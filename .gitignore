@@ -1,0 +1,8 @@
+.metadata
+.recommenders
+bin
+src-gen
+xtend-gen
+.*.jar
+generated
+*.prefs
