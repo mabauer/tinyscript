@@ -33,8 +33,10 @@ class ExpressionsTest {
 
 	@Test
 	def void testIntAddition() {
-		val TSValue value = evaluateOneLineExpression("2+2")
+		var TSValue value = evaluateOneLineExpression("2+2")
 		assertEquals(4, value.asInt())
+		value = evaluateOneLineExpression("4-2")
+		assertEquals(2, value.asInt())
 	}
 	
 	@Test

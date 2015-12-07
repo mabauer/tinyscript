@@ -43,11 +43,11 @@ class TinyscriptInterpreter {
     }
   
   	def dispatch void interpret(Tinyscript p) {
-  		p.elements.interpret
+  		interpret(p.elements)
   	}
   	
     def dispatch void interpret(SourceElements b) {
-        b.statements.forEach[s | s.interpret ]
+        b.statements.forEach[s | interpret(s) ]
     }
     
     def dispatch void interpret(Statement s) {
@@ -55,20 +55,26 @@ class TinyscriptInterpreter {
     }
     
     def dispatch TSValue evaluate(AssignmentExpression expr) {
-    	val value = expr.lhs.evaluate
+    	val value = expr.lhs.evaluate()
     	return value
     }
     
     def dispatch TSValue evaluate(Addition expr) {
-		var TSValue value = expr.expr1.evaluate
+		var TSValue value = expr.expr1.evaluate()
+		val op = expr.ops.iterator()
     	for (operand : expr.exprs) {
-    		val TSValue other = operand.evaluate
+    		val TSValue other = operand.evaluate()
+    		val symbol = op.next()
     		if (value.isNumber() && other.isNumber()) {
     			// TODO: Operator handling
-    			value = new TSValue(value.asDouble() + other.asDouble())
+    			if (symbol == '+')
+    				value = new TSValue(value.asDouble() + other.asDouble())
+    			else if (symbol == '-')
+    				value = new TSValue(value.asDouble() - other.asDouble())
     		}
     		if (value.isString() || other.isString()) {
-    			value = new TSValue(value.asString() + other.asString())
+    			if (symbol == '+')
+    				value = new TSValue(value.asString() + other.asString())
     		}
     		// TODO: Error handling
     	}
@@ -76,12 +82,17 @@ class TinyscriptInterpreter {
     }
     
     def dispatch TSValue evaluate(Multiplication expr) {
-    	var TSValue value = expr.expr1.evaluate
+    	var TSValue value = expr.expr1.evaluate()
+    	val op = expr.ops.iterator()			
     	for (operand : expr.exprs) {
-		val TSValue other = operand.evaluate
+			val TSValue other = operand.evaluate()
+			val symbol = op.next()
 			if (value.isNumber() && other.isNumber()) {
 				// TODO: Operator handling
-				value = new TSValue(value.asDouble() * other.asDouble())
+    			if (symbol == '*')
+    				value = new TSValue(value.asDouble() * other.asDouble())
+    			else if (symbol == '/')
+    				value = new TSValue(value.asDouble() / other.asDouble())
 			}
 			// TODO: Error handling
 		}
@@ -89,12 +100,12 @@ class TinyscriptInterpreter {
     }
     
     def dispatch TSValue evaluate(UnaryOrPrimary expr) {
-    	val value = expr.expr.evaluate
+    	val value = expr.expr.evaluate()
     	return value
     }
     
     def dispatch TSValue evaluate(Unary expr) {
-    	var TSValue value = expr.expr.evaluate
+    	var TSValue value = expr.expr.evaluate()
     	if (value.isNumber()) {
     		value = new TSValue(-value.asDouble())
     	}
