@@ -54,6 +54,7 @@ Atomic:
 	DoubleLiteral |
     StringLiteral |
     ObjectInitializer |
+    ArrayInitializer |
     FunctionExpression |
     ExternalFunctionExpression
 ;
@@ -88,7 +89,7 @@ VariableDeclaration:
 ;
 
 VariableOrMember:
-	name=[Variable] (membersuffixes+=MemberSuffix)* (callsuffixes+=CallSuffix)*  
+	var=[Variable] (membersuffixes+=MemberSuffix)* (callsuffixes+=CallSuffix)*  
 ;
 
 Variable:
@@ -121,6 +122,10 @@ PropertyAssignment:
 PropertyName:
 	expr=StringLiteral |
 	name=ID
+;
+
+ArrayInitializer:
+	'[' (values+=Atomic)? (',' values += Atomic)* ']'  
 ;
 
 StringLiteral:
