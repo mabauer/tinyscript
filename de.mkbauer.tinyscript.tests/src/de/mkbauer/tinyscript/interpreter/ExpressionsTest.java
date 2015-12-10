@@ -15,9 +15,8 @@ import org.eclipse.xtext.junit4.util.ParseHelper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-
-@InjectWith(TinyscriptInjectorProvider.class)
 @RunWith(XtextRunner.class)
+@InjectWith(TinyscriptInjectorProvider.class)
 public class ExpressionsTest {
 	
 	private static final double epsilon = 0.001;

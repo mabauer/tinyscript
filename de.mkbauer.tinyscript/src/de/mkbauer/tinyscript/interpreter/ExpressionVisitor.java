@@ -5,15 +5,16 @@ import java.util.Iterator;
 import org.eclipse.emf.ecore.EObject;
 
 import de.mkbauer.tinyscript.ts.Addition;
+import de.mkbauer.tinyscript.ts.AndExpression;
 import de.mkbauer.tinyscript.ts.AssignmentExpression;
-import de.mkbauer.tinyscript.ts.Atomic;
+import de.mkbauer.tinyscript.ts.CompareExpression;
 import de.mkbauer.tinyscript.ts.DoubleLiteral;
 import de.mkbauer.tinyscript.ts.IntegerLiteral;
 import de.mkbauer.tinyscript.ts.Multiplication;
+import de.mkbauer.tinyscript.ts.OrExpression;
+import de.mkbauer.tinyscript.ts.Primary;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Unary;
-import de.mkbauer.tinyscript.ts.UnaryOrPrimary;
-import de.mkbauer.tinyscript.ts.VariableOrMember;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
 
 
@@ -38,6 +39,27 @@ public class ExpressionVisitor extends TsSwitch<TSValue> {
     	TSValue value = evaluate(expr.getLhs());
     	return value;
     }
+	
+	@Override
+    public TSValue caseCompareExpression(CompareExpression expr) {
+		// TODO
+		TSValue value = evaluate(expr.getExpr1());
+		return value;
+	}
+	
+	@Override
+    public TSValue caseOrExpression(OrExpression expr) {
+		// TODO
+		TSValue value = evaluate(expr.getExpr1());
+		return value;
+	}
+	
+	@Override
+    public TSValue caseAndExpression(AndExpression expr) {
+		// TODO
+		TSValue value = evaluate(expr.getExpr1());
+		return value;
+	}
     
     @Override
     public TSValue caseAddition(Addition expr) {
@@ -82,21 +104,25 @@ public class ExpressionVisitor extends TsSwitch<TSValue> {
     }
     
     @Override
-    public TSValue caseUnaryOrPrimary(UnaryOrPrimary expr) {
-    	TSValue value = evaluate(expr.getExpr());
-    	return value;
-    }
-    
-    @Override
     public TSValue caseUnary(Unary expr) {
     	TSValue value = evaluate(expr.getExpr());
-    	if (value.isNumber()) {
-    		value = new TSValue(-value.asDouble());
-    	}
+    	if (expr.getOp() != null && expr.getOp().equals("-")) 
+    		if (value.isNumber()) {
+    			value = new TSValue(-value.asDouble());
+    		}
+    	// TODO: Handle boolean NOT
     	// TODO: Error handling
     	return value;
     }    
-
+    
+    @Override
+    public TSValue casePrimary(Primary expr) {
+    	TSValue value = evaluate(expr.getExpr());
+    	// TODO: Handle CallOrMemberSuffix!
+    	return value;
+    }    
+    
+    
     @Override
     public TSValue caseIntegerLiteral(IntegerLiteral expr) {
     	return new TSValue(expr.getValue()); 

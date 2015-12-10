@@ -18,16 +18,31 @@ Block:
 ;
 
 Statement:
-	VariableStatement | ExpressionStatement | ReturnStatement
+	VariableStatement | ExpressionStatement | ReturnStatement // | => FunctionDeclaration
+;
+
+FunctionDeclaration:
+	'function' ( name=ID ) '(' params=FormalParameterList? ')' block=Block 
 ;
 
 ExpressionStatement:
 	AssignmentExpression 
-	// | FunctionExpression
 ;
 
 AssignmentExpression:
-	lhs=Addition ('=' rhs=ExpressionStatement)?	
+	lhs=CompareExpression (op=OP_ASSIGN rhs=ExpressionStatement)?	
+;
+
+CompareExpression:
+	expr1=OrExpression (op=OP_COMP expr2 += OrExpression)?
+;
+
+OrExpression:
+	expr1=AndExpression (ops+=('||') exprs += AndExpression)*
+;
+
+AndExpression:
+	expr1=Addition  (ops+=('&&') exprs += Addition)*
 ;
 
 Addition:
@@ -35,37 +50,32 @@ Addition:
 ;
 
 Multiplication:
-    expr1=UnaryOrPrimary  (ops+=('*' | '/') exprs += UnaryOrPrimary)*
-;
-
-UnaryOrPrimary :
-	expr=Atomic |
-    expr=VariableOrMember |
-    expr=Unary |
-    '(' expr=Addition ')'
+    expr1=Unary  (ops+=('*' | '/') exprs += Unary)*
 ;
 
 Unary:
-	'-' expr=UnaryOrPrimary
+	(op='-'|OP_NOT)? expr=Primary // ExpressionStatement?
+;
+
+Primary :
+	(expr = Atomic  | '(' expr=ExpressionStatement ')') 
+    (suffixes+=CallOrMemberSuffix)*
 ;
 
 Atomic:
+	VariableOrMember |
 	IntegerLiteral |
 	DoubleLiteral |
     StringLiteral |
     ObjectInitializer |
-    ArrayInitializer |
-    FunctionExpression |
-    ExternalFunctionExpression
+    ArrayInitializer | 
+    FunctionExpression 
 ;
 
 FunctionExpression:
-	'function' '(' params=FormalParameterList? ')' block=Block 
+	'function' ( name=ID )? '(' params=FormalParameterList? ')' block=Block 
 ;
 
-ExternalFunctionExpression:
-	'external' '(' params=FormalParameterList? ')' name=StringLiteral
-;
 
 FormalParameterList:
 	(params += Variable) (',' params += Variable)*
@@ -85,20 +95,25 @@ VariableDeclarationList:
 ;
 
 VariableDeclaration:
-	var=Variable ('=' expr=AssignmentExpression)?
+	var=Variable (OP_ASSIGN expr=AssignmentExpression)?
 ;
 
 VariableOrMember:
-	var=[Variable] (membersuffixes+=MemberSuffix)* (callsuffixes+=CallSuffix)*  
+	var=[Variable] | this?='this'  
 ;
 
 Variable:
 	name=ID
 ;
 
+CallOrMemberSuffix:
+	{CallOrMemberSuffix}
+	((membersuffixes += MemberSuffix) | (callsuffixes += CallSuffix))
+;
+
 CallSuffix:
 	{CallSuffix}
-	'(' arguments=ArgumentList? ')' (membersuffixes+=MemberSuffix)*
+	'(' arguments=ArgumentList? ')' 
 ;
 
 ArgumentList:
@@ -106,8 +121,8 @@ ArgumentList:
 ;
 
 MemberSuffix:
-	'[' expr=Addition ']' | // TODO: AssignmentExpression?
-	'.' name=ID
+	('[' expr=Addition ']' | // TODO: AssignmentExpression?
+	'.' name=ID ) 
 ;
 
 ObjectInitializer:
@@ -116,7 +131,7 @@ ObjectInitializer:
 ;
 
 PropertyAssignment:
-	key=PropertyName ':' value=Atomic
+	key=PropertyName ':' value=AssignmentExpression
 ;
 
 PropertyName:
@@ -125,6 +140,7 @@ PropertyName:
 ;
 
 ArrayInitializer:
+	{ArrayInitializer}
 	'[' (values+=Atomic)? (',' values += Atomic)* ']'  
 ;
 
@@ -132,12 +148,25 @@ StringLiteral:
 	value=STRING
 ;
 
+// TODO: Remove
 IntegerLiteral:
     value=INT
 ;
 
 DoubleLiteral:
 	value=DOUBLE
+;
+
+terminal OP_COMP:
+	'==' | '===' | '!=' | '<' | '<=' | '>' | '>='
+;
+
+terminal OP_ASSIGN:
+	'='
+;
+
+terminal OP_NOT:
+	'!'
 ;
 
 terminal DOUBLE returns ecore::EDouble:

@@ -12,7 +12,6 @@ import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.Unary;
-import de.mkbauer.tinyscript.ts.UnaryOrPrimary;
 import de.mkbauer.tinyscript.ts.VariableOrMember;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
 
