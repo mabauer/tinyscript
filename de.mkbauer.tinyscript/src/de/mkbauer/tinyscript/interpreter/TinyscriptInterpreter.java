@@ -1,23 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
-import de.mkbauer.tinyscript.ts.Addition;
-import de.mkbauer.tinyscript.ts.AssignmentExpression;
-import de.mkbauer.tinyscript.ts.Atomic;
-import de.mkbauer.tinyscript.ts.DoubleLiteral;
-import de.mkbauer.tinyscript.ts.IntegerLiteral;
-import de.mkbauer.tinyscript.ts.Multiplication;
-import de.mkbauer.tinyscript.ts.SourceElements;
-import de.mkbauer.tinyscript.ts.Statement;
-import de.mkbauer.tinyscript.ts.StringLiteral;
-import de.mkbauer.tinyscript.ts.Tinyscript;
-import de.mkbauer.tinyscript.ts.Unary;
-import de.mkbauer.tinyscript.ts.VariableOrMember;
-import de.mkbauer.tinyscript.ts.util.TsSwitch;
-
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -25,6 +9,13 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.resource.XtextResourceSet;
 
 import com.google.inject.Injector;
+
+import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.SourceElements;
+import de.mkbauer.tinyscript.ts.Statement;
+import de.mkbauer.tinyscript.ts.Tinyscript;
+import de.mkbauer.tinyscript.ts.util.TsSwitch;
 
 class TinyscriptInterpreter extends TsSwitch<Object> {
 	
@@ -76,9 +67,9 @@ class TinyscriptInterpreter extends TsSwitch<Object> {
     }
     
     @Override
-    public Object caseAssignmentExpression(AssignmentExpression object) {
+    public Object caseExpression(Expression object) {
     	// TODO: Complete!
-    	TSValue value = evaluator.evaluate(object.getLhs());
+    	TSValue value = evaluator.evaluate(object);
     	return object;
     }
     

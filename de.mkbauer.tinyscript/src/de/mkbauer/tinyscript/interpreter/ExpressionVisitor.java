@@ -1,17 +1,10 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.Iterator;
-
 import org.eclipse.emf.ecore.EObject;
 
-import de.mkbauer.tinyscript.ts.Addition;
-import de.mkbauer.tinyscript.ts.AndExpression;
-import de.mkbauer.tinyscript.ts.AssignmentExpression;
-import de.mkbauer.tinyscript.ts.CompareExpression;
+import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.DoubleLiteral;
 import de.mkbauer.tinyscript.ts.IntegerLiteral;
-import de.mkbauer.tinyscript.ts.Multiplication;
-import de.mkbauer.tinyscript.ts.OrExpression;
 import de.mkbauer.tinyscript.ts.Primary;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Unary;
@@ -33,74 +26,40 @@ public class ExpressionVisitor extends TsSwitch<TSValue> {
 	public TSValue defaultCase(EObject object) {
 		throw new RuntimeException("Unsupported expression node: " + object.eClass().getName());
 	}
-
-	@Override
-    public TSValue caseAssignmentExpression(AssignmentExpression expr) {
-    	TSValue value = evaluate(expr.getLhs());
-    	return value;
-    }
-	
-	@Override
-    public TSValue caseCompareExpression(CompareExpression expr) {
-		// TODO
-		TSValue value = evaluate(expr.getExpr1());
-		return value;
-	}
-	
-	@Override
-    public TSValue caseOrExpression(OrExpression expr) {
-		// TODO
-		TSValue value = evaluate(expr.getExpr1());
-		return value;
-	}
-	
-	@Override
-    public TSValue caseAndExpression(AndExpression expr) {
-		// TODO
-		TSValue value = evaluate(expr.getExpr1());
-		return value;
-	}
     
     @Override
-    public TSValue caseAddition(Addition expr) {
-		TSValue value = evaluate(expr.getExpr1());
-		Iterator<String> op = expr.getOps().iterator();
-    	for (EObject operand : expr.getExprs()) {
-    		TSValue other = evaluate(operand);
-    		String symbol = op.next();
-    		if (value.isNumber() && other.isNumber()) {
-    			// TODO: Operator handling
-    			if (symbol.equals("+"))
-    				value = new TSValue(value.asDouble() + other.asDouble());
-    			else if (symbol.equals("-"))
-    				value = new TSValue(value.asDouble() - other.asDouble());
+    public TSValue caseBinaryExpression(BinaryExpression expr) {
+    	TSValue left = evaluate(expr.getLeft());
+    	String op = expr.getOp();			
+    	if (op == null) 
+    		return left;
+    	TSValue right = evaluate(expr.getRight());
+    	if (op.equals("+")) {
+    		if (left.isNumber() && right.isNumber()) {
+    			return new TSValue(left.asDouble() + right.asDouble());
     		}
-    		if (value.isString() || other.isString()) {
-    			if (symbol.equals("+"))
-    				value = new TSValue(value.asString() + other.asString());
+    		if (left.isString() || right.isString()) {
+    			return new TSValue(left.asString() + right.asString());
     		}
-    		// TODO: Error handling
     	}
-    	return value;
-    }
-    
-    @Override
-    public TSValue caseMultiplication(Multiplication expr) {
-    	TSValue value = evaluate(expr.getExpr1());
-    	Iterator<String> op = expr.getOps().iterator();			
-    	for (EObject operand : expr.getExprs()) {
-			TSValue other = evaluate(operand);
-			String symbol = op.next();
-			if (value.isNumber() && other.isNumber()) {
-				// TODO: Operator handling
-				if (symbol.equals("*"))
-    				value = new TSValue(value.asDouble() * other.asDouble());
-    			else if (symbol.equals("/"))
-    				value = new TSValue(value.asDouble() / other.asDouble());
-			}
-			// TODO: Error handling
-		}
-		return value;
+    	if (op.equals("-")) {
+    		if (left.isNumber() && right.isNumber()) {
+    			return new TSValue(left.asDouble() - right.asDouble());
+    		}
+    	}
+    	if (op.equals("*")) {
+       		if (left.isNumber() && right.isNumber()) {
+    			return new TSValue(left.asDouble() * right.asDouble());
+    		}
+    	}
+    	if (op.equals("/")) {
+       		if (left.isNumber() && right.isNumber()) {
+    			return new TSValue(left.asDouble() / right.asDouble());
+    		}
+    	}
+    	// Handling of boolean and, or ...
+    	// Error handling
+		return left;
     }
     
     @Override

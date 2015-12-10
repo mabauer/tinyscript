@@ -1,19 +1,19 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import static org.junit.Assert.*;
-
-import com.google.inject.Inject;
-
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.interpreter.TSValue;
-import de.mkbauer.tinyscript.ts.AssignmentExpression;
-import de.mkbauer.tinyscript.ts.Tinyscript;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.eclipse.xtext.junit4.InjectWith;
 import org.eclipse.xtext.junit4.XtextRunner;
 import org.eclipse.xtext.junit4.util.ParseHelper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.google.inject.Inject;
+
+import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
+import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.Tinyscript;
 
 @RunWith(XtextRunner.class)
 @InjectWith(TinyscriptInjectorProvider.class)
@@ -33,7 +33,7 @@ public class ExpressionsTest {
 			fail("Syntax error in: " + line);
 			e.printStackTrace();
 		}
-		AssignmentExpression expr = (AssignmentExpression)ast.getElements().getStatements().get(0);
+		Expression expr = (Expression)ast.getElements().getStatements().get(0);
 		ExpressionVisitor visitor = new ExpressionVisitor();
 		return visitor.evaluate(expr);
 	}

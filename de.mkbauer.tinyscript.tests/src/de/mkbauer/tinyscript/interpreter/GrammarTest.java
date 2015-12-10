@@ -1,19 +1,9 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.HashMap;
-
-import javax.swing.text.html.HTMLEditorKit.Parser;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.interpreter.TSValue;
-import de.mkbauer.tinyscript.ts.AssignmentExpression;
-import de.mkbauer.tinyscript.ts.Tinyscript;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -24,6 +14,12 @@ import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+
+import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
+import de.mkbauer.tinyscript.ts.Tinyscript;
 
 @RunWith(XtextRunner.class)
 @InjectWith(TinyscriptInjectorProvider.class)

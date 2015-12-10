@@ -29,37 +29,44 @@ ExpressionStatement:
 	AssignmentExpression 
 ;
 
-AssignmentExpression:
-	lhs=CompareExpression (op=OP_ASSIGN rhs=ExpressionStatement)?	
+// TODO: Simplify expression hierarchy:
+// - Use tree rewrites to use BinaryOperation, UnaryOperation
+// - Split compare into equality and relational expressions  
+// see https://github.com/eclipse/xtext/blob/master/plugins/org.eclipse.xtext.xbase/src/org/eclipse/xtext/xbase/Xbase.xtext
+AssignmentExpression returns Expression:
+	EqualityExpression ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)?	
 ;
 
-CompareExpression:
-	expr1=OrExpression (op=OP_COMP expr2 += OrExpression)?
+EqualityExpression returns Expression:
+	CompareExpression ({BinaryExpression.left=current} op=OP_EQUALS right=CompareExpression)?
 ;
 
-OrExpression:
-	expr1=AndExpression (ops+=('||') exprs += AndExpression)*
+CompareExpression returns Expression:
+	OrExpression ({BinaryExpression.left=current} op=OP_COMP right=OrExpression)?
 ;
 
-AndExpression:
-	expr1=Addition  (ops+=('&&') exprs += Addition)*
+OrExpression returns Expression:
+	AndExpression ({BinaryExpression.left=current} op=('||') right=AndExpression)*
 ;
 
-Addition:
-	expr1=Multiplication (ops+=('+' | '-') exprs += Multiplication)*
+AndExpression returns Expression:
+	Addition  ({BinaryExpression.left=current} op=('&&') right=Addition)*
 ;
 
-Multiplication:
-    expr1=Unary  (ops+=('*' | '/') exprs += Unary)*
+Addition returns Expression:
+	Multiplication ({BinaryExpression.left=current} op=('+' | '-') right=Multiplication)*
+;
+
+Multiplication returns Expression:
+    (Unary | Primary) ({BinaryExpression.left=current} op=('*' | '/') right=(Unary | Primary))*
 ;
 
 Unary:
-	(op='-'|OP_NOT)? expr=Primary // ExpressionStatement?
+	(op='-'|OP_NOT) expr=Primary // ExpressionStatement?
 ;
 
-Primary :
-	(expr = Atomic  | '(' expr=ExpressionStatement ')') 
-    (suffixes+=CallOrMemberSuffix)*
+Primary:
+	(expr=Atomic  | '(' expr=ExpressionStatement ')' ) (suffixes+=CallOrMemberSuffix)*  
 ;
 
 Atomic:
@@ -69,7 +76,7 @@ Atomic:
     StringLiteral |
     ObjectInitializer |
     ArrayInitializer | 
-    FunctionExpression 
+    FunctionExpression
 ;
 
 FunctionExpression:
@@ -106,9 +113,10 @@ Variable:
 	name=ID
 ;
 
+// TODO: Remove rule
 CallOrMemberSuffix:
 	{CallOrMemberSuffix}
-	((membersuffixes += MemberSuffix) | (callsuffixes += CallSuffix))
+	((membersuffix = MemberSuffix) | (callsuffix = CallSuffix))
 ;
 
 CallSuffix:
@@ -148,6 +156,8 @@ StringLiteral:
 	value=STRING
 ;
 
+// TODO: Add boolean literal
+
 // TODO: Remove
 IntegerLiteral:
     value=INT
@@ -155,6 +165,10 @@ IntegerLiteral:
 
 DoubleLiteral:
 	value=DOUBLE
+;
+
+terminal OP_EQUALS:
+	'==' | '===' | '!=' | '!=='
 ;
 
 terminal OP_COMP:
