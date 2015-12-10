@@ -66,6 +66,23 @@ public class ExpressionsTest {
 		assertEquals(8, value.asInt());
 	}
 	
+	@Test
+	public void testBooleanLiteral() {
+		TSValue value = evaluateOneLineExpression("true");
+		assertEquals(true, value.asBoolean());
+		value = evaluateOneLineExpression("false");
+		assertEquals(false, value.asBoolean());	
+	}
+	
+	public void testBooleanConversion() {
+		TSValue value = evaluateOneLineExpression("1.0");
+		assertEquals(true, value.asBoolean());
+		value = evaluateOneLineExpression("\"Test\"");
+		assertEquals(true, value.asBoolean());
+		value = TSValue.UNDEFINED;
+		assertEquals(false, value.asBoolean());
+	}
+	
 	public void testDoubleLiteral() {
 		TSValue value = evaluateOneLineExpression("2.0");
 		assertEquals(2.0, value.asDouble(), epsilon);

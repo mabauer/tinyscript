@@ -3,8 +3,8 @@ package de.mkbauer.tinyscript.interpreter;
 import org.eclipse.emf.ecore.EObject;
 
 import de.mkbauer.tinyscript.ts.BinaryExpression;
-import de.mkbauer.tinyscript.ts.DoubleLiteral;
-import de.mkbauer.tinyscript.ts.IntegerLiteral;
+import de.mkbauer.tinyscript.ts.BooleanLiteral;
+import de.mkbauer.tinyscript.ts.NumberLiteral;
 import de.mkbauer.tinyscript.ts.Primary;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Unary;
@@ -81,14 +81,15 @@ public class ExpressionVisitor extends TsSwitch<TSValue> {
     	return value;
     }    
     
+
     
     @Override
-    public TSValue caseIntegerLiteral(IntegerLiteral expr) {
-    	return new TSValue(expr.getValue()); 
+    public TSValue caseBooleanLiteral(BooleanLiteral expr) {
+    	return new TSValue(expr.isValue()); 
     }
     
     @Override
-    public TSValue caseDoubleLiteral(DoubleLiteral expr) {
+    public TSValue caseNumberLiteral(NumberLiteral expr) {
     	return new TSValue(expr.getValue()); 
     }
     

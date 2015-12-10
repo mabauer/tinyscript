@@ -9,7 +9,7 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.ts.Atomic;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Expression;
-import de.mkbauer.tinyscript.ts.IntegerLiteral;
+import de.mkbauer.tinyscript.ts.NumberLiteral;
 import de.mkbauer.tinyscript.ts.Primary;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -60,8 +60,9 @@ public class AssociativityTest {
 		}
 
 		@Override
-		public String caseIntegerLiteral(IntegerLiteral object) {			
-			return new Integer(object.getValue()).toString();
+		public String caseNumberLiteral(NumberLiteral object) {	
+			TSValue value = new TSValue(object.getValue());
+			return value.toString();
 		}
 
 		@Override

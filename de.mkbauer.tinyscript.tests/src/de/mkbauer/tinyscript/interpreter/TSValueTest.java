@@ -9,7 +9,7 @@ public class TSValueTest {
 	@Test
 	public void testInt() {
 		TSValue i = new TSValue(1);
-		assert i.isInt();
+		assert i.isMathematicalInteger();
 		assertEquals(1, i.asInt());
 		assertEquals("1", i.toString());
 	}

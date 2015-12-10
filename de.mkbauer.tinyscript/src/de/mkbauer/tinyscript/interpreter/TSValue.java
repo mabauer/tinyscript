@@ -2,7 +2,7 @@ package de.mkbauer.tinyscript.interpreter;
 
 public class TSValue { // implements Comparable<TSValue> 
 	
-	public static final TSValue NULL = new TSValue();
+	public static final TSValue UNDEFINED = new TSValue();
 
 	private Object value;
 	
@@ -21,7 +21,11 @@ public class TSValue { // implements Comparable<TSValue>
 	public String asString() {
 		if (isString()) 
 			return (String)value;
-		else 
+		else if (isInt())
+			return String.format("%d",  value);
+		else if (isMathematicalInteger())
+			return String.format("%.0f", value) ;
+		else
 			return value.toString();
 	}
 	
@@ -37,6 +41,10 @@ public class TSValue { // implements Comparable<TSValue>
 		return (value instanceof Integer);
 	}
 	
+	public boolean isMathematicalInteger() {
+		return (Math.rint(asDouble()) == asDouble()); 
+	}
+	
 	public double asDouble() {
 		return ((Number)value).doubleValue();
 	}
@@ -46,10 +54,14 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public boolean isNumber() {
-		return isInt() || isDouble();
+		return isDouble() || isInt();
 	}
 	
 	public boolean asBoolean() {
+		if (value==null)
+			return false;
+		if ((isNumber()) && (asDouble() == 0.0)) // TODO: Use delta
+			return false;
 		return ((Boolean)value).booleanValue();
 	}
 	
@@ -72,7 +84,7 @@ public class TSValue { // implements Comparable<TSValue>
 	
 	public String toString() {
 		if (value != null) {
-			return value.toString();
+			return asString();
 		}
 		else {
 			return "NULL";
