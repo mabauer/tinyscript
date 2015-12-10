@@ -18,7 +18,7 @@ Block:
 ;
 
 Statement:
-	VariableStatement | ExpressionStatement | ReturnStatement // | => FunctionDeclaration
+	(=> FunctionDeclaration) | VariableStatement | ExpressionStatement | ReturnStatement   
 ;
 
 FunctionDeclaration:
