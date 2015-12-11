@@ -10,7 +10,7 @@ Tinyscript:
 
 SourceElements:
 	{SourceElements}
-	(statements += Statement)? (';' statements += Statement)* (';')?
+	(statements += Statement)* 
 ;
 
 Block: 
@@ -18,7 +18,17 @@ Block:
 ;
 
 Statement:
-	(=> FunctionDeclaration) | VariableStatement | ExpressionStatement | ReturnStatement   
+	(=> FunctionDeclaration) | 
+	VariableStatement | 
+	ExpressionStatement | 
+	ReturnStatement | 
+	IfStatement |
+	ForEachStatement |
+	EmptyStatement
+;
+
+EmptyStatement:
+	';'
 ;
 
 FunctionDeclaration:
@@ -26,7 +36,7 @@ FunctionDeclaration:
 ;
 
 ExpressionStatement:
-	AssignmentExpression 
+	AssignmentExpression ';'
 ;
 
 // TODO: Simplify expression hierarchy:
@@ -66,7 +76,7 @@ Unary:
 ;
 
 Primary:
-	(expr=Atomic  | '(' expr=ExpressionStatement ')' ) (suffixes+=CallOrMemberSuffix)*  
+	(expr=Atomic  | '(' expr=AssignmentExpression ')' ) (suffixes+=CallOrMemberSuffix)*  
 ;
 
 Atomic:
@@ -90,11 +100,20 @@ FormalParameterList:
 
 ReturnStatement:
 	{Return}
-	'return' (expr=AssignmentExpression)?
+	'return' (expr=AssignmentExpression)? ';'
+;
+
+IfStatement:
+	'if' '(' cond=AssignmentExpression ')' then=Block
+	('else' else=Block)?
+;
+
+ForEachStatement:
+	'foreach' '(' var=Variable 'in' inexpr=AssignmentExpression ')' do=Block 
 ;
 
 VariableStatement:
-	'var' vardecllist=VariableDeclarationList
+	'var' vardecllist=VariableDeclarationList ';'
 ;
 
 VariableDeclarationList:
