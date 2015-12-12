@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.interpreter;
+package de.mkbauer.tinyscript;
 
 import static org.junit.Assert.fail;
 
@@ -75,8 +75,18 @@ public class GrammarTest {
 	}
 	
 	@Test
+	public void testCounterWithClosures() {
+		parseFromFile("counter_with_closures.ts");
+	}
+	
+	@Test
 	public void testModulesViaClosures() {
 		parseFromFile("modules_via_closures.ts");
+	}
+	
+	@Test
+	public void testTrigger_example() {
+		parseFromFile("trigger_example.ts");
 	}
 	
 

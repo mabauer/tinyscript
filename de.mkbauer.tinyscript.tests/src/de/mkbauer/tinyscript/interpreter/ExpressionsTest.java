@@ -33,7 +33,7 @@ public class ExpressionsTest {
 			fail("Syntax error in: " + line);
 			e.printStackTrace();
 		}
-		Expression expr = (Expression)ast.getElements().getStatements().get(0);
+		Expression expr = (Expression)ast.getGlobal().getStatements().get(0);
 		ExpressionVisitor visitor = new ExpressionVisitor();
 		return visitor.evaluate(expr);
 	}

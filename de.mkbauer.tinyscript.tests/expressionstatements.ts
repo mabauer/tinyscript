@@ -48,5 +48,9 @@ coordinates.move = function (dx, dy) {
 
 coordinates.move(1.0, 1.0); 
 
+function hello (str) {
+	return "hello";
+}
+
 
 

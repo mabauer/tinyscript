@@ -4,17 +4,18 @@ import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 generate ts "http://www.mkbauer.de/tinyscript/Tinyscript"
 
-Tinyscript:
-	elements=SourceElements
+Tinyscript :
+	global=Global
 ;
 
-SourceElements:
-	{SourceElements}
-	(statements += Statement)* 
+Global returns Block:
+	{Block}
+	(statements += Statement)*
 ;
 
 Block: 
-	'{' sourceelements=SourceElements '}'	
+	{Block}
+	'{' (statements += Statement)* '}'	
 ;
 
 Statement:
@@ -24,6 +25,7 @@ Statement:
 	ReturnStatement | 
 	IfStatement |
 	ForEachStatement |
+	BreakStatement |
 	EmptyStatement
 ;
 
@@ -31,8 +33,8 @@ EmptyStatement:
 	';'
 ;
 
-FunctionDeclaration:
-	'function' ( name=ID ) '(' params=FormalParameterList? ')' block=Block 
+FunctionDeclaration returns Function:
+	'function' ( id=Identifier ) '(' (params += Identifier)? (',' params += Identifier)* ')' block=Block 
 ;
 
 ExpressionStatement:
@@ -75,12 +77,12 @@ Unary:
 	(op='-'|OP_NOT) expr=Primary // ExpressionStatement?
 ;
 
-Primary:
-	(expr=Atomic  | '(' expr=AssignmentExpression ')' ) (suffixes+=CallOrMemberSuffix)*  
+Primary returns Expression:
+	(Atomic  | '(' AssignmentExpression ')' ) ({CallOrPropertyAccess.expr=current} suffixes+=CallOrMemberSuffix)*  
 ;
 
 Atomic:
-	VariableOrMember |
+	Reference |
 	BooleanLiteral |
 	NumberLiteral |
     StringLiteral |
@@ -89,17 +91,12 @@ Atomic:
     FunctionExpression
 ;
 
-FunctionExpression:
-	'function' ( name=ID )? '(' params=FormalParameterList? ')' block=Block 
-;
-
-
-FormalParameterList:
-	(params += Variable) (',' params += Variable)*
+FunctionExpression returns Function:
+	'function' ( id=Identifier )? '(' (params += Identifier)? (',' params += Identifier)* ')' block=Block 
 ;
 
 ReturnStatement:
-	{Return}
+	{ReturnStatement}
 	'return' (expr=AssignmentExpression)? ';'
 ;
 
@@ -109,42 +106,37 @@ IfStatement:
 ;
 
 ForEachStatement:
-	'foreach' '(' var=Variable 'in' inexpr=AssignmentExpression ')' do=Block 
+	'foreach' '(' (('var' id=Identifier) | ref=Reference) 'in' inexpr=AssignmentExpression ')' do=Block 
+;
+
+BreakStatement:
+	{BreakStatement}
+	'break' ';'
 ;
 
 VariableStatement:
-	'var' vardecllist=VariableDeclarationList ';'
+	'var' (vardecls += VariableDeclaration) (',' vardecls += VariableDeclaration)* ';'
 ;
 
-VariableDeclarationList:
-	(vardecls += VariableDeclaration) (',' vardecls += VariableDeclaration)*
+VariableDeclaration returns Expression:
+	Identifier ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)?
 ;
 
-VariableDeclaration:
-	var=Variable (OP_ASSIGN expr=AssignmentExpression)?
+Reference:
+	id=[Identifier] | this?='this'  
 ;
 
-VariableOrMember:
-	var=[Variable] | this?='this'  
-;
-
-Variable:
+Identifier:
 	name=ID
 ;
 
-// TODO: Remove rule
 CallOrMemberSuffix:
-	{CallOrMemberSuffix}
-	((membersuffix = MemberSuffix) | (callsuffix = CallSuffix))
+	((MemberSuffix) | (CallSuffix))
 ;
 
 CallSuffix:
 	{CallSuffix}
-	'(' arguments=ArgumentList? ')' 
-;
-
-ArgumentList:
-	(arguments += AssignmentExpression) (',' arguments += AssignmentExpression)*
+	'(' (arguments += AssignmentExpression)? (',' arguments += AssignmentExpression)* ')' 
 ;
 
 MemberSuffix:
@@ -175,7 +167,6 @@ StringLiteral:
 	value=STRING
 ;
 
-// TODO: Add boolean literal
 BooleanLiteral:
 	value=BOOLEAN
 ;

@@ -4,8 +4,8 @@ import org.eclipse.emf.ecore.EObject;
 
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.BooleanLiteral;
+import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
-import de.mkbauer.tinyscript.ts.Primary;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
@@ -74,14 +74,13 @@ public class ExpressionVisitor extends TsSwitch<TSValue> {
     	return value;
     }    
     
+/*
     @Override
-    public TSValue casePrimary(Primary expr) {
-    	TSValue value = evaluate(expr.getExpr());
-    	// TODO: Handle CallOrMemberSuffix!
-    	return value;
-    }    
-    
-
+    public TSValue caseCallOrPropertyAccess(CallOrPropertyAccess expr) {
+    	return new TSValue(expr.getExpr()); 
+    	// TODO: Handle call or property access suffixes
+    }
+*/
     
     @Override
     public TSValue caseBooleanLiteral(BooleanLiteral expr) {

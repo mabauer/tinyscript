@@ -11,8 +11,8 @@ import org.eclipse.xtext.resource.XtextResourceSet;
 import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Expression;
-import de.mkbauer.tinyscript.ts.SourceElements;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
@@ -55,11 +55,11 @@ class TinyscriptInterpreter extends TsSwitch<Object> {
   	
     @Override
 	public Object caseTinyscript(Tinyscript object) {
-    	return execute(object.getElements());
+    	return execute(object.getGlobal());
 	}
 
     @Override
-	public Object caseSourceElements(SourceElements object) {
+	public Object caseBlock(Block object) {
         for (Statement s : object.getStatements()) {
         	execute(s); 
         }
