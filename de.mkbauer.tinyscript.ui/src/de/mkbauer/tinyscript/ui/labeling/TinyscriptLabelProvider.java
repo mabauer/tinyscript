@@ -7,6 +7,13 @@ import org.eclipse.emf.ecore.EObject;
 
 import com.google.inject.Inject;
 
+import de.mkbauer.tinyscript.ts.BinaryExpression;
+import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.NumberLiteral;
+import de.mkbauer.tinyscript.ts.Reference;
+import de.mkbauer.tinyscript.ts.StringLiteral;
+
 /**
  * Provides labels for a EObjects.
  * 
@@ -17,6 +24,34 @@ public class TinyscriptLabelProvider extends org.eclipse.xtext.ui.label.DefaultE
 	@Inject
 	public TinyscriptLabelProvider(org.eclipse.emf.edit.ui.provider.AdapterFactoryLabelProvider delegate) {
 		super(delegate);
+	}
+	
+	public String text(final BinaryExpression ele) {
+		return ele.getOp();
+	}
+	
+	public String text(final Function ele) {
+		if (ele.getId() != null)
+			return "Function " + ele.getId().getName();
+		return "Function";
+	}
+	
+	public String text(final Identifier ele) {
+		return ele.getName();
+	}
+	
+	public String text(final Reference ele) {
+		if (ele.getId().getName() != null)
+			return "->" + ele.getId().getName();
+		return "-> *unresolved*";
+	}
+	
+	public String text(final StringLiteral ele) {
+		return "\"" + ele.getValue() +"\"";
+	}
+	
+	public String text(final NumberLiteral ele) {
+		return new Double(ele.getValue()).toString();
 	}
 	
 	public String text(final EObject ele) {
