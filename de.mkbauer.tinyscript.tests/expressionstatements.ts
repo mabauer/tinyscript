@@ -36,7 +36,7 @@ var fruit = ["orange", "apple", "banana"];
 
 coordinates.x; 
 coordinates["y"];
-var x = "x";
+x = "x";
 coordinates[x];
 
 banana = fruit[2];
