@@ -224,28 +224,28 @@
     </extension>
 
 
-	<!-- marker definitions for de.mkbauer.tinyscript.Tinyscript -->
-	<extension
-	        id="tinyscript.check.fast"
-	        name="Tinyscript Problem"
-	        point="org.eclipse.core.resources.markers">
-	    <super type="org.eclipse.xtext.ui.check.fast"/>
-	    <persistent value="true"/>
-	</extension>
-	<extension
-	        id="tinyscript.check.normal"
-	        name="Tinyscript Problem"
-	        point="org.eclipse.core.resources.markers">
-	    <super type="org.eclipse.xtext.ui.check.normal"/>
-	    <persistent value="true"/>
-	</extension>
-	<extension
-	        id="tinyscript.check.expensive"
-	        name="Tinyscript Problem"
-	        point="org.eclipse.core.resources.markers">
-	    <super type="org.eclipse.xtext.ui.check.expensive"/>
-	    <persistent value="true"/>
-	</extension>
+    <!-- marker definitions for de.mkbauer.tinyscript.Tinyscript -->
+    <extension
+            id="tinyscript.check.fast"
+            name="Tinyscript Problem"
+            point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.xtext.ui.check.fast"/>
+        <persistent value="true"/>
+    </extension>
+    <extension
+            id="tinyscript.check.normal"
+            name="Tinyscript Problem"
+            point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.xtext.ui.check.normal"/>
+        <persistent value="true"/>
+    </extension>
+    <extension
+            id="tinyscript.check.expensive"
+            name="Tinyscript Problem"
+            point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.xtext.ui.check.expensive"/>
+        <persistent value="true"/>
+    </extension>
 
    <extension
          point="org.eclipse.xtext.builder.participant">

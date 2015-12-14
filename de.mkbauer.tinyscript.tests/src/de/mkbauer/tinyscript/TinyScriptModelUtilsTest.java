@@ -20,7 +20,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.interpreter.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.Identifier;

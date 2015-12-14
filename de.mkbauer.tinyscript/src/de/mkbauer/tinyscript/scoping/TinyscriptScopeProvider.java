@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.scoping;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,24 +9,18 @@ import org.eclipse.emf.ecore.EReference;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
-import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
 import org.eclipse.xtext.scoping.impl.AbstractScopeProvider;
 
-import de.mkbauer.tinyscript.interpreter.TinyscriptModelUtil;
-import de.mkbauer.tinyscript.ts.BinaryExpression;
+import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.Block;
-import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.ForEachStatement;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Reference;
-import de.mkbauer.tinyscript.ts.Statement;
-import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
-import de.mkbauer.tinyscript.ts.VariableStatement;
 
 /**
- * This class contains custom scoping description.
+ * Scoping rules for Tinyscript.
  * 
  * see : http://www.eclipse.org/Xtext/documentation.html#scoping
  * on how and when to use it 

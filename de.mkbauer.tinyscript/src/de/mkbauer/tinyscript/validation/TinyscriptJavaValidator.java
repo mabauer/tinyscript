@@ -1,13 +1,13 @@
 package de.mkbauer.tinyscript.validation;
 
-import de.mkbauer.tinyscript.interpreter.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.VariableStatement;
-import de.mkbauer.tinyscript.validation.AbstractTinyscriptValidator;
+
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
@@ -18,13 +18,13 @@ import org.eclipse.xtext.validation.Check;
  * see http://www.eclipse.org/Xtext/documentation.html#validation
  */
 @SuppressWarnings("all")
-public class TinyscriptValidator extends AbstractTinyscriptValidator {
+public class TinyscriptJavaValidator extends AbstractTinyscriptJavaValidator {
 	
 	/**
 	 * Checks for already declared identifiers of the same name in the same block
 	 * @param identifier
 	 */
-	@Check
+	// @Check
 	public void checkNoDuplicateIdentifiersInBlock(Identifier identifier) {
 		if (isPartOfVariableStatement(identifier)) {
 			Block block = TinyscriptModelUtil.containingBlock(identifier);

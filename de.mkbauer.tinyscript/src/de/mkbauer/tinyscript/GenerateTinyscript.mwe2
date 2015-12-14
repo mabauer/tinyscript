@@ -70,11 +70,14 @@ Workflow {
     		//  }
     		}
     
-    		// Xtend-based API for validation
-    		fragment = validation.ValidatorFragment auto-inject {
+    		fragment = validation.JavaValidatorFragment auto-inject {	
+    		}
+    		
+    		//Xtend-based API for validation
+    		// fragment = validation.ValidatorFragment auto-inject {
     		//    composedCheck = "org.eclipse.xtext.validation.ImportUriValidator"
     		//    composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
-    		}
+    		//}
     
     		// old scoping and exporting API
     		// fragment = scoping.ImportURIScopingFragment auto-inject {}

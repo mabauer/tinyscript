@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.interpreter;
+package de.mkbauer.tinyscript;
 
 import java.util.ArrayList;
 import java.util.Iterator;
