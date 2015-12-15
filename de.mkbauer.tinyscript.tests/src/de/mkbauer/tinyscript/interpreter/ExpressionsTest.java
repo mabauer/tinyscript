@@ -1,11 +1,13 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.eclipse.xtext.junit4.InjectWith;
 import org.eclipse.xtext.junit4.XtextRunner;
 import org.eclipse.xtext.junit4.util.ParseHelper;
+import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -23,19 +25,23 @@ public class ExpressionsTest {
 
 	@Inject
 	ParseHelper<Tinyscript> parser;
+	
+	@Inject 
+	private ValidationTestHelper validator;
 
 	TSValue evaluateOneLineExpression(String line) {
 		Tinyscript ast = null;
 		try {
-			 ast = (Tinyscript)parser.parse(line);
+			 ast = (Tinyscript)parser.parse(line + ";");
 		}
 		catch (Exception e) {
 			fail("Syntax error in: " + line);
 			e.printStackTrace();
 		}
+		validator.assertNoErrors(ast);
 		Expression expr = (Expression)ast.getGlobal().getStatements().get(0);
-		ExpressionVisitor visitor = new ExpressionVisitor();
-		return visitor.evaluate(expr);
+		ExecutionVisitor visitor = new ExecutionVisitor();
+		return visitor.execute(expr);
 	}
 
 	@Test
@@ -118,6 +124,12 @@ public class ExpressionsTest {
 		assertEquals("Hello 2", value.asString());
 		value = evaluateOneLineExpression("\"Hello, \" + 2 + \" Worlds!\"");
 		assertEquals("Hello, 2 Worlds!", value.asString());
+	}
+	
+	@Test
+	public void testCallOrPropertyAccess() {
+		// TSValue value = evaluateOneLineExpression("f(1);");
+		assertTrue(true);
 	}
 
 }

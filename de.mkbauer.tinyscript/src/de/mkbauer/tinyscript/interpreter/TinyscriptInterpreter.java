@@ -15,14 +15,15 @@ import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
+import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
 
-class TinyscriptInterpreter extends TsSwitch<Object> {
+class TinyscriptInterpreter  {
 	
-	private ExpressionVisitor evaluator = null; 
+	private ExecutionVisitor visitor = null; 
 		
 	public static void main(String[] args) {
-		Tinyscript script = null;
+		Tinyscript ast = null;
 		try {
 			String fileName = args[0];
 	 		URI uri = URI.createURI(fileName);
@@ -31,46 +32,13 @@ class TinyscriptInterpreter extends TsSwitch<Object> {
 	 		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
 	 		Resource resource = resourceSet.createResource(uri);
 	 		resource.load(new HashMap());
-	 		script = (Tinyscript) resource.getContents().get(0);
+	 		ast = (Tinyscript) resource.getContents().get(0);
 		}
 		catch (IOException e) {
 			System.exit(1);
 		}
- 		TinyscriptInterpreter interpreter = new TinyscriptInterpreter();
- 		interpreter.execute(script);		
+ 		ExecutionVisitor visitor = new ExecutionVisitor();
+ 		visitor.execute(ast);		
     }  
-	
-	public TinyscriptInterpreter() {
-		evaluator = new ExpressionVisitor();
-	}
-  
-  	public Object execute(EObject object) {
-  		return doSwitch(object);		
-  	}
   	
-	@Override
-	public Object defaultCase(EObject object) {
-		throw new UnsupportedOperationException("Unsupported script node: " + object.eClass().getName());
-	}
-  	
-    @Override
-	public Object caseTinyscript(Tinyscript object) {
-    	return execute(object.getGlobal());
-	}
-
-    @Override
-	public Object caseBlock(Block object) {
-        for (Statement s : object.getStatements()) {
-        	execute(s); 
-        }
-        return object;
-    }
-    
-    @Override
-    public Object caseExpression(Expression object) {
-    	// TODO: Complete!
-    	TSValue value = evaluator.evaluate(object);
-    	return object;
-    }
-    
 }

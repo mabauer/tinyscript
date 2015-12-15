@@ -24,7 +24,7 @@ public class TinyscriptJavaValidator extends AbstractTinyscriptJavaValidator {
 	 * Checks for already declared identifiers of the same name in the same block
 	 * @param identifier
 	 */
-	// @Check
+	@Check
 	public void checkNoDuplicateIdentifiersInBlock(Identifier identifier) {
 		if (isPartOfVariableStatement(identifier)) {
 			Block block = TinyscriptModelUtil.containingBlock(identifier);

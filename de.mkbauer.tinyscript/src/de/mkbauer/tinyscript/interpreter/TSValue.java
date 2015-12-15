@@ -1,5 +1,10 @@
 package de.mkbauer.tinyscript.interpreter;
 
+/**
+ * Represents values used in expressions in Tinyscript. 
+ * @author markus.bauer
+ *
+ */
 public class TSValue { // implements Comparable<TSValue> 
 	
 	public static final TSValue UNDEFINED = new TSValue();
@@ -67,6 +72,11 @@ public class TSValue { // implements Comparable<TSValue>
 	
 	public boolean isBoolean() {
 		return (value instanceof Boolean);
+	}
+	
+	public boolean equals(TSValue other) {
+		// TODO:
+		return value.equals(other.value);
 	}
 
 /*	
