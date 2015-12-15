@@ -20,12 +20,14 @@ Block:
 
 Statement:
 	(=> FunctionDeclaration) | 
+	(=> Block) |
 	VariableStatement | 
 	ExpressionStatement | 
 	ReturnStatement | 
 	IfStatement |
 	ForEachStatement |
 	BreakStatement |
+	AssertStatement |
 	EmptyStatement
 ;
 
@@ -98,6 +100,10 @@ FunctionExpression returns Function:
 ReturnStatement:
 	{ReturnStatement}
 	'return' (expr=AssignmentExpression)? ';'
+;
+
+AssertStatement:
+	'assert' cond=AssignmentExpression ';'
 ;
 
 IfStatement:
