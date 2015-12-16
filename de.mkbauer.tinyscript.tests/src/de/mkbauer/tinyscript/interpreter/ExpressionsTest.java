@@ -125,12 +125,6 @@ public class ExpressionsTest {
 		value = evaluateOneLineExpression("\"Hello, \" + 2 + \" Worlds!\"");
 		assertEquals("Hello, 2 Worlds!", value.asString());
 	}
-	
-	@Test
-	public void testCallOrPropertyAccess() {
-		// TSValue value = evaluateOneLineExpression("f(1);");
-		assertTrue(true);
-	}
 
 }
 

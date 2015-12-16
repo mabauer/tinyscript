@@ -14,13 +14,17 @@ public class TSValue { // implements Comparable<TSValue>
     public TSValue(Object v) {
         value = v;
         // only accept boolean, list, number or string types
-        if(!(isBoolean() || isNumber() || isString())) {
+        if(!(isBoolean() || isNumber() || isString() || isObject())) {
             throw new RuntimeException("invalid data type: " + v + " (" + v.getClass() + ")");
         }
     }
 	
 	private TSValue() {
 		value = null;
+	}
+	
+	public void assign(TSValue other) {
+		value = other.value;
 	}
 	
 	public String asString() {
@@ -74,10 +78,26 @@ public class TSValue { // implements Comparable<TSValue>
 		return (value instanceof Boolean);
 	}
 	
+	public boolean isObject() {
+		return (value instanceof TSObject);
+	}
+	
+	public TSObject asObject() {
+		return (TSObject) value;
+	}
+	
 	public boolean equals(TSValue other) {
 		// TODO:
+		if (value == null) {
+			if (other == null) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 		return value.equals(other.value);
-	}
+	}	
 
 /*	
     @Override
@@ -92,12 +112,13 @@ public class TSValue { // implements Comparable<TSValue>
         return value.hashCode();
     }
 	
+	@Override
 	public String toString() {
 		if (value != null) {
-			return asString();
+			return value.toString(); // asString();
 		}
 		else {
-			return "NULL";
+			return "UNDEFINED";
 		}
 	}
 }
