@@ -48,15 +48,7 @@ ExpressionStatement:
 // - Split compare into equality and relational expressions  
 // see https://github.com/eclipse/xtext/blob/master/plugins/org.eclipse.xtext.xbase/src/org/eclipse/xtext/xbase/Xbase.xtext
 AssignmentExpression returns Expression:
-	EqualityExpression ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)?	
-;
-
-EqualityExpression returns Expression:
-	CompareExpression ({BinaryExpression.left=current} op=OP_EQUALS right=CompareExpression)?
-;
-
-CompareExpression returns Expression:
-	OrExpression ({BinaryExpression.left=current} op=OP_COMP right=OrExpression)?
+	OrExpression ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)?	
 ;
 
 OrExpression returns Expression:
@@ -64,7 +56,15 @@ OrExpression returns Expression:
 ;
 
 AndExpression returns Expression:
-	Addition  ({BinaryExpression.left=current} op=('&&') right=Addition)*
+	EqualityExpression  ({BinaryExpression.left=current} op=('&&') right=EqualityExpression)*
+;
+
+EqualityExpression returns Expression:
+	CompareExpression ({BinaryExpression.left=current} op=OP_EQUALS right=CompareExpression)?
+;
+
+CompareExpression returns Expression:
+	Addition ({BinaryExpression.left=current} op=OP_COMP right=Addition)?
 ;
 
 Addition returns Expression:
@@ -186,7 +186,7 @@ terminal OP_EQUALS:
 ;
 
 terminal OP_COMP:
-	'==' | '===' | '!=' | '<' | '<=' | '>' | '>='
+    '<' | '<=' | '>' | '>='
 ;
 
 terminal OP_ASSIGN:
