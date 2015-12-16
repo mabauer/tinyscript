@@ -11,6 +11,9 @@ import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
+import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.DotPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.PropertyName;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 
@@ -34,6 +37,19 @@ public class TinyscriptLabelProvider extends org.eclipse.xtext.ui.label.DefaultE
 		if (ele.getId() != null)
 			return "Function " + ele.getId().getName();
 		return "Function";
+	}
+	
+	public String text(final DotPropertyAccessSuffix ele) {
+		PropertyName key = ele.getKey();
+		if (key.getName() != null)
+			return "." + key.getName();
+		else if (key.getExpr() != null)
+			return "." + key.getExpr().getValue();
+		return ".";
+	}
+	
+	public String text(final ComputedPropertyAccessSuffix ele) {
+		return "[]";
 	}
 	
 	public String text(final Identifier ele) {

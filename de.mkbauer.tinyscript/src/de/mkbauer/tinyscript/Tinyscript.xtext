@@ -80,7 +80,7 @@ Unary:
 ;
 
 Primary returns Expression:
-	(Atomic  | '(' AssignmentExpression ')' ) ({CallOrPropertyAccess.expr=current} suffixes+=CallOrMemberSuffix)*  
+	(Atomic  | '(' AssignmentExpression ')' ) ({CallOrPropertyAccess.expr=current} suffix=CallOrPropertyAccessSuffix)*  
 ;
 
 Atomic:
@@ -136,8 +136,8 @@ Identifier:
 	name=ID
 ;
 
-CallOrMemberSuffix:
-	((MemberSuffix) | (CallSuffix))
+CallOrPropertyAccessSuffix:
+	PropertyAccessSuffix | CallSuffix
 ;
 
 CallSuffix:
@@ -145,14 +145,21 @@ CallSuffix:
 	'(' (arguments += AssignmentExpression)? (',' arguments += AssignmentExpression)* ')' 
 ;
 
-MemberSuffix:
-	('[' expr=Addition ']' | // TODO: AssignmentExpression?
-	'.' name=ID ) 
+PropertyAccessSuffix:
+	ComputedPropertyAccessSuffix | DotPropertyAccessSuffix
+;
+
+ComputedPropertyAccessSuffix:
+	'[' key=Addition ']'  // TODO: AssignmentExpression?
+;
+	
+DotPropertyAccessSuffix:
+	'.' key=PropertyName 
 ;
 
 ObjectInitializer:
 	{ObjectInitializer}
-	'{' (propertyassignments+=PropertyAssignment)? (',' propertyassigments+=PropertyAssignment)* '}'
+	'{' (propertyassignments+=PropertyAssignment)? (',' propertyassignments+=PropertyAssignment)* '}'
 ;
 
 PropertyAssignment:

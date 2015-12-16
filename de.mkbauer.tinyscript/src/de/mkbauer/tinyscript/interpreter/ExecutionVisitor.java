@@ -7,9 +7,16 @@ import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BooleanLiteral;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
+import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
+import de.mkbauer.tinyscript.ts.ObjectInitializer;
+import de.mkbauer.tinyscript.ts.PropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.DotPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.PropertyAssignment;
+import de.mkbauer.tinyscript.ts.PropertyName;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
@@ -132,13 +139,31 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return value;
     }    
     
-/*
+
     @Override
     public TSValue caseCallOrPropertyAccess(CallOrPropertyAccess expr) {
-    	return new TSValue(expr.getExpr()); 
-    	// TODO: Handle call or property access suffixes
+    	TSValue value = execute(expr.getExpr()); 
+    	CallOrPropertyAccessSuffix suffix = expr.getSuffix();
+		if (suffix instanceof PropertyAccessSuffix) {
+			String key = evaluatePropertyKey((PropertyAccessSuffix) suffix);
+			if (value.isObject()) {
+				value = value.asObject().get(key);
+			}
+			else {
+				// TODO: Handle builtin types! E.g.: "xxx".size(),...
+				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
+			}
+		}
+    		// TODO: Handle call suffixes	
+    	return value;
     }
-*/
+
+    @Override
+    public TSValue casePropertyName(PropertyName expr) {
+    	if (expr.getName() != null)
+    		return new TSValue(expr.getName());
+    	return execute(expr.getExpr());
+    }
     
     @Override
     public TSValue caseIdentifier(Identifier expr) {
@@ -166,17 +191,76 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return new TSValue(expr.getValue()); 
     }
     
-    public TSValue assignValue(Expression left, TSValue right) {
+    @Override
+    public TSValue caseObjectInitializer(ObjectInitializer expr) {
+    	TSObject obj = new TSObject(); 
+    	for (PropertyAssignment assignment : expr.getPropertyassignments()) {
+    		String key = null;
+    		TSValue keyValue = execute(assignment.getKey());
+    		if (keyValue.isString() || keyValue.isNumber()) {
+    			key = keyValue.asString();
+    			obj.put(key, execute(assignment.getValue()));
+    		}
+    	}
+    	return new TSValue(obj);
+    }
+    
+    public TSValue assignValue(Expression left, TSValue value) {
+    	
+    	if (left instanceof CallOrPropertyAccess) {
+    		CallOrPropertyAccess expr = (CallOrPropertyAccess) left;
+        	CallOrPropertyAccessSuffix suffix = expr.getSuffix();
+        	TSValue prefix = execute(expr.getExpr());
+    		if (suffix instanceof PropertyAccessSuffix) {
+    			PropertyAccessSuffix propSuffix = (PropertyAccessSuffix) suffix;
+    			String key = evaluatePropertyKey(propSuffix);
+    			if (prefix.isObject()) {
+    				prefix.asObject().put(key, value);
+    				return value;
+    			}
+    			else {
+    				// TODO: Handle builtin types! E.g.: "xxx".size(),...
+    				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
+    			}
+    		}
+			
+    	}
     	if (left instanceof Identifier) {
     		Identifier identifier = (Identifier) left;
     		currentContext.create(identifier);
-    		currentContext.store(identifier, right);
+    		currentContext.store(identifier, value);
+    		return value;
     	}
     	if (left instanceof Reference) {
     		Identifier identifier = ((Reference) left).getId();
-    		currentContext.store(identifier, right);
+    		currentContext.store(identifier, value);
+    		return value;
     	}
-    	return right;
+
+    	return TSValue.UNDEFINED;
+    	// throw new UnsupportedOperationException("Unsupported left-hand expression in assignment: " + left.eClass().getName() );
     }
+    
+    
+	private String evaluatePropertyKey(PropertyAccessSuffix suffix) {
+		String key = null;
+		TSValue keyExpr = null;
+		if (suffix instanceof DotPropertyAccessSuffix) {
+			DotPropertyAccessSuffix accessor = (DotPropertyAccessSuffix) suffix;
+			keyExpr = execute(accessor.getKey());
+		}
+		if (suffix instanceof ComputedPropertyAccessSuffix) {
+			ComputedPropertyAccessSuffix accessor = (ComputedPropertyAccessSuffix) suffix;
+			keyExpr = execute(accessor.getKey());
+		}
+		if (keyExpr.isString() || keyExpr.isNumber()) {
+			key = keyExpr.asString();
+		}
+		else {
+			throw new TinyscriptTypeError("Property accessors should evaluate to String or Number", suffix);
+		}
+
+		return key;
+	}
 	
 }
