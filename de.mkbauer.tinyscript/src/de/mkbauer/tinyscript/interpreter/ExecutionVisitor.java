@@ -1,15 +1,24 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
+
 import org.eclipse.emf.ecore.EObject;
 
+import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BooleanLiteral;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.CallSuffix;
 import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
 import de.mkbauer.tinyscript.ts.ObjectInitializer;
 import de.mkbauer.tinyscript.ts.PropertyAccessSuffix;
@@ -18,6 +27,7 @@ import de.mkbauer.tinyscript.ts.DotPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.PropertyAssignment;
 import de.mkbauer.tinyscript.ts.PropertyName;
 import de.mkbauer.tinyscript.ts.Reference;
+import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -78,11 +88,25 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	}
     	return cond;
     }
-    
+  
     @Override
-    public TSValue caseExpression(Expression object) {
-    	throw new UnsupportedOperationException("Unsupported expression node: " + object.eClass().getName());
+    public TSValue caseIfStatement(IfStatement object) {
+    	TSValue cond = execute(object.getCond());
+    	if (cond.asBoolean()) {
+    		return execute(object.getThen());
+    	} else {
+    		if (object.getElse() != null) {
+    			return execute(object.getElse());
+    		}
+    	}
+    	return TSValue.UNDEFINED;
     }
+    
+//    
+//    @Override
+//    public TSValue caseExpression(Expression object) {
+//    	throw new UnsupportedOperationException("Unsupported expression node: " + object.eClass().getName());
+//    }
     
     @Override
     public TSValue caseBinaryExpression(BinaryExpression expr) {

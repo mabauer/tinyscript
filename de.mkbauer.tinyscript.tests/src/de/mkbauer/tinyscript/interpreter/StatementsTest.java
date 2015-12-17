@@ -61,6 +61,12 @@ public class StatementsTest {
 			assertTrue(true);
 		}
 	}
+	
+	@Test
+	public void testIfStatement() {
+		TSValue value = executeOneLineScript("var i=1; if (i==1) {i = 2;} assert(i==2);");
+		assertTrue(value.asBoolean());
+	}
 
 	@Test
 	public void testNestedBlocks() {
