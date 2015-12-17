@@ -12,6 +12,7 @@ import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.Statement;
@@ -133,8 +134,8 @@ public class TinyscriptModelUtil {
 		Iterator<Statement> it = stmts.iterator();
 		while (it.hasNext()) {
 			Statement stmt = it.next();
-			if (stmt instanceof Function) {
-				result.add((Function) stmt);
+			if (stmt instanceof FunctionDeclaration) {
+				result.add((FunctionDeclaration) stmt);
 			}
 		}
 		return result;

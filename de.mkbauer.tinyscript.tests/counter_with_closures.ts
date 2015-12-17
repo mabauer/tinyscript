@@ -21,3 +21,7 @@ counter1.sub(4);
 var val3 = counter1.val();
 
 // the result: val1 is 14, val2 is 32, val3 is 10
+assert (val1==14);
+assert (val2==32);
+assert (val3==10);
+ 

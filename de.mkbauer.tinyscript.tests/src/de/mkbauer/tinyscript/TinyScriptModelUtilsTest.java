@@ -81,6 +81,10 @@ public class TinyScriptModelUtilsTest {
 		List<String> names = functions.stream().map(f -> f.getId().getName()).collect(Collectors.toList());
 		Assert.assertTrue(names.stream().anyMatch(s -> s.equals("f")));
 		
+		source = "var x = 2; (function (x) { var local = x*x; return local; })(2) == 4;";
+		ast = parseFromString(source);
+		functions = TinyscriptModelUtil.functionDeclarationsInBlock(ast.getGlobal());
+		Assert.assertEquals(0, functions.size());
 	}
 	
 }

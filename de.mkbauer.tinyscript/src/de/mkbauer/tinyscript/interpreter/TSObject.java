@@ -1,11 +1,12 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 
 public class TSObject {
 	
-	private HashMap<String, TSValue> values;
+	HashMap<String, TSValue> values;
 	
 	public TSObject() {
 		values = new HashMap<String, TSValue>();
@@ -27,12 +28,10 @@ public class TSObject {
 	}
 	
 	public String toString() {
-		String result = "{";
-		for (String  key : values.keySet()) {
-			result = result + key + ":" + values.get(key) + ",";
-		}
-		result = result + "}";
-		return result;
+		
+		return values.keySet().stream()
+				.map(key->key+": "+values.get(key).toString())
+				.collect(Collectors.joining(", ", "{ ", " }"));
 	}
 
 }

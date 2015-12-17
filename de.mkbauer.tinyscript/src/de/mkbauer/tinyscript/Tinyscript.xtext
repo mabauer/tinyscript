@@ -36,6 +36,7 @@ EmptyStatement:
 ;
 
 FunctionDeclaration returns Function:
+	{FunctionDeclaration}
 	'function' ( id=Identifier ) '(' (params += Identifier)? (',' params += Identifier)* ')' block=Block 
 ;
 

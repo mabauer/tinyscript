@@ -45,11 +45,16 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 	
 	private ExecutionContext currentContext;
 	
+	private Stack<ExecutionContext> callStack;
+	
 	public ExecutionVisitor() {
-		currentContext = new ExecutionContext();
+		currentContext = new ExecutionContext("global");
+		callStack = new Stack<ExecutionContext>();
 	}
-
+	
     public TSValue execute(EObject object) {
+    	if (object == null)
+    		throw new NullPointerException();
     	return doSwitch(object);
     }
 	
@@ -66,10 +71,29 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     @Override
 	public TSValue caseBlock(Block object) {
     	TSValue result = TSValue.UNDEFINED;
+    	
+    	// Hoist function declarations
+    	List<Function> funcdecls = TinyscriptModelUtil.functionDeclarationsInBlock(object);
+    	for (Function funcdecl : funcdecls) {
+    		// Create a function object ...
+    		TSValue functionObject = execute(funcdecl); 		
+    		// and create a variable in the current context pointing to it
+    		currentContext.create(funcdecl.getId());
+    		currentContext.store(funcdecl.getId(), functionObject);
+    	}
         for (Statement s : object.getStatements()) {
-        	result = execute(s); 
+        	if (!(s instanceof FunctionDeclaration))
+        		result = execute(s); 
         }
         return result;
+    }
+    
+    @Override 
+    public TSValue caseFunction(Function object) {
+    	TSFunction function = new TSFunction();
+    	function.setOuterContext(currentContext);
+    	function.setAst(object);
+    	return new TSValue(function);
     }
     
     @Override
@@ -78,6 +102,12 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
         	execute(expr); 
         }
     	return TSValue.UNDEFINED;
+    }
+    
+    @Override
+    public TSValue caseReturnStatement(ReturnStatement object) {
+    	TSValue returnValue = execute(object.getExpr());
+    	throw new TSReturnValue(returnValue);
     }
     
     @Override
@@ -148,7 +178,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     		return left;
     	// Handling of boolean and, or ...
     	// Error handling
-		return left;
+		throw new UnsupportedOperationException("Unsupported binary Expression: " + op);
     }
     
     @Override
@@ -178,7 +208,22 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
 			}
 		}
-    		// TODO: Handle call suffixes	
+    	if 	(suffix instanceof CallSuffix) {
+    		if (value.isObject() && (value.asObject() instanceof TSFunction)) {
+    			CallSuffix callSuffix = (CallSuffix) suffix;
+    			List<TSValue> args = null;  			
+    			if (callSuffix.getArguments() != null && callSuffix.getArguments().size() > 0) {
+    				args = new ArrayList<TSValue>();
+    				for (EObject argExpr : callSuffix.getArguments()) {
+    					args.add(execute(argExpr));
+    				}
+    			}
+    			value = applyFunction((TSFunction) value.asObject(), args);
+    		}
+    		else {
+    			throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
+    		}
+    	}
     	return value;
     }
 
@@ -247,7 +292,9 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
     			}
     		}
-			
+    		if (suffix instanceof CallSuffix) {
+    			throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
+    		}
     	}
     	if (left instanceof Identifier) {
     		Identifier identifier = (Identifier) left;
@@ -265,7 +312,37 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	// throw new UnsupportedOperationException("Unsupported left-hand expression in assignment: " + left.eClass().getName() );
     }
     
-    
+	public TSValue applyFunction(TSFunction function, List<TSValue> args) {
+		Block block = function.getBlock();
+		try {
+			// Create a new execution context
+			callStack.push(currentContext);
+			currentContext = new ExecutionContext(function.getName(), function.getOuterContext());
+			// Put the arguments into the context
+			if (args != null) {
+				int argsN = args.size();
+				int i = 0;
+				for (Identifier param : function.getAst().getParams()) {
+					currentContext.create(param);
+					if (i < argsN) {
+						currentContext.store(param, args.get(i));
+					}
+					i++;
+				}
+			}
+			TSValue result = execute(block);
+			currentContext = callStack.pop();
+			return result;
+		}
+		catch (TSReturnValue rv) {
+			// Restore execution context
+			currentContext = callStack.pop();
+			return rv.getReturnValue();	
+			
+		}
+
+	}
+		
 	private String evaluatePropertyKey(PropertyAccessSuffix suffix) {
 		String key = null;
 		TSValue keyExpr = null;

@@ -6,20 +6,26 @@ import de.mkbauer.tinyscript.ts.Identifier;
 
 public class ExecutionContext {
 	
+	private String name;
+	
 	private HashMap<Identifier, TSValue> values;
 	
 	private ExecutionContext outer;
 	
-	private ExecutionContext caller;
-	
-	public ExecutionContext() {
-		caller = null;
+	public ExecutionContext(String name) {
+		this.name = name;
 		outer = null;
 		values = new HashMap<Identifier, TSValue>();
 	}
 	
+	public ExecutionContext(String name, ExecutionContext outerContext) {
+		this.name = name;
+		outer = outerContext;
+		values = new HashMap<Identifier, TSValue>();
+	}
+
 	public boolean isGlobal() {
-		return (caller == null);
+		return (outer == null);
 	}
 	
 	public TSValue get(Identifier identifier) {
@@ -28,7 +34,7 @@ public class ExecutionContext {
 	
 	public void create(Identifier identifier) {
 		if (values.containsKey(identifier)) {
-			throw new IllegalArgumentException("Duplicate Identifier");
+			throw new IllegalArgumentException("Duplicate Identifier: "+ identifier.getName());
 		}
 		else {
 			values.put(identifier, TSValue.UNDEFINED);
@@ -41,7 +47,7 @@ public class ExecutionContext {
 		}
 		else {
 			if (isGlobal()) {
-				return null;
+				throw new IllegalArgumentException("Unknown Identifier: " + identifier.getName());
 			}
 			else { 
 				return outer.lookup(identifier);
@@ -55,7 +61,7 @@ public class ExecutionContext {
 		}
 		else {
 			if (isGlobal()) {
-				throw new IllegalArgumentException("Unknown Identifier");
+				throw new IllegalArgumentException("Unknown Identifier: "+ identifier.getName());
 			}
 			else {
 				outer.store(identifier, value);

@@ -43,5 +43,16 @@ public class TSValueTest {
 		assertEquals("Hello!", s.toString());
 	}
 	
+	@Test
+	public void testObject() {
+		TSObject o = new TSObject();
+		o.put("key1", new TSValue("Hello"));
+		o.put("key2", new TSValue("World"));
+		TSValue v = new TSValue(o);
+		assert v.isObject();
+		assertEquals("{ key1: Hello, key2: World }", v.toString());
+	}
+	
+	
 
 }
