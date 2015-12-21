@@ -28,6 +28,8 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public String asString() {
+		if (value == null) 
+			return "UNDEFINED";
 		if (isString()) 
 			return (String)value;
 		else if (isInt())
@@ -51,6 +53,8 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public boolean isMathematicalInteger() {
+		if (!isDouble())
+			return false;
 		return (Math.rint(asDouble()) == asDouble()); 
 	}
 	
