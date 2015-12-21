@@ -3,9 +3,23 @@
  */
 package de.mkbauer.tinyscript;
 
+import org.eclipse.xtext.naming.IQualifiedNameProvider;
+
+import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
+
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 public class TinyscriptRuntimeModule extends de.mkbauer.tinyscript.AbstractTinyscriptRuntimeModule {
+	
+	// Introducing a global scope provider 
+	public Class<? extends org.eclipse.xtext.scoping.IGlobalScopeProvider> bindIGlobalScopeProvider() {
+		return org.eclipse.xtext.common.types.xtext.TypesAwareDefaultGlobalScopeProvider.class;
+	}
+	
+	@Override
+    public Class<? extends IQualifiedNameProvider> bindIQualifiedNameProvider() {
+        return TinyscriptQualifiedNameProvider.class;
+    }
 
 }

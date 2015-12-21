@@ -6,10 +6,17 @@ import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.resource.IEObjectDescription;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 import org.eclipse.xtext.scoping.impl.AbstractScopeProvider;
+import org.eclipse.xtext.scoping.impl.SimpleLocalScopeProvider;
+import org.eclipse.xtext.xbase.typesystem.internal.ExpressionScope.Scope;
+
+import com.google.common.base.Predicate;
 
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.Block;
@@ -17,6 +24,7 @@ import de.mkbauer.tinyscript.ts.ForEachStatement;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Reference;
+import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
 
 /**
@@ -26,16 +34,21 @@ import de.mkbauer.tinyscript.ts.TsPackage;
  * on how and when to use it 
  *
  */
-public class TinyscriptScopeProvider extends AbstractScopeProvider {
+public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 
 	public IScope getScope(EObject context, EReference reference) {
 		// We want to define the Scope for the Reference's Identifier cross-reference
-		if(context instanceof Reference
+		if (context instanceof Reference
 				&& reference == TsPackage.Literals.REFERENCE__ID) {
-			
-			return createBlockScope((Reference)context, true);
+			return createBlockScope(context, true);
 		}
-		return IScope.NULLSCOPE;
+		// For contentassist, references sometimes need to be resolved with other contexts.
+		if (reference == TsPackage.Literals.REFERENCE__ID) {
+			if (context instanceof Tinyscript)
+				context = ((Tinyscript) context).getGlobal();
+			return createBlockScope(context, false);
+		}
+		return Scope.NULLSCOPE; // super.getScope(context, reference);
 	}
 
 	public IScope createScopeFromAllIdentifers(Reference reference) {
@@ -58,7 +71,17 @@ public class TinyscriptScopeProvider extends AbstractScopeProvider {
 	public IScope createBlockScope(EObject elem, boolean before) {
 		Block block = TinyscriptModelUtil.containingBlock(elem);
 		if (block == null)
-			return IScope.NULLSCOPE;
+			// TODO: Provide a better GlobalScopeProvider instead of the default: TypesAwareDefault....; create a replacement by overriding getScope there.
+			// Check https://www.eclipse.org/forums/index.php/t/1067727/
+			return getGlobalScope(elem.eResource(), TsPackage.Literals.REFERENCE__ID, new Predicate<IEObjectDescription>() {
+
+				@Override
+				public boolean apply(IEObjectDescription description) {
+					return (description.getEObjectOrProxy().eResource() != elem.eResource());
+				}
+				
+			});
+			// return Scope.NULLSCOPE;
 		List<Identifier> ids = null;
 		if (before)
 			ids = TinyscriptModelUtil.declaredVariablesInBlockBefore(block, elem);
@@ -89,7 +112,7 @@ public class TinyscriptScopeProvider extends AbstractScopeProvider {
 				ids.add(varId);
 			}
 		}
-		EObject parent = TinyscriptModelUtil.containingBlock(container);
+		EObject parent = container; 
 		return Scopes.scopeFor(ids, createBlockScope(parent, true));
 	}
 	
