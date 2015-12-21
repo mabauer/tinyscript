@@ -8,17 +8,17 @@ public class TinyscriptRuntimeException extends RuntimeException {
 
 	private EObject node;
 	
-	TinyscriptRuntimeException() {
+	public TinyscriptRuntimeException() {
 		super();
 		this.node = null;
 	}
 	
-	TinyscriptRuntimeException(String message) {
+	public TinyscriptRuntimeException(String message) {
 		super(message);
 		this.node = null;
 	}
 	
-	TinyscriptRuntimeException(String message, EObject node) {
+	public TinyscriptRuntimeException(String message, EObject node) {
 		super(message);
 		this.node = node;
 	}

@@ -6,15 +6,15 @@ import org.eclipse.emf.ecore.EObject;
 public class TinyscriptTypeError extends TinyscriptRuntimeException {
 
 		
-	TinyscriptTypeError() {
+	public TinyscriptTypeError() {
 		super();
 	}
 	
-	TinyscriptTypeError(String message) {
+	public TinyscriptTypeError(String message) {
 		super(message);
 	}
 	
-	TinyscriptTypeError(String message, EObject node) {
+	public TinyscriptTypeError(String message, EObject node) {
 		super(message, node);
 	}
 

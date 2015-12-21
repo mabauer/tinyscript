@@ -5,15 +5,15 @@ import org.eclipse.emf.ecore.EObject;
 public class TinyscriptAssertationError extends TinyscriptRuntimeException {
 
 		
-	TinyscriptAssertationError() {
+	public TinyscriptAssertationError() {
 		super();
 	}
 	
-	TinyscriptAssertationError(String message) {
+	public TinyscriptAssertationError(String message) {
 		super(message);
 	}
 	
-	TinyscriptAssertationError(String message, EObject node) {
+	public TinyscriptAssertationError(String message, EObject node) {
 		super(message, node);
 	}
 

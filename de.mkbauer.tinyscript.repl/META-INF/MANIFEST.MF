@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Repl
+Bundle-SymbolicName: de.mkbauer.tinyscript.repl
+Bundle-Version: 1.0.0.qualifier
+Require-Bundle: com.google.guava.source;bundle-version="15.0.0",
+ com.google.inject.source;bundle-version="3.0.0",
+ org.eclipse.emf;bundle-version="2.6.0",
+ org.eclipse.xtext;bundle-version="2.6.2"
