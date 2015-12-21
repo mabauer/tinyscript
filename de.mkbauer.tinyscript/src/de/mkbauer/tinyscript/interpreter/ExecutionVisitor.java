@@ -10,10 +10,12 @@ import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
+import de.mkbauer.tinyscript.ts.BlockStatement;
 import de.mkbauer.tinyscript.ts.BooleanLiteral;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
+import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
@@ -89,6 +91,11 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     }
     
     @Override 
+    public TSValue caseBlockStatement(BlockStatement object) {
+    	return execute(object.getBlock());
+    }
+    
+    @Override 
     public TSValue caseFunction(Function object) {
     	TSFunction function = new TSFunction();
     	function.setOuterContext(currentContext);
@@ -132,12 +139,12 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return TSValue.UNDEFINED;
     }
     
-//    
-//    @Override
-//    public TSValue caseExpression(Expression object) {
-//    	throw new UnsupportedOperationException("Unsupported expression node: " + object.eClass().getName());
-//    }
+    @Override
+    public TSValue caseElseStatement(ElseStatement object) {
+    	return execute(object.getElse());
+    }
     
+
     @Override
     public TSValue caseBinaryExpression(BinaryExpression expr) {
     	String op = expr.getOp();			
@@ -178,7 +185,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     		return left;
     	// Handling of boolean and, or ...
     	// Error handling
-		throw new UnsupportedOperationException("Unsupported binary Expression: " + op);
+		throw new UnsupportedOperationException("Unsupported binary expression: " + op);
     }
     
     @Override
@@ -242,7 +249,12 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     
     @Override
     public TSValue caseReference(Reference expr) {
-    	return currentContext.lookup(expr.getId());
+    	try {
+    		return currentContext.lookup(expr.getId());
+    	}
+    	catch (IllegalArgumentException e) {
+    		throw new TinyscriptRuntimeException("Unknown Identifier", expr);
+    	}
     }
     
     @Override

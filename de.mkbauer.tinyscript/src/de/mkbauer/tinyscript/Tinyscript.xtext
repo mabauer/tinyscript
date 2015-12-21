@@ -20,7 +20,7 @@ Block:
 
 Statement:
 	(=> FunctionDeclaration) | 
-	(=> Block) |
+	(=> BlockStatement) |
 	VariableStatement | 
 	ExpressionStatement | 
 	ReturnStatement | 
@@ -33,6 +33,10 @@ Statement:
 
 EmptyStatement:
 	';'
+;
+
+BlockStatement:
+	block = Block
 ;
 
 FunctionDeclaration returns Function:
@@ -109,7 +113,11 @@ AssertStatement:
 
 IfStatement:
 	'if' '(' cond=AssignmentExpression ')' then=Block
-	('else' else=Block)?
+	(else=ElseStatement)?
+	;
+	
+ElseStatement:
+	'else' else=Block
 ;
 
 ForEachStatement:
@@ -130,6 +138,7 @@ VariableDeclaration returns Expression:
 ;
 
 Reference:
+	// TODO: Handle undeclared values as properties of the global context
 	id=[Identifier] | this?='this'  
 ;
 

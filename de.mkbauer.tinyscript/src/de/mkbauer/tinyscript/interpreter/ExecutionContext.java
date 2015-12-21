@@ -34,7 +34,7 @@ public class ExecutionContext {
 	
 	public void create(Identifier identifier) {
 		if (values.containsKey(identifier)) {
-			throw new IllegalArgumentException("Duplicate Identifier: "+ identifier.getName());
+			throw new IllegalArgumentException("Duplicate Identifier");
 		}
 		else {
 			values.put(identifier, TSValue.UNDEFINED);
@@ -47,7 +47,7 @@ public class ExecutionContext {
 		}
 		else {
 			if (isGlobal()) {
-				throw new IllegalArgumentException("Unknown Identifier: " + identifier.getName());
+				throw new IllegalArgumentException("Unknown Identifier");
 			}
 			else { 
 				return outer.lookup(identifier);
@@ -61,7 +61,7 @@ public class ExecutionContext {
 		}
 		else {
 			if (isGlobal()) {
-				throw new IllegalArgumentException("Unknown Identifier: "+ identifier.getName());
+				throw new IllegalArgumentException("Unknown Identifier");
 			}
 			else {
 				outer.store(identifier, value);
