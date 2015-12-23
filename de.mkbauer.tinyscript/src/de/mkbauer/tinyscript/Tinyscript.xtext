@@ -121,7 +121,7 @@ ElseStatement:
 ;
 
 ForEachStatement:
-	'foreach' '(' (('var' id=Identifier) | ref=Reference) 'in' inexpr=AssignmentExpression ')' do=Block 
+	'foreach' '(' ((KW_VAR id=Identifier) | ref=Reference) 'in' inexpr=AssignmentExpression ')' do=Block 
 ;
 
 BreakStatement:
@@ -130,7 +130,7 @@ BreakStatement:
 ;
 
 VariableStatement:
-	'var' (vardecls += VariableDeclaration) (',' vardecls += VariableDeclaration)* ';'
+	KW_VAR (vardecls += VariableDeclaration) (',' vardecls += VariableDeclaration)* ';'
 ;
 
 VariableDeclaration returns Expression:
@@ -212,6 +212,10 @@ terminal OP_ASSIGN:
 
 terminal OP_NOT:
 	'!'
+;
+
+terminal KW_VAR:
+	'var' | 'let'
 ;
 
 terminal BOOLEAN returns ecore::EBoolean:
