@@ -80,7 +80,8 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     		// Create a function object ...
     		TSValue functionObject = execute(funcdecl); 		
     		// and create a variable in the current context pointing to it
-    		currentContext.create(funcdecl.getId().getName());
+    		if (!currentContext.contains(funcdecl.getId().getName()))
+    			currentContext.create(funcdecl.getId().getName());
     		currentContext.store(funcdecl.getId().getName(), functionObject);
     	}
         for (Statement s : object.getStatements()) {
@@ -259,7 +260,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     		return currentContext.lookup(expr.getId().getName());
     	}
     	catch (IllegalArgumentException e) {
-    		throw new TinyscriptRuntimeException("Unknown Identifier", expr);
+    		throw new TinyscriptReferenceError("Unknown Identifier", expr);
     	}
     }
     

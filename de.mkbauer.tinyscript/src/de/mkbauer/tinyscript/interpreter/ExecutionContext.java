@@ -24,8 +24,6 @@ public class ExecutionContext {
 		outer = outerContext;
 		values = new HashMap<String, TSValue>();
 	}
-	
-
 
 	public boolean isGlobal() {
 		return (outer == null);
@@ -37,7 +35,7 @@ public class ExecutionContext {
 	
 	public void create(String identifier) {
 		if (values.containsKey(identifier)) {
-			throw new IllegalArgumentException("Duplicate Identifier");
+			throw new TinyscriptReferenceError("Duplicate Identifier: " + identifier);
 		}
 		else {
 			values.put(identifier, TSValue.UNDEFINED);
@@ -50,7 +48,7 @@ public class ExecutionContext {
 		}
 		else {
 			if (isGlobal()) {
-				throw new IllegalArgumentException("Unknown Identifier");
+				throw new TinyscriptReferenceError("Unknown Identifier: " + identifier);
 			}
 			else { 
 				return outer.lookup(identifier);
@@ -64,7 +62,7 @@ public class ExecutionContext {
 		}
 		else {
 			if (isGlobal()) {
-				throw new IllegalArgumentException("Unknown Identifier");
+				throw new TinyscriptReferenceError("Unknown Identifier:" + identifier);
 			}
 			else {
 				outer.store(identifier, value);

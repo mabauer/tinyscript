@@ -28,6 +28,7 @@ import de.mkbauer.console.TextDevices;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.interpreter.TinyscriptReferenceError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
@@ -56,8 +57,6 @@ class TinyscriptREPLDemo  {
 		resourceSet = injector.getInstance(XtextResourceSet.class);
 		visitor = new ExecutionVisitor();	
 		device = TextDevices.defaultTextDevice();
-		// execute("var x = 2; var f = function(x) { var b=2; return b*x; };");
-		// execute("assert(f(x)==4);"); // Fix me!
     }  
 	
 	public void loop() {
@@ -77,7 +76,7 @@ class TinyscriptREPLDemo  {
 				}
 			}
 			catch (TinyscriptRuntimeException e) {
-				device.printf("%s\n", e.getMessage());
+				device.printf("%s: %s\n", e.getClass().getSimpleName(), e.getMessage());
 			}
 		}
 		device.printf("Bye!\n");
@@ -89,7 +88,7 @@ class TinyscriptREPLDemo  {
 			Tinyscript ast = (Tinyscript) (currentResource.getContents().isEmpty() ? null : currentResource.getContents().get(0));
 			List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
 			if (!issues.isEmpty())
-				throw new TinyscriptRuntimeException(issues.get(0).getMessage() + " in " + input);
+				throw new TinyscriptReferenceError(issues.get(0).getMessage() + " in " + input);
 	 		TSValue result = visitor.execute(ast);
 	 		return result;
 		} catch (IOException e) {
