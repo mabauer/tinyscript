@@ -47,11 +47,11 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 	
 	private ExecutionContext currentContext;
 	
-	private Stack<ExecutionContext> callStack;
+	private Stack<ExecutionContext> contextStack;
 	
 	public ExecutionVisitor() {
 		currentContext = new ExecutionContext("global");
-		callStack = new Stack<ExecutionContext>();
+		contextStack = new Stack<ExecutionContext>();
 	}
 	
     public TSValue execute(EObject object) {
@@ -80,8 +80,8 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     		// Create a function object ...
     		TSValue functionObject = execute(funcdecl); 		
     		// and create a variable in the current context pointing to it
-    		currentContext.create(funcdecl.getId());
-    		currentContext.store(funcdecl.getId(), functionObject);
+    		currentContext.create(funcdecl.getId().getName());
+    		currentContext.store(funcdecl.getId().getName(), functionObject);
     	}
         for (Statement s : object.getStatements()) {
         	if (!(s instanceof FunctionDeclaration))
@@ -92,7 +92,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     
     @Override 
     public TSValue caseBlockStatement(BlockStatement object) {
-    	return execute(object.getBlock());
+    	return executeInBlockContext("block", object.getBlock());
     }
     
     @Override 
@@ -129,19 +129,20 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     @Override
     public TSValue caseIfStatement(IfStatement object) {
     	TSValue cond = execute(object.getCond());
+    	TSValue result = TSValue.UNDEFINED;
     	if (cond.asBoolean()) {
-    		return execute(object.getThen());
+    		result = executeInBlockContext("if", object.getThen());
     	} else {
     		if (object.getElse() != null) {
-    			return execute(object.getElse());
+    			result= execute(object.getElse());
     		}
     	}
-    	return TSValue.UNDEFINED;
+    	return result;
     }
     
     @Override
     public TSValue caseElseStatement(ElseStatement object) {
-    	return execute(object.getElse());
+    	return executeInBlockContext("else", object.getElse());
     }
     
 
@@ -152,11 +153,16 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	TSValue right = execute(expr.getRight());
     	if (op.equals("=")) {
     		return assignValue(expr.getLeft(), right);
-    	}
-    	
+    	}   	
     	TSValue left = execute(expr.getLeft());
     	if (op.equalsIgnoreCase("==")) {
     		return new TSValue(left.equals(right));
+    	}
+       	if (op.equalsIgnoreCase("&&")) {
+    		return new TSValue(left.asBoolean() && right.asBoolean());
+    	}
+    	if (op.equalsIgnoreCase("||")) {
+    		return new TSValue(left.asBoolean() || right.asBoolean());
     	}
     	if (op.equals("+")) {
     		if (left.isNumber() && right.isNumber()) {
@@ -243,14 +249,14 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     
     @Override
     public TSValue caseIdentifier(Identifier expr) {
-   		currentContext.create(expr);
+   		currentContext.create(expr.getName());
    		return TSValue.UNDEFINED;
     }
     
     @Override
     public TSValue caseReference(Reference expr) {
     	try {
-    		return currentContext.lookup(expr.getId());
+    		return currentContext.lookup(expr.getId().getName());
     	}
     	catch (IllegalArgumentException e) {
     		throw new TinyscriptRuntimeException("Unknown Identifier", expr);
@@ -310,13 +316,13 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	}
     	if (left instanceof Identifier) {
     		Identifier identifier = (Identifier) left;
-    		currentContext.create(identifier);
-    		currentContext.store(identifier, value);
+    		currentContext.create(identifier.getName());
+    		currentContext.store(identifier.getName(), value);
     		return value;
     	}
     	if (left instanceof Reference) {
     		Identifier identifier = ((Reference) left).getId();
-    		currentContext.store(identifier, value);
+    		currentContext.store(identifier.getName(), value);
     		return value;
     	}
 
@@ -328,27 +334,26 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 		Block block = function.getBlock();
 		try {
 			// Create a new execution context
-			callStack.push(currentContext);
-			currentContext = new ExecutionContext(function.getName(), function.getOuterContext());
+			enterNewExecutionContext(function.getName(), function.getOuterContext());
 			// Put the arguments into the context
 			if (args != null) {
 				int argsN = args.size();
 				int i = 0;
 				for (Identifier param : function.getAst().getParams()) {
-					currentContext.create(param);
+					currentContext.create(param.getName());
 					if (i < argsN) {
-						currentContext.store(param, args.get(i));
+						currentContext.store(param.getName(), args.get(i));
 					}
 					i++;
 				}
 			}
 			TSValue result = execute(block);
-			currentContext = callStack.pop();
+			leaveExecutionContext();
 			return result;
 		}
 		catch (TSReturnValue rv) {
 			// Restore execution context
-			currentContext = callStack.pop();
+			leaveExecutionContext();
 			return rv.getReturnValue();	
 			
 		}
@@ -376,4 +381,42 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 		return key;
 	}
 	
+	private TSValue executeInBlockContext(String name, Block block) {
+		return executeInBlockContext(name, block, null, null);
+	}
+	
+	private TSValue executeInBlockContext(String name, Block block, Identifier variable, TSValue value) {
+		TSValue result = null;
+		enterNewExecutionContext(name);
+		if (variable != null) {
+			// TODO: Create variable with value in new context
+		}
+		try {
+			result = execute(block);
+		}
+		catch (TSReturnValue e) {
+			leaveExecutionContext();
+			throw e;
+		}
+		leaveExecutionContext();
+		return result;
+	}
+	
+	private void enterNewExecutionContext(String name) {
+		enterNewExecutionContext(name, null);
+	}
+	
+	private void enterNewExecutionContext(String name, ExecutionContext outer) {
+		contextStack.push(currentContext);
+		if (outer == null) {
+			currentContext = new ExecutionContext(name, currentContext);
+		}
+		else {
+			currentContext = new ExecutionContext(name, outer);
+		}
+	}
+	
+	private void leaveExecutionContext() {
+		currentContext = contextStack.pop();
+	}
 }
