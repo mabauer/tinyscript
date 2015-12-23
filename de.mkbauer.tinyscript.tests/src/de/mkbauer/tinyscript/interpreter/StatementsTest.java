@@ -64,7 +64,7 @@ public class StatementsTest {
 	
 	@Test
 	public void testIfStatement() {
-		TSValue value = executeOneLineScript("var i=1; if (i==1) {i=2;} assert(i==2);");
+		TSValue value = executeOneLineScript("var i=1; if (i==1) { assert(i==1); i=2; assert(i==2);} assert(i==2);");
 		assertTrue(value.asBoolean());
 	}
 	
