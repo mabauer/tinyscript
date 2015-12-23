@@ -158,6 +158,12 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	if (op.equalsIgnoreCase("==")) {
     		return new TSValue(left.equals(right));
     	}
+        if (op.equalsIgnoreCase("&&")) {
+           return new TSValue(left.asBoolean() && right.asBoolean());
+        }
+        if (op.equalsIgnoreCase("||")) {
+            return new TSValue(left.asBoolean() || right.asBoolean());
+        }
     	if (op.equals("+")) {
     		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() + right.asDouble());
