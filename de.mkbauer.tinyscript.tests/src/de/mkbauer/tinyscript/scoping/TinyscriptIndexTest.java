@@ -50,7 +50,19 @@ public class TinyscriptIndexTest {
 		Tinyscript ast = parseFromString("function f(x) {var local=1; return x;} var global=1; assert (f(global)==1); ");
 		// tester.assertNoErrors(ast);
 		Iterable<IEObjectDescription> exported = index.getExportedEObjectDescriptions(ast);
-		assertEquals("[f, f.x, f.local, global]", exported.toString());
+		assertIterableContainsString("f", exported);
+		assertIterableContainsString("function_f", exported);
+		assertIterableContainsString("function_f.x", exported);
+		assertIterableContainsString("function_f.local", exported);
+		assertIterableContainsString("global", exported);
+		
+		ast = parseFromString("var f = function (x) {var local=1; return x;} var global=1; assert (f(global)==1); ");
+		exported = index.getExportedEObjectDescriptions(ast);
+		assertIterableContainsString("f", exported);
+		assertIterableContainsString("function_", exported);
+		assertIterableContainsString(".x", exported);
+		assertIterableContainsString(".local", exported);
+		assertIterableContainsString("global", exported);
 	}
 	
 	@Test

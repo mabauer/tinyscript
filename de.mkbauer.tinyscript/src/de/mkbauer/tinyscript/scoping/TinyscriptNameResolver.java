@@ -6,6 +6,7 @@ import de.mkbauer.tinyscript.ts.BlockStatement;
 import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.ForEachStatement;
 import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -30,7 +31,7 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 	@Override
 	public String caseFunction(Function function) {
 		if (function.getId() != null)
-			return function.getId().getName();
+			return "function_" + function.getId().getName();
 		else
 			return "function_" + String.valueOf(function.hashCode());
 	}
@@ -59,8 +60,11 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 	public String caseIdentifier(Identifier identifier) {
 		EObject parent = identifier.eContainer();
 		if (parent instanceof Function) {
-			if (identifier.getName().equals(getName(parent)))
+			// Let's ignore the function identifier
+			Function function = (Function) (parent);
+			if ( identifier == function.getId() ) {
 				return null;
+			}
 		}
 		return identifier.getName();
 	}

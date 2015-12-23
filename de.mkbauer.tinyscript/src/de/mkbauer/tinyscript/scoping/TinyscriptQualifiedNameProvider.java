@@ -12,6 +12,9 @@ import org.eclipse.xtext.util.IResourceScopeCache;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import de.mkbauer.tinyscript.ts.FunctionDeclaration;
+import de.mkbauer.tinyscript.ts.Identifier;
+
 
 public class TinyscriptQualifiedNameProvider extends IQualifiedNameProvider.AbstractImpl {
 
@@ -23,6 +26,20 @@ public class TinyscriptQualifiedNameProvider extends IQualifiedNameProvider.Abst
 	
 	@Inject 
 	private TinyscriptNameResolver resolver;
+	
+	protected QualifiedName _getFullyQualifiedName(EObject object) {
+		if (object instanceof Identifier) {
+			Identifier identifier = (Identifier) object;
+			EObject parent = object.eContainer();
+			if (parent instanceof FunctionDeclaration) {
+				FunctionDeclaration function = (FunctionDeclaration) parent;
+				if ( identifier == function.getId() ) {
+					return getFullyQualifiedName(function).skipLast(1).append(identifier.getName());
+				}
+			}
+		}
+		return null;
+	}
 		
 	@Override
 	public QualifiedName getFullyQualifiedName(EObject object) {
@@ -30,6 +47,12 @@ public class TinyscriptQualifiedNameProvider extends IQualifiedNameProvider.Abst
 
 			public QualifiedName get() {
 				List<String> components = new ArrayList<String>();
+				
+				// Check, if we can directly compute the name
+				QualifiedName fqn = _getFullyQualifiedName(object);
+				if (fqn != null)
+					return fqn;
+				// Fall back to the resolver
 				String name = resolver.getName(object);
 				if (name == null)
 					return null;

@@ -5,9 +5,9 @@ import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Statement;
+import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.VariableStatement;
-
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
@@ -37,6 +37,14 @@ public class TinyscriptJavaValidator extends AbstractTinyscriptJavaValidator {
 			}
 		}
 		// TODO: Check for duplicates in the names of formal parameters of a function...
+	}
+	
+	@Check 
+	void checkNoDuplicateIdentifiersInGlobalScope(Identifier identifier) {
+		Block block = TinyscriptModelUtil.containingBlock(identifier);
+		if (block.eContainer() instanceof Tinyscript) {
+			// TODO: ...
+		}
 	}
 	
 	/*
