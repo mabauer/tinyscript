@@ -43,16 +43,14 @@ public class ExecutionContext {
 	}
 	
 	public TSValue lookup(String identifier) {
-		if (values.containsKey(identifier)) {
-			return values.get(identifier);
+		TSValue result = values.get(identifier);
+		if (result != null)
+			return result;
+		if (isGlobal()) {
+			throw new TinyscriptReferenceError("Unknown Identifier: " + identifier);
 		}
-		else {
-			if (isGlobal()) {
-				throw new TinyscriptReferenceError("Unknown Identifier: " + identifier);
-			}
-			else { 
-				return outer.lookup(identifier);
-			}
+		else { 
+			return outer.lookup(identifier);
 		}
 	}
 	

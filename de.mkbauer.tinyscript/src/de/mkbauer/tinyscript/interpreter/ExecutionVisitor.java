@@ -1,7 +1,9 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.eclipse.emf.ecore.EObject;
@@ -49,9 +51,12 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 	
 	private Stack<ExecutionContext> contextStack;
 	
+	private Map<Block, LexicalEnvironment> lexicalEnvironments;
+	
 	public ExecutionVisitor() {
 		currentContext = new ExecutionContext("global");
 		contextStack = new Stack<ExecutionContext>();
+		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
 	}
 	
     public TSValue execute(EObject object) {
@@ -67,23 +72,22 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
   	
     @Override
 	public TSValue caseTinyscript(Tinyscript object) {
+		// Hoist function declarations:
+    	// Create function objects (or get them form a cache)
+    	LexicalEnvironment env = getLexcialEnvironment(object.getGlobal());
+		for (TSValue function : env.getFunctions()) {	
+			// Create a variable in the current context pointing to each function object
+			String functionName = ((TSFunction) function.asObject()).getName();
+			if (!currentContext.contains(functionName))
+				currentContext.create(functionName);
+			currentContext.store(functionName, function);
+		}
     	return execute(object.getGlobal());
 	}
 
     @Override
 	public TSValue caseBlock(Block object) {
-    	TSValue result = TSValue.UNDEFINED;
-    	
-    	// Hoist function declarations
-    	List<Function> funcdecls = TinyscriptModelUtil.functionDeclarationsInBlock(object);
-    	for (Function funcdecl : funcdecls) {
-    		// Create a function object ...
-    		TSValue functionObject = execute(funcdecl); 		
-    		// and create a variable in the current context pointing to it
-    		if (!currentContext.contains(funcdecl.getId().getName()))
-    			currentContext.create(funcdecl.getId().getName());
-    		currentContext.store(funcdecl.getId().getName(), functionObject);
-    	}
+    	TSValue result = TSValue.UNDEFINED;  	
         for (Statement s : object.getStatements()) {
         	if (!(s instanceof FunctionDeclaration))
         		result = execute(s); 
@@ -135,7 +139,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     		result = executeInBlockContext("if", object.getThen());
     	} else {
     		if (object.getElse() != null) {
-    			result= execute(object.getElse());
+    			result= caseElseStatement(object.getElse());
     		}
     	}
     	return result;
@@ -355,8 +359,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 		catch (TSReturnValue rv) {
 			// Restore execution context
 			leaveExecutionContext();
-			return rv.getReturnValue();	
-			
+			return rv.getReturnValue();				
 		}
 
 	}
@@ -388,18 +391,36 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 	
 	private TSValue executeInBlockContext(String name, Block block, Identifier variable, TSValue value) {
 		TSValue result = null;
-		enterNewExecutionContext(name);
-		if (variable != null) {
-			// TODO: Create variable with value in new context
+    	boolean needsNewContext = true;
+    	LexicalEnvironment env = getLexcialEnvironment(block);
+    	if ((variable==null) && (env.getFunctions().isEmpty()) && (env.getVariables().isEmpty()))
+    		needsNewContext = false;
+    	if (needsNewContext) {
+			enterNewExecutionContext(name);
+			// Insert variable into context
+			if (variable != null) {
+				currentContext.create(variable.getName());
+				currentContext.store(variable.getName(), value);
+			}
+			// Hoist function declarations
+			for (TSValue function : env.getFunctions()) {	
+				// Create a variable in the current context pointing to each function object
+				String functionName = ((TSFunction) function.asObject()).getName();
+				if (!currentContext.contains(functionName))
+					currentContext.create(functionName);
+				currentContext.store(functionName, function);
+			}
 		}
 		try {
-			result = execute(block);
+			result = caseBlock(block);
 		}
 		catch (TSReturnValue e) {
-			leaveExecutionContext();
+			if (needsNewContext)
+				leaveExecutionContext();
 			throw e;
 		}
-		leaveExecutionContext();
+		if (needsNewContext)
+			leaveExecutionContext();
 		return result;
 	}
 	
@@ -419,5 +440,20 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 	
 	private void leaveExecutionContext() {
 		currentContext = contextStack.pop();
+	}
+	
+	private LexicalEnvironment getLexcialEnvironment(Block block) {
+		LexicalEnvironment result = lexicalEnvironments.get(block);
+		if (result != null)
+			return result;
+		List <TSValue> functions = new ArrayList<TSValue>();
+		for (Function funcdecl : TinyscriptModelUtil.functionDeclarationsInBlock(block)) {
+			TSValue functionObject = caseFunction(funcdecl);
+			functions.add(functionObject);
+		}
+		List <Identifier> variables = TinyscriptModelUtil.declaredVariablesInBlock(block);
+		result =  new LexicalEnvironment(functions, variables);
+		lexicalEnvironments.put(block, result);
+		return result;
 	}
 }
