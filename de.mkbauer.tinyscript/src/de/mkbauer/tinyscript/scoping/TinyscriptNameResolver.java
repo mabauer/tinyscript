@@ -9,6 +9,7 @@ import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
+import de.mkbauer.tinyscript.ts.NumericForStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
 
@@ -49,6 +50,11 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 	@Override
 	public String caseForEachStatement(ForEachStatement object) {
 		return "foreach_" + String.valueOf(object.hashCode());
+	}
+	
+	@Override
+	public String caseNumericForStatement(NumericForStatement object) {
+		return "for_" + String.valueOf(object.hashCode());
 	}
 
 	@Override

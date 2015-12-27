@@ -23,6 +23,7 @@ import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.ForEachStatement;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.NumericForStatement;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
@@ -108,6 +109,14 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 		if (container instanceof ForEachStatement) {
 			ForEachStatement foreach = (ForEachStatement) container;
 			Identifier varId = foreach.getId(); 
+			if (varId != null) {
+				ids.add(varId);
+			}
+		}
+		// Is the block part of a numerical for statement? Add the (optional) variable declaration to the scope (if present)
+		if (container instanceof NumericForStatement) {
+			NumericForStatement numericalfor = (NumericForStatement) container;
+			Identifier varId = numericalfor.getId(); 
 			if (varId != null) {
 				ids.add(varId);
 			}

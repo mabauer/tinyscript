@@ -19,11 +19,13 @@ import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
 import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.ForEachStatement;
 import de.mkbauer.tinyscript.ts.Function;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
+import de.mkbauer.tinyscript.ts.NumericForStatement;
 import de.mkbauer.tinyscript.ts.ObjectInitializer;
 import de.mkbauer.tinyscript.ts.PropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
@@ -131,12 +133,13 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return cond;
     }
   
-    @Override
+    // @Override
     public TSValue caseIfStatement(IfStatement object) {
     	TSValue cond = execute(object.getCond());
     	TSValue result = TSValue.UNDEFINED;
     	if (cond.asBoolean()) {
     		result = executeInBlockContext("if", object.getThen());
+    		// result = caseBlock(object.getThen());
     	} else {
     		if (object.getElse() != null) {
     			result= caseElseStatement(object.getElse());
@@ -145,29 +148,76 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return result;
     }
     
-    @Override
+    // @Override
     public TSValue caseElseStatement(ElseStatement object) {
     	return executeInBlockContext("else", object.getElse());
+    	// return caseBlock(object.getElse());
     }
     
-
-    @Override
+    // @Override
+    public TSValue caseNumericForStatement(NumericForStatement foreach) {
+    	TSValue result = TSValue.UNDEFINED;
+		TSValue startValue = execute(foreach.getStart());
+		TSValue stopValue = execute(foreach.getStop());    		
+		if (!startValue.isMathematicalInteger())
+			throw new TinyscriptTypeError("for needs an integer value as first bound", foreach.getStart());
+		if (!stopValue.isNumber())
+			throw new TinyscriptTypeError("for needs a number value as second bound", foreach.getStart());
+		double start = startValue.asDouble();
+		double stop = stopValue.asDouble();
+		double step = 1;
+		if (foreach.getStep() != null) {
+			TSValue stepValue =  execute(foreach.getStep());
+			if (!stopValue.isMathematicalInteger()) 
+				throw new TinyscriptTypeError("for needs an integer value as step expression", foreach.getStep());
+			step = stepValue.asDouble();
+		}
+		for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
+			if (foreach.getId() != null) {
+				result = executeInBlockContext("for", foreach.getDo(), foreach.getId(), new TSValue(loopValue));
+			}
+			else {
+				currentContext.store(foreach.getRef().getId().getName(), new TSValue(loopValue));
+				result = executeInBlockContext("for", foreach.getDo());
+			}
+		}
+    	return result;
+    }
+    
+   
+    // @Override
     public TSValue caseBinaryExpression(BinaryExpression expr) {
     	String op = expr.getOp();			
-
-    	TSValue right = execute(expr.getRight());
     	if (op.equals("=")) {
+    	   	TSValue right = execute(expr.getRight());
     		return assignValue(expr.getLeft(), right);
     	}   	
     	TSValue left = execute(expr.getLeft());
+       	if (op.equalsIgnoreCase("&&")) {
+       		if (left.asBoolean())
+       			return new TSValue(execute(expr.getRight()).asBoolean());
+       		return new TSValue(false);
+    	}
+    	if (op.equalsIgnoreCase("||")) {
+    		if (left.asBoolean())
+    			return new TSValue(true);
+    		return new TSValue(execute(expr.getRight()).asBoolean());
+    	}
+    	TSValue right = execute(expr.getRight());
     	if (op.equalsIgnoreCase("==")) {
     		return new TSValue(left.equals(right));
     	}
-       	if (op.equalsIgnoreCase("&&")) {
-    		return new TSValue(left.asBoolean() && right.asBoolean());
+    	if (op.equalsIgnoreCase(">")) {
+    		if (left.isNumber() && right.isNumber())
+    			return new TSValue(left.asDouble() > right.asDouble());
+    		else
+    			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
     	}
-    	if (op.equalsIgnoreCase("||")) {
-    		return new TSValue(left.asBoolean() || right.asBoolean());
+    	if (op.equalsIgnoreCase("<")) {
+    		if (left.isNumber() && right.isNumber())
+    			return new TSValue(left.asDouble() < right.asDouble());
+    		else
+    			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
     	}
     	if (op.equals("+")) {
     		if (left.isNumber() && right.isNumber()) {

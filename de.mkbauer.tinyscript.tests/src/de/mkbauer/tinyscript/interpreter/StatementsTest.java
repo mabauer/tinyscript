@@ -83,6 +83,35 @@ public class StatementsTest {
 	public void testNestedBlocksShadowing() {
 		TSValue value = executeOneLineScript("var i; i=1; { var i; i=2; assert (i==2); } assert (i==1);");
 	}
+		
+	@Test
+	public void testSimpleNumericForLoop() {
+		TSValue value = executeOneLineScript("var i=0; for (i = 1,42) { var j = i; } assert(i==42);");
+	}
+	
+	@Test
+	public void testSimpleNumericForLoopWithVar() {
+		TSValue value = executeOneLineScript("var result=0; for (var i = 1, 42) { result = i; } assert(result==42);");
+	}
+	
+	@Test
+	public void testNumericForLoopStep() {
+		TSValue value = executeOneLineScript("var result=0; for (var i = 42, 0, -2) { result = result + 1; } assert(result==22);");
+	}
+	
+	@Test
+	public void testLongNumericForLoop() {
+		TSValue value = executeOneLineScript("var i=0, result=0; function inc(x) {return x+1;}; for (i = 1,25000) { result = inc(result); } assert(result==25000);");
+		
+	}
+	
+	@Test
+	public void testLongNumericForLoopEvenSquares() {
+		TSValue value = executeOneLineScript("var result=0; var iterations = 1000; function mult(x,y) { var result = 0; for (var i = 1,y) { result = result + x; } return result; } function square(x) {var temp = mult(x,x); return temp; }; for (var i = 1,iterations) { if (i % 2 == 0) {result = square(i);} else { result = i; } } assert(result==(iterations*iterations));");
+		
+	}
+	
+
 }
 
 

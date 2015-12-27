@@ -25,6 +25,7 @@ Statement:
 	ExpressionStatement | 
 	ReturnStatement | 
 	IfStatement |
+	NumericForStatement |
 	ForEachStatement |
 	BreakStatement |
 	AssertStatement |
@@ -121,7 +122,11 @@ ElseStatement:
 ;
 
 ForEachStatement:
-	'foreach' '(' ((KW_VAR id=Identifier) | ref=Reference) 'in' inexpr=AssignmentExpression ')' do=Block 
+	'foreach' '(' ((KW_VAR id=Identifier) | ref=Reference) 'in' object=AssignmentExpression ')' do=Block 
+;
+
+NumericForStatement:
+	'for' '(' ((KW_VAR id=Identifier) | ref=Reference) OP_ASSIGN start=Addition ',' stop=Addition (',' step=Addition )? ')' do=Block
 ;
 
 BreakStatement:
@@ -184,6 +189,10 @@ PropertyName:
 ArrayInitializer:
 	{ArrayInitializer}
 	'[' (values+=Atomic)? (',' values += Atomic)* ']'  
+;
+
+RangeExpression:
+	start=NumberLiteral ',' end=NumberLiteral	
 ;
 
 StringLiteral:
