@@ -1,6 +1,8 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,7 @@ import java.util.Stack;
 import org.eclipse.emf.ecore.EObject;
 
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.ts.ArrayInitializer;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
@@ -37,6 +40,7 @@ import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
+import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
@@ -47,32 +51,79 @@ import de.mkbauer.tinyscript.ts.util.TsSwitch;
  * @author markus.bauer
  *
  */
-public class ExecutionVisitor extends TsSwitch<TSValue> {
+public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	private ExecutionContext currentContext;
 	
-	private Stack<ExecutionContext> contextStack;
+	private Deque<ExecutionContext> contextStack;
 	
 	private Map<Block, LexicalEnvironment> lexicalEnvironments;
 	
 	public ExecutionVisitor() {
 		currentContext = new ExecutionContext("global");
-		contextStack = new Stack<ExecutionContext>();
+		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
 	}
-	
+    
     public TSValue execute(EObject object) {
     	if (object == null)
     		throw new NullPointerException();
-    	return doSwitch(object);
+    	int id = object.eClass().getClassifierID();
+    	switch (id) {
+		case TsPackage.REFERENCE: 
+			return caseReference((Reference) object);
+		case TsPackage.IDENTIFIER:
+			return caseIdentifier((Identifier) object);	
+		case TsPackage.BINARY_EXPRESSION:
+    		return caseBinaryExpression((BinaryExpression) object);
+		case TsPackage.UNARY:
+    		return caseUnary((Unary) object);
+		case TsPackage.CALL_OR_PROPERTY_ACCESS:
+    		return caseCallOrPropertyAccess((CallOrPropertyAccess) object);
+		case TsPackage.PROPERTY_NAME:
+    		return casePropertyName((PropertyName) object);
+		case TsPackage.BLOCK:
+    		return caseBlock((Block) object);
+		case TsPackage.VARIABLE_STATEMENT:
+    		return caseVariableStatement((VariableStatement) object);
+		case TsPackage.IF_STATEMENT:
+    		return caseIfStatement((IfStatement) object);
+		case TsPackage.ELSE_STATEMENT:
+    		return caseElseStatement((ElseStatement) object);
+		case TsPackage.NUMERIC_FOR_STATEMENT:
+    		return caseNumericForStatement((NumericForStatement) object);
+		case TsPackage.FUNCTION:
+    		return caseFunction((Function) object);
+		case TsPackage.RETURN_STATEMENT:
+    		return caseReturnStatement((ReturnStatement) object);
+		case TsPackage.NUMBER_LITERAL:
+    		return caseNumberLiteral((NumberLiteral) object);
+		case TsPackage.STRING_LITERAL:
+    		return caseStringLiteral((StringLiteral) object);
+		case TsPackage.BOOLEAN_LITERAL:
+    		return caseBooleanLiteral((BooleanLiteral) object);
+		case TsPackage.OBJECT_INITIALIZER:
+    		return caseObjectInitializer((ObjectInitializer) object);
+		case TsPackage.ARRAY_INITIALIZER:
+    		return caseArrayInitializer((ArrayInitializer) object);
+		case TsPackage.BLOCK_STATEMENT:
+    		return caseBlockStatement((BlockStatement) object);
+		case TsPackage.ASSERT_STATEMENT:
+    		return caseAssertStatement((AssertStatement) object);
+		case TsPackage.TINYSCRIPT:
+			return caseTinyscript((Tinyscript) object);
+		default:
+    		return defaultCase(object);
+    	}
     }
+
 	
-	@Override
+	// @Override
 	public TSValue defaultCase(EObject object) {
 		throw new UnsupportedOperationException("Unsupported script node: " + object.eClass().getName());
 	}
   	
-    @Override
+    // @Override
 	public TSValue caseTinyscript(Tinyscript object) {
 		// Hoist function declarations:
     	// Create function objects (or get them form a cache)
@@ -87,7 +138,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return execute(object.getGlobal());
 	}
 
-    @Override
+    // @Override
 	public TSValue caseBlock(Block object) {
     	TSValue result = TSValue.UNDEFINED;  	
         for (Statement s : object.getStatements()) {
@@ -97,12 +148,12 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
         return result;
     }
     
-    @Override 
+    // @Override 
     public TSValue caseBlockStatement(BlockStatement object) {
     	return executeInBlockContext("block", object.getBlock());
     }
     
-    @Override 
+    // @Override 
     public TSValue caseFunction(Function object) {
     	TSFunction function = new TSFunction();
     	function.setOuterContext(currentContext);
@@ -110,7 +161,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return new TSValue(function);
     }
     
-    @Override
+    // @Override
     public TSValue caseVariableStatement(VariableStatement object) {
     	for (Expression expr : object.getVardecls()) {
         	execute(expr); 
@@ -118,13 +169,13 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return TSValue.UNDEFINED;
     }
     
-    @Override
+    // @Override
     public TSValue caseReturnStatement(ReturnStatement object) {
     	TSValue returnValue = execute(object.getExpr());
     	throw new TSReturnValue(returnValue);
     }
     
-    @Override
+    // @Override
     public TSValue caseAssertStatement(AssertStatement object) {
     	TSValue cond = execute(object.getCond());
     	if (!cond.asBoolean()) {
@@ -242,6 +293,11 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     			return new TSValue(left.asDouble() / right.asDouble());
     		}
     	}
+    	if (op.equals("%")) {
+       		if (left.isNumber() && right.isNumber()) {
+    			return new TSValue(left.asDouble() % right.asDouble());
+    		}
+    	}
     	if (op == null) 
     		return left;
     	// Handling of boolean and, or ...
@@ -249,27 +305,34 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 		throw new UnsupportedOperationException("Unsupported binary expression: " + op);
     }
     
-    @Override
+    // @Override
     public TSValue caseUnary(Unary expr) {
     	TSValue value = execute(expr.getExpr());
-    	if (expr.getOp() != null && expr.getOp().equals("-")) 
+    	if (expr.getOp().equals("-")) {
     		if (value.isNumber()) {
     			value = new TSValue(-value.asDouble());
+    			return value;
     		}
-    	// TODO: Handle boolean NOT
+    		else {
+    			throw new TinyscriptTypeError("Unsupported unary expression operand: " + expr.getExpr());
+    		}
+    	}
+    	if (expr.getOp().equals("!")) {
+    		return new TSValue(!value.asBoolean());
+    	}
     	// TODO: Error handling
     	return value;
     }    
     
 
-    @Override
+    // @Override
     public TSValue caseCallOrPropertyAccess(CallOrPropertyAccess expr) {
     	TSValue value = execute(expr.getExpr()); 
     	CallOrPropertyAccessSuffix suffix = expr.getSuffix();
 		if (suffix instanceof PropertyAccessSuffix) {
-			String key = evaluatePropertyKey((PropertyAccessSuffix) suffix);
+			TSValue keyValue = evaluatePropertyKey((PropertyAccessSuffix) suffix);
 			if (value.isObject()) {
-				value = value.asObject().get(key);
+				value = value.asObject().get(keyValue.asString());
 			}
 			else {
 				// TODO: Handle builtin types! E.g.: "xxx".size(),...
@@ -281,7 +344,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     			CallSuffix callSuffix = (CallSuffix) suffix;
     			List<TSValue> args = null;  			
     			if (callSuffix.getArguments() != null && callSuffix.getArguments().size() > 0) {
-    				args = new ArrayList<TSValue>();
+    				args = new ArrayList<TSValue>(callSuffix.getArguments().size());
     				for (EObject argExpr : callSuffix.getArguments()) {
     					args.add(execute(argExpr));
     				}
@@ -295,20 +358,20 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return value;
     }
 
-    @Override
+    // @Override
     public TSValue casePropertyName(PropertyName expr) {
     	if (expr.getName() != null)
     		return new TSValue(expr.getName());
     	return execute(expr.getExpr());
     }
     
-    @Override
+    // @Override
     public TSValue caseIdentifier(Identifier expr) {
    		currentContext.create(expr.getName());
    		return TSValue.UNDEFINED;
     }
     
-    @Override
+    // @Override
     public TSValue caseReference(Reference expr) {
     	try {
     		return currentContext.lookup(expr.getId().getName());
@@ -318,22 +381,22 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	}
     }
     
-    @Override
+    // @Override
     public TSValue caseBooleanLiteral(BooleanLiteral expr) {
     	return new TSValue(expr.isValue()); 
     }
     
-    @Override
+    // @Override
     public TSValue caseNumberLiteral(NumberLiteral expr) {
     	return new TSValue(expr.getValue()); 
     }
     
-    @Override
+    // @Override
     public TSValue caseStringLiteral(StringLiteral expr) {
     	return new TSValue(expr.getValue()); 
     }
     
-    @Override
+    // @Override
     public TSValue caseObjectInitializer(ObjectInitializer expr) {
     	TSObject obj = new TSObject(); 
     	for (PropertyAssignment assignment : expr.getPropertyassignments()) {
@@ -347,17 +410,39 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     	return new TSValue(obj);
     }
     
+    // @Override
+    public TSValue caseArrayInitializer(ArrayInitializer expr) {
+    	TSObject obj = new TSObject(); 
+    	int i = 0;
+    	for (Expression itemExpr : expr.getValues()) {
+    		obj.put(String.valueOf(i), execute(itemExpr));
+    		i++;
+    	}
+    	return new TSValue(obj);
+    }
+    
     public TSValue assignValue(Expression left, TSValue value) {
     	
+    	if (left instanceof Reference) {
+    		Identifier identifier = ((Reference) left).getId();
+    		currentContext.store(identifier.getName(), value);
+    		return value;
+    	}
+    	if (left instanceof Identifier) {
+    		Identifier identifier = (Identifier) left;
+    		currentContext.create(identifier.getName());
+    		currentContext.store(identifier.getName(), value);
+    		return value;
+    	}
     	if (left instanceof CallOrPropertyAccess) {
     		CallOrPropertyAccess expr = (CallOrPropertyAccess) left;
         	CallOrPropertyAccessSuffix suffix = expr.getSuffix();
         	TSValue prefix = execute(expr.getExpr());
     		if (suffix instanceof PropertyAccessSuffix) {
     			PropertyAccessSuffix propSuffix = (PropertyAccessSuffix) suffix;
-    			String key = evaluatePropertyKey(propSuffix);
+    			TSValue keyValue = evaluatePropertyKey(propSuffix);
     			if (prefix.isObject()) {
-    				prefix.asObject().put(key, value);
+    				prefix.asObject().put(keyValue.asString(), value);
     				return value;
     			}
     			else {
@@ -369,17 +454,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
     			throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
     		}
     	}
-    	if (left instanceof Identifier) {
-    		Identifier identifier = (Identifier) left;
-    		currentContext.create(identifier.getName());
-    		currentContext.store(identifier.getName(), value);
-    		return value;
-    	}
-    	if (left instanceof Reference) {
-    		Identifier identifier = ((Reference) left).getId();
-    		currentContext.store(identifier.getName(), value);
-    		return value;
-    	}
+
 
     	return TSValue.UNDEFINED;
     	// throw new UnsupportedOperationException("Unsupported left-hand expression in assignment: " + left.eClass().getName() );
@@ -402,7 +477,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 					i++;
 				}
 			}
-			TSValue result = execute(block);
+			TSValue result = caseBlock(block);
 			leaveExecutionContext();
 			return result;
 		}
@@ -414,8 +489,7 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 
 	}
 		
-	private String evaluatePropertyKey(PropertyAccessSuffix suffix) {
-		String key = null;
+	private TSValue evaluatePropertyKey(PropertyAccessSuffix suffix) {
 		TSValue keyExpr = null;
 		if (suffix instanceof DotPropertyAccessSuffix) {
 			DotPropertyAccessSuffix accessor = (DotPropertyAccessSuffix) suffix;
@@ -426,13 +500,11 @@ public class ExecutionVisitor extends TsSwitch<TSValue> {
 			keyExpr = execute(accessor.getKey());
 		}
 		if (keyExpr.isString() || keyExpr.isNumber()) {
-			key = keyExpr.asString();
+			return keyExpr;
 		}
 		else {
 			throw new TinyscriptTypeError("Property accessors should evaluate to String or Number", suffix);
 		}
-
-		return key;
 	}
 	
 	private TSValue executeInBlockContext(String name, Block block) {

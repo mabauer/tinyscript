@@ -73,6 +73,14 @@ public class ExpressionsTest {
 	}
 	
 	@Test
+	public void testModulo() {
+		TSValue value = evaluateOneLineExpression("8 % 2");
+		assertEquals(0, value.asInt());
+		value = evaluateOneLineExpression("9 % 2");
+		assertEquals(1, value.asInt());
+	}
+	
+	@Test
 	public void testBooleanLiteral() {
 		TSValue value = evaluateOneLineExpression("true");
 		assertEquals(true, value.asBoolean());

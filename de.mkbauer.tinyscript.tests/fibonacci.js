@@ -1,3 +1,13 @@
+function assert(condition) {
+    if (!condition) {
+        message = "Assertion failed";
+        if (typeof Error !== "undefined") {
+            throw new Error(message);
+        }
+        throw message; // Fallback
+    }
+}
+
 // Recursive implementation of the fibonacci numbers.
 /* function fibonacci(n) {
 	if (n == 0) {
@@ -27,12 +37,7 @@ assert (fibonacci(5) == 8);
 assert (fibonacci(6) == 13);
 assert (fibonacci(7) == 21); 
 assert (fibonacci(21) == 17711);
-/*
-assert (fibonacci(25) == 121393); // Takes 10s
-assert (fibonacci(28) == 514229);
 assert (fibonacci(32) == 3524578);
-assert (fibonacci(42) == 433494437);
-assert (fibonacci(50) == 20365011074);
+// assert (fibonacci(42) == 433494437);
+// assert (fibonacci(50) == 20365011074);
 
-// assert (fibonacci(32) == 3524578);
-*/

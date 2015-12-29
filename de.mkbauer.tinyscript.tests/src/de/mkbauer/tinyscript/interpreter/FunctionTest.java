@@ -80,13 +80,13 @@ public class FunctionTest {
 	
 	@Test
 	public void testSimpleAnonymousFunctionExpression() {
-		TSValue value = executeOneLineScript("(function(x) {return x*x;})(2);");
+		TSValue value = executeOneLineScript("(function(x) { assert(x==2); return x*x;})(2);");
 		assertEquals(4, value.asDouble(), 0.0001);
 	}
 	
 	@Test
 	public void testSimpleFunctionDeclaration() {
-		TSValue value = executeOneLineScript("function f(x) {return x*x;}; assert (f(2)==4);");
+		TSValue value = executeOneLineScript("function f(x) {assert(x==2); return x*x;}; assert (f(2)==4);");
 	}
 
 	
@@ -97,10 +97,29 @@ public class FunctionTest {
 	}
 	
 	@Test
-	public void testRecursiveFunctionCall() {
+	public void testRecursiveFibonacci() {
 		TSValue value = executeScriptFromFile("fibonacci.ts");
 	}
-
+	
+	@Test
+	public void testIterativeFibonacci() {
+		TSValue value = executeScriptFromFile("fibonacci_loop.ts");
+	}
+	
+	@Test
+	public void testRecursiveFactorial() {
+		TSValue value = executeScriptFromFile("factorial.ts");
+	}
+	
+	@Test
+	public void testRecursiveggT() {
+		TSValue value = executeScriptFromFile("ggt.ts");
+	}
+	
+	@Test
+	public void testRecursiveLinkedList() {
+		TSValue value = executeScriptFromFile("linked_list.ts");
+	}
 	
 	@Test
 	public void testCounterWithClosures() {
@@ -115,6 +134,12 @@ public class FunctionTest {
 */
 	
 	@Test
+	public void testPrimes() {
+		TSValue value = executeScriptFromFile("primes.ts");
+	}	
+	
+	
+	@Test
 	public void testFunctionCallOnLHSExpression() {
 		TSValue value = executeOneLineScript("function f() {return {};} f().key1 = \"Hello\";");
 		assertEquals("Hello", value.asString());
@@ -125,6 +150,12 @@ public class FunctionTest {
 		catch (TinyscriptTypeError e) {
 			assertTrue(true);
 		}
+	}
+	
+	@Test
+	public void testCallToBuiltInFunction() {
+		TSValue value = executeOneLineScript("print(\"Hello\");");	
+		
 	}
 
 }

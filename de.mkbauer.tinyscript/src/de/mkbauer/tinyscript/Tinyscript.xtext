@@ -78,11 +78,11 @@ Addition returns Expression:
 ;
 
 Multiplication returns Expression:
-    (Unary | Primary) ({BinaryExpression.left=current} op=('*' | '/') right=(Unary | Primary))*
+    (Unary | Primary) ({BinaryExpression.left=current} op=('*' | '/' | '%' ) right=(Unary | Primary))*
 ;
 
 Unary:
-	(op='-'|OP_NOT) expr=Primary // ExpressionStatement?
+	op=('-'|OP_NOT) expr=Primary // ExpressionStatement?
 ;
 
 Primary returns Expression:
@@ -188,7 +188,7 @@ PropertyName:
 
 ArrayInitializer:
 	{ArrayInitializer}
-	'[' (values+=Atomic)? (',' values += Atomic)* ']'  
+	'[' (values+=Addition)? (',' values += Addition)* ']'  
 ;
 
 RangeExpression:

@@ -65,4 +65,9 @@ public class ObjectExpressionsTest {
 	public void testObjectInitializers() {
 		TSValue value = executeOneLineScript("var o = { key1: \"Hello\", key2: \"World\" }; assert (o[\"key1\"]==\"Hello\");"); //  && o.key2 == \"World\"
 	}
+	
+	@Test
+	public void testArrayInitializers() {
+		TSValue value = executeOneLineScript("var a = [ \"Hello\", \"Dear\", \"World\", 3, true, \"Markus\" + \"Bauer\" ]; assert (a[0]==\"Hello\"); assert(a[3]==3); assert(a[4]==true); assert(a[5]==\"MarkusBauer\");");
+	}
 }
