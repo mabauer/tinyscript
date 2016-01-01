@@ -1,8 +1,12 @@
+.project
+.classpath
 .metadata
 .recommenders
 bin
 src-gen
 xtend-gen
+target
+plugin.xml_gen
 .*.jar
 generated
 *.prefs
