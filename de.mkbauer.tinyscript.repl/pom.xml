@@ -37,6 +37,11 @@
 			<artifactId>org.eclipse.equinox.common</artifactId>
 			<version>3.6.0</version>
 		</dependency>
+		<dependency>
+			<groupId>jline</groupId>
+			<artifactId>jline</artifactId>
+			<version>2.13</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -75,7 +80,7 @@
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>de.mkbauer.tinyscript.repl.TinyscriptREPLDemo</mainClass>
+									<mainClass>de.mkbauer.tinyscript.repl.TinyscriptREPLMain</mainClass>
 								</transformer>
 							</transformers>
 							<filters>
@@ -89,6 +94,12 @@
 									<artifact>org.eclipse.osgi:org.eclipse.osgi</artifact>
 									<excludes>
 										<exclude>**</exclude>
+									</excludes>
+								</filter>
+								<filter>
+									<artifact>jline:jline</artifact>
+									<excludes>
+										<exclude>org/fusesource/**</exclude>
 									</excludes>
 								</filter>
 								<filter>

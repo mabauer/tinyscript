@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import jline.console.ConsoleReader;
+
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.ecore.EObject;
@@ -33,7 +35,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 
-class TinyscriptREPLDemo  {
+class TinyscriptREPLMain  {
 	
 	private Provider<XtextResourceSet> resourceSetProvider;
 	
@@ -45,67 +47,101 @@ class TinyscriptREPLDemo  {
 
 	private Resource currentResource; 
 	
-	private TextDevice device;
+	private ConsoleReader device;
 		
 	public static void main(String[] args) {
-		TinyscriptREPLDemo repl = new TinyscriptREPLDemo();
-		repl.loop();
+		try {
+			TinyscriptREPLMain repl = new TinyscriptREPLMain();
+			repl.loop();
+		}
+		catch (IOException e) {
+			System.err.println("Error initializing console.");
+		}
 	}
 		
-	public TinyscriptREPLDemo() {	
+	public TinyscriptREPLMain() throws IOException {	
 		Injector injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
 		resourceSet = injector.getInstance(XtextResourceSet.class);
-		visitor = new ExecutionVisitor();	
-		device = TextDevices.defaultTextDevice();
+		visitor = new ExecutionVisitor();
+		device = new ConsoleReader();
+		device.setExpandEvents(false);
     }  
 	
-	public void loop() {
+	public void loop() throws IOException {
 		String line; 
+		String script = "";
 		boolean quit = false;
+		boolean multiline = false;
 		while (!quit) {
-			device.printf("> ");
+			if (multiline) {
+				device.setPrompt("... ");
+			}
+			else {
+				device.setPrompt("> ");
+			}
+			device.flush();
 			line = device.readLine();
 			try {
-				line = line.trim();
-				if (line == null || line.equals("")) {
+				if (line == null || line.trim().equals("!bye")) {
 					quit = true;
 				}
 				else {
-					TSValue result = execute(line);
-					device.printf("%s\n", result.asString());
+					Tinyscript ast = parse(script + line, multiline);
+					if (ast != null) {
+						TSValue result = execute(ast);
+						device.println(result.asString());
+						multiline = false;
+						script = "";
+					}
+					else {
+						multiline = true;
+						script = script + line;
+					}
 				}
 			}
 			catch (TinyscriptRuntimeException e) {
-				device.printf("%s: %s\n", e.getClass().getSimpleName(), e.getMessage());
+				device.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+				if (!multiline)
+					script = "";
 			}
 		}
-		device.printf("Bye!\n");
+		device.println("Bye!");
+		device.flush();
 	}
 	
-	protected TSValue execute(String input) {
+	protected Tinyscript parse(String script, boolean reuseResource) {
+		Tinyscript ast = null;
+		if (!reuseResource) {
+			URI uri = newResourceUri();
+			currentResource = resourceSet.getResource(uri, false);
+			if (currentResource == null) {
+				currentResource = resourceSet.createResource(uri);
+			}
+		} 
+		else {
+			if (currentResource != null) {
+				currentResource.unload();
+			}
+		}
 		try {
-			parse(input);
-			Tinyscript ast = (Tinyscript) (currentResource.getContents().isEmpty() ? null : currentResource.getContents().get(0));
-			List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
-			if (!issues.isEmpty())
-				throw new TinyscriptReferenceError(issues.get(0).getMessage() + " in " + input);
-	 		TSValue result = visitor.execute(ast);
-	 		return result;
+			currentResource.load(new StringInputStream(script), null);
+			ast = (Tinyscript) (currentResource.getContents().isEmpty() ? null : currentResource.getContents().get(0));
 		} catch (IOException e) {
 			throw new WrappedException(e);
+		}	
+		List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
+		if (!issues.isEmpty()) {
+			String msg = issues.get(0).getMessage();
+			if (msg.contains("mismatched input '<EOF>'"))
+				return null;
+			throw new TinyscriptRuntimeException("in '" + script + "': " + msg);	
 		}
+		return ast;
 	}
 	
-	protected void parse(String input) throws IOException {
-		URI uri = newResourceUri();
-		currentResource = resourceSet.getResource(uri, false);
-		if (currentResource == null) {
-			currentResource = resourceSet.createResource(uri);
-		} else {
-			currentResource.unload();
-		}
-		currentResource.load(new StringInputStream(input), null);
-		EcoreUtil2.resolveAll(currentResource);
+	protected TSValue execute(Tinyscript ast) {
+ 		TSValue result = visitor.execute(ast);
+ 		return result;	
 	}
 	
 	protected IResourceValidator getValidator(Resource resource) {
