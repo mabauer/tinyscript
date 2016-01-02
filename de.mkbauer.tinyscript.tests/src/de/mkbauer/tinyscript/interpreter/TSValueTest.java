@@ -32,7 +32,7 @@ public class TSValueTest {
 		assert d.isMathematicalInteger();
 		assertEquals(1, d.asDouble(), 0.00001);
 		assertEquals("1", d.asString());
-		assertEquals("1.0", d.toString());
+		assertEquals("1", d.toString());
 	}
 
 	@Test

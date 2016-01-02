@@ -13,6 +13,8 @@ public class TSValue { // implements Comparable<TSValue>
 	
     public TSValue(Object v) {
         value = v;
+        if (value instanceof Integer)
+        	value = ((Number) value).doubleValue();
         // only accept boolean, list, number or string types
         if(!(isBoolean() || isNumber() || isString() || isObject())) {
             throw new RuntimeException("invalid data type: " + v + " (" + v.getClass() + ")");
@@ -32,8 +34,6 @@ public class TSValue { // implements Comparable<TSValue>
 			return "UNDEFINED";
 		if (isString()) 
 			return (String)value;
-		else if (isInt())
-			return String.format("%d",  value);
 		else if (isMathematicalInteger())
 			return String.format("%.0f", value) ;
 		else
@@ -46,10 +46,6 @@ public class TSValue { // implements Comparable<TSValue>
 	
 	public int asInt() {
 		return ((Number)value).intValue();
-	}
-	
-	public boolean isInt() {
-		return (value instanceof Integer);
 	}
 	
 	public boolean isMathematicalInteger() {
@@ -67,7 +63,7 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public boolean isNumber() {
-		return isDouble() || isInt();
+		return isDouble() ;
 	}
 	
 	public boolean asBoolean() {
@@ -120,12 +116,7 @@ public class TSValue { // implements Comparable<TSValue>
 	
 	@Override
 	public String toString() {
-		if (value != null) {
-			return value.toString(); // asString();
-		}
-		else {
-			return "UNDEFINED";
-		}
+		return asString();
 	}
 }
 
