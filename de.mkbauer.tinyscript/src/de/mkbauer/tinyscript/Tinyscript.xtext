@@ -86,7 +86,7 @@ Unary:
 ;
 
 Primary returns Expression:
-	(Atomic  | '(' AssignmentExpression ')' ) ({CallOrPropertyAccess.expr=current} suffix=CallOrPropertyAccessSuffix)*  
+	(Atomic  | '(' AssignmentExpression ')' ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))*  
 ;
 
 Atomic:
@@ -152,7 +152,8 @@ Identifier:
 ;
 
 CallOrPropertyAccessSuffix:
-	PropertyAccessSuffix | CallSuffix
+	{CallOrPropertyAccessSuffix}
+	(property=PropertyAccessSuffix) =>(call=CallSuffix)?
 ;
 
 CallSuffix:

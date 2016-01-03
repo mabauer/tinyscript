@@ -13,12 +13,8 @@ public class ExecutionContext {
 	
 	private ExecutionContext outer;
 	
-	public ExecutionContext(String name) {
-		this.name = name;
-		outer = null;
-		values = new HashMap<String, TSValue>();
-	}
-	
+	protected TSObject thisRef;
+
 	public ExecutionContext(String name, ExecutionContext outerContext) {
 		this.name = name;
 		outer = outerContext;
@@ -26,7 +22,7 @@ public class ExecutionContext {
 	}
 
 	public boolean isGlobal() {
-		return (outer == null);
+		return false;
 	}
 	
 	public TSValue get(String identifier) {
@@ -66,6 +62,14 @@ public class ExecutionContext {
 				outer.store(identifier, value);
 			}
 		}
+	}
+	
+	public TSObject getThisRef() {
+		return thisRef;
+	}
+
+	public void setThisRef(TSObject thisRef) {
+		this.thisRef = thisRef;
 	}
 	
 	public boolean contains(String identifier) {

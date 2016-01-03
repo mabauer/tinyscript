@@ -60,7 +60,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	private Map<Block, LexicalEnvironment> lexicalEnvironments;
 	
 	public ExecutionVisitor() {
-		currentContext = new ExecutionContext("global");
+		currentContext = new GlobalExecutionContext();
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
 	}
@@ -348,35 +348,40 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 
     // @Override
     public TSValue caseCallOrPropertyAccess(CallOrPropertyAccess expr) {
-    	TSValue value = execute(expr.getExpr()); 
-    	CallOrPropertyAccessSuffix suffix = expr.getSuffix();
-		if (suffix instanceof PropertyAccessSuffix) {
-			TSValue keyValue = evaluatePropertyKey((PropertyAccessSuffix) suffix);
-			if (value.isObject()) {
-				value = value.asObject().get(keyValue.asString());
+    	TSValue base = execute(expr.getExpr()); 
+    	TSValue result = TSValue.UNDEFINED;
+    	EObject suffix = expr.getSuffix();
+		if (suffix instanceof CallOrPropertyAccessSuffix) {
+			CallOrPropertyAccessSuffix callOrProp = (CallOrPropertyAccessSuffix) suffix;
+			TSValue keyValue = evaluatePropertyKey(callOrProp.getProperty());
+			if (base.isObject()) {
+				result = base.asObject().get(keyValue.asString());
 			}
 			else {
 				// TODO: Handle builtin types! E.g.: "xxx".size(),...
 				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
 			}
+			CallSuffix callSuffix = callOrProp.getCall();
+			if (callSuffix != null) {
+				if (result.isObject() && (result.asObject() instanceof TSAbstractFunction)) {
+					result = processFunctionCall((TSAbstractFunction) result.asObject(), base.asObject(), callSuffix.getArguments());
+				}
+				else {
+					throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
+				}	
+			}		
 		}
     	if 	(suffix instanceof CallSuffix) {
-    		if (value.isObject() && (value.asObject() instanceof TSFunction)) {
-    			CallSuffix callSuffix = (CallSuffix) suffix;
-    			List<TSValue> args = null;  			
-    			if (callSuffix.getArguments() != null && callSuffix.getArguments().size() > 0) {
-    				args = new ArrayList<TSValue>(callSuffix.getArguments().size());
-    				for (EObject argExpr : callSuffix.getArguments()) {
-    					args.add(execute(argExpr));
-    				}
-    			}
-    			value = applyFunction((TSFunction) value.asObject(), args);
+    		CallSuffix callSuffix = (CallSuffix) suffix;
+        	if (base.isObject() && (base.asObject() instanceof TSAbstractFunction)) {
+        		result = processFunctionCall((TSAbstractFunction) base.asObject(), null, callSuffix.getArguments());
     		}
-    		else {
+        	else {
     			throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
-    		}
+    		}	
+    		
     	}
-    	return value;
+    	return result;
     }
 
     // @Override
@@ -395,6 +400,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     // @Override
     public TSValue caseReference(Reference expr) {
     	try {
+    		if (expr.isThis())
+    			return new TSValue(currentContext.getThisRef());
     		return currentContext.lookup(expr.getId().getName());
     	}
     	catch (IllegalArgumentException e) {
@@ -446,6 +453,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	
     	if (left instanceof Reference) {
     	    Reference reference = (Reference) left;
+    	    if (reference.isThis())
+    	    	throw new TinyscriptReferenceError("Cannot assign avalue to 'this'", left);
     		Identifier identifier = reference.getId();
     		currentContext.store(identifier.getName(), value);
     		return value;
@@ -458,10 +467,10 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	}
     	if (left instanceof CallOrPropertyAccess) {
     		CallOrPropertyAccess expr = (CallOrPropertyAccess) left;
-        	CallOrPropertyAccessSuffix suffix = expr.getSuffix();
+        	EObject suffix = expr.getSuffix();
         	TSValue prefix = execute(expr.getExpr());
-    		if (suffix instanceof PropertyAccessSuffix) {
-    			PropertyAccessSuffix propSuffix = (PropertyAccessSuffix) suffix;
+    		if (suffix instanceof CallOrPropertyAccessSuffix) {
+    			PropertyAccessSuffix propSuffix = ((CallOrPropertyAccessSuffix) suffix).getProperty();
     			TSValue keyValue = evaluatePropertyKey(propSuffix);
     			if (prefix.isObject()) {
     				prefix.asObject().put(keyValue.asString(), value);
@@ -476,17 +485,53 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
     		}
     	}
-
-
     	return TSValue.UNDEFINED;
     	// throw new UnsupportedOperationException("Unsupported left-hand expression in assignment: " + left.eClass().getName() );
     }
     
-	public TSValue applyFunction(TSFunction function, List<TSValue> args) {
+	private TSValue evaluatePropertyKey(PropertyAccessSuffix suffix) {
+		TSValue keyExpr = null;
+		if (suffix instanceof DotPropertyAccessSuffix) {
+			DotPropertyAccessSuffix accessor = (DotPropertyAccessSuffix) suffix;
+			keyExpr = execute(accessor.getKey());
+		}
+		if (suffix instanceof ComputedPropertyAccessSuffix) {
+			ComputedPropertyAccessSuffix accessor = (ComputedPropertyAccessSuffix) suffix;
+			keyExpr = execute(accessor.getKey());
+		}
+		if (keyExpr.isString() || keyExpr.isNumber()) {
+			return keyExpr;
+		}
+		else {
+			throw new TinyscriptTypeError("Property accessors should evaluate to String or Number", suffix);
+		}
+	}
+	
+    public TSValue processFunctionCall(TSAbstractFunction functionObject, TSObject self, List<Expression> argExprs) {
+			List<TSValue> args = null;  			
+			if (argExprs.size() > 0) {
+				args = new ArrayList<TSValue>(argExprs.size());
+				for (EObject argExpr : argExprs) {
+					args.add(execute(argExpr));
+				}
+			}
+			return applyFunction(functionObject, self, args);
+    }
+    
+    private TSValue applyFunction(TSAbstractFunction function, TSObject self, List<TSValue> args) {
+    	if (function instanceof TSFunction) {
+    		return applyInterpretedFunction((TSFunction) function, self, args);
+    	}
+    	return ((TSBuiltinFunction) function).apply(self, args);
+    }
+    
+	private TSValue applyInterpretedFunction(TSFunction function, TSObject self, List<TSValue> args) {
 		Block block = function.getBlock();
 		try {
 			// Create a new execution context
 			enterNewExecutionContext(function.getName(), function.getOuterContext());
+			// Set this-Reference
+			currentContext.setThisRef(self);
 			// Put the arguments into the context
 			if (args != null) {
 				int argsN = args.size();
@@ -509,24 +554,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			return rv.getReturnValue();				
 		}
 
-	}
-		
-	private TSValue evaluatePropertyKey(PropertyAccessSuffix suffix) {
-		TSValue keyExpr = null;
-		if (suffix instanceof DotPropertyAccessSuffix) {
-			DotPropertyAccessSuffix accessor = (DotPropertyAccessSuffix) suffix;
-			keyExpr = execute(accessor.getKey());
-		}
-		if (suffix instanceof ComputedPropertyAccessSuffix) {
-			ComputedPropertyAccessSuffix accessor = (ComputedPropertyAccessSuffix) suffix;
-			keyExpr = execute(accessor.getKey());
-		}
-		if (keyExpr.isString() || keyExpr.isNumber()) {
-			return keyExpr;
-		}
-		else {
-			throw new TinyscriptTypeError("Property accessors should evaluate to String or Number", suffix);
-		}
 	}
 	
 	private TSValue executeInBlockContext(String name, Block block) {
@@ -574,12 +601,14 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	private void enterNewExecutionContext(String name, ExecutionContext outer) {
 		contextStack.push(currentContext);
+		TSObject thisRef = currentContext.getThisRef();
 		if (outer == null) {
 			currentContext = new ExecutionContext(name, currentContext);
 		}
 		else {
 			currentContext = new ExecutionContext(name, outer);
 		}
+		currentContext.setThisRef(thisRef);
 	}
 	
 	private void leaveExecutionContext() {
