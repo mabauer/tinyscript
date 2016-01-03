@@ -15,7 +15,8 @@ public class TSArray extends TSObject {
 	@Override
 	protected void initialize() {
 		items = new ArrayList<TSValue>();
-
+		setPrototype(new TSObject());
+		defineDefaultProperty(this, "length", new TSValue(0));
 	}
 
 	@Override
@@ -30,11 +31,6 @@ public class TSArray extends TSObject {
 		catch (NumberFormatException e) {
 			return super.get(key);
 		}
-	}
-	
-	@Override
-	protected TSValue getInternal(String key) {
-		return super.getInternal(key);
 	}
 
 	@Override

@@ -1,12 +1,9 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Function;
 
-public class TSFunction extends TSObject {
+public class TSFunction extends TSAbstractFunction {
 	
 	private Function ast;
 	
@@ -32,6 +29,7 @@ public class TSFunction extends TSObject {
 		return outerContext;
 	}
 	
+	@Override
 	public String getName() {
 		if (ast != null) {
 			if (ast.getId() != null)
@@ -40,6 +38,7 @@ public class TSFunction extends TSObject {
 		return null;
 	}
 	
+	@Override
 	public int getLength() {
 		if (ast != null) {
 			if (ast.getParams() != null) 
@@ -55,13 +54,5 @@ public class TSFunction extends TSObject {
 		return null;
 	}
 	
-	public String toString() {
-		String result = "{ [Function";
-		if (getName() != null)
-			result = result + ": " + getName(); 
-		result = result + values.keySet().stream()
-				.map(key->key+": "+values.get(key).toString())
-				.collect(Collectors.joining(", ")) + "] }";
-		return result;
-	}
+
 }
