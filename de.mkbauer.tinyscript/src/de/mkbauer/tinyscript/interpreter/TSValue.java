@@ -84,8 +84,16 @@ public class TSValue { // implements Comparable<TSValue>
 		return (value instanceof TSObject);
 	}
 	
+	public boolean isArray() {
+		return (value instanceof TSArray);
+	}
+	
 	public TSObject asObject() {
 		return (TSObject) value;
+	}
+	
+	public TSArray asArray() {
+		return (TSArray) value;
 	}
 	
 	public boolean equals(TSValue other) {

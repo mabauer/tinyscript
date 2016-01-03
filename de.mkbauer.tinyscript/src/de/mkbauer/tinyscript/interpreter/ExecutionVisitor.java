@@ -274,6 +274,27 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() + right.asDouble());
     		}
+    		if (left.isArray()) {
+    			if (right.isArray()) {
+    				return new TSValue(TSArray.concat(left.asArray(), right.asArray()));
+    			}
+    			else {
+    				TSArray result = left.asArray().clone();
+    				result.add(right);
+    				return new TSValue(result);
+    			}	
+    		}
+    		if (right.isArray()) {
+    			if (left.isArray()) {
+    				return new TSValue(TSArray.concat(left.asArray(), right.asArray()));
+    			}
+    			else {
+    				TSArray result = new TSArray();
+    				result.add(left);
+    				result = TSArray.concat(result, right.asArray());
+    				return new TSValue(result);
+    			}
+    		}
     		if (left.isString() || right.isString()) {
     			return new TSValue(left.asString() + right.asString());
     		}
@@ -412,19 +433,20 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
-    	TSObject obj = new TSObject(); 
+    	TSArray arr = new TSArray(); 
     	int i = 0;
     	for (Expression itemExpr : expr.getValues()) {
-    		obj.put(String.valueOf(i), execute(itemExpr));
+    		arr.put(String.valueOf(i), execute(itemExpr));
     		i++;
     	}
-    	return new TSValue(obj);
+    	return new TSValue(arr);
     }
     
     public TSValue assignValue(Expression left, TSValue value) {
     	
     	if (left instanceof Reference) {
-    		Identifier identifier = ((Reference) left).getId();
+    	    Reference reference = (Reference) left;
+    		Identifier identifier = reference.getId();
     		currentContext.store(identifier.getName(), value);
     		return value;
     	}

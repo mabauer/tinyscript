@@ -70,4 +70,17 @@ public class ObjectExpressionsTest {
 	public void testArrayInitializers() {
 		TSValue value = executeOneLineScript("var a = [ \"Hello\", \"Dear\", \"World\", 3, true, \"Markus\" + \"Bauer\" ]; assert (a[0]==\"Hello\"); assert(a[3]==3); assert(a[4]==true); assert(a[5]==\"MarkusBauer\");");
 	}
+	
+	@Test
+	public void testArrayAddition() {
+		TSValue value = executeOneLineScript("var a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; var result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
+		value = executeOneLineScript("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
+		value = executeOneLineScript("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + s; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
+	}
+	
+	@Test
+	public void testArrayLength() {
+		TSValue value = executeOneLineScript("var a = [ \"Hello\", \"Dear\"]; assert (a.length == 2);");
+	}
+	
 }
