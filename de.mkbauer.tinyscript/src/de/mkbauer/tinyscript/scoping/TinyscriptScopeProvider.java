@@ -21,7 +21,7 @@ import com.google.common.base.Predicate;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.ForEachStatement;
-import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.NumericForStatement;
 import de.mkbauer.tinyscript.ts.Reference;
@@ -98,8 +98,8 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 		// Does the block implement a function? Add formal parameters to the scope 
 		// and collect all identifiers of the parent block to the parent scope
 		EObject container = block.eContainer();
-		if (container instanceof Function) {
-			Function function = (Function) container;
+		if (container instanceof FunctionDefinition) {
+			FunctionDefinition function = (FunctionDefinition) container;
 			List<Identifier> params = function.getParams();
 			ids.addAll(params);
 			EObject parent = TinyscriptModelUtil.containingBlock(function);

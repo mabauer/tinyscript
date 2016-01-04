@@ -1,11 +1,11 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import de.mkbauer.tinyscript.ts.Block;
-import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
 
 public class TSFunction extends TSAbstractFunction {
 	
-	private Function ast;
+	private FunctionDefinition ast;
 	
 	private ExecutionContext outerContext;
 	
@@ -13,11 +13,11 @@ public class TSFunction extends TSAbstractFunction {
 		this.ast = null;
 	}
 	
-	public void setAst(Function ast) {
+	public void setAst(FunctionDefinition ast) {
 		this.ast = ast;
 	}
 	
-	public Function getAst() {
+	public FunctionDefinition getAst() {
 		return ast;
 	}
 	

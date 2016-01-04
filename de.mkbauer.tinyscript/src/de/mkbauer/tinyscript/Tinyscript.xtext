@@ -40,7 +40,7 @@ BlockStatement:
 	block = Block
 ;
 
-FunctionDeclaration returns Function:
+FunctionDeclaration returns FunctionDefinition:
 	{FunctionDeclaration}
 	'function' ( id=Identifier ) '(' (params += Identifier)? (',' params += Identifier)* ')' block=Block 
 ;
@@ -99,7 +99,7 @@ Atomic:
     FunctionExpression
 ;
 
-FunctionExpression returns Function:
+FunctionExpression returns FunctionDefinition:
 	'function' ( id=Identifier )? '(' (params += Identifier)? (',' params += Identifier)* ')' block=Block 
 ;
 

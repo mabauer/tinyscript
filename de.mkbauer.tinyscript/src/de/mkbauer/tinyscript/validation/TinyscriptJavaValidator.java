@@ -2,7 +2,7 @@ package de.mkbauer.tinyscript.validation;
 
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.Block;
-import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -58,7 +58,7 @@ public class TinyscriptJavaValidator extends AbstractTinyscriptJavaValidator {
 	
 	private boolean isPartOfVariableStatement(Identifier identifier) {
 		EObject parent = identifier.eContainer();
-		if ((parent == null) || (parent instanceof Function))
+		if ((parent == null) || (parent instanceof FunctionDefinition))
 			return false;
 		Statement stmt = TinyscriptModelUtil.containingStatement(identifier);
 		return  ((stmt != null) && (stmt instanceof VariableStatement));

@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.Identifier;
 
@@ -63,7 +63,7 @@ public class TinyScriptModelUtilsTest {
 	@Test
 	public void testGetVariablesInFunctionScope() {
 		Tinyscript ast = parseFromString("var x = 2; var f = function (x) { var local = x*x; return local; }; f(x)==4;");
-		Function f = EcoreUtil2.getAllContentsOfType(ast.getGlobal(), Function.class).get(0);
+		FunctionDefinition f = EcoreUtil2.getAllContentsOfType(ast.getGlobal(), FunctionDefinition.class).get(0);
 		List<Identifier> vars = TinyscriptModelUtil.declaredVariablesInBlock(f.getBlock());
 		List<String> names = vars.stream().map(var -> var.getName()).collect(Collectors.toList());
 		Assert.assertTrue(names.stream().anyMatch(s -> s.equals("local")));
@@ -77,7 +77,7 @@ public class TinyScriptModelUtilsTest {
 		String source = "var x = 2; function f(x) { var local = x*x; return local; } f(x)==4;";
 		Tinyscript ast = parseFromString(source);
 				
-		List<Function> functions = TinyscriptModelUtil.functionDeclarationsInBlock(ast.getGlobal());
+		List<FunctionDefinition> functions = TinyscriptModelUtil.functionDeclarationsInBlock(ast.getGlobal());
 		List<String> names = functions.stream().map(f -> f.getId().getName()).collect(Collectors.toList());
 		Assert.assertTrue(names.stream().anyMatch(s -> s.equals("f")));
 		

@@ -8,7 +8,7 @@ import org.eclipse.emf.ecore.EObject;
 import com.google.inject.Inject;
 
 import de.mkbauer.tinyscript.ts.BinaryExpression;
-import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
 import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
@@ -33,7 +33,7 @@ public class TinyscriptLabelProvider extends org.eclipse.xtext.ui.label.DefaultE
 		return ele.getOp();
 	}
 	
-	public String text(final Function ele) {
+	public String text(final FunctionDefinition ele) {
 		if (ele.getId() != null)
 			return "Function " + ele.getId().getName();
 		return "Function";

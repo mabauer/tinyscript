@@ -23,7 +23,7 @@ import de.mkbauer.tinyscript.ts.CallSuffix;
 import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.ForEachStatement;
-import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
@@ -92,8 +92,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		return caseElseStatement((ElseStatement) object);
 		case TsPackage.NUMERIC_FOR_STATEMENT:
     		return caseNumericForStatement((NumericForStatement) object);
-		case TsPackage.FUNCTION:
-    		return caseFunction((Function) object);
+		case TsPackage.FUNCTION_DEFINITION:
+    		return caseFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.RETURN_STATEMENT:
     		return caseReturnStatement((ReturnStatement) object);
 		case TsPackage.NUMBER_LITERAL:
@@ -154,7 +154,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     }
     
     // @Override 
-    public TSValue caseFunction(Function object) {
+    public TSValue caseFunctionDefinition(FunctionDefinition object) {
     	TSFunction function = new TSFunction();
     	function.setOuterContext(currentContext);
     	function.setAst(object);
@@ -620,8 +620,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		if (result != null)
 			return result;
 		List <TSValue> functions = new ArrayList<TSValue>();
-		for (Function funcdecl : TinyscriptModelUtil.functionDeclarationsInBlock(block)) {
-			TSValue functionObject = caseFunction(funcdecl);
+		for (FunctionDefinition funcdecl : TinyscriptModelUtil.functionDeclarationsInBlock(block)) {
+			TSValue functionObject = caseFunctionDefinition(funcdecl);
 			functions.add(functionObject);
 		}
 		List <Identifier> variables = TinyscriptModelUtil.declaredVariablesInBlock(block);

@@ -5,7 +5,7 @@ import org.eclipse.emf.ecore.EObject;
 import de.mkbauer.tinyscript.ts.BlockStatement;
 import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.ForEachStatement;
-import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
@@ -30,7 +30,7 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 	}
 
 	@Override
-	public String caseFunction(Function function) {
+	public String caseFunctionDefinition(FunctionDefinition function) {
 		if (function.getId() != null)
 			return "function_" + function.getId().getName();
 		else
@@ -65,9 +65,9 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 	@Override
 	public String caseIdentifier(Identifier identifier) {
 		EObject parent = identifier.eContainer();
-		if (parent instanceof Function) {
+		if (parent instanceof FunctionDefinition) {
 			// Let's ignore the function identifier
-			Function function = (Function) (parent);
+			FunctionDefinition function = (FunctionDefinition) (parent);
 			if ( identifier == function.getId() ) {
 				return null;
 			}

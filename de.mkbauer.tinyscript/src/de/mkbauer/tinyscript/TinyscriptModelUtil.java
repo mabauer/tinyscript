@@ -11,7 +11,7 @@ import org.eclipse.xtext.EcoreUtil2;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Expression;
-import de.mkbauer.tinyscript.ts.Function;
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Reference;
@@ -54,7 +54,7 @@ public class TinyscriptModelUtil {
 	 */
 	public static EObject containingFunction(EObject elem) {
 		for (EObject e = elem; e != null; e = e.eContainer()) {
-			if (e instanceof Function)
+			if (e instanceof FunctionDefinition)
 				return e;
 			if (e instanceof Tinyscript)
 				return e;
@@ -128,8 +128,8 @@ public class TinyscriptModelUtil {
 	 * @param block
 	 * @return
 	 */
-	public static List<Function> functionDeclarationsInBlock(Block block) {
-		List<Function> result = new ArrayList<Function>();
+	public static List<FunctionDefinition> functionDeclarationsInBlock(Block block) {
+		List<FunctionDefinition> result = new ArrayList<FunctionDefinition>();
 		List<Statement> stmts= block.getStatements();
 		Iterator<Statement> it = stmts.iterator();
 		while (it.hasNext()) {
