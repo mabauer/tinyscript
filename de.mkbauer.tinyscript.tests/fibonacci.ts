@@ -33,6 +33,5 @@ assert (fibonacci(28) == 514229);
 assert (fibonacci(32) == 3524578);
 assert (fibonacci(42) == 433494437);
 assert (fibonacci(50) == 20365011074);
-
-// assert (fibonacci(32) == 3524578);
 */
+//assert (fibonacci(32) == 3524578);

@@ -3,6 +3,9 @@ package de.mkbauer.tinyscript.interpreter;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import de.mkbauer.tinyscript.runtime.object.HasOwnProperty;
+import de.mkbauer.tinyscript.runtime.object.ToString;
+
 
 public class TSObject {
 	
@@ -16,7 +19,8 @@ public class TSObject {
 		if (defaultPrototype != null)
 			return defaultPrototype;
 		defaultPrototype = new TSObject(null);
-		defineDefaultProperty(defaultPrototype, "toString", new TSValue(new ToString()));
+		defineDefaultProperty(defaultPrototype, "toString", new ToString());
+		defineDefaultProperty(defaultPrototype, "hasOwnProperty", new HasOwnProperty());
 		// defaultPrototype.put("toString", new TSValue(new ToString()));
 		return defaultPrototype;
 	}
@@ -35,9 +39,12 @@ public class TSObject {
 		setPrototype(getDefaultProtoType());
 	}
 	
-	public static void defineDefaultProperty(TSObject object, String key, TSValue value) {
+	public static void defineDefaultProperty(TSObject object, String key, Object value) {
 		TSPropertyDescriptor desc = new TSPropertyDescriptor();
-		desc.setValue(value);
+		if (!(value instanceof TSValue))
+			desc.setValue(new TSValue(value));
+		else
+			desc.setValue( (TSValue) value);
 		// This differs form ECMAScript specs.
 		desc.setConfigurable(false);
 		desc.setEnumerable(false);
@@ -51,6 +58,10 @@ public class TSObject {
 	
 	public void setOwnPropertyDescriptor(String key, TSPropertyDescriptor desc) {
 		properties.put(key,  desc);
+	}
+	
+	public boolean hasOwnProperty(String key) {
+		return getOwnPropertyDescriptor(key) != null;
 	}
 	
 	public void setPrototype(TSObject proto) {

@@ -1,6 +1,8 @@
 // See http://eloquentjavascript.net/10_modules.html
 
-var this = {}; // -> ...until this is resolvable
+// var this = {}; // -> ...until this is resolvable
+
+var weekDay;
 
 (function(exports) {
   var names = ["Sunday", "Monday", "Tuesday", "Wednesday",
@@ -12,6 +14,6 @@ var this = {}; // -> ...until this is resolvable
   exports.number = function(name) {
     return names.indexOf(name);
   };
-})(this.weekDay);
+})(weekDay);
 
-assert(this.weekDay.name(this.weekDay.number("Saturday")) == "Saturday"); // -> "Saturday"
+assert(weekDay.name(weekDay.number("Saturday")) == "Saturday"); // -> "Saturday"

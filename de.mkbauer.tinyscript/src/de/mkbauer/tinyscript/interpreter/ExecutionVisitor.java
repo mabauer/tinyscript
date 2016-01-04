@@ -6,7 +6,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 import org.eclipse.emf.ecore.EObject;
 
@@ -40,12 +39,13 @@ import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
+import de.mkbauer.tinyscript.ts.TsFactory;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
 
-
+import de.mkbauer.tinyscript.runtime.math.Math;
 /**
  * Evaluates expressions of the Tinyscript language.
  * @author markus.bauer
@@ -54,15 +54,23 @@ import de.mkbauer.tinyscript.ts.util.TsSwitch;
 public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	private ExecutionContext currentContext;
+	private ExecutionContext globalContext;
 	
 	private Deque<ExecutionContext> contextStack;
 	
 	private Map<Block, LexicalEnvironment> lexicalEnvironments;
 	
 	public ExecutionVisitor() {
-		currentContext = new GlobalExecutionContext();
+		globalContext = new GlobalExecutionContext();
+		currentContext = globalContext;
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
+		initializeGlobalContext();
+	}
+	
+	public void initializeGlobalContext() {
+		TSObject global = globalContext.getThisRef();
+		TSObject.defineDefaultProperty(global, "Math", new Math());
 	}
     
     public TSValue execute(EObject object) {
@@ -347,6 +355,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
 
     // @Override
+    // TODO: Merge with assignemtValue
     public TSValue caseCallOrPropertyAccess(CallOrPropertyAccess expr) {
     	TSValue base = execute(expr.getExpr()); 
     	TSValue result = TSValue.UNDEFINED;
@@ -359,6 +368,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			}
 			else {
 				// TODO: Handle builtin types! E.g.: "xxx".size(),...
+				// TODO: Check, if value is undefined
 				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
 			}
 			CallSuffix callSuffix = callOrProp.getCall();
@@ -478,6 +488,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			}
     			else {
     				// TODO: Handle builtin types! E.g.: "xxx".size(),...
+    				// TODO: Check if value is undefined!
     				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
     			}
     		}
@@ -629,4 +640,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		lexicalEnvironments.put(block, result);
 		return result;
 	}
+
+
 }

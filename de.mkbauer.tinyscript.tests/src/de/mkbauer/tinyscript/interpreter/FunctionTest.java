@@ -154,7 +154,7 @@ public class FunctionTest {
 	
 	@Test
 	public void testCallToBuiltInFunction() {
-		TSValue value = executeOneLineScript("print(\"Hello\");");	
+		TSValue value = executeOneLineScript("var x = Math.sqrt(4); assert(x==2);");	
 		
 	}
 

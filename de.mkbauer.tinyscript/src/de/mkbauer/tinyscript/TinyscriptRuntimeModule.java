@@ -5,6 +5,7 @@ package de.mkbauer.tinyscript;
 
 import org.eclipse.xtext.naming.IQualifiedNameProvider;
 
+import de.mkbauer.tinyscript.scoping.TinyscriptGlobalScopeProvider;
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
 
 /**
@@ -14,7 +15,8 @@ public class TinyscriptRuntimeModule extends de.mkbauer.tinyscript.AbstractTinys
 	
 	// Introducing a global scope provider 
 	public Class<? extends org.eclipse.xtext.scoping.IGlobalScopeProvider> bindIGlobalScopeProvider() {
-		return org.eclipse.xtext.common.types.xtext.TypesAwareDefaultGlobalScopeProvider.class;
+		//return TypesAwareDefaultGlobalScopeProvider.class;
+		return TinyscriptGlobalScopeProvider.class;
 	}
 	
 	@Override
