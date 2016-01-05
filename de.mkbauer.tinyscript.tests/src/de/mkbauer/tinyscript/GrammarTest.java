@@ -26,86 +26,50 @@ import de.mkbauer.tinyscript.ts.ObjectInitializer;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 @RunWith(XtextRunner.class)
-@InjectWith(TinyscriptInjectorProvider.class)
-public class GrammarTest {
-	
-	@Inject
-	private Provider<XtextResourceSet> resourceSetProvider;
-	
-	@Inject
-	private ParseHelper parser;
-	
-	@Inject 
-	private ValidationTestHelper validator;
-
-	void parseFromFile(String filename) {
-		Tinyscript ast = null;
-		try {
-			URI uri = URI.createURI(filename);
-			Resource resource = resourceSetProvider.get().createResource(uri);
-			resource.load(new HashMap());
-			ast = (Tinyscript) resource.getContents().get(0);
-			validator.assertNoErrors(ast);
-		}
-		catch (IOException e) {
-			fail("Script " + filename + " not found.");
-		}
-	}
-	
-	Tinyscript parseFromString(String script) {
-		Tinyscript ast = null;
-		try {
-			ast = (Tinyscript)parser.parse(script);
-			validator.assertNoErrors(ast);
-		}
-		catch (Exception e) {
-			fail("Parser error");
-		}
-		return ast;
-	}
+public class GrammarTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testHelloWorld() {
-		parseFromString("var hello = \"Hello, World!\";");
+		parseScriptFromString("var hello = \"Hello, World!\";");
 	}
 	
 	@Test
 	public void testNestedBlock() {
-		Tinyscript ast = parseFromString("var hello = \"Hello\"; {var world = \"World\"; }");
+		Tinyscript ast = parseScriptFromString("var hello = \"Hello\"; {var world = \"World\"; }");
 		assertEquals(EcoreUtil2.eAllOfType(ast, Block.class).size(), 2);
 	}
 	
 	@Test
 	public void testObjectInitializer() {
-		Tinyscript ast = parseFromString("var anObject = {};");
+		Tinyscript ast = parseScriptFromString("var anObject = {};");
 		assertEquals(EcoreUtil2.eAllOfType(ast, ObjectInitializer.class).size(), 1);
-		ast = parseFromString("var anObject = {hello : \"Hello\", world: \"World\"};");
+		ast = parseScriptFromString("var anObject = {hello : \"Hello\", world: \"World\"};");
 		assertEquals(EcoreUtil2.eAllOfType(ast, ObjectInitializer.class).size(), 1);
 	}
 	
 	@Test
 	public void testExpressionStatements() {
-		parseFromFile("expressionstatements.ts");
+		parseScriptFromFile("expressionstatements.ts");
 	}
 	
 	@Test
 	public void testFunctionExpression() {
-		parseFromFile("function_expression.ts");
+		parseScriptFromFile("function_expression.ts");
 	}
 	
 	@Test
 	public void testCounterWithClosures() {
-		parseFromFile("counter_with_closures.ts");
+		parseScriptFromFile("counter_with_closures.ts");
 	}
 	
 	@Test
 	public void testModulesViaClosures() {
-		parseFromFile("modules_via_closures.ts");
+		parseScriptFromFile("modules_via_closures.ts");
 	}
 	
 	@Test
 	public void testTrigger_example() {
-		parseFromFile("trigger_example.ts");
+		parseScriptFromFile("trigger_example.ts");
 	}
 	
 

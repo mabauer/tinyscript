@@ -23,6 +23,7 @@ import org.junit.runner.RunWith;
 import com.google.inject.Inject;
 
 import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
+import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -30,13 +31,7 @@ import de.mkbauer.tinyscript.ts.TsPackage;
 
 @RunWith(XtextRunner.class)
 @InjectWith(TinyscriptInjectorProvider.class)
-public class TinyScriptScopeProviderTest {
-	
-	@Inject
-	private ParseHelper<Tinyscript> parser;
-	
-	@Inject
-	private ValidationTestHelper tester;
+public class TinyScriptScopeProviderTest extends TinyscriptInterpreterTestHelper {
 	
 	@Inject
 	private IScopeProvider scopeProvider;
@@ -44,35 +39,23 @@ public class TinyScriptScopeProviderTest {
 	@Inject
 	private Object qualifiedNameConverter;
 	
-	Tinyscript parseFromString(String script) {
-		Tinyscript ast = null;
-		try {
-			ast = (Tinyscript)parser.parse(script);
-
-		}
-		catch (Exception e) {
-			fail("Parser error");
-		}
-		return ast;
-	}
-	
 	
 	@Test
 	public void testValidSimpleReference() {
-		Tinyscript ast = parseFromString("var x =\"Hello, World!\"; x;");
-		tester.assertNoErrors(ast);
+		Tinyscript ast = parseScriptFromString("var x =\"Hello, World!\"; x;");
+		getValidator().assertNoErrors(ast);
 	}
 	
 	@Test
 	public void testInvalidSimleReference() {
-		Tinyscript ast = parseFromString("x; var x =\"Hello, World!\";");
-		assertFalse(tester.validate(ast).isEmpty());
+		Tinyscript ast = parseScriptFromStringWithoutValidating("x; var x =\"Hello, World!\";");
+		assertFalse(getValidator().validate(ast).isEmpty());
 	}
 		
 	@Test
 	public void testFunctionScope() {
-		Tinyscript ast = parseFromString("var x = 1; var f = function(x) {return x;}; f(x);");
-		tester.assertNoErrors(ast);
+		Tinyscript ast = parseScriptFromString("var x = 1; var f = function(x) {return x;}; f(x);");
+		getValidator().assertNoErrors(ast);
 
 				// parseFromString("var x =\"Hello, World!\"; var f = function (x) { return x; }; f(x);");
 		List<Identifier> ids = EcoreUtil2.getAllContentsOfType(ast, Identifier.class);
@@ -92,9 +75,9 @@ public class TinyScriptScopeProviderTest {
 	
 	@Test
 	public void testFunctionGlobalVariable() {
-		Tinyscript ast = parseFromString("var f = function() {return global;}; var global;");
-		tester.assertNoErrors(ast);
-		// assertFalse(tester.validate(ast).isEmpty());
+		Tinyscript ast = parseScriptFromString("var f = function() {return global;}; var global;");
+		getValidator().assertNoErrors(ast);
+		// assertFalse(getValidator().validate(ast).isEmpty());
 	}
 	
 	
