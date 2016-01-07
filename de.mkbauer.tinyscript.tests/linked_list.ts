@@ -79,9 +79,9 @@ function filter(p, list) {
 	}
 }
 
-function fromarray(a, n) {
+function fromarray(a) {
 	var result = {};
-	for (var i = n, 1, -1) {
+	for (var i = a.length, 1, -1) {
 		result = insert(a[i-1], result);
 	}
 	return result;
@@ -120,15 +120,20 @@ function isodd(x) {
 assert(length(filter(iseven, list))==4);
 assert(length(filter(isodd, list))==4);
 
-var sequence = [2, 10, 9, 5, 1, 24, 3, 12, 8, 2, 10, 9, 5, 1, 24, 3, 12, 8, 2, 10, 9, 5, 1, 25, 3, 12, 50, 2, 10, 9, 5, 1, 23, 3, 12, 8];
-var longlist = fromarray(sequence, 32);
+var sequence = [2, 10, 9, 5, 1, 24, 3, 12, 
+				8, 2, 10, 9, 5, 1, 24, 3, 
+				12, 8, 2, 10, 9, 5, 1, 25, 
+				3, 12, 50, 2, 10, 9, 5, 1, 
+				23, 3, 12, 8, 4, 11, 22, 13];
+assert(sequence.length==40);
+var longlist = fromarray(sequence);
 
-assert(length(longlist)==32);
+assert(length(longlist)==40);
 assert(max(longlist)==50);
 
 var negatives = map(function(x) {return -x;}, longlist);
 
-assert(length(negatives)==32);
+assert(length(negatives)==40);
 assert(max(negatives)==-1);
 
 function square(x) {
@@ -138,5 +143,5 @@ function square(x) {
 assert(max(map(square, longlist))==50*50);
 assert(max(map(square, negatives))==50*50);
 
-assert(equals(map(square, longlist), map(square, negatives)));
+assert(equals(map(square, longlist), map(square, negatives))); 
 
