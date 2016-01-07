@@ -45,7 +45,7 @@ public class TSValueTest {
 	
 	@Test
 	public void testObject() {
-		TSObject o = new TSObject(TSObject.getDefaultProtoType());
+		TSObject o = new TSObject();
 		o.put("key1", new TSValue("Hello"));
 		o.put("key2", new TSValue("World"));
 		TSValue v = new TSValue(o);

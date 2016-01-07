@@ -78,7 +78,7 @@ Addition returns Expression:
 ;
 
 Multiplication returns Expression:
-    (Unary | Primary) ({BinaryExpression.left=current} op=('*' | '/' | '%' ) right=(Unary | Primary))*
+    (Unary | Primary ) ({BinaryExpression.left=current} op=('*' | '/' | '%' ) right=(Unary | Primary ))*
 ;
 
 Unary:
@@ -86,7 +86,11 @@ Unary:
 ;
 
 Primary returns Expression:
-	(Atomic  | '(' AssignmentExpression ')' ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))*  
+	(Atomic  | NewExpression | '(' AssignmentExpression ')' ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))*  
+;
+
+NewExpression:
+	'new' (expr=Atomic | => '(' expr=AssignmentExpression ')' )
 ;
 
 Atomic:

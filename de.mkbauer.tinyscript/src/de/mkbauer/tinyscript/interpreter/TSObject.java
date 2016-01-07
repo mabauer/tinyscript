@@ -13,30 +13,18 @@ public class TSObject {
 	
 	private TSObject proto = null;
 	
-	private static TSObject defaultPrototype = null;
-	
-	public static TSObject getDefaultProtoType() {
-		if (defaultPrototype != null)
-			return defaultPrototype;
-		defaultPrototype = new TSObject(null);
-		defineDefaultProperty(defaultPrototype, "toString", new ToString());
-		defineDefaultProperty(defaultPrototype, "hasOwnProperty", new HasOwnProperty());
-		// defaultPrototype.put("toString", new TSValue(new ToString()));
-		return defaultPrototype;
-	}
-	
 	public TSObject() {
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		initialize();
 	}
 	
 	public TSObject(TSObject proto) {
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		this.proto = null;
+		if (proto != null)
+			setPrototype(proto); 
+		initialize();
 	}
 	
 	protected void initialize() {
-		setPrototype(getDefaultProtoType());
 	}
 	
 	public static void defineDefaultProperty(TSObject object, String key, Object value) {

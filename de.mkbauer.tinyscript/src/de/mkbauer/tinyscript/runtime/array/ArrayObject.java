@@ -4,15 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.mkbauer.tinyscript.interpreter.Function;
+import de.mkbauer.tinyscript.interpreter.GlobalExecutionContext;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
-public class ArrayObject extends TSObject {
+public class ArrayObject extends Function {
 	
 	private List<TSValue> items;
 	
-	public ArrayObject() {
-		super(new TSObject(getDefaultProtoType()));	
+	public ArrayObject(GlobalExecutionContext globalContext) {
+		super(globalContext);	
 		items = new ArrayList<TSValue>();
 		defineDefaultProperty(this, "length", new TSValue(0));
 	}
@@ -55,14 +57,14 @@ public class ArrayObject extends TSObject {
 	}
 	
 	public ArrayObject clone() {
-		ArrayObject result = new ArrayObject();
+		ArrayObject result = new ArrayObject(globalContext);
 		result.items.addAll(items);
 		result.put("length", new TSValue(result.getLength()));
 		return result;
 	}
 	
 	public static ArrayObject concat(ArrayObject arr1, ArrayObject arr2) {
-		ArrayObject result = new ArrayObject();
+		ArrayObject result = new ArrayObject(arr1.globalContext);
 		result.items.addAll(arr1.items);
 		result.items.addAll(arr2.items);
 		// TODO: Handle named properties
@@ -80,6 +82,12 @@ public class ArrayObject extends TSObject {
 	
 	public int getLength() {
 		return items.size();
+	}
+
+	@Override
+	public String getName() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

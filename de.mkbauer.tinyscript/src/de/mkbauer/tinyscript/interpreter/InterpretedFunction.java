@@ -3,14 +3,17 @@ package de.mkbauer.tinyscript.interpreter;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 
-public class InterpretedFunction extends FunctionObject {
+public class InterpretedFunction extends Function {
 	
 	private FunctionDefinition ast;
 	
 	private ExecutionContext outerContext;
 	
-	public InterpretedFunction() {
+	public InterpretedFunction(GlobalExecutionContext globalContext) {
+		super(globalContext);
 		this.ast = null;
+		// Each user defined functions gets a new prototype property since it could be used as a constructor
+		setPrototypeProperty(new TSObject(globalContext.getDefaultPrototype()));
 	}
 	
 	public void setAst(FunctionDefinition ast) {

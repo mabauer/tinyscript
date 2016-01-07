@@ -2,7 +2,11 @@ package de.mkbauer.tinyscript.interpreter;
 
 import java.util.List;
 
-public abstract class BuiltinFunction extends FunctionObject {
+public abstract class BuiltinFunction extends Function {
+	
+	public BuiltinFunction(GlobalExecutionContext globalContext) {
+		super(globalContext);
+	}
 
 	@Override
 	public String getName() {
