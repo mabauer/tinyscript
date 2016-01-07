@@ -2,14 +2,13 @@ package de.mkbauer.tinyscript.interpreter;
 
 import java.util.stream.Collectors;
 
-public abstract class TSAbstractFunction extends TSObject {
-			
-	@Override
-	protected void initialize() {
-		TSObject proto = new TSObject();
-		setPrototype(proto);
+public abstract class FunctionObject extends TSObject {
+	
+	public FunctionObject() {
+		super(new TSObject(getDefaultProtoType()));
+		defineDefaultProperty(this, "prototype", new TSObject(getDefaultProtoType()));
 	}
-
+			
 	public abstract String getName();
 	
 	public abstract int getLength();

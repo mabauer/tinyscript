@@ -2,7 +2,7 @@ package de.mkbauer.tinyscript.interpreter;
 
 import java.util.List;
 
-public abstract class TSBuiltinFunction extends TSAbstractFunction {
+public abstract class BuiltinFunction extends FunctionObject {
 
 	@Override
 	public String getName() {

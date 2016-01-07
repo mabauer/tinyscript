@@ -44,8 +44,8 @@ import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
-
-import de.mkbauer.tinyscript.runtime.math.Math;
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.runtime.math.MathObject;
 /**
  * Evaluates expressions of the Tinyscript language.
  * @author markus.bauer
@@ -70,7 +70,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	public void initializeGlobalContext() {
 		TSObject global = globalContext.getThisRef();
-		TSObject.defineDefaultProperty(global, "Math", new Math());
+		TSObject.defineDefaultProperty(global, "Math", new MathObject());
 	}
     
     public TSValue execute(EObject object) {
@@ -138,7 +138,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	LexicalEnvironment env = getLexcialEnvironment(object.getGlobal());
 		for (TSValue function : env.getFunctions()) {	
 			// Create a variable in the current context pointing to each function object
-			String functionName = ((TSFunction) function.asObject()).getName();
+			String functionName = ((InterpretedFunction) function.asObject()).getName();
 			if (!currentContext.contains(functionName))
 				currentContext.create(functionName);
 			currentContext.store(functionName, function);
@@ -163,7 +163,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override 
     public TSValue caseFunctionDefinition(FunctionDefinition object) {
-    	TSFunction function = new TSFunction();
+    	InterpretedFunction function = new InterpretedFunction();
     	function.setOuterContext(currentContext);
     	function.setAst(object);
     	return new TSValue(function);
@@ -284,22 +284,22 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		}
     		if (left.isArray()) {
     			if (right.isArray()) {
-    				return new TSValue(TSArray.concat(left.asArray(), right.asArray()));
+    				return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
     			}
     			else {
-    				TSArray result = left.asArray().clone();
+    				ArrayObject result = left.asArray().clone();
     				result.add(right);
     				return new TSValue(result);
     			}	
     		}
     		if (right.isArray()) {
     			if (left.isArray()) {
-    				return new TSValue(TSArray.concat(left.asArray(), right.asArray()));
+    				return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
     			}
     			else {
-    				TSArray result = new TSArray();
+    				ArrayObject result = new ArrayObject();
     				result.add(left);
-    				result = TSArray.concat(result, right.asArray());
+    				result = ArrayObject.concat(result, right.asArray());
     				return new TSValue(result);
     			}
     		}
@@ -450,7 +450,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
-    	TSArray arr = new TSArray(); 
+    	ArrayObject arr = new ArrayObject(); 
     	int i = 0;
     	for (Expression itemExpr : expr.getValues()) {
     		arr.put(String.valueOf(i), execute(itemExpr));
@@ -518,7 +518,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 	}
 	
-    public TSValue processFunctionCall(TSAbstractFunction functionObject, TSObject self, List<Expression> argExprs) {
+    public TSValue processFunctionCall(FunctionObject functionObject, boolean asConstructor, TSObject self, List<Expression> argExprs) {
 			List<TSValue> args = null;  			
 			if (argExprs.size() > 0) {
 				args = new ArrayList<TSValue>(argExprs.size());
@@ -526,18 +526,19 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 					args.add(execute(argExpr));
 				}
 			}
-			return applyFunction(functionObject, self, args);
+			return applyFunction(functionObject, asConstructor, self, args);
     }
     
-    private TSValue applyFunction(TSAbstractFunction function, TSObject self, List<TSValue> args) {
-    	if (function instanceof TSFunction) {
-    		return applyInterpretedFunction((TSFunction) function, self, args);
+    private TSValue applyFunction(FunctionObject function, boolean asConstructor, TSObject self, List<TSValue> args) {
+    	if (function instanceof InterpretedFunction) {
+    		return applyInterpretedFunction((InterpretedFunction) function, asConstructor, self, args);
     	}
-    	return ((TSBuiltinFunction) function).apply(self, args);
+    	return ((BuiltinFunction) function).apply(self, args);
     }
     
-	private TSValue applyInterpretedFunction(TSFunction function, TSObject self, List<TSValue> args) {
+	private TSValue applyInterpretedFunction(InterpretedFunction function, boolean asConstructor, TSObject self, List<TSValue> args) {
 		Block block = function.getBlock();
+		TSValue result = null;
 		try {
 			// Create a new execution context
 			enterNewExecutionContext(function.getName(), function.getOuterContext());
@@ -587,7 +588,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			// Hoist function declarations
 			for (TSValue function : env.getFunctions()) {	
 				// Create a variable in the current context pointing to each function object
-				String functionName = ((TSFunction) function.asObject()).getName();
+				String functionName = ((InterpretedFunction) function.asObject()).getName();
 				if (!currentContext.contains(functionName))
 					currentContext.create(functionName);
 				currentContext.store(functionName, function);

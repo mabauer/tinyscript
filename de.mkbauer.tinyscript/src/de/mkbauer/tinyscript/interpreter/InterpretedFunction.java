@@ -3,13 +3,13 @@ package de.mkbauer.tinyscript.interpreter;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 
-public class TSFunction extends TSAbstractFunction {
+public class InterpretedFunction extends FunctionObject {
 	
 	private FunctionDefinition ast;
 	
 	private ExecutionContext outerContext;
 	
-	public TSFunction() {
+	public InterpretedFunction() {
 		this.ast = null;
 	}
 	

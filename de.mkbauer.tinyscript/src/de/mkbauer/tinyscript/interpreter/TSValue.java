@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+
 /**
  * Represents values used in expressions in Tinyscript. 
  * @author markus.bauer
@@ -85,15 +87,15 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public boolean isArray() {
-		return (value instanceof TSArray);
+		return (value instanceof ArrayObject);
 	}
 	
 	public TSObject asObject() {
 		return (TSObject) value;
 	}
 	
-	public TSArray asArray() {
-		return (TSArray) value;
+	public ArrayObject asArray() {
+		return (ArrayObject) value;
 	}
 	
 	public boolean equals(TSValue other) {

@@ -1,21 +1,19 @@
-package de.mkbauer.tinyscript.interpreter;
+package de.mkbauer.tinyscript.runtime.array;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class TSArray extends TSObject {
+import de.mkbauer.tinyscript.interpreter.TSObject;
+import de.mkbauer.tinyscript.interpreter.TSValue;
+
+public class ArrayObject extends TSObject {
 	
 	private List<TSValue> items;
 	
-	public TSArray() {
-		super();	
-	}
-	
-	@Override
-	protected void initialize() {
+	public ArrayObject() {
+		super(new TSObject(getDefaultProtoType()));	
 		items = new ArrayList<TSValue>();
-		setPrototype(new TSObject());
 		defineDefaultProperty(this, "length", new TSValue(0));
 	}
 
@@ -56,15 +54,15 @@ public class TSArray extends TSObject {
 		put("length", new TSValue(getLength()));
 	}
 	
-	public TSArray clone() {
-		TSArray result = new TSArray();
+	public ArrayObject clone() {
+		ArrayObject result = new ArrayObject();
 		result.items.addAll(items);
 		result.put("length", new TSValue(result.getLength()));
 		return result;
 	}
 	
-	public static TSArray concat(TSArray arr1, TSArray arr2) {
-		TSArray result = new TSArray();
+	public static ArrayObject concat(ArrayObject arr1, ArrayObject arr2) {
+		ArrayObject result = new ArrayObject();
 		result.items.addAll(arr1.items);
 		result.items.addAll(arr2.items);
 		// TODO: Handle named properties
