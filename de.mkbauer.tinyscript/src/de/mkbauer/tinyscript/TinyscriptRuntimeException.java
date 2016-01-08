@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.interpreter;
+package de.mkbauer.tinyscript;
 
 import org.eclipse.emf.ecore.EObject;
 
@@ -21,6 +21,11 @@ public class TinyscriptRuntimeException extends RuntimeException {
 	public TinyscriptRuntimeException(String message, EObject node) {
 		super(message);
 		this.node = node;
+	}
+	
+	public TinyscriptRuntimeException(Exception e) {
+		super(e);
+		this.node = null;
 	}
 
 }

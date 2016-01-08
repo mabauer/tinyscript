@@ -16,7 +16,7 @@ import org.eclipse.xtext.scoping.impl.ResourceSetGlobalScopeProvider;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 
-import de.mkbauer.tinyscript.interpreter.TinyscriptRuntimeException;
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.TsFactory;
 

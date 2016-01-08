@@ -27,11 +27,11 @@ import com.google.inject.Provider;
 
 import de.mkbauer.console.TextDevice;
 import de.mkbauer.console.TextDevices;
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.interpreter.TinyscriptReferenceError;
-import de.mkbauer.tinyscript.interpreter.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 

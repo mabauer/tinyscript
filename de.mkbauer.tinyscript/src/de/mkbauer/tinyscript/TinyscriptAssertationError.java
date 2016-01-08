@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.interpreter;
+package de.mkbauer.tinyscript;
 
 import org.eclipse.emf.ecore.EObject;
 
@@ -15,6 +15,10 @@ public class TinyscriptAssertationError extends TinyscriptRuntimeException {
 	
 	public TinyscriptAssertationError(String message, EObject node) {
 		super(message, node);
+	}
+	
+	public TinyscriptAssertationError(Exception e) {
+		super(e);
 	}
 
 }
