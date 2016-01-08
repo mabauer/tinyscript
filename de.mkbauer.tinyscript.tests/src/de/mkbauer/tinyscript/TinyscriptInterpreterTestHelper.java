@@ -72,8 +72,9 @@ public class TinyscriptInterpreterTestHelper {
 			 ast = (Tinyscript) parser.parse(line);	
 			 validator.assertNoErrors(ast);
 		}
+		// TODO: Check exception handling
 		catch (Exception e) {
-			fail("Syntax error in: " + line + ": " + e.getMessage());
+			fail("Error in: " + line + ": " + e.getClass());
 			e.printStackTrace();
 		}
 		return ast;
@@ -85,7 +86,7 @@ public class TinyscriptInterpreterTestHelper {
 			 ast = (Tinyscript) parser.parse(line);	
 		}
 		catch (Exception e) {
-			fail("Syntax error in: " + line + ": " + e.getMessage());
+			fail("Syntax error in: " + line + ": " + e.getClass());
 			e.printStackTrace();
 		}
 		return ast;

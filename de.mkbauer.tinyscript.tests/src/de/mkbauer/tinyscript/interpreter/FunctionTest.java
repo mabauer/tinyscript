@@ -39,7 +39,11 @@ public class FunctionTest extends TinyscriptInterpreterTestHelper {
 	@Test
 	public void testFunctionExpressionWithoutArgs() {
 		TSValue value = executeScriptFromString("var f = function() {return 4;}; assert (f()==4);");
-		value = executeScriptFromString("var f = function() {return 4;}; assert (f(2)==4);");
+	}
+	
+	@Test
+	public void testNamedFunctionExpression() {
+		TSValue value = executeScriptFromString("var f = function square(x) {return x*x;}; assert (f(2)==4);");
 	}
 	
 	@Test
