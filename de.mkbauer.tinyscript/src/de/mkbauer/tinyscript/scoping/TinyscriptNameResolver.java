@@ -1,5 +1,8 @@
 package de.mkbauer.tinyscript.scoping;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.emf.ecore.EObject;
 
 import de.mkbauer.tinyscript.ts.BlockStatement;
@@ -32,34 +35,34 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 	@Override
 	public String caseFunctionDefinition(FunctionDefinition function) {
 		if (function.getId() != null)
-			return "function_" + function.getId().getName();
+			return "function" + function.getId().getName();
 		else
-			return "function_" + String.valueOf(function.hashCode());
+			return "function" + getUniqueID(function);
 	}
 
 	@Override
 	public String caseIfStatement(IfStatement object) {
-		return "if_" + String.valueOf(object.hashCode());
+		return "if" + getUniqueID(object);
 	}
 
 	@Override
 	public String caseElseStatement(ElseStatement object) {
-		return "else_" + String.valueOf(object.hashCode());
+		return "else" + getUniqueID(object);
 	}
 
 	@Override
 	public String caseForEachStatement(ForEachStatement object) {
-		return "foreach_" + String.valueOf(object.hashCode());
+		return "foreach" + getUniqueID(object);
 	}
 	
 	@Override
 	public String caseNumericForStatement(NumericForStatement object) {
-		return "for_" + String.valueOf(object.hashCode());
+		return "for" + getUniqueID(object);
 	}
 
 	@Override
 	public String caseBlockStatement(BlockStatement object) {
-		return "block_" + String.valueOf(object.hashCode());
+		return "block" + getUniqueID(object);
 	}	
 	
 	@Override
@@ -73,6 +76,11 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 			}
 		}
 		return identifier.getName();
+	}
+	
+	public String getUniqueID(EObject object) {		
+		String id = String.valueOf(object.hashCode());
+		return id;
 	}
 
 }

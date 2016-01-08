@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.regex.Pattern;
+
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.junit4.InjectWith;
 import org.eclipse.xtext.junit4.XtextRunner;
@@ -51,17 +53,17 @@ public class TinyscriptIndexTest {
 		// tester.assertNoErrors(ast);
 		Iterable<IEObjectDescription> exported = index.getExportedEObjectDescriptions(ast);
 		assertIterableContainsString("f", exported);
-		assertIterableContainsString("function_f", exported);
-		assertIterableContainsString("function_f.x", exported);
-		assertIterableContainsString("function_f.local", exported);
+		assertIterableContainsString("functionf", exported);
+		assertIterableContainsString("functionf.x", exported);
+		assertIterableContainsString("functionf.local", exported);
 		assertIterableContainsString("global", exported);
 		
 		ast = parseFromString("var f = function (x) {var local=1; return x;} var global=1; assert (f(global)==1); ");
 		exported = index.getExportedEObjectDescriptions(ast);
 		assertIterableContainsString("f", exported);
-		assertIterableContainsString("function_", exported);
-		assertIterableContainsString(".x", exported);
-		assertIterableContainsString(".local", exported);
+		assertIterableContainsString("function\\d+", exported);
+		assertIterableContainsString("function\\d+.x", exported);
+		assertIterableContainsString("function\\d+.local", exported);
 		assertIterableContainsString("global", exported);
 	}
 	
@@ -70,8 +72,8 @@ public class TinyscriptIndexTest {
 		Tinyscript ast = parseFromString("{ var local=1; } var global = 1; assert (global==1); ");
 		// tester.assertNoErrors(ast);
 		Iterable<IEObjectDescription> exported = index.getExportedEObjectDescriptions(ast);
-		assertIterableContainsString("block_", exported);
-		assertIterableContainsString(".local", exported);
+		assertIterableContainsString("block\\d+", exported);
+		assertIterableContainsString("block\\d+.local", exported);
 		assertIterableContainsString("global", exported);
 	}
 	
@@ -82,14 +84,14 @@ public class TinyscriptIndexTest {
 		Iterable<IEObjectDescription> exported = index.getExportedEObjectDescriptions(ast);
 		assertIterableContainsString("obj", exported);
 		assertIterableContainsString("i", exported);
-		assertIterableContainsString("foreach_", exported);
-		assertIterableContainsString(".x", exported);
+		assertIterableContainsString("foreach\\d+", exported);
+		assertIterableContainsString("foreach\\d+.x", exported);
 
 	}
 	
 	public <T> void assertIterableContainsString(String expected, Iterable<T> elements) {
 		for (T element : elements) {
-			if (element.toString().contains(expected))
+			if (Pattern.matches(expected, element.toString()))
 				return;
 		}
 		fail(expected + " not found in " + elements.toString());

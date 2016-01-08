@@ -80,8 +80,6 @@ public class TinyScriptScopeProviderTest extends TinyscriptInterpreterTestHelper
 		// assertFalse(getValidator().validate(ast).isEmpty());
 	}
 	
-	
-	
 	private Identifier lookup(Reference reference) {
 		return reference.getId();
 	}
