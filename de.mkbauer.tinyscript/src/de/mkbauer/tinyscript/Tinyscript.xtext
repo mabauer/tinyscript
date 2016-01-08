@@ -46,7 +46,7 @@ FunctionDeclaration returns FunctionDefinition:
 ;
 
 ExpressionStatement:
-	AssignmentExpression ';'
+	expr=AssignmentExpression ';'
 ;
 
 // TODO: Simplify expression hierarchy:
@@ -86,7 +86,11 @@ Unary:
 ;
 
 Primary returns Expression:
-	(Atomic  | NewExpression | '(' AssignmentExpression ')' ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))*  
+	(Atomic  | NewExpression | GroupingExpression ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))*  
+;
+
+GroupingExpression:
+	'(' expr=AssignmentExpression ')'
 ;
 
 NewExpression:

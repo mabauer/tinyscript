@@ -20,6 +20,7 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeModule;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.ExpressionStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 @InjectWith(TinyscriptInjectorProvider.class)
@@ -93,14 +94,14 @@ public class TinyscriptInterpreterTestHelper {
 	protected TSValue execute(Tinyscript ast) {
 		ExecutionVisitor visitor = new ExecutionVisitor();
 		TSValue result = visitor.execute(ast);
-		return result; 
+		return result;
 	}
 	
 	protected TSValue evaluateSimpleExpression(String line) {
 		String statement = line + ";";
 		Tinyscript ast = parseScriptFromString(statement);
 		getValidator().assertNoErrors(ast);
-		Expression expr = (Expression) ast.getGlobal().getStatements().get(0);
+		ExpressionStatement expr = (ExpressionStatement) ast.getGlobal().getStatements().get(0);
 		ExecutionVisitor visitor = new ExecutionVisitor();
 		TSValue result = visitor.execute(expr);
 		return result;

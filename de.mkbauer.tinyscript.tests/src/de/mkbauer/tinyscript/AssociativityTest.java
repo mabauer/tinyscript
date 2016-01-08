@@ -17,6 +17,7 @@ import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.ExpressionStatement;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
 import de.mkbauer.tinyscript.ts.Reference;
@@ -33,6 +34,12 @@ public class AssociativityTest {
 	ParseHelper<Tinyscript> parser;
 	
 	private TsSwitch<String> stringRepr = new TsSwitch<String>() {
+		
+		@Override
+		public String caseExpressionStatement(ExpressionStatement object) {
+			return doSwitch(object.getExpr());
+		}
+		
 		public String caseBinaryExpression(BinaryExpression expr) {
 			String result = "(" + doSwitch(expr.getLeft()) + expr.getOp() + doSwitch(expr.getRight()) + ")";
 			return result;
@@ -66,11 +73,11 @@ public class AssociativityTest {
 		
 	};
 	
-	String stringRepr(Expression expr) {
+	String stringRepr(EObject expr) {
 		return stringRepr.doSwitch(expr);
 	}
 
-	Expression parseExpression(String line) {
+	ExpressionStatement parseExpression(String line) {
 		Tinyscript ast = null;
 		try {
 			 ast = (Tinyscript)parser.parse(line);
@@ -80,7 +87,7 @@ public class AssociativityTest {
 			e.printStackTrace();
 		}
 		EList<Statement> statements = ast.getGlobal().getStatements();
-		Expression expr = (Expression)statements.get(statements.size()-1);
+		ExpressionStatement expr = (ExpressionStatement)statements.get(statements.size()-1);
 		return expr;
 	}
 	

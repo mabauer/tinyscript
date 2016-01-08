@@ -22,9 +22,11 @@ import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
 import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.ExpressionStatement;
 import de.mkbauer.tinyscript.ts.ForEachStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
+import de.mkbauer.tinyscript.ts.GroupingExpression;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.NewExpression;
@@ -80,6 +82,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			return caseReference((Reference) object);
 		case TsPackage.IDENTIFIER:
 			return caseIdentifier((Identifier) object);	
+		case TsPackage.EXPRESSION_STATEMENT:
+			return caseExpressionStatement((ExpressionStatement)object);
 		case TsPackage.BINARY_EXPRESSION:
     		return caseBinaryExpression((BinaryExpression) object);
 		case TsPackage.UNARY:
@@ -102,6 +106,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		return caseFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.RETURN_STATEMENT:
     		return caseReturnStatement((ReturnStatement) object);
+		case TsPackage.GROUPING_EXPRESSION:
+			return caseGroupingExpression((GroupingExpression) object);
 		case TsPackage.NUMBER_LITERAL:
     		return caseNumberLiteral((NumberLiteral) object);
 		case TsPackage.STRING_LITERAL:
@@ -160,6 +166,10 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     public TSValue caseBlockStatement(BlockStatement object) {
     	return executeInBlockContext("block", object.getBlock());
     }
+    
+    public TSValue caseExpressionStatement(ExpressionStatement object) {
+    	return execute(object.getExpr());
+    }    
     
     // @Override 
     public TSValue caseFunctionDefinition(FunctionDefinition object) {
@@ -356,7 +366,12 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	}
     	// TODO: Error handling
     	return value;
-    }    
+    }   
+    
+    public TSValue caseGroupingExpression(GroupingExpression expr) {
+    	TSValue result = execute(expr.getExpr());
+    	return result;
+    }
     
     public TSValue caseNewExpression(NewExpression expr) {
     	TSValue result = execute(expr.getExpr());
