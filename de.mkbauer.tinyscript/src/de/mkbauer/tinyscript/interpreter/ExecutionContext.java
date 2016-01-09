@@ -3,22 +3,30 @@ package de.mkbauer.tinyscript.interpreter;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import org.eclipse.emf.ecore.EObject;
+
 import de.mkbauer.tinyscript.ts.Identifier;
 
 public class ExecutionContext {
 	
-	private String name;
+	protected String name;
 	
 	private HashMap<String, TSValue> values;
 	
 	private ExecutionContext outer;
 	
 	protected TSObject thisRef;
+	
+	// Used to save the last expression before a function call in order to compute stack traces
+	protected EObject currentExpression;
+	
+	private boolean functionContext;
 
 	public ExecutionContext(String name, ExecutionContext outerContext) {
 		this.name = name;
 		outer = outerContext;
 		values = new HashMap<String, TSValue>();
+		currentExpression = null;
 	}
 
 	public boolean isGlobal() {
@@ -63,6 +71,11 @@ public class ExecutionContext {
 			}
 		}
 	}
+
+	
+	public boolean contains(String identifier) {
+		return values.containsKey(identifier); 
+	}
 	
 	public TSObject getThisRef() {
 		return thisRef;
@@ -72,8 +85,13 @@ public class ExecutionContext {
 		this.thisRef = thisRef;
 	}
 	
-	public boolean contains(String identifier) {
-		return values.containsKey(identifier); 
+	
+	public void setFunctionContext(boolean functionContext) {
+		this.functionContext = functionContext;
+	}
+	
+	public boolean isFunctionContext() {
+		return this.functionContext;
 	}
 	
 	public String toString() {
