@@ -7,12 +7,12 @@ assert(markus.name=="Markus");
 assert(Person.prototype==markus.__proto__);
 assert(markus.__proto__);
 
-Person.prototype.setName() = function(name) { 
+Person.prototype.setName = function(name) { 
 	return this.name = name; 
 };
 
 
-Person.prototype.getName() = function() { 
+Person.prototype.getName = function() { 
 	return this.name; 
 };
 

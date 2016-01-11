@@ -1,6 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.runtime.string.StringObject;
 
 /**
  * Represents values used in expressions in Tinyscript. 
@@ -10,6 +11,7 @@ import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 public class TSValue { // implements Comparable<TSValue> 
 	
 	public static final TSValue UNDEFINED = new TSValue();
+	public static final TSValue NULL = new TSValue();
 
 	private Object value;
 	
@@ -32,18 +34,33 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public String asString() {
-		if (value == null) 
-			return "UNDEFINED";
-		if (isString()) 
+		if (this == TSValue.UNDEFINED) 
+			return "Undefined";
+		if (this == TSValue.NULL) 
+			return "Null";
+		if (isPrimitiveString()) 
 			return (String)value;
 		else if (isMathematicalInteger())
 			return String.format("%.0f", value) ;
+/*		
+  		// TODO: This should go somewhere else, because an ExecutionContext is needed. 
+ 		else if (isObject()) {
+			TSValue toStringProperty = ((TSObject) value).get("toString");
+			if (toStringProperty.isObject() && (toStringProperty.asObject() instanceof Function)) {
+				return ((Function) toStringProperty).apply(...)
+			}
+		}
+*/
 		else
 			return value.toString();
 	}
 	
 	public boolean isString() {
-		return (value instanceof String);
+		return (value != null && (value instanceof String || value instanceof StringObject));
+	}
+	
+	public boolean isPrimitiveString() {
+		return (value != null && value instanceof String);
 	}
 	
 	public int asInt() {
@@ -61,7 +78,7 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public boolean isDouble() {
-		return (value instanceof Double);
+		return (value != null && value instanceof Double);
 	}
 	
 	public boolean isNumber() {
@@ -79,15 +96,15 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public boolean isBoolean() {
-		return (value instanceof Boolean);
+		return (value != null && value instanceof Boolean);
 	}
 	
 	public boolean isObject() {
-		return (value instanceof TSObject);
+		return (value != null && value instanceof TSObject);
 	}
 	
 	public boolean isArray() {
-		return (value instanceof ArrayObject);
+		return (value != null && value instanceof ArrayObject);
 	}
 	
 	public TSObject asObject() {

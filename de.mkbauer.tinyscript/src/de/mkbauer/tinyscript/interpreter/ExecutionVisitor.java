@@ -51,6 +51,8 @@ import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.runtime.object.ObjectObject;
+import de.mkbauer.tinyscript.runtime.string.StringObject;
 
 
 /**
@@ -395,7 +397,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
 
     // @Override
-    // TODO: Merge with assignemtValue
+    // TODO: Merge with assignValue
     public TSValue caseCallOrPropertyAccess(CallOrPropertyAccess expr) {
     	TSValue base = execute(expr.getExpr()); 
     	TSValue result = TSValue.UNDEFINED;
@@ -403,14 +405,14 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		if (suffix instanceof CallOrPropertyAccessSuffix) {
 			CallOrPropertyAccessSuffix callOrProp = (CallOrPropertyAccessSuffix) suffix;
 			TSValue keyValue = evaluatePropertyKey(callOrProp.getProperty());
-			if (base.isObject()) {
-				result = base.asObject().get(keyValue.asString());
+			
+			if (!base.isObject()) {
+				if (base == TSValue.NULL || base == TSValue.UNDEFINED) {
+					throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
+				}			
 			}
-			else {
-				// TODO: Handle builtin types! E.g.: "xxx".size(),...
-				// TODO: Check, if value is undefined
-				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
-			}
+			TSObject baseasObject = ObjectObject.toObject(globalContext, base);
+			result = baseasObject.get(keyValue.asString());
 			CallSuffix callSuffix = callOrProp.getCall();
 			if (callSuffix != null) {
 				if (result.isObject() && (result.asObject() instanceof Function)) {
@@ -420,10 +422,11 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 						thisRef = new TSObject(result.asObject().get("prototype").asObject());
 					}
 					else
-						thisRef = base.asObject();
+						thisRef = baseasObject;
 					result = processFunctionCall(expr, (Function) result.asObject(), asConstructor, thisRef, callSuffix.getArguments());
 				}
 				else {
+					// TODO: Check for Null or Undefined!
 					throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
 				}	
 			}		
@@ -439,6 +442,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
         		result = processFunctionCall(expr, (Function) base.asObject(), asConstructor, thisRef, callSuffix.getArguments());
     		}
         	else {
+        		// TODO: Check for Null or Undefined!
     			throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
     		}	
     		
@@ -534,22 +538,22 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		if (suffix instanceof CallOrPropertyAccessSuffix) {
     			PropertyAccessSuffix propSuffix = ((CallOrPropertyAccessSuffix) suffix).getProperty();
     			TSValue keyValue = evaluatePropertyKey(propSuffix);
-    			if (prefix.isObject()) {
-    				prefix.asObject().put(keyValue.asString(), value);
-    				return value;
+    			if (!prefix.isObject()) {
+    				if (prefix == TSValue.NULL || prefix == TSValue.UNDEFINED) {
+    					throw new TinyscriptTypeError("Cannot assign to property of undefined or null", expr);
+    				}	
     			}
-    			else {
-    				// TODO: Handle builtin types! E.g.: "xxx".size(),...
-    				// TODO: Check if value is undefined!
-    				throw new TinyscriptTypeError("Property accessors are only allowed for objects", expr);
-    			}
+    			if ( ((CallOrPropertyAccessSuffix) suffix).getCall() != null)
+    				throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
+    			TSObject prefixasObject = ObjectObject.toObject(globalContext, prefix);
+    			prefixasObject.put(keyValue.asString(), value);
+    			return value;
     		}
     		if (suffix instanceof CallSuffix) {
     			throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
     		}
     	}
     	return TSValue.UNDEFINED;
-    	// throw new UnsupportedOperationException("Unsupported left-hand expression in assignment: " + left.eClass().getName() );
     }
     
 	private TSValue evaluatePropertyKey(PropertyAccessSuffix suffix) {
