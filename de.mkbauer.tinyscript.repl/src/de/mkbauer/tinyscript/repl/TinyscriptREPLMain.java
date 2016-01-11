@@ -25,8 +25,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
-import de.mkbauer.console.TextDevice;
-import de.mkbauer.console.TextDevices;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
@@ -36,8 +34,6 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 
 
 class TinyscriptREPLMain  {
-	
-	private Provider<XtextResourceSet> resourceSetProvider;
 	
 	private static final String fileExtension = "ts"; 
 	
@@ -133,7 +129,10 @@ class TinyscriptREPLMain  {
 		if (!issues.isEmpty()) {
 			String msg = issues.get(0).getMessage();
 			if (msg.contains("mismatched input '<EOF>'"))
-				return null;
+				if (issues.size() == 1)
+					return null;
+				else
+					msg = issues.get(1).getMessage();
 			throw new TinyscriptRuntimeException("in '" + script + "': " + msg);	
 		}
 		return ast;
