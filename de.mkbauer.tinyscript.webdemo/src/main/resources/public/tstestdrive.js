@@ -7,7 +7,7 @@
  */
 function Tinyscript($scope, $http) {
 
-	$scope.result = {};
+	//$scope.result = {};
 	
 	$scope.codeMirror = initCodeMirror();
 
@@ -35,6 +35,8 @@ function initCodeMirror() {
 	return new CodeMirror(elem, 
 		{
     		lineNumbers: true,
+    		indentUnit: 4,
+    		theme: "eclipse",
    			mode: "javascript"
   		});
 }
