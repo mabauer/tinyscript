@@ -1,7 +1,6 @@
 
 package de.mkbauer.tinyscript.generator
 
-import org.eclipse.emf.ecore.resource.Resource
 import de.mkbauer.tinyscript.ts.Tinyscript
 import de.mkbauer.tinyscript.ts.VariableStatement
 import de.mkbauer.tinyscript.ts.BinaryExpression
@@ -34,7 +33,7 @@ import de.mkbauer.tinyscript.ts.ObjectInitializer
 import de.mkbauer.tinyscript.ts.PropertyAssignment
 import de.mkbauer.tinyscript.ts.ArrayInitializer
 import de.mkbauer.tinyscript.ts.NumericForStatement
-import de.mkbauer.tinyscript.TinyscriptRuntimeModule
+
 import com.google.inject.Inject
 
 class TinyscriptGenerator  {
@@ -43,15 +42,22 @@ class TinyscriptGenerator  {
 	TinyscriptQualifiedNameProvider nameProvider;
 	
 	def generateBuiltins() '''
+
 		function assert(condition) {
-    		if (!condition) {
-        		message = "Assertion failed";
-        		if (typeof Error !== "undefined") {
-            		throw new Error(message);
-        		}
-        		throw message; // Fallback
-    		}
+			if (!condition) {
+				message = "Assertion failed";
+				if (typeof Error !== "undefined") {
+					throw new Error(message);
+				}
+			throw message; // Fallback
+			}
 		}
+		
+		if (typeof print !== "function") {
+			print = function(s) {
+				console.log(s);
+			};
+		} 
 		
 	'''
 	

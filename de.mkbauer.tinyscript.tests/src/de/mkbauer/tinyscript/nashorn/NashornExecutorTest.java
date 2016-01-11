@@ -58,4 +58,9 @@ public class NashornExecutorTest extends TinyscriptInterpreterTestHelper {
 		executeScriptFromFileWithNashorn("linked_list.ts");
 	}
 	
+	@Test
+	public void testbuiltinPrint() {
+		executeScriptFromString("var hello=\"Hello!\"; print(hello);");
+	}
+	
 }
