@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -9,8 +11,10 @@ import java.util.Map;
 
 import org.eclipse.emf.ecore.EObject;
 
+import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.ArrayInitializer;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
@@ -43,13 +47,10 @@ import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
-import de.mkbauer.tinyscript.ts.TsFactory;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
-import de.mkbauer.tinyscript.ts.util.TsSwitch;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
-import de.mkbauer.tinyscript.runtime.math.MathObject;
 
 
 /**
@@ -72,6 +73,11 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
 	}
+	
+	public void defineStdOut(OutputStream os) {
+		globalContext.defineStdOut(os);
+	}
+
     
     public TSValue execute(EObject object) {
     	if (object == null)
@@ -139,6 +145,10 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
   	
     // @Override
 	public TSValue caseTinyscript(Tinyscript object) {
+		// Start from scratch!
+		currentContext = globalContext;
+		contextStack.clear();
+		
 		// Hoist function declarations:
     	// Create function objects (or get them form a cache)
     	LexicalEnvironment env = getLexcialEnvironment(object.getGlobal());
@@ -149,7 +159,13 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 				currentContext.create(functionName);
 			currentContext.store(functionName, function);
 		}
-    	return execute(object.getGlobal());
+		try {
+			return execute(object.getGlobal());
+		}
+		catch (TinyscriptRuntimeException e) {
+			attachStackTrace(e);
+			throw e;
+		}
 	}
 
     // @Override
@@ -342,8 +358,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			return new TSValue(left.asDouble() % right.asDouble());
     		}
     	}
-    	if (op == null) 
-    		return left;
+
     	// Handling of boolean and, or ...
     	// Error handling
 		throw new UnsupportedOperationException("Unsupported binary expression: " + op);
@@ -406,7 +421,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 					}
 					else
 						thisRef = base.asObject();
-					result = processFunctionCall((Function) result.asObject(), asConstructor, thisRef, callSuffix.getArguments());
+					result = processFunctionCall(expr, (Function) result.asObject(), asConstructor, thisRef, callSuffix.getArguments());
 				}
 				else {
 					throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
@@ -421,7 +436,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 				if (asConstructor) {
 					thisRef = new TSObject(base.asObject().get("prototype").asObject());
 				}
-        		result = processFunctionCall((Function) base.asObject(), asConstructor, thisRef, callSuffix.getArguments());
+        		result = processFunctionCall(expr, (Function) base.asObject(), asConstructor, thisRef, callSuffix.getArguments());
     		}
         	else {
     			throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
@@ -555,15 +570,16 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 	}
 	
-    public TSValue processFunctionCall(Function functionObject, boolean asConstructor, TSObject self, List<Expression> argExprs) {
-			List<TSValue> args = null;  			
-			if (argExprs.size() > 0) {
-				args = new ArrayList<TSValue>(argExprs.size());
-				for (EObject argExpr : argExprs) {
-					args.add(execute(argExpr));
-				}
+    public TSValue processFunctionCall(EObject expr, Function functionObject, boolean asConstructor, TSObject self, List<Expression> argExprs) {
+    	currentContext.currentExpression = expr;
+    	List<TSValue> args = null;  			
+		if (argExprs.size() >= 0) {
+			args = new ArrayList<TSValue>(argExprs.size());
+			for (EObject argExpr : argExprs) {
+				args.add(execute(argExpr));
 			}
-			return applyFunction(functionObject, asConstructor, self, args);
+		}
+		return applyFunction(functionObject, asConstructor, self, args);
     }
     
     private TSValue applyFunction(Function function, boolean asConstructor, TSObject self, List<TSValue> args) {
@@ -581,6 +597,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			enterNewExecutionContext(function.getName(), function.getOuterContext());
 			// Set this-Reference
 			currentContext.setThisRef(self);
+			currentContext.setFunctionContext(true);
 			// Put the arguments into the context
 			if (args != null) {
 				int argsN = args.size();
@@ -607,6 +624,11 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 				result = rv.getReturnValue();
 			leaveExecutionContext();
 			return result;				
+		}
+		catch (TinyscriptRuntimeException e) {
+			attachStackTrace(e);
+			leaveExecutionContext();
+			throw e;
 		}
 
 	}
@@ -640,7 +662,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		try {
 			result = caseBlock(block);
 		}
-		catch (TSReturnValue e) {
+		catch (TinyscriptRuntimeException e) {
 			if (needsNewContext)
 				leaveExecutionContext();
 			throw e;
@@ -683,6 +705,25 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		result =  new LexicalEnvironment(functions, variables);
 		lexicalEnvironments.put(block, result);
 		return result;
+	}
+	
+	private void attachStackTrace(TinyscriptRuntimeException e) {
+		List<TSStacktraceElement> stacktrace = new ArrayList<TSStacktraceElement>();
+		if (e.getNode() != null)
+			stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(e.getNode()), 
+					currentContext.name, TinyscriptModelUtil.getLineOfASTNode(e.getNode())));
+		else 
+			stacktrace.add(new TSStacktraceElement(currentContext.name, 0));
+		for (ExecutionContext ctx: contextStack) {
+			if (ctx.isFunctionContext()) {
+				stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(ctx.currentExpression), 
+						ctx.name, TinyscriptModelUtil.getLineOfASTNode(ctx.currentExpression)));
+			}
+		}
+			
+		TSStacktraceElement[] result = new TSStacktraceElement[0];
+		result = stacktrace.toArray(result);
+		e.setTinyscriptStacktrace(result);
 	}
 
 

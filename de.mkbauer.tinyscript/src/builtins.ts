@@ -1,5 +1,10 @@
-var Object;
+function Object(o) {
+}
 
-var Function;
+function Function() {
+}
 
 var Math;
+
+function print() {
+}

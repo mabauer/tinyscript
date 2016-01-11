@@ -1,0 +1,84 @@
+<!doctype html>
+<html ng-app="TinyscriptApp">
+	<head>
+		<title>Tinyscript</title>
+		<script src="lib/angular.js"></script>
+		<script src="lib/ui-bootstrap-tpls.js"></script>
+		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+ 		<script src="lib/codemirror/codemirror.js"></script>
+		<link rel="stylesheet" href="lib/codemirror/codemirror.css">
+		<link rel="stylesheet" href="lib/codemirror/eclipse.css">
+		<script src="lib/codemirror/javascript.js"></script>
+		
+  		<script src="tstestdrive.js"></script>
+  		<link rel="stylesheet" href="tstestdrive.css">
+	</head>
+
+	<body>
+		<div id="main" ng-controller="Tinyscript">
+			<div class="page-header">
+				<div id="header" class="container">
+	  				<div class="row">
+	  					<div class="col-md-12">
+	  						<h1>Tinyscript Testdrive</h1>
+	  					</div>
+	  				</div>
+	  				<div id="commands" class=row> 
+	  					<div class="col-md-12">
+							<button class="btn btn-default" ng-click="executeScript()">Execute</button>
+						</div>
+					</div>
+	  			</div>
+			</div>
+
+			<div id="content" class="container">
+				<div id="code" class="row">
+					<div class="col-md-12">
+ 	     				<div id="codeEditor">
+ 	     				</div>
+ 	     			</div>
+      			</div>
+      			<div id="help" class="row">
+      				<div class="col-md-12">
+						<small>or press <kbd>Ctrl</kbd>+<kbd>Enter</kbd></small>
+					</div>
+				</div>
+      			<div id=status class="row row_sep" ng-show="result">
+	      			<div class="col-md-12">
+		      			<div class="alert alert-success" role="alert" ng-show="result.value && result.errorCode == 0">
+		      				<span class="sr-only">Result:</span>
+				     			OK
+				     	</div>
+		     			<div class="alert alert-danger" role="alert" ng-show="result.errorCode > 0">
+	  						<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+	  						<span class="sr-only">Error:</span>
+	  							{{result.errorMessage}}
+						</div>
+					</div>
+				</div>
+				<div id=result class="row" ng-show="result"> 
+					<div class="col-md-12">	
+						<pre>result = {{result.value}}</pre>
+					</div>
+      			</div>
+				<div id=output class="row" ng-show="result && result.output"> 
+					<div class="col-md-12">	
+						<pre>{{result.output}}</pre>
+					</div>
+      			</div>
+			</div> <!-- content -->
+
+		    <div class=page-footer>
+		    	<div id="footer" class="container">
+	  				<div class="row">
+	  					<div class="col-md-12">
+	  						<small>Tinyscript Version 0.0.1, Markus Bauer</small>
+	  					</div>
+	  				</div>
+	  			</div>
+		    </div>
+		    		    
+		</div> <!-- main -->
+		
+	</body>
+</html>

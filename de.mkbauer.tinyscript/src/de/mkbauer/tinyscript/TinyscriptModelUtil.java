@@ -7,6 +7,7 @@ import java.util.List;
 import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
@@ -139,6 +140,16 @@ public class TinyscriptModelUtil {
 			}
 		}
 		return result;
+	}
+	
+
+	
+	public static int getLineOfASTNode(EObject elem) {
+		return NodeModelUtils.getNode(elem).getStartLine();
+	}
+	
+	public static String getFilenameOfASTNode(EObject elem) {
+		return elem.eResource().getURI().toString();
 	}
 
 	public static boolean isShadowing(EObject elem) {

@@ -1,5 +1,8 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.io.OutputStream;
+
+import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.runtime.function.FunctionObject;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
 import de.mkbauer.tinyscript.runtime.object.ObjectObject;
@@ -10,6 +13,9 @@ public class GlobalExecutionContext extends ExecutionContext {
 	private TSObject globalObject;
 	
 	private TSObject objectPrototype;
+	
+	private OutputStream stdOut;
+
 
 	public GlobalExecutionContext() {
 		super("global", null);
@@ -26,7 +32,8 @@ public class GlobalExecutionContext extends ExecutionContext {
 
 		TSObject.defineDefaultProperty(globalObject, "Function", new FunctionObject(this));
 		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
-
+		
+		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
 
 	}
 	
@@ -81,6 +88,17 @@ public class GlobalExecutionContext extends ExecutionContext {
 		return !globalObject.get(identifier).equals(TSValue.UNDEFINED);
 	}
 	
+	@Override
+	public boolean isFunctionContext() {
+		return true;
+	}
+
+	public void defineStdOut(OutputStream os) {
+		stdOut = os;	
+	}
 	
+	public OutputStream getStdOut() {
+		return stdOut;
+	}
 
 }
