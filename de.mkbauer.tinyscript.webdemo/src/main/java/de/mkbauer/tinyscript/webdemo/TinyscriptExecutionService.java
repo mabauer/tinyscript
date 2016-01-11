@@ -1,7 +1,9 @@
 package de.mkbauer.tinyscript.webdemo;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 import org.eclipse.emf.common.util.URI;
@@ -42,18 +44,22 @@ public class TinyscriptExecutionService {
 		String resultAsString = "";
 		String errorMessage = "";
 		int errorLine = 0;
+		ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 		
 		try {
 			Tinyscript ast = parseScriptFromString(script);
 			ExecutionVisitor executionvisitor = new ExecutionVisitor();
+			executionvisitor.defineStdOut(stdout);
 			TSValue result = executionvisitor.execute(ast);
 			resultAsString = result.asString();
-			return new TinyscriptExecutionResult(resultAsString);
+			String output = stdout.toString();
+			return new TinyscriptExecutionResult(resultAsString, output);
 		}
 		catch (TinyscriptRuntimeException e) {
 			errorMessage = e.getMessage();
 			errorLine = e.getAffectedLine();
-			return new TinyscriptExecutionResult(resultAsString, errorMessage, errorLine);
+			String output = stdout.toString();
+			return new TinyscriptExecutionResult(resultAsString, output, errorMessage, errorLine);
 		}
 	}
 	

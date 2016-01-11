@@ -38,17 +38,32 @@
  	     				</div>
  	     			</div>
       			</div>
-      			<div id=results class="row row_sep" ng-show="result">
+      			<div id="help" class="row">
+      				<div class="col-md-12">
+						<small>or press <kbd>Ctrl</kbd>+<kbd>Enter</kbd></small>
+					</div>
+				</div>
+      			<div id=status class="row row_sep" ng-show="result">
 	      			<div class="col-md-12">
 		      			<div class="alert alert-success" role="alert" ng-show="result.value && result.errorCode == 0">
 		      				<span class="sr-only">Result:</span>
-				     			{{result.value}}
+				     			OK
 				     	</div>
 		     			<div class="alert alert-danger" role="alert" ng-show="result.errorCode > 0">
 	  						<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
 	  						<span class="sr-only">Error:</span>
 	  							{{result.errorMessage}}
 						</div>
+					</div>
+				</div>
+				<div id=result class="row" ng-show="result"> 
+					<div class="col-md-12">	
+						<pre>result = {{result.value}}</pre>
+					</div>
+      			</div>
+				<div id=output class="row" ng-show="result && result.output"> 
+					<div class="col-md-12">	
+						<pre>{{result.output}}</pre>
 					</div>
       			</div>
 			</div> <!-- content -->

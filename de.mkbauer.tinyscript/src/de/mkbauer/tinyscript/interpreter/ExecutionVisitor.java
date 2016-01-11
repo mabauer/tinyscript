@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -71,6 +73,11 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
 	}
+	
+	public void defineStdOut(OutputStream os) {
+		globalContext.defineStdOut(os);
+	}
+
     
     public TSValue execute(EObject object) {
     	if (object == null)
@@ -566,13 +573,13 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     public TSValue processFunctionCall(EObject expr, Function functionObject, boolean asConstructor, TSObject self, List<Expression> argExprs) {
     	currentContext.currentExpression = expr;
     	List<TSValue> args = null;  			
-			if (argExprs.size() > 0) {
-				args = new ArrayList<TSValue>(argExprs.size());
-				for (EObject argExpr : argExprs) {
-					args.add(execute(argExpr));
-				}
+		if (argExprs.size() >= 0) {
+			args = new ArrayList<TSValue>(argExprs.size());
+			for (EObject argExpr : argExprs) {
+				args.add(execute(argExpr));
 			}
-			return applyFunction(functionObject, asConstructor, self, args);
+		}
+		return applyFunction(functionObject, asConstructor, self, args);
     }
     
     private TSValue applyFunction(Function function, boolean asConstructor, TSObject self, List<TSValue> args) {

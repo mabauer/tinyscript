@@ -65,6 +65,7 @@ class TinyscriptREPLMain  {
 		visitor = new ExecutionVisitor();
 		device = new ConsoleReader();
 		device.setExpandEvents(false);
+		visitor.defineStdOut(System.out);
     }  
 	
 	public void loop() throws IOException {
