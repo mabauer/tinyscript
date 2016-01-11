@@ -141,4 +141,45 @@ public class TinyscriptModelUtil {
 		return result;
 	}
 
+	public static boolean isShadowing(EObject elem) {
+		Block block = containingBlock(elem);
+		while (block != null) {
+			if (blockContainsConflictingIdentifiers(elem, block))
+				return true;
+			EObject parent = block.eContainer();
+			if ((parent instanceof Tinyscript) || (parent instanceof FunctionDeclaration)) 
+				break;
+			block = containingBlock(parent);
+		}
+		return false;
+	}
+	
+	public static boolean blockContainsConflictingIdentifiers(EObject elem, Block block) {
+		String name = getNameIfNamedElement(elem);
+		if (name == null)
+			return false;
+		long countDuplicates = declaredVariablesInBlockBefore(block, elem).stream()
+				.filter(i->i.getName().equals(name))
+				.count();
+		if (countDuplicates > 0)
+			return true;
+		countDuplicates  = functionDeclarationsInBlock(block).stream()
+				.filter(f->f.getId().getName().equals(name))
+				.count();
+		return (countDuplicates > 0);
+		// TODO: Check parameters of functions
+	}
+	
+	public static String getNameIfNamedElement(EObject elem) {
+		String name = null;
+		if (elem instanceof FunctionDeclaration) {
+			return ((FunctionDeclaration) elem).getId().getName();
+		}
+		if (elem instanceof Identifier) {
+			return ((Identifier) elem).getName();
+		}
+		return null;
+		
+	}
+	
 } 

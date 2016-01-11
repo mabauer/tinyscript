@@ -5,6 +5,10 @@ package de.mkbauer.tinyscript;
 
 import org.eclipse.xtext.naming.IQualifiedNameProvider;
 
+import com.google.inject.Provides;
+
+import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
+import de.mkbauer.tinyscript.nashorn.NashornExecutor;
 import de.mkbauer.tinyscript.scoping.TinyscriptGlobalScopeProvider;
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
 
@@ -24,4 +28,9 @@ public class TinyscriptRuntimeModule extends de.mkbauer.tinyscript.AbstractTinys
         return TinyscriptQualifiedNameProvider.class;
     }
 
+	@Provides
+	public NashornExecutor getNashornExecutor(TinyscriptGenerator generator) {
+		return new NashornExecutor(generator);
+	}
+	
 }

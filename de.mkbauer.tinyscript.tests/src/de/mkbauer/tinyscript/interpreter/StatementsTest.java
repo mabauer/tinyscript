@@ -13,6 +13,7 @@ import org.junit.runner.RunWith;
 
 import com.google.inject.Inject;
 
+import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
 import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
 import de.mkbauer.tinyscript.ts.Expression;
@@ -34,7 +35,7 @@ public class StatementsTest extends TinyscriptInterpreterTestHelper {
 			fail("assert (1==2); should raise an exception!");
 		}
 		catch (TinyscriptAssertationError e) {
-			// We have the exception, so the test is successfful!
+			// We have the exception, so the test is successful!
 			assertTrue(true);
 		}
 	}

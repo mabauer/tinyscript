@@ -21,13 +21,15 @@ Require-Bundle: org.eclipse.xtext;visibility:=reexport,
  org.junit,
  org.eclipse.xtext.xbase.lib,
  org.eclipse.equinox.common;bundle-version="3.6.200"
-Import-Package: org.apache.log4j,
+Import-Package: com.google.inject;version="1.4.0",
+ org.apache.log4j,
  org.eclipse.xtext.xbase.lib
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: de.mkbauer.tinyscript,
  de.mkbauer.tinyscript.formatting,
  de.mkbauer.tinyscript.generator,
  de.mkbauer.tinyscript.interpreter,
+ de.mkbauer.tinyscript.nashorn,
  de.mkbauer.tinyscript.parser.antlr,
  de.mkbauer.tinyscript.parser.antlr.internal,
  de.mkbauer.tinyscript.scoping,

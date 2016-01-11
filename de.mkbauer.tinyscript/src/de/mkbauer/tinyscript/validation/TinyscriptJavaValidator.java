@@ -27,6 +27,7 @@ public class TinyscriptJavaValidator extends AbstractTinyscriptJavaValidator {
 	@Check
 	public void checkNoDuplicateIdentifiersInBlock(Identifier identifier) {
 		if (isPartOfVariableStatement(identifier)) {
+			// TODO: Replace with TinyscriptModelUtil.blockContainsConflictingIdentifiers()
 			Block block = TinyscriptModelUtil.containingBlock(identifier);
 			long countDuplicates = TinyscriptModelUtil.declaredVariablesInBlockBefore(block, identifier).stream()
 				.filter(i->i.getName().equals(identifier.getName()))
