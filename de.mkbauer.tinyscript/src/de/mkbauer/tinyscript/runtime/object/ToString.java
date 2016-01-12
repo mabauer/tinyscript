@@ -14,8 +14,7 @@ public class ToString extends BuiltinFunction {
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self,
 			List<TSValue> args) {
-		// TODO Auto-generated method stub
-		return null;
+		return new TSValue(self.toString());
 	}
 
 	@Override
@@ -25,7 +24,6 @@ public class ToString extends BuiltinFunction {
 
 	@Override
 	public int getLength() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
