@@ -4,7 +4,6 @@ import java.util.List;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
-import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
@@ -57,7 +56,7 @@ public class StringObject extends BuiltinType {
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		// TODO Auto-generated method stub
 		return null;
 	}

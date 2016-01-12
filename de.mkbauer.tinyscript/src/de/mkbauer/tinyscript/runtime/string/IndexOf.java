@@ -9,12 +9,14 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class IndexOf extends BuiltinFunction {
 	
+	private final static String NAME = "indexOf";
+	
 	public IndexOf(ExecutionVisitor ev) {
 		super(ev);
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		// TODO: Should try to convert to string (using asString())
 		if (self instanceof StringObject) {
@@ -28,7 +30,7 @@ public class IndexOf extends BuiltinFunction {
 
 	@Override
 	public String getName() {
-		return "toString";
+		return NAME;
 	}
 
 	@Override

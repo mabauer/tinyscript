@@ -1,7 +1,10 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import de.mkbauer.tinyscript.runtime.function.Call;
 
 public abstract class Function extends TSObject {
 	
@@ -23,6 +26,11 @@ public abstract class Function extends TSObject {
 			proto = new TSObject(ev.getDefaultPrototype());
 			// Property: __proto__
 			setPrototype(proto);
+			// Store our unfinished Object Object into the global context, because
+			// other functions that we will add to our prototype next will need it.
+			ev.getGlobalContext().store("Object", new TSValue(this));
+			TSObject.defineDefaultProperty(proto, "call", new Call(ev));
+			TSObject.defineDefaultProperty(proto, "length", new TSValue(getLength()));
 			// TODO: Remove, just for testing
 			TSObject.defineDefaultProperty(proto, "isCallable", new TSValue(true));
 		}
@@ -36,16 +44,15 @@ public abstract class Function extends TSObject {
 		return get("prototype");
 	}
 	
-	public abstract TSValue apply(TSObject self, List<TSValue> args);
-			
-	public String getName() {
-		return "";
+	public TSValue call(boolean asConstructor, TSObject self, TSValue... args) {
+		return apply(asConstructor, self, Arrays.<TSValue>asList(args));
 	}
 	
-	public int getLength() {
-		// TODO: Find out why?
-		return 0;
-	}
+	public abstract TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args);
+			
+	public abstract String getName();
+	
+	public abstract int getLength();
 
 	public String toString() {
 		String result = "";

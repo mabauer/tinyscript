@@ -122,6 +122,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		return globalContext;
 	}
 
+	protected ExecutionContext getCurrentContext() {
+		return currentContext;
+	}
     
     public TSValue execute(EObject object) {
     	if (object == null)
@@ -618,66 +621,13 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
     public TSValue processFunctionCall(EObject expr, Function functionObject, boolean asConstructor, TSObject self, List<Expression> argExprs) {
     	currentContext.currentExpression = expr;
-    	List<TSValue> args = null;  			
-		if (argExprs.size() >= 0) {
-			args = new ArrayList<TSValue>(argExprs.size());
-			for (EObject argExpr : argExprs) {
-				args.add(execute(argExpr));
-			}
-		}
-		return applyFunction(functionObject, asConstructor, self, args);
+    	
+			TSValue[] args = new TSValue[argExprs.size()];
+			for (int i = 0; i < argExprs.size(); i++) {
+				args[i] = execute(argExprs.get(i));
+			}		
+		return functionObject.call(asConstructor, self, args);
     }
-    
-    private TSValue applyFunction(Function function, boolean asConstructor, TSObject self, List<TSValue> args) {
-    	if (function instanceof InterpretedFunction) {
-    		return applyInterpretedFunction((InterpretedFunction) function, asConstructor, self, args);
-    	}
-    	return ((BuiltinFunction) function).apply(self, args);
-    }
-    
-	private TSValue applyInterpretedFunction(InterpretedFunction function, boolean asConstructor, TSObject self, List<TSValue> args) {
-		Block block = function.getBlock();
-		TSValue result = null;
-		try {
-			// Create a new execution context
-			enterNewExecutionContext(function.getName(), function.getOuterContext());
-			// Set this-Reference
-			currentContext.setThisRef(self);
-			currentContext.setFunctionContext(true);
-			// Put the arguments into the context
-			if (args != null) {
-				int argsN = args.size();
-				int i = 0;
-				for (Identifier param : function.getAst().getParams()) {
-					currentContext.create(param.getName());
-					if (i < argsN) {
-						currentContext.store(param.getName(), args.get(i));
-					}
-					i++;
-				}
-			}
-			result = caseBlock(block);
-			if (asConstructor)
-				 result = new TSValue(currentContext.getThisRef());
-			leaveExecutionContext();
-			return result;
-		}
-		catch (TSReturnValue rv) {
-			// Restore execution context
-			if (asConstructor && rv.equals(TSValue.UNDEFINED))
-				result = new TSValue(currentContext.getThisRef());
-			else
-				result = rv.getReturnValue();
-			leaveExecutionContext();
-			return result;				
-		}
-		catch (TinyscriptRuntimeException e) {
-			attachStackTrace(e);
-			leaveExecutionContext();
-			throw e;
-		}
-
-	}
 	
 	private TSValue executeInBlockContext(String name, Block block) {
 		return executeInBlockContext(name, block, null, null);
@@ -718,11 +668,11 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		return result;
 	}
 	
-	private void enterNewExecutionContext(String name) {
-		enterNewExecutionContext(name, null);
+	protected ExecutionContext enterNewExecutionContext(String name) {
+		return enterNewExecutionContext(name, null);
 	}
 	
-	private void enterNewExecutionContext(String name, ExecutionContext outer) {
+	protected ExecutionContext enterNewExecutionContext(String name, ExecutionContext outer) {
 		contextStack.push(currentContext);
 		TSObject thisRef = currentContext.getThisRef();
 		if (outer == null) {
@@ -732,9 +682,10 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			currentContext = new ExecutionContext(name, outer);
 		}
 		currentContext.setThisRef(thisRef);
+		return currentContext;
 	}
 	
-	private void leaveExecutionContext() {
+	protected void leaveExecutionContext() {
 		currentContext = contextStack.pop();
 	}
 	
@@ -753,7 +704,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		return result;
 	}
 	
-	private void attachStackTrace(TinyscriptRuntimeException e) {
+	protected void attachStackTrace(TinyscriptRuntimeException e) {
 		List<TSStacktraceElement> stacktrace = new ArrayList<TSStacktraceElement>();
 		if (e.getNode() != null)
 			stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(e.getNode()), 

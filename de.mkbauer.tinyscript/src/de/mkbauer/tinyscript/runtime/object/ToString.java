@@ -9,13 +9,28 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class ToString extends BuiltinFunction {
 	
-	public ToString(ExecutionVisitor ev) {
-		super(ev);
+	private final static String NAME = "toString";
+	
+	@Override
+	public TSValue apply(boolean asConstructor, TSObject self,
+			List<TSValue> args) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
-		return new TSValue(self.toString());
+	public String getName() {
+		return NAME;
+	}
+
+	@Override
+	public int getLength() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public ToString(ExecutionVisitor ev) {
+		super(ev);
 	}
 
 }

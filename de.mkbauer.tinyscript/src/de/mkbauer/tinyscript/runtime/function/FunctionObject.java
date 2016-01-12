@@ -11,6 +11,8 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class FunctionObject extends BuiltinType {
 	
+	private static final String NAME = "Function";
+	
 	public FunctionObject(ExecutionVisitor ev) {
 		super(ev);
 		
@@ -19,13 +21,13 @@ public class FunctionObject extends BuiltinType {
 	}
 	
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 	
 	public String getName() {
-		return "Function";
+		return NAME;
 	}
 	
 	public int getLength() {

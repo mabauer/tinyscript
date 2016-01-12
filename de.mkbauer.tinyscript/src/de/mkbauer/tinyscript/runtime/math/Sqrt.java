@@ -10,14 +10,22 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class Sqrt extends BuiltinFunction {
 	
+	private static final String NAME = "sqrt";
+	
 	public Sqrt(ExecutionVisitor ev) {
 		super(ev);
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		return new TSValue(java.lang.Math.sqrt(args.get(0).asDouble()));
+	}
+	
+
+	@Override
+	public String getName() {
+		return NAME;
 	}
 
 	@Override

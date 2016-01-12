@@ -10,6 +10,8 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class ObjectObject extends BuiltinType {
 	
+	private final static String NAME = "Object";
+	
 	public ObjectObject(ExecutionVisitor ev) {
 		super(ev);
 		
@@ -23,14 +25,14 @@ public class ObjectObject extends BuiltinType {
 	}
 	
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public String getName() {
-		return "Object";
+		return NAME;
 	}
 
 	@Override

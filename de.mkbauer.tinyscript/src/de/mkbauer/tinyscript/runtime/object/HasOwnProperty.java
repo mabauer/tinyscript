@@ -9,14 +9,22 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class HasOwnProperty extends BuiltinFunction {
 	
+	private final static String NAME = "hasOwnProperty";
+	
 	public HasOwnProperty(ExecutionVisitor ev) {
 		super(ev);
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		return new TSValue(self.hasOwnProperty(args.get(0).asString()));
+	}
+
+
+	@Override
+	public String getName() {
+		return NAME;
 	}
 
 	@Override
