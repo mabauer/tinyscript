@@ -3,6 +3,8 @@ package de.mkbauer.tinyscript.interpreter;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import de.mkbauer.tinyscript.runtime.string.StringObject;
+
 
 public class TSObject {
 	
@@ -18,10 +20,31 @@ public class TSObject {
 		properties = new HashMap<String, TSPropertyDescriptor>();
 		if (proto != null)
 			setPrototype(proto); 
-		initialize();
 	}
 	
-	protected void initialize() {
+	public static TSObject toObject(ExecutionVisitor ev, TSValue value) throws TinyscriptTypeError {
+		if (value == TSValue.UNDEFINED)  {
+			throw new TinyscriptTypeError("Cannot convert 'undefined' to an object");
+		}
+		if (value == TSValue.NULL) {
+			throw new TinyscriptTypeError("Cannot convert 'null' to an object");
+		}
+		if (value.isPrimitiveString()) {
+			return new StringObject(ev, value);
+		}
+		if (value.isNumber()) {
+			// TODO Create a NumberObject object
+			TSObject result = new TSObject(ev.getDefaultPrototype()); 
+			result.put("value", value);
+			return result; 
+		}
+		if (value.isBoolean()) {
+			// TODO Create a BooleanObject object
+			TSObject result = new TSObject(ev.getDefaultPrototype()); 
+			result.put("value", value);
+			return result;
+		}
+		return value.asObject();
 	}
 	
 	public static void defineDefaultProperty(TSObject object, String key, Object value) {
