@@ -1,8 +1,9 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
-public class Function extends TSObject {
+public abstract class Function extends TSObject {
 	
 	protected ExecutionVisitor ev;
 	
@@ -24,7 +25,7 @@ public class Function extends TSObject {
 			setPrototype(proto);
 			// TODO: Remove, just for testing
 			TSObject.defineDefaultProperty(proto, "isCallable", new TSValue(true));
-		}			
+		}
 	}
 	
 	public void setPrototypeProperty(Object prototype) {
@@ -34,6 +35,8 @@ public class Function extends TSObject {
 	public TSValue getPrototypeProperty() {
 		return get("prototype");
 	}
+	
+	public abstract TSValue apply(TSObject self, List<TSValue> args);
 			
 	public String getName() {
 		return "";

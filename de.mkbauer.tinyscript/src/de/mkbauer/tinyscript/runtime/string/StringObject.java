@@ -1,10 +1,14 @@
 package de.mkbauer.tinyscript.runtime.string;
 
+import java.util.List;
+
+import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.Function;
+import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
-public class StringObject extends Function {
+public class StringObject extends BuiltinType {
 	
 	private String value;
 	
@@ -50,6 +54,12 @@ public class StringObject extends Function {
 	
 	public String toString() {
 		return value;
+	}
+
+	@Override
+	public TSValue apply(TSObject self, List<TSValue> args) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 

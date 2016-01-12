@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.List;
+
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 
@@ -33,6 +35,12 @@ public class InterpretedFunction extends Function {
 	}
 	
 	@Override
+	public TSValue apply(TSObject self, List<TSValue> args) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	@Override
 	public String getName() {
 		if (ast != null) {
 			if (ast.getId() != null)
@@ -56,6 +64,8 @@ public class InterpretedFunction extends Function {
 		}
 		return null;
 	}
+
+
 	
 
 }

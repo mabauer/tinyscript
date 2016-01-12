@@ -1,13 +1,14 @@
 package de.mkbauer.tinyscript.runtime.object;
 
+import java.util.List;
+
+import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
-import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
-import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
-import de.mkbauer.tinyscript.runtime.string.StringObject;
 
-public class ObjectObject extends Function {
+
+public class ObjectObject extends BuiltinType {
 	
 	public ObjectObject(ExecutionVisitor ev) {
 		super(ev);
@@ -20,6 +21,12 @@ public class ObjectObject extends Function {
 		defineDefaultProperty(defaultPrototype, "toString", new ToString(ev));
 		defineDefaultProperty(defaultPrototype, "hasOwnProperty", new HasOwnProperty(ev));
 	}
+	
+	@Override
+	public TSValue apply(TSObject self, List<TSValue> args) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public String getName() {
@@ -31,30 +38,7 @@ public class ObjectObject extends Function {
 		// TODO Find out why?
 		return 1;
 	}
-	
-	public static TSObject toObject(ExecutionVisitor ev, TSValue value) throws TinyscriptTypeError {
-		if (value == TSValue.UNDEFINED)  {
-			throw new TinyscriptTypeError("Cannot convert 'undefined' to an object");
-		}
-		if (value == TSValue.NULL) {
-			throw new TinyscriptTypeError("Cannot convert 'null' to an object");
-		}
-		if (value.isPrimitiveString()) {
-			return new StringObject(ev, value);
-		}
-		if (value.isNumber()) {
-			// TODO Create a NumberObject object
-			TSObject result = new TSObject(ev.getDefaultPrototype()); 
-			result.put("value", value);
-			return result; 
-		}
-		if (value.isBoolean()) {
-			// TODO Create a BooleanObject object
-			TSObject result = new TSObject(ev.getDefaultPrototype()); 
-			result.put("value", value);
-			return result;
-		}
-		return value.asObject();
-	}
+
+
 
 }

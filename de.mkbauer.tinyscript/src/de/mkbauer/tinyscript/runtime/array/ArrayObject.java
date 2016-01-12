@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.Function;
+import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
-public class ArrayObject extends Function {
+public class ArrayObject extends BuiltinType {
 	
 	private List<TSValue> items;
 	
@@ -70,6 +72,12 @@ public class ArrayObject extends Function {
 		result.put("length", new TSValue(result.getLength()));
 		return result;
 	}
+	
+	@Override
+	public TSValue apply(TSObject self, List<TSValue> args) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	@Override
 	public String toString() {
@@ -88,5 +96,7 @@ public class ArrayObject extends Function {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+
 
 }
