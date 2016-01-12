@@ -10,11 +10,11 @@ function Tinyscript($scope, $http) {
 	$scope.codeMirror = initCodeMirror();
 
 	$scope.executeScript = function() {
-	    $http.post('/execute', $scope.codeMirror.getValue()).
+	    $http.post('execute', $scope.codeMirror.getValue()).
     	    success(function(data) {
 				if (data.errorCode > 0) {
 					$scope.codeMirror.markText({line: data.errorLine-1, ch: 0}, { line: data.errorLine, ch: 0}, 
-							{clearOnEnter: true, css: "background-color: red"});	
+							{clearOnEnter: true, css: "background-color: #f2dede"});	
 				}
         	    $scope.result = data;
 				

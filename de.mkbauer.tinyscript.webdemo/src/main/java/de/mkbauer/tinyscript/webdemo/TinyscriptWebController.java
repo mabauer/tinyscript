@@ -36,20 +36,20 @@ public class TinyscriptWebController {
 	@Autowired
 	private TinyscriptExecutionService tinyscriptExecutionService;
 
+
 	@RequestMapping("/")
+	public String root() {
+		return "redirect:index.html";
+	}
+
+	@RequestMapping("/hello")
 	@ResponseBody
 	public Map<String, String> helloWorld() {
 		return Collections.singletonMap("message",
 				this.helloWorldService.getHelloMessage());
 	}
-
-	@RequestMapping("/greeting")
-	@ResponseBody
-	public Greeting greeting( @RequestParam(value="name", defaultValue="World") String name) {
-		return new Greeting(name);
-	}
 	
-	@RequestMapping("/sample")
+	@RequestMapping("/test")
 	@ResponseBody
 	public TinyscriptExecutionResult executeSampleProgram() {
 		return this.tinyscriptExecutionService.executeScriptFromString("var hello; hello=\"Hello, Tinyscript\";");
