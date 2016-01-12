@@ -4,14 +4,14 @@ import java.util.stream.Collectors;
 
 public class Function extends TSObject {
 	
-	protected GlobalExecutionContext globalContext;
+	protected ExecutionVisitor ev;
 	
-	public Function(GlobalExecutionContext globalContext) {
-		this.globalContext = globalContext;
+	public Function(ExecutionVisitor ev) {
+		this.ev = ev;
 		
 		TSObject proto = null;
 		// Object Object is a function as well, so we can get it's prototype and use it.
-		TSObject objectobject = globalContext.get("Object").asObject();
+		TSObject objectobject = ev.getGlobalContext().get("Object").asObject();
 		if (objectobject != null) {
 			proto = objectobject.getPrototype();
 			setPrototype(proto);
@@ -19,7 +19,7 @@ public class Function extends TSObject {
 		else {
 			// We don't have the Object Object yet, so we are Object Object (hopefully!)
 			// ... and we have to create the prototype for all functions
-			proto = new TSObject(globalContext.getDefaultPrototype());
+			proto = new TSObject(ev.getDefaultPrototype());
 			// Property: __proto__
 			setPrototype(proto);
 			// TODO: Remove, just for testing

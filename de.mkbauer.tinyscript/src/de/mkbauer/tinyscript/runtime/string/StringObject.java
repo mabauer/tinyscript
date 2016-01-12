@@ -1,11 +1,8 @@
 package de.mkbauer.tinyscript.runtime.string;
 
+import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.Function;
-import de.mkbauer.tinyscript.interpreter.GlobalExecutionContext;
-import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
-import de.mkbauer.tinyscript.runtime.object.HasOwnProperty;
-import de.mkbauer.tinyscript.runtime.object.ToString;
 
 public class StringObject extends Function {
 	
@@ -13,15 +10,15 @@ public class StringObject extends Function {
 	
 
 
-	public StringObject(GlobalExecutionContext globalContext) {
-		super(globalContext);
+	public StringObject(ExecutionVisitor ev) {
+		super(ev);
 		setValue(null);
 		defineDefaultProperty(this,"length", new TSValue(0));
 		defineStringPrototype();
 	}
 	
-	public StringObject(GlobalExecutionContext globalContext, TSValue value) {
-		super(globalContext);
+	public StringObject(ExecutionVisitor ev, TSValue value) {
+		super(ev);
 		setValue(value.asString());
 		defineDefaultProperty(this,"length", new TSValue(getLength()));
 		defineStringPrototype();
@@ -29,7 +26,7 @@ public class StringObject extends Function {
 	
 	private void defineStringPrototype() {
 		// TODO
-		defineDefaultProperty(getPrototype(), "indexOf", new IndexOf(globalContext));
+		defineDefaultProperty(getPrototype(), "indexOf", new IndexOf(ev));
 	}
 	
 

@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EObject;
 
-import de.mkbauer.tinyscript.ts.Identifier;
 
 public class ExecutionContext {
 	

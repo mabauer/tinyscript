@@ -3,9 +3,6 @@ package de.mkbauer.tinyscript.interpreter;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
-import de.mkbauer.tinyscript.runtime.object.HasOwnProperty;
-import de.mkbauer.tinyscript.runtime.object.ToString;
-
 
 public class TSObject {
 	

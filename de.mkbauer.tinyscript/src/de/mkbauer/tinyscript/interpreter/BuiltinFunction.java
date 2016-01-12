@@ -4,8 +4,8 @@ import java.util.List;
 
 public abstract class BuiltinFunction extends Function {
 	
-	public BuiltinFunction(GlobalExecutionContext globalContext) {
-		super(globalContext);
+	public BuiltinFunction(ExecutionVisitor ev) {
+		super(ev);
 	}
 
 	@Override

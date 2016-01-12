@@ -1,16 +1,17 @@
 package de.mkbauer.tinyscript.runtime.math;
 
+import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.GlobalExecutionContext;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class MathObject extends TSObject {
 	
-	public MathObject(GlobalExecutionContext globalContext) {
-		super(globalContext.getDefaultPrototype());
+	public MathObject(ExecutionVisitor ev) {
+		super(ev.getDefaultPrototype());
 		
 		defineDefaultProperty(this, "PI", java.lang.Math.PI);
-		defineDefaultProperty(this, "sqrt", new Sqrt(globalContext));
+		defineDefaultProperty(this, "sqrt", new Sqrt(ev));
 	}
 	
 }

@@ -9,11 +9,11 @@ public class InterpretedFunction extends Function {
 	
 	private ExecutionContext outerContext;
 	
-	public InterpretedFunction(GlobalExecutionContext globalContext) {
-		super(globalContext);
+	public InterpretedFunction(ExecutionVisitor ev) {
+		super(ev);
 		this.ast = null;
 		// Each user defined functions gets a new prototype property since it could be used as a constructor
-		setPrototypeProperty(new TSObject(globalContext.getDefaultPrototype()));
+		setPrototypeProperty(new TSObject(ev.getDefaultPrototype()));
 	}
 	
 	public void setAst(FunctionDefinition ast) {

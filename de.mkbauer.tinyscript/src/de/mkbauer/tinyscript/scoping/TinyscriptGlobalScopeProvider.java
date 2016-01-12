@@ -7,7 +7,6 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.resource.IEObjectDescription;
 import org.eclipse.xtext.resource.ResourceSetReferencingResourceSet;
 import org.eclipse.xtext.scoping.IScope;
@@ -17,8 +16,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
-import de.mkbauer.tinyscript.ts.Identifier;
-import de.mkbauer.tinyscript.ts.TsFactory;
 
 public class TinyscriptGlobalScopeProvider extends
 		ResourceSetGlobalScopeProvider {

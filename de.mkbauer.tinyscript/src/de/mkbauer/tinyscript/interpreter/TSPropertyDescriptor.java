@@ -62,7 +62,7 @@ public class TSPropertyDescriptor {
 		this.value = value;
 	}
 
-	private TSObject toObject() {
+	public TSObject toObject() {
 		// TODO: Complete implementation
 		return null;
 	}

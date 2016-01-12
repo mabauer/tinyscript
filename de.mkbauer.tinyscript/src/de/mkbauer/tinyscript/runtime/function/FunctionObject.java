@@ -1,12 +1,13 @@
 package de.mkbauer.tinyscript.runtime.function;
 
+import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.GlobalExecutionContext;
 
 public class FunctionObject extends Function {
 	
-	public FunctionObject(GlobalExecutionContext globalContext) {
-		super(globalContext);
+	public FunctionObject(ExecutionVisitor ev) {
+		super(ev);
 		
 		// Property: prototype
 		setPrototypeProperty(getPrototype());
