@@ -35,7 +35,7 @@ function initCodeMirror() {
     		lineNumbers: true,
     		indentUnit: 4,
     		theme: "eclipse",
-   			mode: "javascript",
+   			mode: {name: "javascript", tinyscript: true},
    			extraKeys: {
    				"Ctrl-Enter": function(cm) {
    						var controller = document.getElementById('main');
