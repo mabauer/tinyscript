@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.runtime.object;
+package de.mkbauer.tinyscript.runtime.string;
 
 import java.util.List;
 
@@ -7,6 +7,7 @@ import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 public class ToString extends BuiltinFunction {
 	
@@ -15,11 +16,9 @@ public class ToString extends BuiltinFunction {
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self,
 			List<TSValue> args) {
-		String name = "Object";
-		if (self instanceof BuiltinType) 
-			name = ((BuiltinType) self).getConstructorName();
-		String result = "[object " + name + "]";
-		return new TSValue(result);
+		if (!(self instanceof StringObject))
+			throw new TinyscriptTypeError("Function String.prototype.toString only works for String objects.");
+		return new TSValue(((StringObject)self).getValue());
 	}
 
 	@Override

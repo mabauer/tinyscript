@@ -1,12 +1,14 @@
-package de.mkbauer.tinyscript.runtime.object;
+package de.mkbauer.tinyscript.runtime.array;
+
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
-import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 public class ToString extends BuiltinFunction {
 	
@@ -15,10 +17,13 @@ public class ToString extends BuiltinFunction {
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self,
 			List<TSValue> args) {
-		String name = "Object";
-		if (self instanceof BuiltinType) 
-			name = ((BuiltinType) self).getConstructorName();
-		String result = "[object " + name + "]";
+		// TODO: Should be generic (implemented by calling join)
+		if (!(self instanceof ArrayObject))
+			throw new TinyscriptTypeError("Function Array.prototype.toString only works for Array objects.");
+		ArrayObject arr = (ArrayObject) self;
+		String result = arr.getItems().stream()
+				.map(item->TSObject.toString(ev, item))
+				.collect(Collectors.joining(", "));
 		return new TSValue(result);
 	}
 

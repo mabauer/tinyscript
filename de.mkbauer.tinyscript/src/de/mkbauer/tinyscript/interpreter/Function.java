@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.runtime.function.Call;
+import de.mkbauer.tinyscript.runtime.function.ToString;
 
 public abstract class Function extends TSObject {
 	
@@ -29,6 +30,7 @@ public abstract class Function extends TSObject {
 			// Store our unfinished Object Object into the global context, because
 			// other functions that we will add to our prototype next will need it.
 			ev.getGlobalContext().store("Object", new TSValue(this));
+			TSObject.defineDefaultProperty(proto, "toString", new ToString(ev));
 			TSObject.defineDefaultProperty(proto, "call", new Call(ev));
 			TSObject.defineDefaultProperty(proto, "length", new TSValue(getLength()));
 			// TODO: Remove, just for testing

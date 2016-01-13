@@ -1,6 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.Block;
@@ -87,7 +88,7 @@ public class InterpretedFunction extends Function {
 			if (ast.getId() != null)
 				return ast.getId().getName();
 		}
-		return null;
+		return "";
 	}
 	
 	@Override
@@ -106,7 +107,15 @@ public class InterpretedFunction extends Function {
 		return null;
 	}
 
-
+	public String getCodeAsString() {
+		String result = "function " + getName() + "(";
+		if (ast != null) 
+			result = result + ast.getParams().stream()
+				.map(id->id.getName())
+				.collect(Collectors.joining(", "));
+		result = result + ") {...}"; 
+		return result;
+	}
 	
 
 }

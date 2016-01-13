@@ -22,6 +22,29 @@ public class TSObject {
 			setPrototype(proto); 
 	}
 	
+	// TODO Write tests and use it instead of TSValue.asString() where appropriate
+	public static String toString(ExecutionVisitor ev, TSValue value) {
+		if (value == TSValue.UNDEFINED)
+			return "[object Undefined]";
+		if (value == TSValue.NULL)
+			return "[object Null]";
+		if (value.isObject()) {
+			TSObject object = value.asObject();
+			TSValue toStringValue = object.get("toString");
+			// if (toStringValue.isString()) 
+			// 		return toStringValue.asString();
+			if (toStringValue.isObject()) {
+				TSObject toString = toStringValue.asObject();
+				if (toString instanceof Function) {
+					TSValue result = ((Function) toString).call(false, object, new TSValue[0]);
+					if (result.isString())
+						return result.asString();
+				}
+			}
+		}
+		return value.asString();
+	}
+	
 	public static TSObject toObject(ExecutionVisitor ev, TSValue value) throws TinyscriptTypeError {
 		if (value == TSValue.UNDEFINED)  {
 			throw new TinyscriptTypeError("Cannot convert 'undefined' to an object");
