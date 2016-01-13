@@ -9,6 +9,8 @@ import org.eclipse.xtext.junit4.XtextRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import de.mkbauer.tinyscript.TSStacktraceElement;
+import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
 import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
 import de.mkbauer.tinyscript.ts.Expression;
@@ -75,6 +77,20 @@ public class FunctionTest extends TinyscriptInterpreterTestHelper {
 	public void testCounterWithClosures() {
 		TSValue value = executeScriptFromFile("counter_with_closures.ts");
 	}	
+	
+	@Test
+	public void testFunctionCausingException() {
+		// TODO: Move to an extra test, checking stacktrace generation
+		try {
+			TSValue value = executeScriptFromString("function f(x) {assert(x!=2); return x*x;}; assert (f(2)==4);");
+			fail();
+		}
+		catch (TinyscriptAssertationError e) {
+			TSStacktraceElement[] st = e.getTinyscriptStacktrace();
+			assertEquals("f", st[0].getFunctionName());
+			assertEquals("global", st[1].getFunctionName());
+		}
+	}
 	
 /*	
     @Test

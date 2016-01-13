@@ -213,7 +213,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			return execute(object.getGlobal());
 		}
 		catch (TinyscriptRuntimeException e) {
-			attachStackTrace(e);
+			if (e.getStackTrace() == null)
+				attachStackTrace(e);
 			throw e;
 		}
 	}
