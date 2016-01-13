@@ -40,7 +40,7 @@ public class TSValueTest {
 		TSValue s = new TSValue("Hello!");
 		assert s.isString();
 		assertEquals("Hello!", s.asString());
-		assertEquals("Hello!", s.toString());
+		assertEquals("'Hello!'", s.toString());
 	}
 	
 	@Test
@@ -50,7 +50,7 @@ public class TSValueTest {
 		o.put("key2", new TSValue("World"));
 		TSValue v = new TSValue(o);
 		assert v.isObject();
-		assertEquals("{key1: Hello, key2: World}", v.toString());
+		assertEquals("{key1: 'Hello', key2: 'World'}", v.toString());
 	}
 	
 	

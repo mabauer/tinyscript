@@ -50,11 +50,12 @@ import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.runtime.Print;
+import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
-import de.mkbauer.tinyscript.runtime.function.FunctionObject;
+import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
 import de.mkbauer.tinyscript.runtime.object.ObjectObject;
-import de.mkbauer.tinyscript.runtime.string.StringObject;
+import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 
 
 /**
@@ -89,7 +90,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		// Caveat: Object needs to be initialized first!
 		TSObject.defineDefaultProperty(globalObject, "Object", new ObjectObject(this));
 
-		TSObject.defineDefaultProperty(globalObject, "Function", new FunctionObject(this));
+		TSObject.defineDefaultProperty(globalObject, "Function", new FunctionConstructor(this));
+		TSObject.defineDefaultProperty(globalObject, "String", new StringConstructor(this));
+		TSObject.defineDefaultProperty(globalObject, "Array", new ArrayConstructor(this));
 		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
 		
 		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
@@ -397,6 +400,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	}
     	if (op.equals("/")) {
        		if (left.isNumber() && right.isNumber()) {
+       			// TODO: Catch division by 0
     			return new TSValue(left.asDouble() / right.asDouble());
     		}
     	}
@@ -405,8 +409,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			return new TSValue(left.asDouble() % right.asDouble());
     		}
     	}
-
-    	// Handling of boolean and, or ...
     	// Error handling
 		throw new UnsupportedOperationException("Unsupported binary expression: " + op);
     }

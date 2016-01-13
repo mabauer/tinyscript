@@ -2,13 +2,13 @@ package de.mkbauer.tinyscript.runtime.object;
 
 import java.util.List;
 
-import de.mkbauer.tinyscript.interpreter.BuiltinType;
+import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
 
-public class ObjectObject extends BuiltinType {
+public class ObjectObject extends BuiltinConstructor {
 	
 	private final static String NAME = "Object";
 	
@@ -26,8 +26,8 @@ public class ObjectObject extends BuiltinType {
 	
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO Handle arguments
+		return new TSValue(new TSObject(ev.getDefaultPrototype()));
 	}
 
 	@Override
@@ -40,7 +40,6 @@ public class ObjectObject extends BuiltinType {
 		// TODO Find out why?
 		return 1;
 	}
-
 
 
 }

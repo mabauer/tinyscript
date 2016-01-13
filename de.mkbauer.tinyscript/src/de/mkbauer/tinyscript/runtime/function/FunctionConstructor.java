@@ -2,18 +2,18 @@ package de.mkbauer.tinyscript.runtime.function;
 
 import java.util.List;
 
-import de.mkbauer.tinyscript.interpreter.BuiltinType;
+import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.GlobalExecutionContext;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
-public class FunctionObject extends BuiltinType {
+public class FunctionConstructor extends BuiltinConstructor {
 	
 	private static final String NAME = "Function";
 	
-	public FunctionObject(ExecutionVisitor ev) {
+	public FunctionConstructor(ExecutionVisitor ev) {
 		super(ev);
 		
 		// Property: prototype

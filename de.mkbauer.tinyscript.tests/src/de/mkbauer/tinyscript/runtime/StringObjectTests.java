@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.runtime;
 
+import static org.junit.Assert.fail;
+
 import org.eclipse.xtext.junit4.XtextRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +19,25 @@ public class StringObjectTests extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testConcat() {
-		TSValue value = executeScriptFromString("var str1 = new String(\"Hallo\"), str2 = new String (\"Hugo\"); assert (str1 + str2 == \"Hallo Hugo\");");	
+		TSValue value = executeScriptFromString("var str1 = new String(\"Hallo\"), str2 = new String (\"Hugo\"); assert (str1 + \" \" + str2 == \"Hallo Hugo\");");	
+	}
+	
+	@Test
+	public void testCharAt() {
+		TSValue value = executeScriptFromString("var str = \"Hallo\"; assert (str.charAt(0) == \"H\");");
+		value = executeScriptFromString("var str = \"Hallo\"; assert (str.charAt(4) == \"o\");");
+		value = executeScriptFromString("var str = \"Hallo\"; assert (str.charAt(-1) == \"\");");
+		value = executeScriptFromString("var str = \"Hallo\"; assert (str.charAt(str.length) == \"\");");
+		
+	}
+	
+	@Test
+	public void testSubstring() {
+		TSValue value = executeScriptFromString("var str = \"Hallo Markus\"; assert (str.substring(0, str.length) == \"Hallo Markus\");");
+		value = executeScriptFromString("var str = \"Hallo Markus\"; assert (str.substring(5, 0) == \"Hallo\");");
+		value = executeScriptFromString("var str = \"Hallo Markus\"; assert (str.substring(-1, 25) == \"Hallo Markus\");");
+		value = executeScriptFromString("var str = \"Hallo Markus\"; assert (str.substring(6, str.length) == \"Markus\");");
+		value = executeScriptFromString("var str = \"Hallo Markus\"; assert (str.substring(6) == \"Markus\");");
+		
 	}
 }

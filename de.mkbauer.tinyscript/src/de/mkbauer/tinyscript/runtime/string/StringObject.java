@@ -9,36 +9,27 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class StringObject extends BuiltinType {
 	
+	private static final String CONSTRUCTOR = "String";
+	
 	private String value;
 	
-
-
 	public StringObject(ExecutionVisitor ev) {
 		super(ev);
 		setValue(null);
 		defineDefaultProperty(this,"length", new TSValue(0));
-		defineStringPrototype();
 	}
 	
 	public StringObject(ExecutionVisitor ev, TSValue value) {
 		super(ev);
 		setValue(value.asString());
 		defineDefaultProperty(this,"length", new TSValue(getLength()));
-		defineStringPrototype();
 	}
 	
 	private void defineStringPrototype() {
-		// TODO
+		// TODO Add other String methods
 		defineDefaultProperty(getPrototype(), "indexOf", new IndexOf(ev));
 	}
 	
-
-	@Override
-	public String getName() {
-		return "String";
-	}
-
-	@Override
 	public int getLength() {
 		return value.length();
 	}
@@ -54,12 +45,16 @@ public class StringObject extends BuiltinType {
 	public String toString() {
 		return value;
 	}
+	
 
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
-		// TODO Auto-generated method stub
-		return null;
+	public TSValue valueOf() {
+		return new TSValue(value);
 	}
-	
+
+	@Override
+	public String getConstructorName() {
+		return CONSTRUCTOR;
+	}
 
 }
