@@ -42,15 +42,6 @@ public class TSValue { // implements Comparable<TSValue>
 			return (String)value;
 		else if (isMathematicalInteger())
 			return String.format("%.0f", value) ;
-/*		
-  		// TODO: This should go somewhere else, because an ExecutionContext is needed. 
- 		else if (isObject()) {
-			TSValue toStringProperty = ((TSObject) value).get("toString");
-			if (toStringProperty.isObject() && (toStringProperty.asObject() instanceof Function)) {
-				return ((Function) toStringProperty).apply(...)
-			}
-		}
-*/
 		else
 			return value.toString();
 	}
@@ -115,6 +106,16 @@ public class TSValue { // implements Comparable<TSValue>
 		return (ArrayObject) value;
 	}
 	
+	public boolean isCallable() {
+		if (value != null && value instanceof Function) 
+			return true;
+		return false;
+	}
+	
+	public boolean isObjectCoercible() {
+		return (value!=null);
+	}
+	
 	public boolean equals(TSValue other) {
 		// TODO: Check with ECMAScript Specs
 		if (value == null) {
@@ -143,7 +144,16 @@ public class TSValue { // implements Comparable<TSValue>
 	
 	@Override
 	public String toString() {
-		return asString();
+		if (this == TSValue.UNDEFINED) 
+			return "Undefined";
+		if (this == TSValue.NULL) 
+			return "Null";
+		if (isString()) 
+			return "'" + value.toString() + "'";
+		else if (isMathematicalInteger())
+			return String.format("%.0f", value) ;
+		else
+			return value.toString();
 	}
 }
 

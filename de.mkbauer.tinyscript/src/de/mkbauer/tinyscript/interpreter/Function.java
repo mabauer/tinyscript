@@ -1,17 +1,22 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
-public class Function extends TSObject {
+import de.mkbauer.tinyscript.runtime.function.Call;
+import de.mkbauer.tinyscript.runtime.function.ToString;
+
+public abstract class Function extends TSObject {
 	
-	protected GlobalExecutionContext globalContext;
+	protected ExecutionVisitor ev;
 	
-	public Function(GlobalExecutionContext globalContext) {
-		this.globalContext = globalContext;
+	public Function(ExecutionVisitor ev) {
+		this.ev = ev;
 		
 		TSObject proto = null;
 		// Object Object is a function as well, so we can get it's prototype and use it.
-		TSObject objectobject = globalContext.get("Object").asObject();
+		TSObject objectobject = ev.getGlobalContext().get("Object").asObject();
 		if (objectobject != null) {
 			proto = objectobject.getPrototype();
 			setPrototype(proto);
@@ -19,12 +24,18 @@ public class Function extends TSObject {
 		else {
 			// We don't have the Object Object yet, so we are Object Object (hopefully!)
 			// ... and we have to create the prototype for all functions
-			proto = new TSObject(globalContext.getDefaultPrototype());
+			proto = new TSObject(ev.getDefaultPrototype());
 			// Property: __proto__
 			setPrototype(proto);
+			// Store our unfinished Object Object into the global context, because
+			// other functions that we will add to our prototype next will need it.
+			ev.getGlobalContext().store("Object", new TSValue(this));
+			TSObject.defineDefaultProperty(proto, "toString", new ToString(ev));
+			TSObject.defineDefaultProperty(proto, "call", new Call(ev));
+			TSObject.defineDefaultProperty(proto, "length", new TSValue(getLength()));
 			// TODO: Remove, just for testing
 			TSObject.defineDefaultProperty(proto, "isCallable", new TSValue(true));
-		}			
+		}
 	}
 	
 	public void setPrototypeProperty(Object prototype) {
@@ -34,15 +45,16 @@ public class Function extends TSObject {
 	public TSValue getPrototypeProperty() {
 		return get("prototype");
 	}
-			
-	public String getName() {
-		return "";
+	
+	public TSValue call(boolean asConstructor, TSObject self, TSValue... args) {
+		return apply(asConstructor, self, Arrays.<TSValue>asList(args));
 	}
 	
-	public int getLength() {
-		// TODO: Find out why?
-		return 0;
-	}
+	public abstract TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args);
+			
+	public abstract String getName();
+	
+	public abstract int getLength();
 
 	public String toString() {
 		String result = "";

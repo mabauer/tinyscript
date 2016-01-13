@@ -1,44 +1,35 @@
 package de.mkbauer.tinyscript.runtime.string;
 
-import de.mkbauer.tinyscript.interpreter.Function;
-import de.mkbauer.tinyscript.interpreter.GlobalExecutionContext;
+import java.util.List;
+
+import de.mkbauer.tinyscript.interpreter.BuiltinType;
+import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
-import de.mkbauer.tinyscript.runtime.object.HasOwnProperty;
-import de.mkbauer.tinyscript.runtime.object.ToString;
 
-public class StringObject extends Function {
+public class StringObject extends BuiltinType {
+	
+	private static final String CONSTRUCTOR = "String";
 	
 	private String value;
 	
-
-
-	public StringObject(GlobalExecutionContext globalContext) {
-		super(globalContext);
+	public StringObject(ExecutionVisitor ev) {
+		super(ev);
 		setValue(null);
 		defineDefaultProperty(this,"length", new TSValue(0));
-		defineStringPrototype();
 	}
 	
-	public StringObject(GlobalExecutionContext globalContext, TSValue value) {
-		super(globalContext);
+	public StringObject(ExecutionVisitor ev, TSValue value) {
+		super(ev);
 		setValue(value.asString());
 		defineDefaultProperty(this,"length", new TSValue(getLength()));
-		defineStringPrototype();
 	}
 	
 	private void defineStringPrototype() {
-		// TODO
-		defineDefaultProperty(getPrototype(), "indexOf", new IndexOf(globalContext));
+		// TODO Add other String methods
+		defineDefaultProperty(getPrototype(), "indexOf", new IndexOf(ev));
 	}
 	
-
-	@Override
-	public String getName() {
-		return "String";
-	}
-
-	@Override
 	public int getLength() {
 		return value.length();
 	}
@@ -55,5 +46,15 @@ public class StringObject extends Function {
 		return value;
 	}
 	
+
+	@Override
+	public TSValue valueOf() {
+		return new TSValue(value);
+	}
+
+	@Override
+	public String getConstructorName() {
+		return CONSTRUCTOR;
+	}
 
 }

@@ -1,7 +1,12 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
+import de.mkbauer.tinyscript.ts.Identifier;
 
 public class InterpretedFunction extends Function {
 	
@@ -9,11 +14,11 @@ public class InterpretedFunction extends Function {
 	
 	private ExecutionContext outerContext;
 	
-	public InterpretedFunction(GlobalExecutionContext globalContext) {
-		super(globalContext);
+	public InterpretedFunction(ExecutionVisitor ev) {
+		super(ev);
 		this.ast = null;
 		// Each user defined functions gets a new prototype property since it could be used as a constructor
-		setPrototypeProperty(new TSObject(globalContext.getDefaultPrototype()));
+		setPrototypeProperty(new TSObject(ev.getDefaultPrototype()));
 	}
 	
 	public void setAst(FunctionDefinition ast) {
@@ -33,12 +38,57 @@ public class InterpretedFunction extends Function {
 	}
 	
 	@Override
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+		Block block = getBlock();
+		TSValue result = null;
+		
+		// Create a new execution context
+		ExecutionContext currentContext = ev.enterNewExecutionContext(getName(), outerContext);
+		// Set this-Reference
+		currentContext.setThisRef(self);
+		currentContext.setFunctionContext(true);
+		// Put the arguments into the context
+		if (args != null) {
+			int argsN = args.size();
+			int i = 0;
+			for (Identifier param : ast.getParams()) {
+				currentContext.create(param.getName());
+				if (i < argsN) {
+					currentContext.store(param.getName(), args.get(i));
+				}
+				i++;
+			}
+		}
+		try {
+			result = ev.caseBlock(block);
+			if (asConstructor)
+				 result = new TSValue(currentContext.getThisRef());
+			ev.leaveExecutionContext();
+			return result;
+		}
+		catch (TSReturnValue rv) {
+			// Restore execution context
+			if (asConstructor && rv.equals(TSValue.UNDEFINED))
+				result = new TSValue(currentContext.getThisRef());
+			else
+				result = rv.getReturnValue();
+			ev.leaveExecutionContext();
+			return result;				
+		}
+		catch (TinyscriptRuntimeException e) {
+			ev.attachStackTrace(e);
+			ev.leaveExecutionContext();
+			throw e;
+		}
+	}
+	
+	@Override
 	public String getName() {
 		if (ast != null) {
 			if (ast.getId() != null)
 				return ast.getId().getName();
 		}
-		return null;
+		return "";
 	}
 	
 	@Override
@@ -55,6 +105,16 @@ public class InterpretedFunction extends Function {
 			return ast.getBlock();
 		}
 		return null;
+	}
+
+	public String getCodeAsString() {
+		String result = "function " + getName() + "(";
+		if (ast != null) 
+			result = result + ast.getParams().stream()
+				.map(id->id.getName())
+				.collect(Collectors.joining(", "));
+		result = result + ") {...}"; 
+		return result;
 	}
 	
 

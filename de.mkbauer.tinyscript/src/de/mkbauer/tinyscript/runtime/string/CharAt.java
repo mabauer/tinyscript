@@ -7,25 +7,27 @@ import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
-public class IndexOf extends BuiltinFunction {
+public class CharAt extends BuiltinFunction {
+
+	private static final String NAME = "charAt";
 	
-	private final static String NAME = "indexOf";
-	
-	public IndexOf(ExecutionVisitor ev) {
+	public CharAt(ExecutionVisitor ev) {
 		super(ev);
 	}
 
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(boolean asConstructor, TSObject self,
+			List<TSValue> args) {
 		checkArgs(args);
-		// TODO: Should try to convert to string (using asString())
+		String result = "";
 		if (self instanceof StringObject) {
-			String search = args.get(0).asString(); 
-			String value = ((StringObject) self).getValue();
-			int result = value.indexOf(search);
-			return new TSValue(result);
+			String str = TSObject.toString(ev, new TSValue(self));
+			int pos = TSObject.toInteger(ev, args.get(0)); 
+			if (pos >=0 && pos < str.length()) {
+				result = str.substring(pos, pos+1);
+			} 
 		}
-		return new TSValue(-1);
+		return new TSValue(result);
 	}
 
 	@Override
@@ -37,7 +39,5 @@ public class IndexOf extends BuiltinFunction {
 	public int getLength() {
 		return 1;
 	}
-	
-	
 
 }

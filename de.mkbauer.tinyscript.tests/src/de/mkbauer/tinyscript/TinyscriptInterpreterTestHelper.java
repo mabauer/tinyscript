@@ -11,6 +11,7 @@ import org.eclipse.xtext.junit4.InjectWith;
 import org.eclipse.xtext.junit4.util.ParseHelper;
 import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
 import org.eclipse.xtext.resource.XtextResourceSet;
+import org.junit.Before;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -36,9 +37,16 @@ public class TinyscriptInterpreterTestHelper {
 
 	@Inject
 	private ValidationTestHelper validator;
+	
+	private ExecutionVisitor visitor;
 
 	public TinyscriptInterpreterTestHelper() {
 		super();
+	}
+	
+	@Before
+	public void setUp()  {
+		visitor = new ExecutionVisitor();
 	}
 	
 	protected TSValue executeScriptFromFile(String filename) {
@@ -93,7 +101,6 @@ public class TinyscriptInterpreterTestHelper {
 	}
 	
 	protected TSValue execute(Tinyscript ast) {
-		ExecutionVisitor visitor = new ExecutionVisitor();
 		TSValue result = visitor.execute(ast);
 		return result;
 	}
@@ -103,7 +110,6 @@ public class TinyscriptInterpreterTestHelper {
 		Tinyscript ast = parseScriptFromString(statement);
 		getValidator().assertNoErrors(ast);
 		ExpressionStatement expr = (ExpressionStatement) ast.getGlobal().getStatements().get(0);
-		ExecutionVisitor visitor = new ExecutionVisitor();
 		TSValue result = visitor.execute(expr);
 		return result;
 	}
@@ -118,6 +124,10 @@ public class TinyscriptInterpreterTestHelper {
 
 	protected ValidationTestHelper getValidator() {
 		return validator;
+	}
+	
+	protected ExecutionVisitor getExecutionVisitor() {
+		return visitor;
 	}
 
 }

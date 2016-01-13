@@ -3,8 +3,7 @@ package de.mkbauer.tinyscript.interpreter;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
-import de.mkbauer.tinyscript.runtime.object.HasOwnProperty;
-import de.mkbauer.tinyscript.runtime.object.ToString;
+import de.mkbauer.tinyscript.runtime.string.StringObject;
 
 
 public class TSObject {
@@ -21,10 +20,88 @@ public class TSObject {
 		properties = new HashMap<String, TSPropertyDescriptor>();
 		if (proto != null)
 			setPrototype(proto); 
-		initialize();
 	}
 	
-	protected void initialize() {
+	// TODO Write tests and use it instead of TSValue.asString() where appropriate
+	public static String toString(ExecutionVisitor ev, TSValue value) {
+		if (value == TSValue.UNDEFINED)
+			return "[object Undefined]";
+		if (value == TSValue.NULL)
+			return "[object Null]";
+		if (value.isObject()) {
+			TSObject object = value.asObject();
+			TSValue toStringValue = object.get("toString");
+			// if (toStringValue.isString()) 
+			// 		return toStringValue.asString();
+			if (toStringValue.isObject()) {
+				TSObject toString = toStringValue.asObject();
+				if (toString instanceof Function) {
+					TSValue result = ((Function) toString).call(false, object, new TSValue[0]);
+					if (result.isString())
+						return result.asString();
+				}
+			}
+		}
+		return value.asString();
+	}
+	
+	public static TSObject toObject(ExecutionVisitor ev, TSValue value) throws TinyscriptTypeError {
+		if (value == TSValue.UNDEFINED)  {
+			throw new TinyscriptTypeError("Cannot convert 'undefined' to an object");
+		}
+		if (value == TSValue.NULL) {
+			throw new TinyscriptTypeError("Cannot convert 'null' to an object");
+		}
+		if (value.isPrimitiveString()) {
+			return new StringObject(ev, value);
+		}
+		if (value.isNumber()) {
+			// TODO Create a NumberObject object
+			TSObject result = new TSObject(ev.getDefaultPrototype()); 
+			result.put("value", value);
+			return result; 
+		}
+		if (value.isBoolean()) {
+			// TODO Create a BooleanObject object
+			TSObject result = new TSObject(ev.getDefaultPrototype()); 
+			result.put("value", value);
+			return result;
+		}
+		return value.asObject();
+	}
+	
+	public static TSValue toPrimitive(ExecutionVisitor ev, TSObject object) {
+		// TODO Evaluate user defined valueOf property
+		if (object instanceof BuiltinType) {
+			return ((BuiltinType) object).valueOf();
+		}
+		return TSValue.UNDEFINED;		
+	}
+	
+	public static int toInteger(ExecutionVisitor ev, TSValue value) {
+		// TODO Return NAN if undefined
+		if (value.isObject()) {
+			value = toPrimitive(ev, value.asObject());
+		}
+		if (value.isBoolean())
+			return (value.asBoolean() ? 1 :0);
+		if (value.isNumber())
+			return (value.asInt());
+		if (value.isString()) {
+			String str = value.asString();
+			try {
+				double d = Double.parseDouble(str);
+				return ((Number)d).intValue();
+			}
+			catch (NumberFormatException e) {}
+			try {
+				return Integer.decode(str);
+			}
+			catch (NumberFormatException e) {}
+			// TODO: Should be NAN!
+			return 0;
+		}
+		return 0;
 	}
 	
 	public static void defineDefaultProperty(TSObject object, String key, Object value) {

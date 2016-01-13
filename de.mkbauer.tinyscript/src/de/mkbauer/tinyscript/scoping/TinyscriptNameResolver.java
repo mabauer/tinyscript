@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.scoping;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import org.eclipse.emf.ecore.EObject;
 
@@ -9,7 +7,6 @@ import de.mkbauer.tinyscript.ts.BlockStatement;
 import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.ForEachStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
-import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.NumericForStatement;

@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -50,9 +49,13 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
+import de.mkbauer.tinyscript.runtime.Print;
+import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
+import de.mkbauer.tinyscript.runtime.math.MathObject;
 import de.mkbauer.tinyscript.runtime.object.ObjectObject;
-import de.mkbauer.tinyscript.runtime.string.StringObject;
+import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 
 
 /**
@@ -69,17 +72,62 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	private Map<Block, LexicalEnvironment> lexicalEnvironments;
 	
+	private TSObject objectPrototype;
+	
+	private OutputStream stdOut; 
+	
 	public ExecutionVisitor() {
 		globalContext = new GlobalExecutionContext();
 		currentContext = globalContext;
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
+		
+		objectPrototype = new TSObject();
+		TSObject globalObject = globalContext.getGlobalObject();
+		
+		globalObject.setPrototype(objectPrototype);
+
+		// Caveat: Object needs to be initialized first!
+		TSObject.defineDefaultProperty(globalObject, "Object", new ObjectObject(this));
+
+		TSObject.defineDefaultProperty(globalObject, "Function", new FunctionConstructor(this));
+		TSObject.defineDefaultProperty(globalObject, "String", new StringConstructor(this));
+		TSObject.defineDefaultProperty(globalObject, "Array", new ArrayConstructor(this));
+		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
+		
+		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
 	}
 	
 	public void defineStdOut(OutputStream os) {
-		globalContext.defineStdOut(os);
+		stdOut = os;	
+	}
+	
+	public OutputStream getStdOut() {
+		return stdOut;
+	}
+	
+	public TSObject getDefaultPrototype() {
+		return objectPrototype;
+	}
+	
+	public TSValue getObjectPrototypeFor(String objectName) {
+		TSValue value = globalContext.get(objectName);
+		Function object = null;
+		if (value != TSValue.UNDEFINED) {
+			object = (Function) value.asObject();
+			TSValue prototype = object.getPrototypeProperty();
+			return prototype;
+		}
+		return TSValue.UNDEFINED;
+	}
+	
+	protected GlobalExecutionContext getGlobalContext() {
+		return globalContext;
 	}
 
+	protected ExecutionContext getCurrentContext() {
+		return currentContext;
+	}
     
     public TSValue execute(EObject object) {
     	if (object == null)
@@ -191,7 +239,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override 
     public TSValue caseFunctionDefinition(FunctionDefinition object) {
-    	InterpretedFunction function = new InterpretedFunction(globalContext);
+    	InterpretedFunction function = new InterpretedFunction(this);
     	function.setOuterContext(currentContext);
     	function.setAst(object);
     	return new TSValue(function);
@@ -330,7 +378,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     				return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
     			}
     			else {
-    				ArrayObject result = new ArrayObject(globalContext);
+    				ArrayObject result = new ArrayObject(this);
     				result.add(left);
     				result = ArrayObject.concat(result, right.asArray());
     				return new TSValue(result);
@@ -352,6 +400,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	}
     	if (op.equals("/")) {
        		if (left.isNumber() && right.isNumber()) {
+       			// TODO: Catch division by 0
     			return new TSValue(left.asDouble() / right.asDouble());
     		}
     	}
@@ -360,8 +409,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			return new TSValue(left.asDouble() % right.asDouble());
     		}
     	}
-
-    	// Handling of boolean and, or ...
     	// Error handling
 		throw new UnsupportedOperationException("Unsupported binary expression: " + op);
     }
@@ -411,7 +458,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 					throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
 				}			
 			}
-			TSObject baseasObject = ObjectObject.toObject(globalContext, base);
+			TSObject baseasObject = ObjectObject.toObject(this, base);
 			result = baseasObject.get(keyValue.asString());
 			CallSuffix callSuffix = callOrProp.getCall();
 			if (callSuffix != null) {
@@ -492,7 +539,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseObjectInitializer(ObjectInitializer expr) {
-    	TSObject obj = new TSObject(globalContext.getDefaultPrototype()); 
+    	TSObject obj = new TSObject(getDefaultPrototype()); 
     	for (PropertyAssignment assignment : expr.getPropertyassignments()) {
     		String key = null;
     		TSValue keyValue = execute(assignment.getKey());
@@ -506,7 +553,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
-    	ArrayObject arr = new ArrayObject(globalContext); 
+    	ArrayObject arr = new ArrayObject(this); 
     	int i = 0;
     	for (Expression itemExpr : expr.getValues()) {
     		arr.put(String.valueOf(i), execute(itemExpr));
@@ -545,7 +592,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			}
     			if ( ((CallOrPropertyAccessSuffix) suffix).getCall() != null)
     				throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
-    			TSObject prefixasObject = ObjectObject.toObject(globalContext, prefix);
+    			TSObject prefixasObject = ObjectObject.toObject(this, prefix);
     			prefixasObject.put(keyValue.asString(), value);
     			return value;
     		}
@@ -576,66 +623,13 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
     public TSValue processFunctionCall(EObject expr, Function functionObject, boolean asConstructor, TSObject self, List<Expression> argExprs) {
     	currentContext.currentExpression = expr;
-    	List<TSValue> args = null;  			
-		if (argExprs.size() >= 0) {
-			args = new ArrayList<TSValue>(argExprs.size());
-			for (EObject argExpr : argExprs) {
-				args.add(execute(argExpr));
-			}
-		}
-		return applyFunction(functionObject, asConstructor, self, args);
+    	
+			TSValue[] args = new TSValue[argExprs.size()];
+			for (int i = 0; i < argExprs.size(); i++) {
+				args[i] = execute(argExprs.get(i));
+			}		
+		return functionObject.call(asConstructor, self, args);
     }
-    
-    private TSValue applyFunction(Function function, boolean asConstructor, TSObject self, List<TSValue> args) {
-    	if (function instanceof InterpretedFunction) {
-    		return applyInterpretedFunction((InterpretedFunction) function, asConstructor, self, args);
-    	}
-    	return ((BuiltinFunction) function).apply(self, args);
-    }
-    
-	private TSValue applyInterpretedFunction(InterpretedFunction function, boolean asConstructor, TSObject self, List<TSValue> args) {
-		Block block = function.getBlock();
-		TSValue result = null;
-		try {
-			// Create a new execution context
-			enterNewExecutionContext(function.getName(), function.getOuterContext());
-			// Set this-Reference
-			currentContext.setThisRef(self);
-			currentContext.setFunctionContext(true);
-			// Put the arguments into the context
-			if (args != null) {
-				int argsN = args.size();
-				int i = 0;
-				for (Identifier param : function.getAst().getParams()) {
-					currentContext.create(param.getName());
-					if (i < argsN) {
-						currentContext.store(param.getName(), args.get(i));
-					}
-					i++;
-				}
-			}
-			result = caseBlock(block);
-			if (asConstructor)
-				 result = new TSValue(currentContext.getThisRef());
-			leaveExecutionContext();
-			return result;
-		}
-		catch (TSReturnValue rv) {
-			// Restore execution context
-			if (asConstructor && rv.equals(TSValue.UNDEFINED))
-				result = new TSValue(currentContext.getThisRef());
-			else
-				result = rv.getReturnValue();
-			leaveExecutionContext();
-			return result;				
-		}
-		catch (TinyscriptRuntimeException e) {
-			attachStackTrace(e);
-			leaveExecutionContext();
-			throw e;
-		}
-
-	}
 	
 	private TSValue executeInBlockContext(String name, Block block) {
 		return executeInBlockContext(name, block, null, null);
@@ -676,11 +670,11 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		return result;
 	}
 	
-	private void enterNewExecutionContext(String name) {
-		enterNewExecutionContext(name, null);
+	protected ExecutionContext enterNewExecutionContext(String name) {
+		return enterNewExecutionContext(name, null);
 	}
 	
-	private void enterNewExecutionContext(String name, ExecutionContext outer) {
+	protected ExecutionContext enterNewExecutionContext(String name, ExecutionContext outer) {
 		contextStack.push(currentContext);
 		TSObject thisRef = currentContext.getThisRef();
 		if (outer == null) {
@@ -690,9 +684,10 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			currentContext = new ExecutionContext(name, outer);
 		}
 		currentContext.setThisRef(thisRef);
+		return currentContext;
 	}
 	
-	private void leaveExecutionContext() {
+	protected void leaveExecutionContext() {
 		currentContext = contextStack.pop();
 	}
 	
@@ -711,7 +706,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		return result;
 	}
 	
-	private void attachStackTrace(TinyscriptRuntimeException e) {
+	protected void attachStackTrace(TinyscriptRuntimeException e) {
 		List<TSStacktraceElement> stacktrace = new ArrayList<TSStacktraceElement>();
 		if (e.getNode() != null)
 			stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(e.getNode()), 
