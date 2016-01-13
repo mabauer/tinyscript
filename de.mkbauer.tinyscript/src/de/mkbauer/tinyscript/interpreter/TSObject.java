@@ -70,6 +70,40 @@ public class TSObject {
 		return value.asObject();
 	}
 	
+	public static TSValue toPrimitive(ExecutionVisitor ev, TSObject object) {
+		// TODO Evaluate user defined valueOf property
+		if (object instanceof BuiltinType) {
+			return ((BuiltinType) object).valueOf();
+		}
+		return TSValue.UNDEFINED;		
+	}
+	
+	public static int toInteger(ExecutionVisitor ev, TSValue value) {
+		// TODO Return NAN if undefined
+		if (value.isObject()) {
+			value = toPrimitive(ev, value.asObject());
+		}
+		if (value.isBoolean())
+			return (value.asBoolean() ? 1 :0);
+		if (value.isNumber())
+			return (value.asInt());
+		if (value.isString()) {
+			String str = value.asString();
+			try {
+				double d = Double.parseDouble(str);
+				return ((Number)d).intValue();
+			}
+			catch (NumberFormatException e) {}
+			try {
+				return Integer.decode(str);
+			}
+			catch (NumberFormatException e) {}
+			// TODO: Should be NAN!
+			return 0;
+		}
+		return 0;
+	}
+	
 	public static void defineDefaultProperty(TSObject object, String key, Object value) {
 		TSPropertyDescriptor desc = new TSPropertyDescriptor();
 		if (!(value instanceof TSValue))
