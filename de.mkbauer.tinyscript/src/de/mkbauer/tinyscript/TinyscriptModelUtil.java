@@ -171,6 +171,41 @@ public class TinyscriptModelUtil {
 		String name = getNameIfNamedElement(elem);
 		if (name == null)
 			return false;
+		long countDuplicates = declaredVariablesInBlock(block).stream()
+				.filter(i->(i.getName().equals(name) && i != elem))
+				.count();
+		if (countDuplicates > 0)
+			return true;
+		countDuplicates = functionDeclarationsInBlock(block).stream()
+				.filter(f->(f.getId().getName().equals(name) && f.getId() != elem))
+				.count();
+		if (countDuplicates > 0)
+			return true;
+		if (block.eContainer() instanceof FunctionDefinition) {
+			FunctionDefinition function = (FunctionDefinition) block.eContainer();
+			countDuplicates = function.getParams().stream()
+				.filter(p->p.getName().equals(name))
+				.count();
+		}
+		if (countDuplicates > 0)
+			return true;
+		if (block.eContainer() instanceof NumericForStatement) {
+			NumericForStatement forStmt = (NumericForStatement) block.eContainer();
+			if (forStmt.getId().getName().equals(name))
+				return true;
+		}
+		if (block.eContainer() instanceof ForEachStatement) {
+			ForEachStatement forStmt = (ForEachStatement) block.eContainer();
+			if (forStmt.getId().getName().equals(name))
+				return true;
+		}
+		return false;
+	}
+	
+	public static boolean blockContainsConflictingIdentifiersBefore(EObject elem, Block block) {
+		String name = getNameIfNamedElement(elem);
+		if (name == null)
+			return false;
 		long countDuplicates = declaredVariablesInBlockBefore(block, elem).stream()
 				.filter(i->i.getName().equals(name))
 				.count();
@@ -212,6 +247,14 @@ public class TinyscriptModelUtil {
 		}
 		return null;
 		
+	}
+	
+	public static boolean isPartOfVariableStatement(Identifier identifier) {
+		EObject parent = identifier.eContainer();
+		if ((parent == null) || (parent instanceof FunctionDefinition))
+			return false;
+		Statement stmt = TinyscriptModelUtil.containingStatement(identifier);
+		return  ((stmt != null) && (stmt instanceof VariableStatement));
 	}
 	
 } 
