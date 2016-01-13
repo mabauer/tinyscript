@@ -47,7 +47,6 @@ public class GlobalExecutionContext extends ExecutionContext {
 
 	@Override
 	public boolean contains(String identifier) {
-		// TODO Auto-generated method stub
 		return !globalObject.get(identifier).equals(TSValue.UNDEFINED);
 	}
 	
