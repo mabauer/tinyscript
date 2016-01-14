@@ -13,7 +13,7 @@
 		<module>../de.mkbauer.tinyscript.ui</module>
 		<module>../de.mkbauer.tinyscript.tests</module>
 		<module>../de.mkbauer.tinyscript.sdk</module>
-		<!-- <module>../my.mavenized.herolanguage.updatesite</module> -->
+		<module>../de.mkbauer.tinyscript.updatesite</module> 
 	</modules>
 
 	<properties>
