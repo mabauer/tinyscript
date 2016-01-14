@@ -221,6 +221,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		contextStack.clear();
 		callDepth = 0;
 		resourceConsumption = new ResourceConsumption();
+		final long startTime = System.nanoTime();
 		
 		// Hoist function declarations:
     	// Create function objects (or get them form a cache)
@@ -233,9 +234,14 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			currentContext.store(functionName, function);
 		}
 		try {
-			return execute(object.getGlobal());
+			TSValue result = execute(object.getGlobal());
+			final long duration = (System.nanoTime() - startTime) / 1000000;
+			resourceConsumption.executionTime = duration; 
+			return result;
 		}
 		catch (TinyscriptRuntimeException e) {
+			final long duration = (System.nanoTime() - startTime) / 1000000;
+			resourceConsumption.executionTime = duration; 
 			if (e.getStackTrace() == null)
 				attachStackTrace(e);
 			throw e;

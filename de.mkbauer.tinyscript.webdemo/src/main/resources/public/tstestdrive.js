@@ -20,7 +20,8 @@ function Tinyscript($scope, $http) {
 							{clearOnEnter: true, css: "background-color: #f2dede"});	
 				}
         	    $scope.result = data;
-        	    $scope.statistics = "\n(stmts=" + $scope.result.statistics.statements 
+        	    $scope.statistics = "\n(time=" + $scope.result.statistics.executionTime + "ms"
+        	    	+ ", stmts=" + $scope.result.statistics.statements 
         	    	+ ", calldepth=" + $scope.result.statistics.callDepth 
         	    	+ ", objs=" + $scope.result.statistics.objectCreations + ")\n";
 				
