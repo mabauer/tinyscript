@@ -3,6 +3,7 @@ package de.mkbauer.tinyscript;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 
 import org.eclipse.emf.common.util.URI;
@@ -59,7 +60,9 @@ public class TinyscriptInterpreterTestHelper {
 		try {
 			URI uri = URI.createURI(filename);
 			Resource resource = resourceSetProvider.get().createResource(uri);
-			resource.load(null);
+			InputStream in = this.getClass().getClassLoader()
+                    .getResourceAsStream(filename);
+			resource.load(in, null);
 			ast = (Tinyscript) resource.getContents().get(0);
 			validator.assertNoErrors(ast);
 		}

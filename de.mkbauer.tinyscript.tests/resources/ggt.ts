@@ -14,5 +14,5 @@ function ggt(p, q) {
 }
 
 assert(ggt(8, 12)==4);
-assert(ggt(10710000, 10290)==210); 
+assert(ggt(107100, 10290)==210); 
 
