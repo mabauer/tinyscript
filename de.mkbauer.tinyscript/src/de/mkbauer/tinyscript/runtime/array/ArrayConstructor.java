@@ -25,6 +25,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 	@Override
 	public TSValue apply(boolean asConstrcutor, TSObject self, List<TSValue> args) {
 		// TODO Handle arguments
+		ev.checkAndIncreaseObjectCreations();
 		return new TSValue(new ArrayObject(ev));
 	}
 

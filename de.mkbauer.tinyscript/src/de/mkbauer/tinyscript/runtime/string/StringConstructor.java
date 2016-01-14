@@ -26,6 +26,7 @@ public class StringConstructor extends BuiltinConstructor {
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		// TODO Handle arguments
+		ev.checkAndIncreaseObjectCreations();
 		if (args.size() > 0)
 			return new TSValue(new StringObject(ev, args.get(0)));
 		else

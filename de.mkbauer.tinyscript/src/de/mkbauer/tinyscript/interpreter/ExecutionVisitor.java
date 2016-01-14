@@ -75,12 +75,17 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	private TSObject objectPrototype;
 	
 	private OutputStream stdOut; 
+	private ResourceLimits resourceLimits;
+	private ResourceConsumption resourceConsumption;
+	private int callDepth;
 	
 	public ExecutionVisitor() {
 		globalContext = new GlobalExecutionContext();
 		currentContext = globalContext;
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
+		
+		resourceLimits = null;
 		
 		objectPrototype = new TSObject();
 		TSObject globalObject = globalContext.getGlobalObject();
@@ -106,6 +111,22 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		return stdOut;
 	}
 	
+	public ResourceLimits getResourceLimits() {
+		return resourceLimits;
+	}
+
+	public void setResourceLimits(ResourceLimits resourceLimits) {
+		this.resourceLimits = resourceLimits;
+	}
+
+	public ResourceConsumption getResourceConsumption() {
+		return resourceConsumption;
+	}
+
+	public void setResourceConsumption(ResourceConsumption resourceConsumption) {
+		this.resourceConsumption = resourceConsumption;
+	}
+
 	public TSObject getDefaultPrototype() {
 		return objectPrototype;
 	}
@@ -198,6 +219,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		// Start from scratch!
 		currentContext = globalContext;
 		contextStack.clear();
+		callDepth = 0;
+		resourceConsumption = new ResourceConsumption();
 		
 		// Hoist function declarations:
     	// Create function objects (or get them form a cache)
@@ -235,6 +258,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     }
     
     public TSValue caseExpressionStatement(ExpressionStatement object) {
+    	checkAndIncreaseStatements();
     	return execute(object.getExpr());
     }    
     
@@ -248,6 +272,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseVariableStatement(VariableStatement object) {
+    	checkAndIncreaseStatements();
     	for (Expression expr : object.getVardecls()) {
         	execute(expr); 
         }
@@ -256,6 +281,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseReturnStatement(ReturnStatement object) {
+    	checkAndIncreaseStatements();
     	TSValue returnValue = TSValue.UNDEFINED;
     	if (object.getExpr() != null)
     		returnValue =execute(object.getExpr());
@@ -264,6 +290,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseAssertStatement(AssertStatement object) {
+    	checkAndIncreaseStatements();
     	TSValue cond = execute(object.getCond());
     	if (!cond.asBoolean()) {
     		throw new TinyscriptAssertationError("assert: condition is false", object);
@@ -273,6 +300,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
   
     // @Override
     public TSValue caseIfStatement(IfStatement object) {
+    	checkAndIncreaseStatements();
     	TSValue cond = execute(object.getCond());
     	TSValue result = TSValue.UNDEFINED;
     	if (cond.asBoolean()) {
@@ -294,6 +322,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseNumericForStatement(NumericForStatement foreach) {
+    	checkAndIncreaseStatements();
     	TSValue result = TSValue.UNDEFINED;
 		TSValue startValue = execute(foreach.getStart());
 		TSValue stopValue = execute(foreach.getStop());    		
@@ -540,6 +569,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseObjectInitializer(ObjectInitializer expr) {
+    	checkAndIncreaseObjectCreations();
     	TSObject obj = new TSObject(getDefaultPrototype()); 
     	for (PropertyAssignment assignment : expr.getPropertyassignments()) {
     		String key = null;
@@ -554,6 +584,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
+    	checkAndIncreaseObjectCreations();
     	ArrayObject arr = new ArrayObject(this); 
     	int i = 0;
     	for (Expression itemExpr : expr.getValues()) {
@@ -705,6 +736,42 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		result =  new LexicalEnvironment(functions, variables);
 		lexicalEnvironments.put(block, result);
 		return result;
+	}
+	
+	protected void checkAndIncrementCallDepth() {
+		if (resourceLimits != null) {
+			callDepth++;
+			if (callDepth > resourceConsumption.callDepth) {
+				resourceConsumption.callDepth = callDepth;
+			}
+			if (resourceLimits.maxCallDepth >0 && resourceConsumption.callDepth > resourceLimits.maxCallDepth) {
+				throw new TinyscriptResourceLimitViolation("Call depth limit reached");
+			}
+		}
+	}
+	
+	protected void DecrementCallDepth() {
+		if (resourceLimits != null) {
+			callDepth--;
+		}
+	}
+	
+	protected void checkAndIncreaseStatements() {
+		if (resourceLimits != null) {
+				resourceConsumption.statements++;
+			if (resourceLimits.maxStatements > 0 && resourceConsumption.statements > resourceLimits.maxStatements) {
+				throw new TinyscriptResourceLimitViolation("Statement limit reached");
+			}
+		}
+	}
+	
+	public void checkAndIncreaseObjectCreations() {
+		if (resourceLimits != null) {
+				resourceConsumption.objectCreations++;
+			if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
+				throw new TinyscriptResourceLimitViolation("Object creation limit reached");
+			}
+		}
 	}
 	
 	protected void attachStackTrace(TinyscriptRuntimeException e) {

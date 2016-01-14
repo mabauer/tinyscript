@@ -25,6 +25,8 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.ResourceConsumption;
+import de.mkbauer.tinyscript.interpreter.ResourceLimits;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
@@ -41,25 +43,29 @@ public class TinyscriptExecutionService {
 	
 	public TinyscriptExecutionResult executeScriptFromString(String script) {
 
+		ExecutionVisitor executionvisitor = new ExecutionVisitor();
 		String resultAsString = "";
 		String errorMessage = "";
 		int errorLine = 0;
 		ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+		ResourceConsumption statistics = new ResourceConsumption();
 		
 		try {
 			Tinyscript ast = parseScriptFromString(script);
-			ExecutionVisitor executionvisitor = new ExecutionVisitor();
 			executionvisitor.defineStdOut(stdout);
+			executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
 			TSValue result = executionvisitor.execute(ast);
 			resultAsString = result.asString();
 			String output = stdout.toString();
-			return new TinyscriptExecutionResult(resultAsString, output);
+			statistics = executionvisitor.getResourceConsumption();
+			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
 		catch (TinyscriptRuntimeException e) {
 			errorMessage = e.getMessage();
 			errorLine = e.getAffectedLine();
 			String output = stdout.toString();
-			return new TinyscriptExecutionResult(resultAsString, output, errorMessage, errorLine);
+			statistics = executionvisitor.getResourceConsumption();
+			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
 	}
 	
