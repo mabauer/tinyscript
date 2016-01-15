@@ -9,8 +9,18 @@ function Tinyscript($scope, $http) {
 	
 	$scope.codeMirror = initCodeMirror();
 	
+	$scope.loadScript = function(script) {
+		$http.get(script).
+		    then(function(data) {
+		    	$scope.codeMirror.setValue(data.data);
+		    	$scope.codeMirror.focus();
+		    }, function() {
+		    	$scope.codeMirror.setValue("// Example not available. This should not happen.");
+		    	$scope.codeMirror.focus();
+		    });
+	}
+	
 	$scope.statistics = "";
-
 	$scope.executeScript = function() {
 		$scope.result = false;
 	    $http.post('execute', $scope.codeMirror.getValue()).

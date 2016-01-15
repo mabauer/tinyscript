@@ -24,8 +24,25 @@
 	  					</div>
 	  				</div>
 	  				<div id="commands" class=row> 
-	  					<div class="col-md-12">
-							<button class="btn btn-default" ng-click="executeScript()">Execute</button>
+	  					<div class="col-md-4">
+	  						<div class="btn-group" uib-dropdown is-open="status.isopen">
+      							<button id="examples" type="button" class="btn btn-default" uib-dropdown-toggle ng-disabled="disabled">
+        							Examples <span class="caret"></span>
+      							</button>
+      							<ul uib-dropdown-menu role="menu" aria-labelledby="single-button">
+							        <li role="menuitem">
+							        	<a href="#" ng-click="loadScript('helloworld.ts')">Hello World</a>
+							        	<a href="#" ng-click="loadScript('expressions.ts')">Basic Expressions</a>
+							        	<a href="#" ng-click="loadScript('strings.ts')">Strings</a>
+							        	<a href="#" ng-click="loadScript('primes.ts')">Control flow: for and if Statements</a>
+							        	<a href="#" ng-click="loadScript('fibonacci.ts')">Functions</a>
+							        	<a href="#" ng-click="loadScript('fibonacci_recursive.ts')">Functions: recursion</a>
+							        	<a href="#" ng-click="loadScript('closures.ts')">Closures</a>
+							        	<a href="#" ng-click="loadScript('oo.ts')">Objects and Prototypes</a>
+							        </li>
+      							</ul>
+    						</div>
+							<button id="execute" class="btn btn-primary" ng-click="executeScript()">Execute</button>
 						</div>
 					</div>
 	  			</div>

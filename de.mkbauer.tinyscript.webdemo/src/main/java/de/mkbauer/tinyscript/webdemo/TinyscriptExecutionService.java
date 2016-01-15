@@ -35,6 +35,9 @@ public class TinyscriptExecutionService {
 	
 	private final static String fileExtension = "ts";
 	
+	public static final int MAX_STATEMENTS = 500000;
+	public static final int MAX_CALL_DEPTH = 256;
+	
 	private Injector injector;
 	
 	public TinyscriptExecutionService() {
@@ -55,7 +58,8 @@ public class TinyscriptExecutionService {
 			executionvisitor.defineStdOut(stdout);
 			// executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
 			ResourceLimits limits = new ResourceLimits();
-			limits.setMaxRecursionDepth(256);
+			limits.setMaxStatements(MAX_STATEMENTS);
+			limits.setMaxRecursionDepth(MAX_CALL_DEPTH);
 			executionvisitor.setResourceLimits(limits);
 			TSValue result = executionvisitor.execute(ast);
 			resultAsString = result.asString();
