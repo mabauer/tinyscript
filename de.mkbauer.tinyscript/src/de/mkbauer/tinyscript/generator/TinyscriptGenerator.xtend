@@ -59,6 +59,26 @@ class TinyscriptGenerator  {
 			};
 		} 
 		
+		function __ts_add(obj1, obj2) {
+			var result;
+			if (Array.isArray(obj1)) {
+				if (Array.isArray(obj2)) {
+					return obj1.concat(obj2);
+				} 
+				else {
+					result = obj1.slice(0);
+					result.push(obj2);
+					return result;
+				}
+			}
+			if (Array.isArray(obj2)) {
+				result = obj2.slice();
+				result.unshift(obj1);
+				return result;
+			}
+			return obj1 + obj2;
+		}
+		
 	'''
 	
 	def generate(Tinyscript script, boolean includeBuiltins) '''
@@ -138,8 +158,8 @@ class TinyscriptGenerator  {
 		«ENDIF»
 	'''
 	
-	def dispatch generate(BinaryExpression expr) 
-		'''«expr.left.generate» «expr.op» «expr.right.generate»'''
+	def dispatch generate(BinaryExpression expr) '''
+		«IF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
 
 	def dispatch generate(Unary expr)
 		'''«expr.op»«expr.expr.generate»'''

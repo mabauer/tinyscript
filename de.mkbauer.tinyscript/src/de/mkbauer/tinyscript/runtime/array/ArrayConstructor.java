@@ -15,6 +15,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 	public ArrayConstructor(ExecutionVisitor ev) {
 		super(ev);
 		defineArrayPrototype();
+		defineDefaultProperty(this, "isArray", new IsArray(ev));
 	}
 	
 	private void defineArrayPrototype() {

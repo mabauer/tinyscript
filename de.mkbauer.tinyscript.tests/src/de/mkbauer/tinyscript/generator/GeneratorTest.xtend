@@ -58,11 +58,11 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		var result = generateScriptFromString("3*4;")
 		assertEquals("3 * 4;", result.trim())
 		result = generateScriptFromString("(3+4)*5;")
-		assertEquals("(3 + 4) * 5;", result.trim())
+		assertEquals("(__ts_add(3, 4)) * 5;", result.trim())
 		result = generateScriptFromString("3 == 4;")
 		assertEquals("3 == 4;", result.trim())
 		result = generateScriptFromString("\"Hello\" + \" World\";")
-		assertEquals("\"Hello\" + \" World\";", result.trim())
+		assertEquals("__ts_add(\"Hello\", \" World\");", result.trim())
 	}
 	
 		@Test
@@ -111,12 +111,12 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 	def void testgenerateFunctionDeclaration() {
 		val result = generateScriptFromString('''
 			function f(p1, p2) {
-				return p1 + p2;
+				return p1 * p2;
 			}		
 		''')
 		assertEquals('''
 			function f(p1, p2) {
-				return p1 + p2;
+				return p1 * p2;
 			}
 			
 		'''.toString, result)	
@@ -127,13 +127,13 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		val result = generateScriptFromString('''
 			var f;
 			f = function (p1, p2) {
-				return p1 + p2;
+				return p1 * p2;
 			};
 		''')
 		assertEquals('''
 			var f;
 			f = function (p1, p2) {
-				return p1 + p2;
+				return p1 * p2;
 			};
 		'''.toString, result)	
 	}
@@ -143,13 +143,13 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		val result = generateScriptFromString('''
 			var f;
 			f = function name(p1, p2) {
-				return p1 + p2;
+				return p1 * p2;
 			};
 		''')
 		assertEquals('''
 			var f;
 			f = function name(p1, p2) {
-				return p1 + p2;
+				return p1 * p2;
 			};
 		'''.toString, result)	
 	}

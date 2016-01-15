@@ -16,16 +16,16 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 @RunWith(XtextRunner.class)
-public class NashornExecutorTest extends TinyscriptInterpreterTestHelper {
+public class NashornRunnerTest extends TinyscriptInterpreterTestHelper {
 
 	@Inject
-	private Provider<NashornExecutor> nashornExecutorProvider;
+	private Provider<NashornRunner> nashornExecutorProvider;
 	
 	public TSValue executeScriptFromString(String script) {
 		Tinyscript ast = parseScriptFromString(script);
 		// FIXME: This works but is probably not correct...
 		// NashornExecutor nashorn = injectorProvider.getInjector().getInstance(NashornExecutor.class);
-		NashornExecutor nashorn = nashornExecutorProvider.get();
+		NashornRunner nashorn = nashornExecutorProvider.get();
 		nashorn.execute(ast);
 		return TSValue.UNDEFINED;
 	}
@@ -33,7 +33,7 @@ public class NashornExecutorTest extends TinyscriptInterpreterTestHelper {
 	public TSValue executeScriptFromFileWithNashorn(String filename) {
 		Tinyscript ast = parseScriptFromFile(filename);
 		// FIXME: This works but is probably not correct...
-		NashornExecutor nashorn = nashornExecutorProvider.get();
+		NashornRunner nashorn = nashornExecutorProvider.get();
 		nashorn.execute(ast);
 		return TSValue.UNDEFINED;
 	}
@@ -56,6 +56,11 @@ public class NashornExecutorTest extends TinyscriptInterpreterTestHelper {
 	@Test
 	public void testRecursiveLinkedList() {
 		executeScriptFromFileWithNashorn("linked_list.ts");
+	}
+	
+	@Test
+	public void testAdditionExpressions() {
+		executeScriptFromFileWithNashorn("additions.ts");
 	}
 	
 	@Test

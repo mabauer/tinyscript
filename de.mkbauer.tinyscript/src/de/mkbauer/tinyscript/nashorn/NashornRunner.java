@@ -13,13 +13,13 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
-public class NashornExecutor {
+public class NashornRunner {
 	
 	@Inject
 	private TinyscriptGenerator generator; 
 
 	@Inject
-	public NashornExecutor(TinyscriptGenerator generator) {
+	public NashornRunner(TinyscriptGenerator generator) {
 		this.generator = generator;
 	}
 	
