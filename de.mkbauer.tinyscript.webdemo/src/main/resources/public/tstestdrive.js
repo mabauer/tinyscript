@@ -9,7 +9,6 @@ function Tinyscript($scope, $http) {
 	
 	$scope.codeMirror = initCodeMirror();
 	
-	$scope.examples = [ { name: "Hello World", file: "helloworld.ts" }, {name: "Basic Expressions", file: "expressions.ts" } ];
 	$scope.loadScript = function(script) {
 		$http.get(script).
 		    then(function(data) {

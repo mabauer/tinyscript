@@ -30,8 +30,9 @@
         							Examples <span class="caret"></span>
       							</button>
       							<ul uib-dropdown-menu role="menu" aria-labelledby="single-button">
-							        <li ng-repeat="example in examples" role="menuitem">
-							        	<a href="#" ng-click="loadScript(example.file)">{{example.name}}</a>
+							        <li role="menuitem">
+							        	<a href="#" ng-click="loadScript('helloworld.ts')">Hello World</a>
+							        	<a href="#" ng-click="loadScript('expressions.ts')">Basic Expressions</a>
 							        </li>
       							</ul>
     						</div>
