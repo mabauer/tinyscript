@@ -14,6 +14,7 @@ import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
+import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.ts.ArrayInitializer;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
@@ -288,6 +289,10 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     // @Override
     public TSValue caseReturnStatement(ReturnStatement object) {
     	checkAndIncreaseStatements();
+    	if (callDepth == 0) {
+    		throw new TinyscriptSyntaxError("Return statement is only valid inside functions", 
+    				TinyscriptModelUtil.getFilenameOfASTNode(object), TinyscriptModelUtil.getLineOfASTNode(object));
+    	}
     	TSValue returnValue = TSValue.UNDEFINED;
     	if (object.getExpr() != null)
     		returnValue =execute(object.getExpr());
@@ -759,8 +764,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	}
 	
 	protected void checkAndIncrementCallDepth() {
+		callDepth++;
 		if (resourceLimits != null) {
-			callDepth++;
 			if (callDepth > resourceConsumption.callDepth) {
 				resourceConsumption.callDepth = callDepth;
 			}
@@ -771,9 +776,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	}
 	
 	protected void DecrementCallDepth() {
-		if (resourceLimits != null) {
-			callDepth--;
-		}
+		callDepth--;
 	}
 	
 	protected void checkAndIncreaseStatements() {
