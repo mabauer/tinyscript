@@ -56,6 +56,7 @@ public class InterpretedFunction extends Function {
 		// Set this-Reference
 		currentContext.setThisRef(self);
 		currentContext.setFunctionContext(true);
+		
 		// Put the arguments into the context
 		if (args != null) {
 			int argsN = args.size();
@@ -68,6 +69,17 @@ public class InterpretedFunction extends Function {
 				i++;
 			}
 		}
+		
+		// Hoist function declarations
+		LexicalEnvironment env = ev.getLexcialEnvironment(block);
+		for (TSValue function : env.getFunctions()) {	
+			// Create a variable in the current context pointing to each function object
+			String functionName = ((InterpretedFunction) function.asObject()).getName();
+			if (!currentContext.contains(functionName))
+				currentContext.create(functionName);
+			currentContext.store(functionName, function);
+		}
+		
 		try {
 			result = ev.caseBlock(block);
 			if (asConstructor)
