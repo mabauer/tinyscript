@@ -81,7 +81,7 @@ public class ArrayObject extends BuiltinType {
 		// TODO: Handle named properties
 		return items.stream()
 				.map(item->item.toString())
-				.collect(Collectors.joining(", ", "[ ", " ]"));
+				.collect(Collectors.joining(", ", "[", "]"));
 	}
 	
 	public int getLength() {
