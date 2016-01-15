@@ -216,7 +216,7 @@ terminal OP_EQUALS:
 ;
 
 terminal OP_COMP:
-    '<' | '<=' | '>' | '>='
+    '<' | '<=' | '>' | '>=' | 'instanceof'
 ;
 
 terminal OP_ASSIGN:

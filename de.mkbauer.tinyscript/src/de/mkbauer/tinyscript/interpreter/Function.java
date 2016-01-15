@@ -46,6 +46,21 @@ public abstract class Function extends TSObject {
 		return get("prototype");
 	}
 	
+	public boolean hasInstance(TSValue value) {
+		if (!value.isObject())
+			return false;
+		TSObject object = value.asObject();
+		TSValue prototypePropertyAsValue = getPrototypeProperty();
+		if (!prototypePropertyAsValue.isObject())
+			throw new TinyscriptTypeError("Constructor " + getName() + " does not have a prototype property");
+		TSObject prototypeProperty = prototypePropertyAsValue.asObject();
+		for (object = object.getPrototype(); object != null; object = object.getPrototype()) {
+			if (object == prototypeProperty) 
+				return true;
+		}
+		return false;
+	}
+	
 	public TSValue call(boolean asConstructor, TSObject self, TSValue... args) {
 		return apply(asConstructor, self, Arrays.<TSValue>asList(args));
 	}

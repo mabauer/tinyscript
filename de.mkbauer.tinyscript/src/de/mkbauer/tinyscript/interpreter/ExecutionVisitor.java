@@ -464,6 +464,15 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			return new TSValue(left.asDouble() % right.asDouble());
     		}
     	}
+    	if (op.equals("instanceof")) {
+    		if (!(right.isObject() && right.asObject() instanceof Function))
+    			throw new TinyscriptTypeError("'instanceof' requires a function object as right-hand operand");
+    		else {
+    			Function constructor = (Function) right.asObject();
+    			return new TSValue(constructor.hasInstance(left));
+    		}
+    				
+    	}
     	// Error handling
 		throw new UnsupportedOperationException("Unsupported binary expression: " + op);
     }
