@@ -348,6 +348,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	if (op.equalsIgnoreCase("!=")) {
     		return new TSValue(!left.equals(right));
     	}
+    	// TODO: Make comparisons work for other types. Strategy: Implement TSValue as Comparable
+    	// TODO: Respect the evaluation order. In ECMAScript: left to right
     	if (op.equalsIgnoreCase(">")) {
     		if (left.isNumber() && right.isNumber())
     			return new TSValue(left.asDouble() > right.asDouble());
@@ -357,6 +359,18 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	if (op.equalsIgnoreCase("<")) {
     		if (left.isNumber() && right.isNumber())
     			return new TSValue(left.asDouble() < right.asDouble());
+    		else
+    			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
+    	}
+    	if (op.equalsIgnoreCase(">=")) {
+    		if (left.isNumber() && right.isNumber())
+    			return new TSValue(left.asDouble() >= right.asDouble());
+    		else
+    			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
+    	}
+    	if (op.equalsIgnoreCase("<=")) {
+    		if (left.isNumber() && right.isNumber())
+    			return new TSValue(left.asDouble() <= right.asDouble());
     		else
     			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
     	}
