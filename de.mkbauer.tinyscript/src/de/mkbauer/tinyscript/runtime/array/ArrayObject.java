@@ -45,8 +45,9 @@ public class ArrayObject extends BuiltinType {
 			if (index < getLength()) 
 				items.set(index, value);
 			else {
-				for (int i = getLength(); i < index; i++) 
-					items.set(i, TSValue.UNDEFINED);
+				int len = getLength();
+				for (int i = len; i < index; i++) 
+					items.add(TSValue.UNDEFINED);
 				items.add(value);
 			}
 			put("length", new TSValue(getLength()));
