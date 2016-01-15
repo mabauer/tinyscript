@@ -24,8 +24,18 @@
 	  					</div>
 	  				</div>
 	  				<div id="commands" class=row> 
-	  					<div class="col-md-12">
-							<button class="btn btn-default" ng-click="executeScript()">Execute</button>
+	  					<div class="col-md-4">
+	  						<div class="btn-group" uib-dropdown is-open="status.isopen">
+      							<button id="examples" type="button" class="btn btn-default" uib-dropdown-toggle ng-disabled="disabled">
+        							Examples <span class="caret"></span>
+      							</button>
+      							<ul uib-dropdown-menu role="menu" aria-labelledby="single-button">
+							        <li ng-repeat="example in examples" role="menuitem">
+							        	<a href="#" ng-click="loadScript(example.file)">{{example.name}}</a>
+							        </li>
+      							</ul>
+    						</div>
+							<button id="execute" class="btn btn-primary" ng-click="executeScript()">Execute</button>
 						</div>
 					</div>
 	  			</div>

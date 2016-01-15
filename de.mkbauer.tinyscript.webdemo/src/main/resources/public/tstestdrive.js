@@ -9,8 +9,17 @@ function Tinyscript($scope, $http) {
 	
 	$scope.codeMirror = initCodeMirror();
 	
+	$scope.examples = [ { name: "Hello World", file: "helloworld.ts" }, {name: "Basic Expressions", file: "expressions.ts" } ];
+	$scope.loadScript = function(script) {
+		$http.get(script).
+		    then(function(data) {
+		    	$scope.codeMirror.setValue(data.data);
+		    }, function() {
+		    	$scope.codeMirror.setValue("// Example not available. This should not happen.");
+		    });
+	}
+	
 	$scope.statistics = "";
-
 	$scope.executeScript = function() {
 		$scope.result = false;
 	    $http.post('execute', $scope.codeMirror.getValue()).
