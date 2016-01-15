@@ -609,7 +609,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
-    	checkAndIncreaseObjectCreations();
     	ArrayObject arr = new ArrayObject(this); 
     	int i = 0;
     	for (Expression itemExpr : expr.getValues()) {

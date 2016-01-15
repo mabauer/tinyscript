@@ -19,6 +19,7 @@ public class ArrayObject extends BuiltinType {
 	// TODO: Check prototype property -- this should equal [].__proto
 	public ArrayObject(ExecutionVisitor ev) {
 		super(ev);
+		ev.checkAndIncreaseObjectCreations();
 		items = new ArrayList<TSValue>();
 		defineDefaultProperty(this, "length", new TSValue(0));
 	}
