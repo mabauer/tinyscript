@@ -79,6 +79,12 @@ public class TSValue { // implements Comparable<TSValue>
 	public boolean asBoolean() {
 		if (value==null)
 			return false;
+		if (isPrimitiveString()) {
+			if (value.equals(""))
+				return false;
+			else
+				return true;
+		}
 		if (isObject())
 			return true;
 		if (isNumber()) 
