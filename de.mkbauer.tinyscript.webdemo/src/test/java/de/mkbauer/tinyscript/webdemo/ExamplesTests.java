@@ -51,6 +51,12 @@ public class ExamplesTests {
 	}
 	
 	@Test
+	public void testPrimes() {
+		TinyscriptExecutionResult result = executeScriptFromFile("primes.ts");
+		assertEquals(0, result.getErrorCode());
+	}
+	
+	@Test
 	public void testFibonacci() {
 		TinyscriptExecutionResult result = executeScriptFromFile("fibonacci.ts");
 		assertEquals(0, result.getErrorCode());
@@ -59,6 +65,12 @@ public class ExamplesTests {
 	@Test
 	public void testFibonacciRecursive() {
 		TinyscriptExecutionResult result = executeScriptFromFile("fibonacci_recursive.ts");
+		assertEquals(0, result.getErrorCode());
+	}
+	
+	@Test
+	public void testClosures() {
+		TinyscriptExecutionResult result = executeScriptFromFile("closures.ts");
 		assertEquals(0, result.getErrorCode());
 	}
 	
