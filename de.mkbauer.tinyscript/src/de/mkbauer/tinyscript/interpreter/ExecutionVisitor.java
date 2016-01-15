@@ -748,7 +748,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		currentContext = contextStack.pop();
 	}
 	
-	private LexicalEnvironment getLexcialEnvironment(Block block) {
+	protected LexicalEnvironment getLexcialEnvironment(Block block) {
 		LexicalEnvironment result = lexicalEnvironments.get(block);
 		if (result != null)
 			return result;
