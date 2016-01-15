@@ -23,6 +23,7 @@ public class FunctionConstructor extends BuiltinConstructor {
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		// TODO Auto-generated method stub
+		// ev.checkAndIncreaseObjectCreations();
 		return null;
 	}
 	

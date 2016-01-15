@@ -39,11 +39,20 @@ public class InterpretedFunction extends Function {
 	
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+		
+		if (asConstructor) {
+			ev.checkAndIncreaseObjectCreations();
+		}
+
 		Block block = getBlock();
 		TSValue result = null;
 		
 		// Create a new execution context
 		ExecutionContext currentContext = ev.enterNewExecutionContext(getName(), outerContext);
+		
+		// Check and update resource consumption
+		ev.checkAndIncrementCallDepth();
+		
 		// Set this-Reference
 		currentContext.setThisRef(self);
 		currentContext.setFunctionContext(true);
@@ -64,6 +73,7 @@ public class InterpretedFunction extends Function {
 			if (asConstructor)
 				 result = new TSValue(currentContext.getThisRef());
 			ev.leaveExecutionContext();
+			ev.DecrementCallDepth();
 			return result;
 		}
 		catch (TSReturnValue rv) {
@@ -73,11 +83,13 @@ public class InterpretedFunction extends Function {
 			else
 				result = rv.getReturnValue();
 			ev.leaveExecutionContext();
+			ev.DecrementCallDepth();
 			return result;				
 		}
 		catch (TinyscriptRuntimeException e) {
 			ev.attachStackTrace(e);
 			ev.leaveExecutionContext();
+			ev.DecrementCallDepth();
 			throw e;
 		}
 	}
