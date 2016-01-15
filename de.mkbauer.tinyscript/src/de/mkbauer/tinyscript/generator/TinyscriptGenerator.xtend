@@ -193,7 +193,10 @@ class TinyscriptGenerator  {
 	}
 	
 	def dispatch generate(Reference ref) {
-		getName(ref.id);
+		if (ref.^this)
+			"this"
+		else
+			getName(ref.id);
 	}
 	
 	def dispatch generate(ObjectInitializer expr) {
