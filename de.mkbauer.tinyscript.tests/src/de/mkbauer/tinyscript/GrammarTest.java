@@ -5,6 +5,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -14,6 +15,7 @@ import org.eclipse.xtext.junit4.XtextRunner;
 import org.eclipse.xtext.junit4.util.ParseHelper;
 import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
 import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.validation.Issue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -45,6 +47,16 @@ public class GrammarTest extends TinyscriptInterpreterTestHelper {
 		assertEquals(EcoreUtil2.eAllOfType(ast, ObjectInitializer.class).size(), 1);
 		ast = parseScriptFromString("var anObject = {hello : \"Hello\", world: \"World\"};");
 		assertEquals(EcoreUtil2.eAllOfType(ast, ObjectInitializer.class).size(), 1);
+	}
+	
+	@Test
+	public void testReturnStatements() {
+		Tinyscript ast = parseScriptFromStringWithoutValidating("{ var x = 4; return x; }");
+		List <Issue> issues = getValidator().validate(ast);
+		assertEquals(1, issues.size());
+		
+		ast = parseScriptFromStringWithoutValidating("function f() { var x = 4; return x; }");
+		getValidator().assertNoErrors(ast);
 	}
 	
 	@Test

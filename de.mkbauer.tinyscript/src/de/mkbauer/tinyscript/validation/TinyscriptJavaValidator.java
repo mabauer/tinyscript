@@ -5,6 +5,7 @@ import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
@@ -67,6 +68,13 @@ public class TinyscriptJavaValidator extends AbstractTinyscriptJavaValidator {
 	public void checkReservedIdentifier(Identifier identifier) {
 		if (identifier.getName().startsWith("__ts")) {
 			error("Reserved identifier", TsPackage.Literals.IDENTIFIER__NAME);
+		}
+	}
+	
+	@Check
+	public void checkReturnInvalidInGlobal(ReturnStatement retStmt) {
+		if (TinyscriptModelUtil.containingFunction(retStmt) instanceof Tinyscript) {
+			error("Return only allowed in functions", null);
 		}
 	}
 	
