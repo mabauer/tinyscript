@@ -13,8 +13,10 @@ function Tinyscript($scope, $http) {
 		$http.get(script).
 		    then(function(data) {
 		    	$scope.codeMirror.setValue(data.data);
+		    	$scope.codeMirror.focus();
 		    }, function() {
 		    	$scope.codeMirror.setValue("// Example not available. This should not happen.");
+		    	$scope.codeMirror.focus();
 		    });
 	}
 	
