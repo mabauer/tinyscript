@@ -116,6 +116,22 @@ public class TSValue { // implements Comparable<TSValue>
 		return (value!=null);
 	}
 	
+	public String typeOf() {
+		if (this == TSValue.UNDEFINED)
+			return "undefined";
+		if (this == TSValue.NULL)
+			return "object";
+		if (isBoolean())
+			return "boolean";
+		if (isNumber())
+			return "number";
+		if (isPrimitiveString())
+			return "string";
+		if (isCallable())
+			return "function";
+		return "object";
+	}
+	
 	public boolean equals(TSValue other) {
 		// TODO: Check with ECMAScript Specs
 		if (value == null) {

@@ -48,6 +48,7 @@ import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
+import de.mkbauer.tinyscript.ts.TypeOfExpression;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.runtime.Print;
@@ -202,6 +203,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		return caseBlockStatement((BlockStatement) object);
 		case TsPackage.ASSERT_STATEMENT:
     		return caseAssertStatement((AssertStatement) object);
+		case TsPackage.TYPE_OF_EXPRESSION:
+			return caseTypeOfExpression((TypeOfExpression) object);
 		case TsPackage.TINYSCRIPT:
 			return caseTinyscript((Tinyscript) object);
 		default:
@@ -625,6 +628,11 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		i++;
     	}
     	return new TSValue(arr);
+    }
+    
+    public TSValue caseTypeOfExpression(TypeOfExpression expr) {
+    	TSValue value = currentContext.lookup(expr.getName());
+    	return new TSValue(value.typeOf());
     }
     
     public TSValue assignValue(Expression left, TSValue value) {
