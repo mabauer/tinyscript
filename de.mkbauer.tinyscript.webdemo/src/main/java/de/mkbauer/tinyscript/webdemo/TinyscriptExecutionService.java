@@ -68,7 +68,7 @@ public class TinyscriptExecutionService {
 			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
 		catch (TinyscriptRuntimeException e) {
-			errorMessage = e.getMessage();
+			errorMessage = e.getClass().getSimpleName() + ": " + e.getMessage();
 			errorLine = e.getAffectedLine();
 			String output = stdout.toString();
 			statistics = executionvisitor.getResourceConsumption();
