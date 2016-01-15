@@ -53,7 +53,10 @@ public class TinyscriptExecutionService {
 		try {
 			Tinyscript ast = parseScriptFromString(script);
 			executionvisitor.defineStdOut(stdout);
-			executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
+			// executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
+			ResourceLimits limits = new ResourceLimits();
+			limits.setMaxRecursionDepth(256);
+			executionvisitor.setResourceLimits(limits);
 			TSValue result = executionvisitor.execute(ast);
 			resultAsString = result.asString();
 			String output = stdout.toString();
