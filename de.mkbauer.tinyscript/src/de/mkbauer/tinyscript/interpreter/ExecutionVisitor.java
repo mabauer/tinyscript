@@ -448,7 +448,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			}
     		}
     		if (left.isString() || right.isString()) {
-    			return new TSValue(left.asString() + right.asString());
+    			String result = left.asString() + right.asString();
+    			checkAndIncreaseStringCreation(result);
+    			return new TSValue(result);
     		}
     	}
     	if (op.equals("-")) {
@@ -606,7 +608,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseStringLiteral(StringLiteral expr) {
-    	return new TSValue(expr.getValue()); 
+    	String result = expr.getValue();
+    	checkAndIncreaseStringCreation(result);
+    	return new TSValue(result); 
     }
     
     // @Override
@@ -820,13 +824,23 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 	}
 	
-	public void checkAndIncreaseObjectCreations() {
+	public void checkAndIncreaseObjectCreations(TSObject object) {
 		if (resourceLimits != null) {
 				resourceConsumption.objectCreations++;
 			if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
 				throw new TinyscriptResourceLimitViolation("Object creation limit reached");
 			}
 		}
+	}
+	
+	public void checkAndIncreaseStringCreation(String string) {
+		if (resourceLimits != null) {
+			if (string.length() > resourceLimits.LARGE_STRING_SIZE) 
+				resourceConsumption.objectCreations++;
+		if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
+			throw new TinyscriptResourceLimitViolation("Object creation limit reached");
+		}
+	}
 	}
 	
 	protected void attachStackTrace(TinyscriptRuntimeException e) {

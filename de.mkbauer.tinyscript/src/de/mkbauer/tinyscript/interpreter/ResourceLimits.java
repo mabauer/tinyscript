@@ -2,6 +2,8 @@ package de.mkbauer.tinyscript.interpreter;
 
 public class ResourceLimits {
 	
+	public static final int LARGE_STRING_SIZE = 256;
+	
 	public static final ResourceLimits UNLIMITED = new ResourceLimits();
 	
 	protected int maxStatements;

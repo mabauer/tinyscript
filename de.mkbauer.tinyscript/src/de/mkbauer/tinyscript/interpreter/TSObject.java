@@ -18,12 +18,12 @@ public class TSObject {
 	
 	protected TSObject(ExecutionVisitor ev) {
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ev.checkAndIncreaseObjectCreations();
+		ev.checkAndIncreaseObjectCreations(this);
 	}
 	
 	public TSObject(ExecutionVisitor ev, TSObject proto) {
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ev.checkAndIncreaseObjectCreations();
+		ev.checkAndIncreaseObjectCreations(this);
 		if (proto != null)
 			setPrototype(proto);
 	}

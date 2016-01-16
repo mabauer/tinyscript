@@ -24,6 +24,7 @@ public class ToString extends BuiltinFunction {
 		String result = arr.getItems().stream()
 				.map(item->TSObject.toString(ev, item))
 				.collect(Collectors.joining(", "));
+		ev.checkAndIncreaseStringCreation(result);
 		return new TSValue(result);
 	}
 
