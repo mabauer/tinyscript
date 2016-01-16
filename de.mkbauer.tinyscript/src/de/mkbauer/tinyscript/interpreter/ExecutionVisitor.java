@@ -835,12 +835,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	public void monitorStringCreation(String string) {
 		if (resourceLimits != null) {
-			if (string.length() > resourceLimits.LARGE_STRING_SIZE) 
-				resourceConsumption.objectCreations++;
-		if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
-			throw new TinyscriptResourceLimitViolation("Object creation limit reached");
+			if (resourceLimits.maxStringLength > 0 && string.length() > resourceLimits.maxStringLength) 
+				throw new TinyscriptResourceLimitViolation("String length limit reached");
 		}
-	}
 	}
 	
 	protected void attachStackTrace(TinyscriptRuntimeException e) {

@@ -11,17 +11,20 @@ public class TSObject {
 	protected HashMap<String, TSPropertyDescriptor> properties;
 	
 	private TSObject proto = null;
+	protected ExecutionVisitor ev;
 	
 	protected TSObject() {
 		properties = new HashMap<String, TSPropertyDescriptor>();
 	}
 	
 	protected TSObject(ExecutionVisitor ev) {
+		this.ev = ev;
 		properties = new HashMap<String, TSPropertyDescriptor>();
 		ev.monitorObjectCreation(this);
 	}
 	
 	public TSObject(ExecutionVisitor ev, TSObject proto) {
+		this.ev = ev;
 		properties = new HashMap<String, TSPropertyDescriptor>();
 		ev.monitorObjectCreation(this);
 		if (proto != null)
@@ -165,6 +168,7 @@ public class TSObject {
 		else {
 			desc = new TSPropertyDescriptor(value);
 			properties.put(key, desc);
+			update();
 		}
 	}
 		
@@ -183,6 +187,18 @@ public class TSObject {
 				.filter(key -> properties.get(key).isEnumerable())
 				.map(key -> key + ": " + properties.get(key).getValue().toString())
 				.collect(Collectors.joining(", ", "{", "}"));
+	}
+	
+	protected void update() {
+		if (ev != null) {
+			ResourceLimits limits = ev.getResourceLimits();
+			if (limits != null && limits.maxObjectSize > 0 && getObjectSize() > limits.maxObjectSize)
+				throw new TinyscriptResourceLimitViolation("Object size limit reached");
+		}
+	}
+
+	public int getObjectSize() {
+		return properties.size();
 	}
 
 }
