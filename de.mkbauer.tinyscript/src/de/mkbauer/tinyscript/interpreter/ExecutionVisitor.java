@@ -84,7 +84,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	public ExecutionVisitor() {
 		
 		objectPrototype = new TSObject();
-		checkAndIncreaseObjectCreations(objectPrototype);
+		monitorObjectCreation(objectPrototype);
 		
 		globalContext = new GlobalExecutionContext(this);
 		currentContext = globalContext;
@@ -273,7 +273,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     }
     
     public TSValue caseExpressionStatement(ExpressionStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	return execute(object.getExpr());
     }    
     
@@ -287,7 +287,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseVariableStatement(VariableStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	for (Expression expr : object.getVardecls()) {
         	execute(expr); 
         }
@@ -296,7 +296,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseReturnStatement(ReturnStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	if (callDepth == 0) {
     		throw new TinyscriptSyntaxError("Return statement is only valid inside functions", 
     				TinyscriptModelUtil.getFilenameOfASTNode(object), TinyscriptModelUtil.getLineOfASTNode(object));
@@ -309,7 +309,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseAssertStatement(AssertStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	TSValue cond = execute(object.getCond());
     	if (!cond.asBoolean()) {
     		throw new TinyscriptAssertationError("assert: condition is false", object);
@@ -319,7 +319,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
   
     // @Override
     public TSValue caseIfStatement(IfStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	TSValue cond = execute(object.getCond());
     	TSValue result = TSValue.UNDEFINED;
     	if (cond.asBoolean()) {
@@ -341,7 +341,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseNumericForStatement(NumericForStatement foreach) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	TSValue result = TSValue.UNDEFINED;
 		TSValue startValue = execute(foreach.getStart());
 		TSValue stopValue = execute(foreach.getStop());    		
@@ -449,7 +449,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		}
     		if (left.isString() || right.isString()) {
     			String result = left.asString() + right.asString();
-    			checkAndIncreaseStringCreation(result);
+    			monitorStringCreation(result);
     			return new TSValue(result);
     		}
     	}
@@ -609,7 +609,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     // @Override
     public TSValue caseStringLiteral(StringLiteral expr) {
     	String result = expr.getValue();
-    	checkAndIncreaseStringCreation(result);
+    	monitorStringCreation(result);
     	return new TSValue(result); 
     }
     
@@ -815,7 +815,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		callDepth--;
 	}
 	
-	protected void checkAndIncreaseStatements() {
+	protected void monitorStatements() {
 		if (resourceLimits != null) {
 				resourceConsumption.statements++;
 			if (resourceLimits.maxStatements > 0 && resourceConsumption.statements > resourceLimits.maxStatements) {
@@ -824,7 +824,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 	}
 	
-	public void checkAndIncreaseObjectCreations(TSObject object) {
+	public void monitorObjectCreation(TSObject object) {
 		if (resourceLimits != null) {
 				resourceConsumption.objectCreations++;
 			if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
@@ -833,7 +833,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 	}
 	
-	public void checkAndIncreaseStringCreation(String string) {
+	public void monitorStringCreation(String string) {
 		if (resourceLimits != null) {
 			if (string.length() > resourceLimits.LARGE_STRING_SIZE) 
 				resourceConsumption.objectCreations++;
