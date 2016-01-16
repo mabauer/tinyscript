@@ -36,5 +36,18 @@ public class ObjectCreationAndPrototypesTest extends
 	public void testCreationViaNew() {
 		executeScriptFromFile("objectcreation_via_new.ts");
 	}
+	
+	@Test 
+	public void testOO() {
+		executeScriptFromFile("oo.ts");
+	}
+	
+	@Test 
+	public void testInstanceOfForBuiltins() {
+		executeScriptFromString("var obj = {}; assert (obj instanceof Object);");
+		executeScriptFromString("function f(x) {return x; } assert (f instanceof Function);");
+		executeScriptFromString("assert (print instanceof Function);");
+		executeScriptFromString("var obj = {}; assert (obj.toString instanceof Function);");
+	}
 
 }

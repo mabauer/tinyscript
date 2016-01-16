@@ -1,18 +1,14 @@
 // Object Oriented Programming
 // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Introduction_to_Object-Oriented_JavaScript
 
+// Adapted to make it testable
+
 // Helper function, because Object.create(proto) is not yet implemented
 function createObject(proto) {
     function ctor() { }
     ctor.prototype = proto;
     return new ctor();
 }
-
-// Helper function because console.log(s) is not yet implemented
-var console = {};
-console.log = function(s) {
-    print(s);
-};
 
 // Define the Person constructor
 var Person = function(firstName) {
@@ -21,11 +17,11 @@ var Person = function(firstName) {
 
 // Add a couple of methods to Person.prototype
 Person.prototype.walk = function() {
-	console.log("I am walking!");
+	return "I am walking!";
 };
 
 Person.prototype.sayHello = function() {
-	console.log("Hello, I'm " + this.firstName);
+	return "Hello, I'm " + this.firstName;
 };
 
 // Define the Student constructor
@@ -51,21 +47,22 @@ Student.prototype = createObject(Person.prototype); // Object.create(Person.prot
 
 // Replace the "sayHello" method
 Student.prototype.sayHello = function() {
-	console.log("Hello, I'm " + this.firstName + ". I'm studying "
-			+ this.subject + ".");
+	return "Hello, I'm " + this.firstName + ". I'm studying "
+			+ this.subject + ".";
 };
 
 // Add a "sayGoodBye" method
 Student.prototype.sayGoodBye = function() {
-	console.log("Goodbye!");
+	return "Goodbye!";
 };
 
 // Example usage:
 var student1 = new Student("Janet", "Applied Physics");
-student1.sayHello(); // "Hello, I'm Janet. I'm studying Applied Physics."
-student1.walk(); // "I am walking!"
-student1.sayGoodBye(); // "Goodbye!"
+assert ("Hello, I'm Janet. I'm studying Applied Physics." == student1.sayHello()) ;
+assert ("I am walking!" == student1.walk()); 
+assert ("Goodbye!" == student1.sayGoodBye());
 
 // Check that instanceof works correctly
-console.log(student1 instanceof Person); // true 
-console.log(student1 instanceof Student); // true
+assert(student1 instanceof Object); 
+assert(student1 instanceof Person);  
+assert(student1 instanceof Student);
