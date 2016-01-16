@@ -27,8 +27,7 @@ public class ObjectObject extends BuiltinConstructor {
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		// TODO Handle arguments
-		ev.checkAndIncreaseObjectCreations();
-		return new TSValue(new TSObject(ev.getDefaultPrototype()));
+		return new TSValue(new TSObject(ev, ev.getDefaultPrototype()));
 	}
 
 	@Override

@@ -12,6 +12,7 @@ public abstract class Function extends TSObject {
 	protected ExecutionVisitor ev;
 	
 	public Function(ExecutionVisitor ev) {
+		super(ev);
 		this.ev = ev;
 		
 		TSObject proto = null;
@@ -24,7 +25,7 @@ public abstract class Function extends TSObject {
 		else {
 			// We don't have the Object Object yet, so we are Object Object (hopefully!)
 			// ... and we have to create the prototype for all functions
-			proto = new TSObject(ev.getDefaultPrototype());
+			proto = new TSObject(ev, ev.getDefaultPrototype());
 			// Property: __proto__
 			setPrototype(proto);
 			// Store our unfinished Object Object into the global context, because

@@ -5,10 +5,10 @@ public class GlobalExecutionContext extends ExecutionContext {
 
 	private TSObject globalObject;
 	
-	public GlobalExecutionContext() {
+	public GlobalExecutionContext(ExecutionVisitor ev) {
 		super("global", null);
 		
-		globalObject = new TSObject();
+		globalObject = new TSObject(ev, ev.getDefaultPrototype());
 		
 		// TODO: In strict mode, this should be TSValue.undefined
 		thisRef = globalObject;

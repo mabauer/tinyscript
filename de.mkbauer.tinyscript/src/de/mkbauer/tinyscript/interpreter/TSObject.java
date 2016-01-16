@@ -12,14 +12,20 @@ public class TSObject {
 	
 	private TSObject proto = null;
 	
-	public TSObject() {
+	protected TSObject() {
 		properties = new HashMap<String, TSPropertyDescriptor>();
 	}
 	
-	public TSObject(TSObject proto) {
+	protected TSObject(ExecutionVisitor ev) {
 		properties = new HashMap<String, TSPropertyDescriptor>();
+		ev.checkAndIncreaseObjectCreations();
+	}
+	
+	public TSObject(ExecutionVisitor ev, TSObject proto) {
+		properties = new HashMap<String, TSPropertyDescriptor>();
+		ev.checkAndIncreaseObjectCreations();
 		if (proto != null)
-			setPrototype(proto); 
+			setPrototype(proto);
 	}
 	
 	// TODO Write tests and use it instead of TSValue.asString() where appropriate
@@ -57,13 +63,13 @@ public class TSObject {
 		}
 		if (value.isNumber()) {
 			// TODO Create a NumberObject object
-			TSObject result = new TSObject(ev.getDefaultPrototype()); 
+			TSObject result = new TSObject(ev, ev.getDefaultPrototype()); 
 			result.put("value", value);
 			return result; 
 		}
 		if (value.isBoolean()) {
 			// TODO Create a BooleanObject object
-			TSObject result = new TSObject(ev.getDefaultPrototype()); 
+			TSObject result = new TSObject(ev, ev.getDefaultPrototype()); 
 			result.put("value", value);
 			return result;
 		}

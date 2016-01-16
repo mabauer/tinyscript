@@ -82,14 +82,19 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	private int callDepth;
 	
 	public ExecutionVisitor() {
-		globalContext = new GlobalExecutionContext();
+		
+		objectPrototype = new TSObject();
+		checkAndIncreaseObjectCreations(objectPrototype);
+		
+		globalContext = new GlobalExecutionContext(this);
 		currentContext = globalContext;
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
 		
 		resourceLimits = null;
 		
-		objectPrototype = new TSObject();
+		
+		 
 		TSObject globalObject = globalContext.getGlobalObject();
 		
 		globalObject.setPrototype(objectPrototype);
@@ -533,7 +538,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 					TSObject thisRef = null;
 					boolean asConstructor = (expr.getExpr() instanceof NewExpression);
 					if (asConstructor) {
-						thisRef = new TSObject(result.asObject().get("prototype").asObject());
+						thisRef = new TSObject(this, result.asObject().get("prototype").asObject());
 					}
 					else
 						thisRef = baseasObject;
@@ -551,7 +556,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
         		TSObject thisRef = null;
         		boolean asConstructor = (expr.getExpr() instanceof NewExpression);
 				if (asConstructor) {
-					thisRef = new TSObject(base.asObject().get("prototype").asObject());
+					thisRef = new TSObject(this, base.asObject().get("prototype").asObject());
 				}
         		result = processFunctionCall(expr, (Function) base.asObject(), asConstructor, thisRef, callSuffix.getArguments());
     		}
@@ -606,8 +611,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseObjectInitializer(ObjectInitializer expr) {
-    	checkAndIncreaseObjectCreations();
-    	TSObject obj = new TSObject(getDefaultPrototype()); 
+    	TSObject obj = new TSObject(this, getDefaultPrototype()); 
     	for (PropertyAssignment assignment : expr.getPropertyassignments()) {
     		String key = null;
     		TSValue keyValue = execute(assignment.getKey());

@@ -9,7 +9,7 @@ public abstract class BuiltinConstructor extends BuiltinFunction {
 		
 		TSValue prototype = ev.getObjectPrototypeFor(getName());
 		if (prototype == TSValue.UNDEFINED) {
-			setPrototypeProperty(new TSObject(ev.getDefaultPrototype()));
+			setPrototypeProperty(new TSObject(ev, ev.getDefaultPrototype()));
 		}
 	}
 
