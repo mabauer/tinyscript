@@ -632,6 +632,18 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     public TSValue caseTypeOfExpression(TypeOfExpression expr) {
     	TSValue value = currentContext.lookup(expr.getName());
+    	if (expr.getSuffixes() != null) {
+    		for (DotPropertyAccessSuffix suffix : expr.getSuffixes()) {
+    			if (!value.isObject()) {
+    				value = TSValue.UNDEFINED; 
+    				break;
+    			}
+    			else {
+    				value = value.asObject().get(suffix.getKey().getName());
+    			}
+    		}
+    		
+    	}
     	return new TSValue(value.typeOf());
     }
     

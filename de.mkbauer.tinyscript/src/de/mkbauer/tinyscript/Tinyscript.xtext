@@ -82,7 +82,8 @@ Unary:
 ;
 
 Primary returns Expression:
-	(Atomic  | NewExpression | GroupingExpression ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))*  
+	((Atomic  | NewExpression | GroupingExpression ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))* )
+	| TypeOfExpression 
 ;
 
 GroupingExpression:
@@ -100,7 +101,6 @@ Atomic:
     StringLiteral |
     ObjectInitializer |
     ArrayInitializer | 
-    TypeOfExpression |
     FunctionExpression
 ;
 
@@ -201,7 +201,7 @@ RangeExpression:
 ;
 
 TypeOfExpression:
-	'typeof' name = ID
+	'typeof' name=ID (suffixes+=DotPropertyAccessSuffix)*
 ;
 
 StringLiteral:
