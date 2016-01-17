@@ -12,6 +12,8 @@ public class MathObject extends TSObject {
 		
 		defineDefaultProperty(this, "PI", java.lang.Math.PI);
 		defineDefaultProperty(this, "sqrt", new Sqrt(ev));
+		defineDefaultProperty(this, "round", new Round(ev));
+		defineDefaultProperty(this, "random", new Random(ev));
 	}
 	
 }
