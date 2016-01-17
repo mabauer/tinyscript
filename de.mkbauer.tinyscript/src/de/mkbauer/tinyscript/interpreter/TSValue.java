@@ -17,7 +17,7 @@ public class TSValue { // implements Comparable<TSValue>
 	
     public TSValue(Object v) {
         value = v;
-        if (value instanceof Integer)
+        if (value instanceof Number)
         	value = ((Number) value).doubleValue();
         // only accept boolean, list, number or string types
         if(!(isBoolean() || isNumber() || isString() || isObject())) {

@@ -354,12 +354,12 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     // @Override
     public TSValue caseElseStatement(ElseStatement object) {
     	return executeInBlockContext("else", object.getElse());
-    	// return caseBlock(object.getElse());
     }
     
     // @Override
     public TSValue caseNumericForStatement(NumericForStatement foreach) {
     	monitorStatements();
+    	// TODO: Use TSObject.toNumber/toInteger for bounds
     	TSValue result = TSValue.UNDEFINED;
 		TSValue startValue = execute(foreach.getStart());
 		TSValue stopValue = execute(foreach.getStop());    		
@@ -376,6 +376,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 				throw new TinyscriptTypeError("for needs an integer value as step expression", foreach.getStep());
 			step = stepValue.asDouble();
 		}
+		// TODO: If bounds are NaNs, don't loop!
 		for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
 			if (foreach.getId() != null) {
 				result = executeInBlockContext("for", foreach.getDo(), foreach.getId(), new TSValue(loopValue));
@@ -450,7 +451,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			}
     			else {
     				ArrayObject result = left.asArray().clone();
-    				result.add(right);
+    				result.push(right);
     				return new TSValue(result);
     			}	
     		}
@@ -460,7 +461,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			}
     			else {
     				ArrayObject result = new ArrayObject(this);
-    				result.add(left);
+    				result.push(left);
     				result = ArrayObject.concat(result, right.asArray());
     				return new TSValue(result);
     			}
@@ -470,27 +471,32 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			monitorStringCreation(result);
     			return new TSValue(result);
     		}
+    		// TODO: return NaN
     	}
     	if (op.equals("-")) {
     		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() - right.asDouble());
     		}
+    		// TODO: return NAN
     	}
     	if (op.equals("*")) {
        		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() * right.asDouble());
     		}
+       		// TODO: return NaN
     	}
     	if (op.equals("/")) {
        		if (left.isNumber() && right.isNumber()) {
        			// TODO: Catch division by 0
     			return new TSValue(left.asDouble() / right.asDouble());
     		}
+       		// TODO: return NaN
     	}
     	if (op.equals("%")) {
        		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() % right.asDouble());
     		}
+       		// TODO: return NaN
     	}
     	if (op.equals("instanceof")) {
     		if (!(right.isObject() && right.asObject() instanceof Function))
@@ -890,7 +896,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		else 
 			stacktrace.add(new TSStacktraceElement(currentContext.name, 0));
 		for (ExecutionContext ctx: contextStack) {
-			if (ctx.isFunctionContext()) {
+			if (ctx.isFunctionContext() && ctx.currentExpression != null) {
 				stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(ctx.currentExpression), 
 						ctx.name, TinyscriptModelUtil.getLineOfASTNode(ctx.currentExpression)));
 			}

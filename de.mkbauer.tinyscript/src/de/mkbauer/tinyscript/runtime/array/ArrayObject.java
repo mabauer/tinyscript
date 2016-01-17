@@ -48,17 +48,42 @@ public class ArrayObject extends BuiltinType {
 				for (int i = len; i < index; i++) 
 					items.add(TSValue.UNDEFINED);
 				items.add(value);
+				update();
 			}
-			update();
 		}
 		catch (NumberFormatException e) {
 			super.put(key, value);
 		}
 	}
 	
-	public void add(TSValue value) {
+	public void push(TSValue value) {
 		items.add(value);
 		update();
+	}
+	
+	public TSValue pop() {
+		if (items.size() == 0)
+			return TSValue.UNDEFINED;
+		else {
+			TSValue result = items.remove(items.size()-1);
+			update();
+			return result;
+		}
+	}
+	
+	public void unshift(TSValue value) {
+		items.add(0, value);
+		update();
+	}
+	
+	public TSValue shift() {
+		if (items.size() == 0)
+			return TSValue.UNDEFINED;
+		else {
+			TSValue result = items.remove(0);
+			update();
+			return result;
+		}
 	}
 	
 	public ArrayObject clone() {

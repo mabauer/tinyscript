@@ -7,18 +7,18 @@ import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
-public class Sqrt extends BuiltinFunction {
+public class Round extends BuiltinFunction {
 	
-	private static final String NAME = "sqrt";
+	private static final String NAME = "round";
 	
-	public Sqrt(ExecutionVisitor ev) {
+	public Round(ExecutionVisitor ev) {
 		super(ev);
 	}
 
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		checkArgs(args);
-		return new TSValue(java.lang.Math.sqrt(TSObject.toNumber(ev, args.get(0))));
+		return new TSValue(java.lang.Math.round(TSObject.toNumber(ev, args.get(0))));
 	}
 	
 
