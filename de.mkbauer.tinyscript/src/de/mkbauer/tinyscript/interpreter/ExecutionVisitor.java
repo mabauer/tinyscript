@@ -79,22 +79,29 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	private OutputStream stdOut; 
 	private ResourceLimits resourceLimits;
 	private ResourceConsumption resourceConsumption;
+	private ResourceConsumption totalResourceConsumption;
+	
 	private int callDepth;
+	private ObjectTracker objectTracker;
 	
 	public ExecutionVisitor() {
+		
+		resourceLimits = ResourceLimits.UNLIMITED;
+		resourceConsumption = new ResourceConsumption();
+		totalResourceConsumption = new ResourceConsumption();
+		if (resourceLimits != null)
+			objectTracker = new ObjectTracker();
 		
 		objectPrototype = new TSObject();
 		monitorObjectCreation(objectPrototype);
 		
 		globalContext = new GlobalExecutionContext(this);
+		monitorObjectCreation(globalContext.getGlobalObject());
+		
 		currentContext = globalContext;
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
-		
-		resourceLimits = null;
-		
-		
-		 
+				 
 		TSObject globalObject = globalContext.getGlobalObject();
 		
 		globalObject.setPrototype(objectPrototype);
@@ -108,6 +115,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
 		
 		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
+
+		totalResourceConsumption.add(resourceConsumption);
+		resourceLimits = null;
 	}
 	
 	public void defineStdOut(OutputStream os) {
@@ -126,8 +136,12 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		this.resourceLimits = resourceLimits;
 	}
 
-	public ResourceConsumption getResourceConsumption() {
+	public ResourceConsumption getLastResourceConsumption() {
 		return resourceConsumption;
+	}
+	
+	public ResourceConsumption getTotalResourceConsumption() {
+		return totalResourceConsumption;
 	}
 
 	public void setResourceConsumption(ResourceConsumption resourceConsumption) {
@@ -230,6 +244,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		contextStack.clear();
 		callDepth = 0;
 		resourceConsumption = new ResourceConsumption();
+		
 		final long startTime = System.nanoTime();
 		
 		// Hoist function declarations:
@@ -244,13 +259,16 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 		try {
 			TSValue result = execute(object.getGlobal());
+			
 			final long duration = (System.nanoTime() - startTime) / 1000000;
 			resourceConsumption.executionTime = duration; 
+			totalResourceConsumption.add(resourceConsumption);
 			return result;
 		}
 		catch (TinyscriptRuntimeException e) {
 			final long duration = (System.nanoTime() - startTime) / 1000000;
 			resourceConsumption.executionTime = duration; 
+			totalResourceConsumption.add(resourceConsumption);
 			if (e.getStackTrace() == null)
 				attachStackTrace(e);
 			throw e;
@@ -830,13 +848,37 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
 				throw new TinyscriptResourceLimitViolation("Object creation limit reached");
 			}
+			monitorObjectSizeChange(object);
+		}
+	}
+	
+	public void monitorObjectSizeChange(TSObject object) {
+		if (resourceLimits != null) {
+			objectTracker.trackObject(object);
+			checkObjectsAndMemoryConsumption();
 		}
 	}
 	
 	public void monitorStringCreation(String string) {
 		if (resourceLimits != null) {
+			resourceConsumption.objectCreations++;
 			if (resourceLimits.maxStringLength > 0 && string.length() > resourceLimits.maxStringLength) 
 				throw new TinyscriptResourceLimitViolation("String length limit reached");
+			objectTracker.trackString(string);
+			checkObjectsAndMemoryConsumption();	
+		}
+	}
+	
+	private void checkObjectsAndMemoryConsumption() {
+		if (objectTracker.size() > resourceConsumption.objects)
+			resourceConsumption.objects = objectTracker.size();
+		if (resourceLimits.maxObjects > 0 && resourceConsumption.objects > resourceLimits.maxObjects) {
+			throw new TinyscriptResourceLimitViolation("Object limit reached");
+		}
+		if (objectTracker.memory() > resourceConsumption.memory)
+			resourceConsumption.memory = objectTracker.memory();
+		if (resourceLimits.maxMemory > 0 && resourceConsumption.memory > resourceLimits.maxMemory) {
+			throw new TinyscriptResourceLimitViolation("Memory limit reached");
 		}
 	}
 	

@@ -110,7 +110,10 @@ public class ArrayObject extends BuiltinType {
 	
 	@Override
 	public int getObjectSize() {
-		return items.size() + properties.size();
+		if (items != null)
+			return items.size() + properties.size();
+		else 
+			return 0;
 	}
 
 }

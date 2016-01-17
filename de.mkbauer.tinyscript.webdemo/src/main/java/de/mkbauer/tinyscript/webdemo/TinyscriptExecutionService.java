@@ -35,10 +35,12 @@ public class TinyscriptExecutionService {
 	
 	private final static String fileExtension = "ts";
 	
-	public static final int MAX_STATEMENTS = 500000;
+	public static final int MAX_STATEMENTS = 0;  // 500000;
 	public static final int MAX_CALL_DEPTH = 256;
-	public static final int MAX_OBJECT_SIZE = 1024*32;
-	public static final int MAX_STRING_LENGTH = 1024*8;
+	public static final int MAX_OBJECT_SIZE = 0; //1024*32;
+	public static final int MAX_STRING_LENGTH = 0; // 1024*8;
+	
+	public static final int MAX_OUTPUT_SIZE = 1024*8;
 	
 	private Injector injector;
 	
@@ -52,6 +54,7 @@ public class TinyscriptExecutionService {
 		String resultAsString = "";
 		String errorMessage = "";
 		int errorLine = 0;
+		// TODO: Should be replaced by an OutputStream with a limited capacity
 		ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 		ResourceConsumption statistics = new ResourceConsumption();
 		
@@ -67,17 +70,22 @@ public class TinyscriptExecutionService {
 			executionvisitor.setResourceLimits(limits);
 			TSValue result = executionvisitor.execute(ast);
 			resultAsString = result.asString();
-			String output = stdout.toString();
-			statistics = executionvisitor.getResourceConsumption();
+			String output = stdoutToString(stdout);
+			statistics = executionvisitor.getTotalResourceConsumption();
 			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
 		catch (TinyscriptRuntimeException e) {
 			errorMessage = e.getClass().getSimpleName() + ": " + e.getMessage();
 			errorLine = e.getAffectedLine();
-			String output = stdout.toString();
-			statistics = executionvisitor.getResourceConsumption();
+			String output = stdoutToString(stdout);
+			statistics = executionvisitor.getTotalResourceConsumption();
 			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
+	}
+	
+	private String stdoutToString(ByteArrayOutputStream out) {
+		String result = out.toString();
+		return result.substring(Math.max(0, result.length()-MAX_OUTPUT_SIZE));
 	}
 	
 	protected Tinyscript parseScriptFromString(String script) {

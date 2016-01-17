@@ -8,6 +8,10 @@ public class ResourceLimits {
 	
 	protected int maxCallDepth;
 	
+	protected int maxObjects;
+	
+	protected long maxMemory;
+	
 	protected int maxObjectCreations;
 	
 	protected int maxObjectSize;
@@ -17,6 +21,7 @@ public class ResourceLimits {
 	public ResourceLimits() {
 		maxStatements = 0;
 		maxCallDepth = 0;
+		maxObjects = 0;
 		maxObjectCreations = 0;
 		maxObjectSize = 0;
 		maxStringLength = 0;

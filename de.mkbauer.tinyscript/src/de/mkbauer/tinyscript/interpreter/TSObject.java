@@ -192,8 +192,11 @@ public class TSObject {
 	protected void update() {
 		if (ev != null) {
 			ResourceLimits limits = ev.getResourceLimits();
-			if (limits != null && limits.maxObjectSize > 0 && getObjectSize() > limits.maxObjectSize)
-				throw new TinyscriptResourceLimitViolation("Object size limit reached");
+			if (limits != null) {
+				if (limits.maxObjectSize > 0 && getObjectSize() > limits.maxObjectSize)
+					throw new TinyscriptResourceLimitViolation("Object size limit reached");
+				ev.monitorObjectSizeChange(this);
+			}
 		}
 	}
 
