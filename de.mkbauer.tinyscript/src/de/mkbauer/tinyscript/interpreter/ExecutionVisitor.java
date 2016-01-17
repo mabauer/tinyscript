@@ -428,7 +428,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			}
     			else {
     				ArrayObject result = left.asArray().clone();
-    				result.add(right);
+    				result.push(right);
     				return new TSValue(result);
     			}	
     		}
@@ -438,7 +438,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			}
     			else {
     				ArrayObject result = new ArrayObject(this);
-    				result.add(left);
+    				result.push(left);
     				result = ArrayObject.concat(result, right.asArray());
     				return new TSValue(result);
     			}
