@@ -8,7 +8,7 @@ import de.mkbauer.tinyscript.interpreter.TSValue;
 public class MathObject extends TSObject {
 	
 	public MathObject(ExecutionVisitor ev) {
-		super(ev.getDefaultPrototype());
+		super(ev, ev.getDefaultPrototype());
 		
 		defineDefaultProperty(this, "PI", java.lang.Math.PI);
 		defineDefaultProperty(this, "sqrt", new Sqrt(ev));

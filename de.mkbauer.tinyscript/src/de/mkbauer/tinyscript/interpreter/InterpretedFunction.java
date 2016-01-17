@@ -18,7 +18,7 @@ public class InterpretedFunction extends Function {
 		super(ev);
 		this.ast = null;
 		// Each user defined functions gets a new prototype property since it could be used as a constructor
-		setPrototypeProperty(new TSObject(ev.getDefaultPrototype()));
+		setPrototypeProperty(new TSObject(ev, ev.getDefaultPrototype()));
 	}
 	
 	public void setAst(FunctionDefinition ast) {
@@ -39,10 +39,6 @@ public class InterpretedFunction extends Function {
 	
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
-		
-		if (asConstructor) {
-			ev.checkAndIncreaseObjectCreations();
-		}
 
 		Block block = getBlock();
 		TSValue result = null;

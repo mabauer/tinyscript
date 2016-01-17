@@ -19,7 +19,6 @@ public class ArrayObject extends BuiltinType {
 	// TODO: Check prototype property -- this should equal [].__proto
 	public ArrayObject(ExecutionVisitor ev) {
 		super(ev);
-		ev.checkAndIncreaseObjectCreations();
 		items = new ArrayList<TSValue>();
 		defineDefaultProperty(this, "length", new TSValue(0));
 	}
@@ -90,7 +89,7 @@ public class ArrayObject extends BuiltinType {
 	public ArrayObject clone() {
 		ArrayObject result = new ArrayObject(ev);
 		result.items.addAll(items);
-		result.put("length", new TSValue(result.getLength()));
+		result.update();
 		return result;
 	}
 	
@@ -99,7 +98,7 @@ public class ArrayObject extends BuiltinType {
 		result.items.addAll(arr1.items);
 		result.items.addAll(arr2.items);
 		// TODO: Handle named properties
-		result.put("length", new TSValue(result.getLength()));
+		result.update();
 		return result;
 	}
 
@@ -130,7 +129,13 @@ public class ArrayObject extends BuiltinType {
 	}
 	
 	protected void update() {
+		super.update();
 		put("length", new TSValue(getLength()));
+	}
+	
+	@Override
+	public int getObjectSize() {
+		return items.size() + properties.size();
 	}
 
 }

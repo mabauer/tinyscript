@@ -37,6 +37,8 @@ public class TinyscriptExecutionService {
 	
 	public static final int MAX_STATEMENTS = 500000;
 	public static final int MAX_CALL_DEPTH = 256;
+	public static final int MAX_OBJECT_SIZE = 1024*32;
+	public static final int MAX_STRING_LENGTH = 1024*8;
 	
 	private Injector injector;
 	
@@ -60,6 +62,8 @@ public class TinyscriptExecutionService {
 			ResourceLimits limits = new ResourceLimits();
 			limits.setMaxStatements(MAX_STATEMENTS);
 			limits.setMaxRecursionDepth(MAX_CALL_DEPTH);
+			limits.setMaxObjectSize(MAX_OBJECT_SIZE);
+			limits.setMaxStringLength(MAX_STRING_LENGTH);
 			executionvisitor.setResourceLimits(limits);
 			TSValue result = executionvisitor.execute(ast);
 			resultAsString = result.asString();

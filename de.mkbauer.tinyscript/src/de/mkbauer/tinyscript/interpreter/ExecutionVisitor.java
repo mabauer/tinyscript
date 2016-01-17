@@ -82,14 +82,19 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	private int callDepth;
 	
 	public ExecutionVisitor() {
-		globalContext = new GlobalExecutionContext();
+		
+		objectPrototype = new TSObject();
+		monitorObjectCreation(objectPrototype);
+		
+		globalContext = new GlobalExecutionContext(this);
 		currentContext = globalContext;
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
 		
 		resourceLimits = null;
 		
-		objectPrototype = new TSObject();
+		
+		 
 		TSObject globalObject = globalContext.getGlobalObject();
 		
 		globalObject.setPrototype(objectPrototype);
@@ -268,7 +273,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     }
     
     public TSValue caseExpressionStatement(ExpressionStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	return execute(object.getExpr());
     }    
     
@@ -282,7 +287,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseVariableStatement(VariableStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	for (Expression expr : object.getVardecls()) {
         	execute(expr); 
         }
@@ -291,7 +296,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseReturnStatement(ReturnStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	if (callDepth == 0) {
     		throw new TinyscriptSyntaxError("Return statement is only valid inside functions", 
     				TinyscriptModelUtil.getFilenameOfASTNode(object), TinyscriptModelUtil.getLineOfASTNode(object));
@@ -304,7 +309,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseAssertStatement(AssertStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	TSValue cond = execute(object.getCond());
     	if (!cond.asBoolean()) {
     		throw new TinyscriptAssertationError("assert: condition is false", object);
@@ -314,7 +319,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
   
     // @Override
     public TSValue caseIfStatement(IfStatement object) {
-    	checkAndIncreaseStatements();
+    	monitorStatements();
     	TSValue cond = execute(object.getCond());
     	TSValue result = TSValue.UNDEFINED;
     	if (cond.asBoolean()) {
@@ -335,8 +340,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseNumericForStatement(NumericForStatement foreach) {
-    	checkAndIncreaseStatements();
     	// TODO: Use TSObject.toNumber/toInteger for bounds
+    	monitorStatements();
     	TSValue result = TSValue.UNDEFINED;
 		TSValue startValue = execute(foreach.getStart());
 		TSValue stopValue = execute(foreach.getStop());    		
@@ -444,7 +449,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			}
     		}
     		if (left.isString() || right.isString()) {
-    			return new TSValue(left.asString() + right.asString());
+    			String result = left.asString() + right.asString();
+    			monitorStringCreation(result);
+    			return new TSValue(result);
     		}
     		// TODO: return NaN
     	}
@@ -539,7 +546,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 					TSObject thisRef = null;
 					boolean asConstructor = (expr.getExpr() instanceof NewExpression);
 					if (asConstructor) {
-						thisRef = new TSObject(result.asObject().get("prototype").asObject());
+						thisRef = new TSObject(this, result.asObject().get("prototype").asObject());
 					}
 					else
 						thisRef = baseasObject;
@@ -557,7 +564,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
         		TSObject thisRef = null;
         		boolean asConstructor = (expr.getExpr() instanceof NewExpression);
 				if (asConstructor) {
-					thisRef = new TSObject(base.asObject().get("prototype").asObject());
+					thisRef = new TSObject(this, base.asObject().get("prototype").asObject());
 				}
         		result = processFunctionCall(expr, (Function) base.asObject(), asConstructor, thisRef, callSuffix.getArguments());
     		}
@@ -607,13 +614,14 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseStringLiteral(StringLiteral expr) {
-    	return new TSValue(expr.getValue()); 
+    	String result = expr.getValue();
+    	monitorStringCreation(result);
+    	return new TSValue(result); 
     }
     
     // @Override
     public TSValue caseObjectInitializer(ObjectInitializer expr) {
-    	checkAndIncreaseObjectCreations();
-    	TSObject obj = new TSObject(getDefaultPrototype()); 
+    	TSObject obj = new TSObject(this, getDefaultPrototype()); 
     	for (PropertyAssignment assignment : expr.getPropertyassignments()) {
     		String key = null;
     		TSValue keyValue = execute(assignment.getKey());
@@ -813,7 +821,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		callDepth--;
 	}
 	
-	protected void checkAndIncreaseStatements() {
+	protected void monitorStatements() {
 		if (resourceLimits != null) {
 				resourceConsumption.statements++;
 			if (resourceLimits.maxStatements > 0 && resourceConsumption.statements > resourceLimits.maxStatements) {
@@ -822,12 +830,19 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 	}
 	
-	public void checkAndIncreaseObjectCreations() {
+	public void monitorObjectCreation(TSObject object) {
 		if (resourceLimits != null) {
 				resourceConsumption.objectCreations++;
 			if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
 				throw new TinyscriptResourceLimitViolation("Object creation limit reached");
 			}
+		}
+	}
+	
+	public void monitorStringCreation(String string) {
+		if (resourceLimits != null) {
+			if (resourceLimits.maxStringLength > 0 && string.length() > resourceLimits.maxStringLength) 
+				throw new TinyscriptResourceLimitViolation("String length limit reached");
 		}
 	}
 	

@@ -11,15 +11,24 @@ public class TSObject {
 	protected HashMap<String, TSPropertyDescriptor> properties;
 	
 	private TSObject proto = null;
+	protected ExecutionVisitor ev;
 	
-	public TSObject() {
+	protected TSObject() {
 		properties = new HashMap<String, TSPropertyDescriptor>();
 	}
 	
-	public TSObject(TSObject proto) {
+	protected TSObject(ExecutionVisitor ev) {
+		this.ev = ev;
 		properties = new HashMap<String, TSPropertyDescriptor>();
+		ev.monitorObjectCreation(this);
+	}
+	
+	public TSObject(ExecutionVisitor ev, TSObject proto) {
+		this.ev = ev;
+		properties = new HashMap<String, TSPropertyDescriptor>();
+		ev.monitorObjectCreation(this);
 		if (proto != null)
-			setPrototype(proto); 
+			setPrototype(proto);
 	}
 	
 	// TODO Write tests and use it instead of TSValue.asString() where appropriate
@@ -57,13 +66,13 @@ public class TSObject {
 		}
 		if (value.isNumber()) {
 			// TODO Create a NumberObject object
-			TSObject result = new TSObject(ev.getDefaultPrototype()); 
+			TSObject result = new TSObject(ev, ev.getDefaultPrototype()); 
 			result.put("value", value);
 			return result; 
 		}
 		if (value.isBoolean()) {
 			// TODO Create a BooleanObject object
-			TSObject result = new TSObject(ev.getDefaultPrototype()); 
+			TSObject result = new TSObject(ev, ev.getDefaultPrototype()); 
 			result.put("value", value);
 			return result;
 		}
@@ -180,6 +189,7 @@ public class TSObject {
 		else {
 			desc = new TSPropertyDescriptor(value);
 			properties.put(key, desc);
+			update();
 		}
 	}
 		
@@ -198,6 +208,18 @@ public class TSObject {
 				.filter(key -> properties.get(key).isEnumerable())
 				.map(key -> key + ": " + properties.get(key).getValue().toString())
 				.collect(Collectors.joining(", ", "{", "}"));
+	}
+	
+	protected void update() {
+		if (ev != null) {
+			ResourceLimits limits = ev.getResourceLimits();
+			if (limits != null && limits.maxObjectSize > 0 && getObjectSize() > limits.maxObjectSize)
+				throw new TinyscriptResourceLimitViolation("Object size limit reached");
+		}
+	}
+
+	public int getObjectSize() {
+		return properties.size();
 	}
 
 }

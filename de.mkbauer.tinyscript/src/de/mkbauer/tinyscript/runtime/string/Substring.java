@@ -40,6 +40,7 @@ public class Substring extends BuiltinFunction {
 			else
 				result = str.substring(end, start);
 		}
+		ev.monitorStringCreation(result);
 		return new TSValue(result);
 	}
 

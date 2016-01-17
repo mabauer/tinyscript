@@ -2,10 +2,8 @@ package de.mkbauer.tinyscript.interpreter;
 
 public abstract class BuiltinType extends TSObject {
 	
-	protected ExecutionVisitor ev;
-	
 	public BuiltinType(ExecutionVisitor ev) {
-		this.ev = ev;
+		super(ev);
 		
 		TSValue proto = ev.getObjectPrototypeFor(getConstructorName());
 		if (proto == TSValue.UNDEFINED) {
