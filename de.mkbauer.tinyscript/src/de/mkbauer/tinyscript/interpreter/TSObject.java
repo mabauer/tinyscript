@@ -78,6 +78,27 @@ public class TSObject {
 		return TSValue.UNDEFINED;		
 	}
 	
+	public static double toNumber(ExecutionVisitor ev, TSValue value) {
+		// TODO Return NAN if undefined
+		if (value.isObject()) {
+			value = toPrimitive(ev, value.asObject());
+		}
+		if (value.isBoolean())
+			return (value.asBoolean() ? 1 :0);
+		if (value.isNumber())
+			return (value.asDouble());
+		if (value.isString()) {
+			String str = value.asString();
+			try {
+				double d = Double.parseDouble(str);
+				return d;
+			}
+			catch (NumberFormatException e) {}
+			return 0.0;
+		}
+		return 0.0;
+	}
+	
 	public static int toInteger(ExecutionVisitor ev, TSValue value) {
 		// TODO Return NAN if undefined
 		if (value.isObject()) {

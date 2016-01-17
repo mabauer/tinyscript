@@ -331,12 +331,12 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     // @Override
     public TSValue caseElseStatement(ElseStatement object) {
     	return executeInBlockContext("else", object.getElse());
-    	// return caseBlock(object.getElse());
     }
     
     // @Override
     public TSValue caseNumericForStatement(NumericForStatement foreach) {
     	checkAndIncreaseStatements();
+    	// TODO: Use TSObject.toNumber/toInteger for bounds
     	TSValue result = TSValue.UNDEFINED;
 		TSValue startValue = execute(foreach.getStart());
 		TSValue stopValue = execute(foreach.getStop());    		
@@ -353,6 +353,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 				throw new TinyscriptTypeError("for needs an integer value as step expression", foreach.getStep());
 			step = stepValue.asDouble();
 		}
+		// TODO: If bounds are NaNs, don't loop!
 		for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
 			if (foreach.getId() != null) {
 				result = executeInBlockContext("for", foreach.getDo(), foreach.getId(), new TSValue(loopValue));
@@ -445,27 +446,32 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		if (left.isString() || right.isString()) {
     			return new TSValue(left.asString() + right.asString());
     		}
+    		// TODO: return NaN
     	}
     	if (op.equals("-")) {
     		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() - right.asDouble());
     		}
+    		// TODO: return NAN
     	}
     	if (op.equals("*")) {
        		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() * right.asDouble());
     		}
+       		// TODO: return NaN
     	}
     	if (op.equals("/")) {
        		if (left.isNumber() && right.isNumber()) {
        			// TODO: Catch division by 0
     			return new TSValue(left.asDouble() / right.asDouble());
     		}
+       		// TODO: return NaN
     	}
     	if (op.equals("%")) {
        		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() % right.asDouble());
     		}
+       		// TODO: return NaN
     	}
     	if (op.equals("instanceof")) {
     		if (!(right.isObject() && right.asObject() instanceof Function))
