@@ -833,7 +833,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		else 
 			stacktrace.add(new TSStacktraceElement(currentContext.name, 0));
 		for (ExecutionContext ctx: contextStack) {
-			if (ctx.isFunctionContext()) {
+			if (ctx.isFunctionContext() && ctx.currentExpression != null) {
 				stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(ctx.currentExpression), 
 						ctx.name, TinyscriptModelUtil.getLineOfASTNode(ctx.currentExpression)));
 			}
