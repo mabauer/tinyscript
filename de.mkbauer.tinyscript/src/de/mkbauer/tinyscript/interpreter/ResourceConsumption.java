@@ -10,7 +10,11 @@ public class ResourceConsumption {
 	
 	protected long memory;
 	
+	protected long memoryMax;
+	
 	protected int objects;
+	
+	protected int objectsMax;
 	
 	protected int objectCreations;
 	
@@ -56,12 +60,30 @@ public class ResourceConsumption {
 		this.objects = objects;
 	}
 	
+	public long getMemoryMax() {
+		return memoryMax;
+	}
+
+	public void setMemoryMax(long memoryMax) {
+		this.memoryMax = memoryMax;
+	}
+
+	public int getObjectsMax() {
+		return objectsMax;
+	}
+
+	public void setObjectsMax(int objectsMax) {
+		this.objectsMax = objectsMax;
+	}
+
 	public void add(ResourceConsumption other) {
 		executionTime += other.executionTime;
 		statements += other.statements;
 		callDepth = Math.max(callDepth, other.callDepth);
-		memory = Math.max(memory, other.memory);
-		objects = Math.max(objects, other.objects);
+		memory = other.memory;
+		memoryMax = Math.max(memoryMax, other.memoryMax);
+		objects = other.objects;
+		objectsMax = Math.max(objectsMax, other.objectsMax);
 		objectCreations += other.objectCreations;
 	}
 	

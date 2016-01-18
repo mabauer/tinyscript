@@ -876,14 +876,18 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	}
 	
 	private void checkObjectsAndMemoryConsumption() {
-		if (objectTracker.size() > resourceConsumption.objects)
-			resourceConsumption.objects = objectTracker.size();
-		if (resourceLimits.maxObjects > 0 && resourceConsumption.objects > resourceLimits.maxObjects) {
+		int currentObjects = objectTracker.size();
+		resourceConsumption.objects = currentObjects;
+		if (currentObjects > resourceConsumption.objectsMax)
+			resourceConsumption.objectsMax = currentObjects;
+		if (resourceLimits.maxObjects > 0 && currentObjects > resourceLimits.maxObjects) {
 			throw new TinyscriptResourceLimitViolation("Object limit reached");
 		}
-		if (objectTracker.memory() > resourceConsumption.memory)
-			resourceConsumption.memory = objectTracker.memory();
-		if (resourceLimits.maxMemory > 0 && resourceConsumption.memory > resourceLimits.maxMemory) {
+		long currentMemory = objectTracker.memory();
+		resourceConsumption.memory = currentMemory;
+		if ( currentMemory > resourceConsumption.memoryMax)
+			resourceConsumption.memoryMax = currentMemory;
+		if (resourceLimits.maxMemory > 0 && currentMemory > resourceLimits.maxMemory) {
 			throw new TinyscriptResourceLimitViolation("Memory limit reached");
 		}
 	}

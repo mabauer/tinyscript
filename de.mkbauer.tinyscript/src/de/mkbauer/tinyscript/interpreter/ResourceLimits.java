@@ -18,6 +18,8 @@ public class ResourceLimits {
 	
 	protected int maxStringLength;
 	
+	private boolean useObjectTracking = false;
+	
 	public ResourceLimits() {
 		maxStatements = 0;
 		maxCallDepth = 0;
@@ -65,6 +67,42 @@ public class ResourceLimits {
 
 	public void setMaxStringLength(int maxStringSize) {
 		this.maxStringLength = maxStringSize;
+	}
+
+	public int getMaxCallDepth() {
+		return maxCallDepth;
+	}
+
+	public void setMaxCallDepth(int maxCallDepth) {
+		this.maxCallDepth = maxCallDepth;
+	}
+
+	public int getMaxObjects() {
+		return maxObjects;
+	}
+
+	public void setMaxObjects(int maxObjects) {
+		this.maxObjects = maxObjects;
+		if (maxObjects > 0) 
+			useObjectTracking = true;
+	}
+
+	public long getMaxMemory() {
+		return maxMemory;
+	}
+
+	public void setMaxMemory(long maxMemory) {
+		this.maxMemory = maxMemory;
+		if (maxMemory > 0) 
+			useObjectTracking = true;
+	}
+	
+	public void enableObjectTracking() {
+		useObjectTracking = true;
+	}
+	
+	public boolean useObjectTracking() {
+		return useObjectTracking;
 	}
 
 }

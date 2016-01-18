@@ -2,10 +2,12 @@ package de.mkbauer.tinyscript.interpreter;
 
 import java.util.WeakHashMap;
 
+import org.apache.log4j.Logger;
+
 public class ObjectTracker {
 	
 	private static final int RECALCULATE_LIMIT = 64;
-	private static final double MAX_SIZE_ERROR = 0.2;
+	private static final double MAX_SIZE_ERROR = 0.5;
 	
 	private static final int TSVALUE_SIZE = 8;
 	private static final int CHAR_SIZE = 2;
@@ -14,6 +16,8 @@ public class ObjectTracker {
 	
 	private int size = 0;
 	private long totalMemory = 0;
+	
+	private final static Logger logger = Logger.getLogger(ObjectTracker.class);
 
 	public void trackObject(TSObject object) {
 		Integer mem = objects.get(object);
@@ -42,6 +46,7 @@ public class ObjectTracker {
 	}
 	
 	public void recalculateSizes() {
+		logger.debug("recalculate objects - before: " + size);
 		int mem;
 		totalMemory = 0;
 		size = 0;
@@ -54,16 +59,17 @@ public class ObjectTracker {
 			size++;
 			totalMemory = totalMemory + mem;
 		}
+		logger.debug("recalculate objects - after: " + size);
 	}
 	
 	public int size() {
-		if (objects.size() <= RECALCULATE_LIMIT || Math.abs(size - objects.size()) / size > MAX_SIZE_ERROR)
+		if (objects.size() <= RECALCULATE_LIMIT || ((double) Math.abs(size - objects.size())) / size > MAX_SIZE_ERROR)
 			recalculateSizes();
 		return size;
 	}
 	
 	public long memory() {
-		if (objects.size() <= RECALCULATE_LIMIT || Math.abs(size - objects.size()) / size > MAX_SIZE_ERROR)
+		if (objects.size() <= RECALCULATE_LIMIT || ((double) Math.abs(size - objects.size())) / size > MAX_SIZE_ERROR)
 			recalculateSizes();
 		return totalMemory;
 	}
