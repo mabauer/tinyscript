@@ -8,6 +8,10 @@ public class ResourceLimits {
 	
 	protected int maxCallDepth;
 	
+	protected int maxObjects;
+	
+	protected long maxMemory;
+	
 	protected int maxObjectCreations;
 	
 	protected int maxObjectSize;
@@ -17,6 +21,7 @@ public class ResourceLimits {
 	public ResourceLimits() {
 		maxStatements = 0;
 		maxCallDepth = 0;
+		maxObjects = 0;
 		maxObjectCreations = 0;
 		maxObjectSize = 0;
 		maxStringLength = 0;
@@ -60,6 +65,31 @@ public class ResourceLimits {
 
 	public void setMaxStringLength(int maxStringSize) {
 		this.maxStringLength = maxStringSize;
+	}
+
+	public int getMaxCallDepth() {
+		return maxCallDepth;
+	}
+
+	public void setMaxCallDepth(int maxCallDepth) {
+		this.maxCallDepth = maxCallDepth;
+	}
+
+	public int getMaxObjects() {
+		return maxObjects;
+	}
+
+	public void setMaxObjects(int maxObjects) {
+		this.maxObjects = maxObjects;
+		
+	}
+
+	public long getMaxMemory() {
+		return maxMemory;
+	}
+
+	public void setMaxMemory(long maxMemory) {
+		this.maxMemory = maxMemory;
 	}
 
 }

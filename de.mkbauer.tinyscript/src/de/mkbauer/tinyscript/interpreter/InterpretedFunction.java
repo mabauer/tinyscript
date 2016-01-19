@@ -46,8 +46,11 @@ public class InterpretedFunction extends Function {
 		// Create a new execution context
 		ExecutionContext currentContext = ev.enterNewExecutionContext(getName(), outerContext);
 		
-		// Check and update resource consumption
-		ev.checkAndIncrementCallDepth();
+		// Update and check call depth
+		ev.callDepth++;
+		ResourceMonitor monitor = ev.getResourceMonitor();
+		if (monitor != null)
+			monitor.checkCallDepth(ev.callDepth);
 		
 		// Set this-Reference
 		currentContext.setThisRef(self);
@@ -81,7 +84,7 @@ public class InterpretedFunction extends Function {
 			if (asConstructor)
 				 result = new TSValue(currentContext.getThisRef());
 			ev.leaveExecutionContext();
-			ev.DecrementCallDepth();
+			ev.callDepth--;
 			return result;
 		}
 		catch (TSReturnValue rv) {
@@ -91,13 +94,13 @@ public class InterpretedFunction extends Function {
 			else
 				result = rv.getReturnValue();
 			ev.leaveExecutionContext();
-			ev.DecrementCallDepth();
+			ev.callDepth--;
 			return result;				
 		}
 		catch (TinyscriptRuntimeException e) {
 			ev.attachStackTrace(e);
 			ev.leaveExecutionContext();
-			ev.DecrementCallDepth();
+			ev.callDepth--;
 			throw e;
 		}
 	}

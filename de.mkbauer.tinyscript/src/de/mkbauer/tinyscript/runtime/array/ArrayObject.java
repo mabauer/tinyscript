@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
@@ -135,10 +136,11 @@ public class ArrayObject extends BuiltinType {
 	
 	@Override
 	public int getObjectSize() {
-        if (items != null)
-            return items.size() + properties.size();
-        else 
-            return 0;
+
+		if (items != null)
+			return (items.size() + properties.size());
+		else 
+			return 0;
 	}
 
 }

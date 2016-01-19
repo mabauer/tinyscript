@@ -77,24 +77,38 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	private TSObject objectPrototype;
 	
 	private OutputStream stdOut; 
-	private ResourceLimits resourceLimits;
-	private ResourceConsumption resourceConsumption;
-	private int callDepth;
+	
+	protected int callDepth;
+	private ResourceMonitor resourceMonitor;
 	
 	public ExecutionVisitor() {
+		initialize();
+	}
+	
+	public ExecutionVisitor(ResourceMonitor resourceMonitor) {
+		this.resourceMonitor = resourceMonitor;
+		initialize();
+	}
+	
+	public ResourceMonitor getResourceMonitor() {
+		return resourceMonitor;
+	}
+		
+	private void initialize() {	
+		
+		if (resourceMonitor != null)
+			resourceMonitor.start();
 		
 		objectPrototype = new TSObject();
-		monitorObjectCreation(objectPrototype);
+		recordObjectCreation(objectPrototype);
 		
 		globalContext = new GlobalExecutionContext(this);
+		recordObjectCreation(globalContext.getGlobalObject());
+		
 		currentContext = globalContext;
 		contextStack = new ArrayDeque<ExecutionContext>();
 		lexicalEnvironments = new HashMap<Block, LexicalEnvironment>();
-		
-		resourceLimits = null;
-		
-		
-		 
+				 
 		TSObject globalObject = globalContext.getGlobalObject();
 		
 		globalObject.setPrototype(objectPrototype);
@@ -108,6 +122,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
 		
 		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
+		
+		if (resourceMonitor != null)
+			resourceMonitor.stop();
 	}
 	
 	public void defineStdOut(OutputStream os) {
@@ -116,22 +133,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	public OutputStream getStdOut() {
 		return stdOut;
-	}
-	
-	public ResourceLimits getResourceLimits() {
-		return resourceLimits;
-	}
-
-	public void setResourceLimits(ResourceLimits resourceLimits) {
-		this.resourceLimits = resourceLimits;
-	}
-
-	public ResourceConsumption getResourceConsumption() {
-		return resourceConsumption;
-	}
-
-	public void setResourceConsumption(ResourceConsumption resourceConsumption) {
-		this.resourceConsumption = resourceConsumption;
 	}
 
 	public TSObject getDefaultPrototype() {
@@ -229,9 +230,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		currentContext = globalContext;
 		contextStack.clear();
 		callDepth = 0;
-		resourceConsumption = new ResourceConsumption();
-		final long startTime = System.nanoTime();
-		
+		if (resourceMonitor != null)
+			resourceMonitor.start();
+			
 		// Hoist function declarations:
     	// Create function objects (or get them form a cache)
     	LexicalEnvironment env = getLexcialEnvironment(object.getGlobal());
@@ -244,13 +245,14 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 		try {
 			TSValue result = execute(object.getGlobal());
-			final long duration = (System.nanoTime() - startTime) / 1000000;
-			resourceConsumption.executionTime = duration; 
+
+			if (resourceMonitor != null)
+				resourceMonitor.stop();
 			return result;
 		}
 		catch (TinyscriptRuntimeException e) {
-			final long duration = (System.nanoTime() - startTime) / 1000000;
-			resourceConsumption.executionTime = duration; 
+			if (resourceMonitor != null)
+				resourceMonitor.stop();
 			if (e.getStackTrace() == null)
 				attachStackTrace(e);
 			throw e;
@@ -273,7 +275,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     }
     
     public TSValue caseExpressionStatement(ExpressionStatement object) {
-    	monitorStatements();
+    	recordStatement();
     	return execute(object.getExpr());
     }    
     
@@ -287,7 +289,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseVariableStatement(VariableStatement object) {
-    	monitorStatements();
+    	recordStatement();
     	for (Expression expr : object.getVardecls()) {
         	execute(expr); 
         }
@@ -296,7 +298,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseReturnStatement(ReturnStatement object) {
-    	monitorStatements();
+    	recordStatement();
     	if (callDepth == 0) {
     		throw new TinyscriptSyntaxError("Return statement is only valid inside functions", 
     				TinyscriptModelUtil.getFilenameOfASTNode(object), TinyscriptModelUtil.getLineOfASTNode(object));
@@ -309,7 +311,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseAssertStatement(AssertStatement object) {
-    	monitorStatements();
+    	recordStatement();
     	TSValue cond = execute(object.getCond());
     	if (!cond.asBoolean()) {
     		throw new TinyscriptAssertationError("assert: condition is false", object);
@@ -319,7 +321,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
   
     // @Override
     public TSValue caseIfStatement(IfStatement object) {
-    	monitorStatements();
+    	recordStatement();
     	TSValue cond = execute(object.getCond());
     	TSValue result = TSValue.UNDEFINED;
     	if (cond.asBoolean()) {
@@ -340,8 +342,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseNumericForStatement(NumericForStatement foreach) {
+    	recordStatement();
     	// TODO: Use TSObject.toNumber/toInteger for bounds
-    	monitorStatements();
     	TSValue result = TSValue.UNDEFINED;
 		TSValue startValue = execute(foreach.getStart());
 		TSValue stopValue = execute(foreach.getStop());    		
@@ -450,7 +452,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		}
     		if (left.isString() || right.isString()) {
     			String result = left.asString() + right.asString();
-    			monitorStringCreation(result);
+    			recordStringCreation(result);
     			return new TSValue(result);
     		}
     		// TODO: return NaN
@@ -615,7 +617,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     // @Override
     public TSValue caseStringLiteral(StringLiteral expr) {
     	String result = expr.getValue();
-    	monitorStringCreation(result);
+    	recordStringCreation(result);
     	return new TSValue(result); 
     }
     
@@ -805,47 +807,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		return result;
 	}
 	
-	protected void checkAndIncrementCallDepth() {
-		callDepth++;
-		if (resourceLimits != null) {
-			if (callDepth > resourceConsumption.callDepth) {
-				resourceConsumption.callDepth = callDepth;
-			}
-			if (resourceLimits.maxCallDepth >0 && resourceConsumption.callDepth > resourceLimits.maxCallDepth) {
-				throw new TinyscriptResourceLimitViolation("Call depth limit reached");
-			}
-		}
-	}
-	
-	protected void DecrementCallDepth() {
-		callDepth--;
-	}
-	
-	protected void monitorStatements() {
-		if (resourceLimits != null) {
-				resourceConsumption.statements++;
-			if (resourceLimits.maxStatements > 0 && resourceConsumption.statements > resourceLimits.maxStatements) {
-				throw new TinyscriptResourceLimitViolation("Statement limit reached");
-			}
-		}
-	}
-	
-	public void monitorObjectCreation(TSObject object) {
-		if (resourceLimits != null) {
-				resourceConsumption.objectCreations++;
-			if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
-				throw new TinyscriptResourceLimitViolation("Object creation limit reached");
-			}
-		}
-	}
-	
-	public void monitorStringCreation(String string) {
-		if (resourceLimits != null) {
-			if (resourceLimits.maxStringLength > 0 && string.length() > resourceLimits.maxStringLength) 
-				throw new TinyscriptResourceLimitViolation("String length limit reached");
-		}
-	}
-	
 	protected void attachStackTrace(TinyscriptRuntimeException e) {
 		List<TSStacktraceElement> stacktrace = new ArrayList<TSStacktraceElement>();
 		if (e.getNode() != null)
@@ -865,5 +826,23 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		e.setTinyscriptStacktrace(result);
 	}
 
-
+	private void recordStatement() {
+		if (resourceMonitor != null) 
+			resourceMonitor.recordStatement();
+	}
+	
+	protected void recordObjectCreation(TSObject object) {
+		if (resourceMonitor != null)
+			resourceMonitor.recordObjectCreation(object);
+	}
+	
+	protected void recordObjectSizeChange(TSObject object) {
+		if (resourceMonitor != null)
+			resourceMonitor.recordObjectSizeChange(object);
+	}
+	
+	public void recordStringCreation(String str) {
+		if (resourceMonitor != null)
+			resourceMonitor.recordStringCreation(str);
+	}
 }
