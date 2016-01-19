@@ -21,16 +21,13 @@ public class TSObject {
 		this.ev = ev;
 		properties = new HashMap<String, TSPropertyDescriptor>();
 		ResourceMonitor monitor = ev.getResourceMonitor();
-		if (monitor != null)
-			monitor.monitorObjectCreation(this);
+		ev.recordObjectCreation(this);
 	}
 	
 	public TSObject(ExecutionVisitor ev, TSObject proto) {
 		this.ev = ev;
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ResourceMonitor monitor = ev.getResourceMonitor();
-		if (monitor != null)
-			monitor.monitorObjectCreation(this);
+		ev.recordObjectCreation(this);
 		if (proto != null)
 			setPrototype(proto);
 	}
@@ -216,10 +213,7 @@ public class TSObject {
 	
 	protected void update() {
 		if (ev != null) {
-			ResourceMonitor monitor = ev.getResourceMonitor();
-			if (monitor != null) {
-				monitor.monitorObjectSizeChange(this);
-			}
+			ev.recordObjectSizeChange(this);
 		}
 	}
 	

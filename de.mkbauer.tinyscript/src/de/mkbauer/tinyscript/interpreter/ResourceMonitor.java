@@ -63,22 +63,22 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		return totalResourceConsumption;
 	}
 	
-	public void monitorStatements() {
+	protected void recordStatement() {
 		resourceConsumption.statements++;
 		if (resourceLimits.maxStatements > 0 && resourceConsumption.statements > resourceLimits.maxStatements) {
 			throw new TinyscriptResourceLimitViolation("Statement limit reached");
 		}
 	}
 	
-	public void monitorObjectCreation(TSObject object) {
+	protected void recordObjectCreation(TSObject object) {
 		resourceConsumption.objectCreations++;
 		if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
 			throw new TinyscriptResourceLimitViolation("Object creation limit reached");
 		}
-		monitorObjectSizeChange(object);		
+		recordObjectSizeChange(object);		
 	}
 	
-	public void monitorObjectSizeChange(TSObject object) {
+	protected void recordObjectSizeChange(TSObject object) {
 		if (resourceLimits.maxObjectSize > 0 && object.getObjectSize() > resourceLimits.maxObjectSize) 
 			throw new TinyscriptResourceLimitViolation("Object size limit reached");
 		if (useObjectTracking) {
@@ -87,7 +87,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		}
 	}
 	
-	public void monitorStringCreation(String string) {
+	protected void recordStringCreation(String string) {
 		resourceConsumption.objectCreations++;
 		if (resourceLimits.maxStringLength > 0 && string.length() > resourceLimits.maxStringLength) 
 			throw new TinyscriptResourceLimitViolation("String length limit reached");
@@ -97,7 +97,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		}
 	}
 	
-	public void checkCallDepth(int callDepth) {
+	protected void checkCallDepth(int callDepth) {
 		if (callDepth > resourceConsumption.callDepth) {
 			resourceConsumption.callDepth = callDepth;
 		}
@@ -123,7 +123,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		}
 	}
 
-	public void trackObject(TSObject object) {
+	private void trackObject(TSObject object) {
 		Integer mem = objects.get(object);
 		if (mem != null) {
 			totalMemory = totalMemory - mem;
@@ -133,7 +133,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		totalMemory = totalMemory + mem;		
 	}
 	
-	public void trackString(String string) {
+	private void trackString(String string) {
 		Integer mem = objects.get(string);
 		if (mem != null) {
 			totalMemory = totalMemory - mem;

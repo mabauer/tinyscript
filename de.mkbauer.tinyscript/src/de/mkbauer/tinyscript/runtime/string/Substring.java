@@ -41,9 +41,7 @@ public class Substring extends BuiltinFunction {
 			else
 				result = str.substring(end, start);
 		}
-		ResourceMonitor monitor = ev.getResourceMonitor();
-		if (monitor != null)
-			monitor.monitorStringCreation(result);
+		ev.recordStringCreation(result);
 		return new TSValue(result);
 	}
 

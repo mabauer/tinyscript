@@ -26,8 +26,7 @@ public class ToString extends BuiltinFunction {
 				.map(item->TSObject.toString(ev, item))
 				.collect(Collectors.joining(", "));
 		ResourceMonitor monitor = ev.getResourceMonitor();
-		if (monitor != null)
-			monitor.monitorStringCreation(result);
+		ev.recordStringCreation(result);
 		return new TSValue(result);
 	}
 
