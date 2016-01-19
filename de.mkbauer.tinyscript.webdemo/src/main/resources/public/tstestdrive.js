@@ -33,8 +33,8 @@ function Tinyscript($scope, $http) {
         	    $scope.statistics = "\n(time=" + $scope.result.statistics.executionTime + "ms"
         	    	+ ", stmts=" + $scope.result.statistics.statements 
         	    	+ ", calldepth=" + $scope.result.statistics.callDepth 
-        	    	+ ", objs=" + $scope.result.statistics.objects 
-        	    	+ ", mem=" + Math.round($scope.result.statistics.memory / 1024) + "K"
+        	    	+ ", objs=" + $scope.result.statistics.objectsMax 
+        	    	+ ", mem=" + Math.round($scope.result.statistics.memoryMax / 1024) + "K"
         	    	+ ", creates=" + $scope.result.statistics.objectCreations + ")\n";
 				
         	});	
