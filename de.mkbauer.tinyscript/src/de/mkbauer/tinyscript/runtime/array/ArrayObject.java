@@ -129,6 +129,16 @@ public class ArrayObject extends BuiltinType {
 		return items;
 	}
 	
+	@Override
+	public List<String> getKeys() {
+		List<String> result = new ArrayList<String>();
+		for (int i = 0; i < items.size(); i++) {
+			result.add(String.valueOf(i));
+		}
+		result.addAll(super.getKeys());
+		return result; 
+	}
+	
 	protected void update() {
 		super.update();
 		put("length", new TSValue(getLength()));

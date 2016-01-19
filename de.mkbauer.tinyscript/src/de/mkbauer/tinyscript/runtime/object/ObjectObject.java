@@ -17,6 +17,7 @@ public class ObjectObject extends BuiltinConstructor {
 		
 		initializeDefaultPrototype(ev, ev.getDefaultPrototype());
 		setPrototypeProperty(ev.getDefaultPrototype());
+		defineDefaultProperty(this, "keys", new Keys(ev));
 	}
 	
 	public static void initializeDefaultPrototype(ExecutionVisitor ev, TSObject defaultPrototype) {

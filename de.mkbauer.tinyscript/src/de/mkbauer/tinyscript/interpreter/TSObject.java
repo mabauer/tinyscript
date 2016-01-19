@@ -1,6 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.runtime.string.StringObject;
@@ -202,6 +203,12 @@ public class TSObject {
 		return (properties.keySet().stream()
 				.filter(key -> properties.get(key).isEnumerable())
 				.count() > 0);
+	}
+	
+	public List<String> getKeys() {
+		return (properties.keySet().stream()
+				.filter(key -> properties.get(key).isEnumerable())
+				.collect(Collectors.toList()));
 	}
 	
 	public String toString() {
