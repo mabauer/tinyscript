@@ -77,26 +77,35 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	private TSObject objectPrototype;
 	
 	private OutputStream stdOut; 
-	private ResourceLimits resourceLimits;
-	private ResourceConsumption resourceConsumption;
-	private ResourceConsumption totalResourceConsumption;
 	
-	private int callDepth;
-	private ObjectTracker objectTracker;
+	protected int callDepth;
+	private ResourceMonitor resourceMonitor;
 	
 	public ExecutionVisitor() {
+		initialize();
+	}
+	
+	public ExecutionVisitor(ResourceMonitor resourceMonitor) {
+		this.resourceMonitor = resourceMonitor;
+		initialize();
+	}
+	
+	public ResourceMonitor getResourceMonitor() {
+		return resourceMonitor;
+	}
 		
-		resourceLimits = ResourceLimits.UNLIMITED;
-		resourceConsumption = new ResourceConsumption();
-		totalResourceConsumption = new ResourceConsumption();
-		if (resourceLimits != null)
-			objectTracker = new ObjectTracker();
+	private void initialize() {	
+		
+		if (resourceMonitor != null)
+			resourceMonitor.start();
 		
 		objectPrototype = new TSObject();
-		monitorObjectCreation(objectPrototype);
+		if (resourceMonitor != null) 
+			resourceMonitor.monitorObjectCreation(objectPrototype);
 		
 		globalContext = new GlobalExecutionContext(this);
-		monitorObjectCreation(globalContext.getGlobalObject());
+		if (resourceMonitor != null) 
+			resourceMonitor.monitorObjectCreation(globalContext.getGlobalObject());
 		
 		currentContext = globalContext;
 		contextStack = new ArrayDeque<ExecutionContext>();
@@ -115,9 +124,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
 		
 		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
-
-		totalResourceConsumption.add(resourceConsumption);
-		resourceLimits = null;
+		
+		if (resourceMonitor != null)
+			resourceMonitor.stop();
 	}
 	
 	public void defineStdOut(OutputStream os) {
@@ -126,26 +135,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	public OutputStream getStdOut() {
 		return stdOut;
-	}
-	
-	public ResourceLimits getResourceLimits() {
-		return resourceLimits;
-	}
-
-	public void setResourceLimits(ResourceLimits resourceLimits) {
-		this.resourceLimits = resourceLimits;
-	}
-
-	public ResourceConsumption getLastResourceConsumption() {
-		return resourceConsumption;
-	}
-	
-	public ResourceConsumption getTotalResourceConsumption() {
-		return totalResourceConsumption;
-	}
-
-	public void setResourceConsumption(ResourceConsumption resourceConsumption) {
-		this.resourceConsumption = resourceConsumption;
 	}
 
 	public TSObject getDefaultPrototype() {
@@ -243,10 +232,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		currentContext = globalContext;
 		contextStack.clear();
 		callDepth = 0;
-		resourceConsumption = new ResourceConsumption();
-		
-		final long startTime = System.nanoTime();
-		
+		if (resourceMonitor != null)
+			resourceMonitor.start();
+			
 		// Hoist function declarations:
     	// Create function objects (or get them form a cache)
     	LexicalEnvironment env = getLexcialEnvironment(object.getGlobal());
@@ -259,16 +247,14 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		}
 		try {
 			TSValue result = execute(object.getGlobal());
-			
-			final long duration = (System.nanoTime() - startTime) / 1000000;
-			resourceConsumption.executionTime = duration; 
-			totalResourceConsumption.add(resourceConsumption);
+
+			if (resourceMonitor != null)
+				resourceMonitor.stop();
 			return result;
 		}
 		catch (TinyscriptRuntimeException e) {
-			final long duration = (System.nanoTime() - startTime) / 1000000;
-			resourceConsumption.executionTime = duration; 
-			totalResourceConsumption.add(resourceConsumption);
+			if (resourceMonitor != null)
+				resourceMonitor.stop();
 			if (e.getStackTrace() == null)
 				attachStackTrace(e);
 			throw e;
@@ -291,7 +277,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     }
     
     public TSValue caseExpressionStatement(ExpressionStatement object) {
-    	monitorStatements();
+    	if (resourceMonitor != null)
+    		resourceMonitor.monitorStatements();
     	return execute(object.getExpr());
     }    
     
@@ -305,7 +292,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseVariableStatement(VariableStatement object) {
-    	monitorStatements();
+    	if (resourceMonitor != null)
+    		resourceMonitor.monitorStatements();
     	for (Expression expr : object.getVardecls()) {
         	execute(expr); 
         }
@@ -314,7 +302,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseReturnStatement(ReturnStatement object) {
-    	monitorStatements();
+    	if (resourceMonitor != null)
+    		resourceMonitor.monitorStatements();
     	if (callDepth == 0) {
     		throw new TinyscriptSyntaxError("Return statement is only valid inside functions", 
     				TinyscriptModelUtil.getFilenameOfASTNode(object), TinyscriptModelUtil.getLineOfASTNode(object));
@@ -327,7 +316,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseAssertStatement(AssertStatement object) {
-    	monitorStatements();
+    	if (resourceMonitor != null)
+    		resourceMonitor.monitorStatements();
     	TSValue cond = execute(object.getCond());
     	if (!cond.asBoolean()) {
     		throw new TinyscriptAssertationError("assert: condition is false", object);
@@ -337,7 +327,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
   
     // @Override
     public TSValue caseIfStatement(IfStatement object) {
-    	monitorStatements();
+    	if (resourceMonitor != null)
+    		resourceMonitor.monitorStatements();
     	TSValue cond = execute(object.getCond());
     	TSValue result = TSValue.UNDEFINED;
     	if (cond.asBoolean()) {
@@ -358,7 +349,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     
     // @Override
     public TSValue caseNumericForStatement(NumericForStatement foreach) {
-    	monitorStatements();
+    	if (resourceMonitor != null)
+    		resourceMonitor.monitorStatements();
     	// TODO: Use TSObject.toNumber/toInteger for bounds
     	TSValue result = TSValue.UNDEFINED;
 		TSValue startValue = execute(foreach.getStart());
@@ -468,7 +460,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		}
     		if (left.isString() || right.isString()) {
     			String result = left.asString() + right.asString();
-    			monitorStringCreation(result);
+    			if (resourceMonitor != null)
+    				resourceMonitor.monitorStringCreation(result);
     			return new TSValue(result);
     		}
     		// TODO: return NaN
@@ -633,7 +626,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     // @Override
     public TSValue caseStringLiteral(StringLiteral expr) {
     	String result = expr.getValue();
-    	monitorStringCreation(result);
+    	if (resourceMonitor != null)
+    		resourceMonitor.monitorStringCreation(result);
     	return new TSValue(result); 
     }
     
@@ -821,75 +815,6 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		result =  new LexicalEnvironment(functions, variables);
 		lexicalEnvironments.put(block, result);
 		return result;
-	}
-	
-	protected void checkAndIncrementCallDepth() {
-		callDepth++;
-		if (resourceLimits != null) {
-			if (callDepth > resourceConsumption.callDepth) {
-				resourceConsumption.callDepth = callDepth;
-			}
-			if (resourceLimits.maxCallDepth >0 && resourceConsumption.callDepth > resourceLimits.maxCallDepth) {
-				throw new TinyscriptResourceLimitViolation("Call depth limit reached");
-			}
-		}
-	}
-	
-	protected void DecrementCallDepth() {
-		callDepth--;
-	}
-	
-	protected void monitorStatements() {
-		if (resourceLimits != null) {
-				resourceConsumption.statements++;
-			if (resourceLimits.maxStatements > 0 && resourceConsumption.statements > resourceLimits.maxStatements) {
-				throw new TinyscriptResourceLimitViolation("Statement limit reached");
-			}
-		}
-	}
-	
-	public void monitorObjectCreation(TSObject object) {
-		if (resourceLimits != null) {
-				resourceConsumption.objectCreations++;
-			if (resourceLimits.maxObjectCreations > 0 && resourceConsumption.objectCreations > resourceLimits.maxObjectCreations) {
-				throw new TinyscriptResourceLimitViolation("Object creation limit reached");
-			}
-			monitorObjectSizeChange(object);
-		}
-	}
-	
-	public void monitorObjectSizeChange(TSObject object) {
-		if (resourceLimits != null) {
-			objectTracker.trackObject(object);
-			checkObjectsAndMemoryConsumption();
-		}
-	}
-	
-	public void monitorStringCreation(String string) {
-		if (resourceLimits != null) {
-			resourceConsumption.objectCreations++;
-			if (resourceLimits.maxStringLength > 0 && string.length() > resourceLimits.maxStringLength) 
-				throw new TinyscriptResourceLimitViolation("String length limit reached");
-			objectTracker.trackString(string);
-			checkObjectsAndMemoryConsumption();	
-		}
-	}
-	
-	private void checkObjectsAndMemoryConsumption() {
-		int currentObjects = objectTracker.size();
-		resourceConsumption.objects = currentObjects;
-		if (currentObjects > resourceConsumption.objectsMax)
-			resourceConsumption.objectsMax = currentObjects;
-		if (resourceLimits.maxObjects > 0 && currentObjects > resourceLimits.maxObjects) {
-			throw new TinyscriptResourceLimitViolation("Object limit reached");
-		}
-		long currentMemory = objectTracker.memory();
-		resourceConsumption.memory = currentMemory;
-		if ( currentMemory > resourceConsumption.memoryMax)
-			resourceConsumption.memoryMax = currentMemory;
-		if (resourceLimits.maxMemory > 0 && currentMemory > resourceLimits.maxMemory) {
-			throw new TinyscriptResourceLimitViolation("Memory limit reached");
-		}
 	}
 	
 	protected void attachStackTrace(TinyscriptRuntimeException e) {

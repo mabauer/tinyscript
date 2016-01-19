@@ -25,6 +25,7 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.ResourceConsumption;
 import de.mkbauer.tinyscript.interpreter.ResourceLimits;
 import de.mkbauer.tinyscript.interpreter.TSValue;
@@ -50,35 +51,39 @@ public class TinyscriptExecutionService {
 	
 	public TinyscriptExecutionResult executeScriptFromString(String script) {
 
-		ExecutionVisitor executionvisitor = new ExecutionVisitor();
 		String resultAsString = "";
 		String errorMessage = "";
 		int errorLine = 0;
 		// TODO: Should be replaced by an OutputStream with a limited capacity
 		ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+		
+		ResourceLimits limits = new ResourceLimits();
+		limits.setMaxStatements(MAX_STATEMENTS);
+		limits.setMaxRecursionDepth(MAX_CALL_DEPTH);
+		limits.setMaxObjectSize(MAX_OBJECT_SIZE);
+		limits.setMaxStringLength(MAX_STRING_LENGTH);
+		ResourceMonitor monitor = new ResourceMonitor();
+		monitor.enableObjectTracking();
+		monitor.configureLimits(limits);
+		ExecutionVisitor executionvisitor = new ExecutionVisitor(monitor);
 		ResourceConsumption statistics = new ResourceConsumption();
 		
 		try {
 			Tinyscript ast = parseScriptFromString(script);
 			executionvisitor.defineStdOut(stdout);
 			// executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
-			ResourceLimits limits = new ResourceLimits();
-			limits.setMaxStatements(MAX_STATEMENTS);
-			limits.setMaxRecursionDepth(MAX_CALL_DEPTH);
-			limits.setMaxObjectSize(MAX_OBJECT_SIZE);
-			limits.setMaxStringLength(MAX_STRING_LENGTH);
-			executionvisitor.setResourceLimits(limits);
+
 			TSValue result = executionvisitor.execute(ast);
 			resultAsString = result.asString();
 			String output = stdoutToString(stdout);
-			statistics = executionvisitor.getTotalResourceConsumption();
+			statistics = monitor.getTotalResourceConsumption();
 			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
 		catch (TinyscriptRuntimeException e) {
 			errorMessage = e.getClass().getSimpleName() + ": " + e.getMessage();
 			errorLine = e.getAffectedLine();
 			String output = stdoutToString(stdout);
-			statistics = executionvisitor.getTotalResourceConsumption();
+			statistics = monitor.getTotalResourceConsumption();
 			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
 	}

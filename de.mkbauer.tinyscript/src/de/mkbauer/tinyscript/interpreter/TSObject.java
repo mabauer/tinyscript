@@ -20,13 +20,17 @@ public class TSObject {
 	protected TSObject(ExecutionVisitor ev) {
 		this.ev = ev;
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ev.monitorObjectCreation(this);
+		ResourceMonitor monitor = ev.getResourceMonitor();
+		if (monitor != null)
+			monitor.monitorObjectCreation(this);
 	}
 	
 	public TSObject(ExecutionVisitor ev, TSObject proto) {
 		this.ev = ev;
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ev.monitorObjectCreation(this);
+		ResourceMonitor monitor = ev.getResourceMonitor();
+		if (monitor != null)
+			monitor.monitorObjectCreation(this);
 		if (proto != null)
 			setPrototype(proto);
 	}
@@ -212,17 +216,19 @@ public class TSObject {
 	
 	protected void update() {
 		if (ev != null) {
-			ResourceLimits limits = ev.getResourceLimits();
-			if (limits != null) {
-				if (limits.maxObjectSize > 0 && getObjectSize() > limits.maxObjectSize)
-					throw new TinyscriptResourceLimitViolation("Object size limit reached");
-				ev.monitorObjectSizeChange(this);
+			ResourceMonitor monitor = ev.getResourceMonitor();
+			if (monitor != null) {
+				monitor.monitorObjectSizeChange(this);
 			}
 		}
 	}
-
+	
 	public int getObjectSize() {
 		return properties.size();
+	}
+	
+	public int estimateMemory() {
+		return getObjectSize()*ResourceMonitor.TSVALUE_SIZE;
 	}
 
 }
