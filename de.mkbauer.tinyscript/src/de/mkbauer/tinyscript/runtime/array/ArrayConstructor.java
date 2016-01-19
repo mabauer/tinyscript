@@ -22,6 +22,9 @@ public class ArrayConstructor extends BuiltinConstructor {
 		// TODO Add other Array methods
 		defineDefaultProperty(getPrototypeProperty().asObject(), "toString", new ToString(ev));
 		defineDefaultProperty(getPrototypeProperty().asObject(), "push", new Push(ev));
+		defineDefaultProperty(getPrototypeProperty().asObject(), "pop", new Pop(ev));
+		defineDefaultProperty(getPrototypeProperty().asObject(), "unshift", new Unshift(ev));
+		defineDefaultProperty(getPrototypeProperty().asObject(), "shift", new Shift(ev));
 	}
 	
 	@Override
