@@ -5,11 +5,10 @@ import org.eclipse.emf.ecore.EObject;
 
 import de.mkbauer.tinyscript.ts.BlockStatement;
 import de.mkbauer.tinyscript.ts.ElseStatement;
-import de.mkbauer.tinyscript.ts.ForEachStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
-import de.mkbauer.tinyscript.ts.NumericForStatement;
+import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
 
@@ -46,14 +45,9 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 	public String caseElseStatement(ElseStatement object) {
 		return "else" + getUniqueID(object);
 	}
-
-	@Override
-	public String caseForEachStatement(ForEachStatement object) {
-		return "foreach" + getUniqueID(object);
-	}
 	
 	@Override
-	public String caseNumericForStatement(NumericForStatement object) {
+	public String caseForStatement(ForStatement object) {
 		return "for" + getUniqueID(object);
 	}
 

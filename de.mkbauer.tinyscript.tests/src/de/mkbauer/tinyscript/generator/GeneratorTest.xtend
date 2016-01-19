@@ -224,6 +224,24 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		
 	}
 	
+	@Test
+	def void testGenerateNumericForWithExistingVariable() {
+		var result = generateScriptFromString('''
+			var result;
+			var i;
+			for (i = 1, 10) {
+				result = i;
+			}
+		''')
+		assertEquals('''
+			var result;
+			var i;
+			for (i = 1; i <= 10; i = i + 1) {
+				result = i;
+			}
+		'''.toString, result)	
+	}
+	
 	def boolean matches(String expected, String result) {
 		// Ignore all regex special characters. CAVEAT: * and . are NOT quoted.
 		var String pattern = Pattern.quote(result);

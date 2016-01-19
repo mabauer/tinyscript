@@ -27,15 +27,16 @@ import de.mkbauer.tinyscript.ts.CallSuffix;
 import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.ExpressionStatement;
-import de.mkbauer.tinyscript.ts.ForEachStatement;
+import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.GroupingExpression;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
+import de.mkbauer.tinyscript.ts.IterableForExpression;
 import de.mkbauer.tinyscript.ts.NewExpression;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
-import de.mkbauer.tinyscript.ts.NumericForStatement;
+import de.mkbauer.tinyscript.ts.NumericForExpression;
 import de.mkbauer.tinyscript.ts.ObjectInitializer;
 import de.mkbauer.tinyscript.ts.PropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
@@ -185,8 +186,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		return caseIfStatement((IfStatement) object);
 		case TsPackage.ELSE_STATEMENT:
     		return caseElseStatement((ElseStatement) object);
-		case TsPackage.NUMERIC_FOR_STATEMENT:
-    		return caseNumericForStatement((NumericForStatement) object);
+		case TsPackage.FOR_STATEMENT:
+    		return caseForStatement((ForStatement) object);
 		case TsPackage.FUNCTION_DEFINITION:
     		return caseFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.RETURN_STATEMENT:
@@ -341,39 +342,68 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     }
     
     // @Override
-    public TSValue caseNumericForStatement(NumericForStatement foreach) {
+    public TSValue caseForStatement(ForStatement forstmt) {
     	recordStatement();
+    	if (forstmt.getNumericForExpr() != null) {
+    		return executeNumericForStatement(forstmt);
+    	}
+    	else {
+    		return executeIterableForStatement(forstmt);
+    	}
+    }
+    
+    public TSValue executeNumericForStatement(ForStatement forstmt) {
     	// TODO: Use TSObject.toNumber/toInteger for bounds
+    	NumericForExpression expr = forstmt.getNumericForExpr();
     	TSValue result = TSValue.UNDEFINED;
-		TSValue startValue = execute(foreach.getStart());
-		TSValue stopValue = execute(foreach.getStop());    		
+		TSValue startValue = execute(expr.getStart());
+		TSValue stopValue = execute(expr.getStop());    		
 		if (!startValue.isMathematicalInteger())
-			throw new TinyscriptTypeError("for needs an integer value as first bound", foreach.getStart());
+			throw new TinyscriptTypeError("for needs an integer value as first bound", expr.getStart());
 		if (!stopValue.isNumber())
-			throw new TinyscriptTypeError("for needs a number value as second bound", foreach.getStart());
+			throw new TinyscriptTypeError("for needs a number value as second bound", expr.getStart());
 		double start = startValue.asDouble();
 		double stop = stopValue.asDouble();
 		double step = 1;
-		if (foreach.getStep() != null) {
-			TSValue stepValue =  execute(foreach.getStep());
+		if (expr.getStep() != null) {
+			TSValue stepValue =  execute(expr.getStep());
 			if (!stopValue.isMathematicalInteger()) 
-				throw new TinyscriptTypeError("for needs an integer value as step expression", foreach.getStep());
+				throw new TinyscriptTypeError("for needs an integer value as step expression", expr.getStep());
 			step = stepValue.asDouble();
 		}
 		// TODO: If bounds are NaNs, don't loop!
 		for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
-			if (foreach.getId() != null) {
-				result = executeInBlockContext("for", foreach.getDo(), foreach.getId(), new TSValue(loopValue));
+			if (forstmt.getId() != null) {
+				result = executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), new TSValue(loopValue));
 			}
 			else {
-				currentContext.store(foreach.getRef().getId().getName(), new TSValue(loopValue));
-				result = executeInBlockContext("for", foreach.getDo());
+				currentContext.store(forstmt.getRef().getId().getName(), new TSValue(loopValue));
+				result = executeInBlockContext("for", forstmt.getDo());
 			}
 		}
     	return result;
     }
     
-   
+    public TSValue executeIterableForStatement(ForStatement forstmt) {
+    	IterableForExpression expr = forstmt.getIterableForExpr();
+    	TSValue result = TSValue.UNDEFINED;
+		TSValue iterable = execute(expr.getIterable());
+		if (iterable.isArray()) {
+			ArrayObject arr = (ArrayObject) iterable.asObject();
+			for (int i = 0; i < arr.getLength(); i++) {
+				TSValue loopValue = arr.get(String.valueOf(i));
+				if (forstmt.getId() != null) {
+					result = executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
+				}
+				else {
+					currentContext.store(forstmt.getRef().getId().getName(), loopValue);
+					result = executeInBlockContext("for", forstmt.getDo());
+				} 
+			}
+		}
+		return result;
+    }
+    
     // @Override
     public TSValue caseBinaryExpression(BinaryExpression expr) {
     	String op = expr.getOp();			

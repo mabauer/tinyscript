@@ -24,7 +24,7 @@ import com.google.inject.Provider;
 import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
-import de.mkbauer.tinyscript.ts.NumericForStatement;
+import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.VariableStatement;
@@ -152,7 +152,7 @@ public class TinyScriptModelUtilsTest {
 	public void testForBlockContainsConflictingIdentifiers() {
 		String source = "for (var i = 1, 10) { var i = 1; } ";
 		Tinyscript ast = parseFromStringNoValidation(source);
-		NumericForStatement forStmt = (NumericForStatement) ast.getGlobal().getStatements().get(0);
+		ForStatement forStmt = (ForStatement) ast.getGlobal().getStatements().get(0);
 		Block block_for = forStmt.getDo();
 		List<Identifier> declaredVars = TinyscriptModelUtil.declaredVariablesInBlock(block_for);
 		Identifier i_2 = declaredVars.get(declaredVars.size()-1);

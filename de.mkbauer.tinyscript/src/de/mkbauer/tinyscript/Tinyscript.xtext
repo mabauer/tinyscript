@@ -25,8 +25,7 @@ Statement:
 	ExpressionStatement | 
 	ReturnStatement | 
 	IfStatement |
-	NumericForStatement |
-	ForEachStatement |
+	ForStatement |
 	BreakStatement |
 	AssertStatement |
 	EmptyStatement
@@ -126,13 +125,18 @@ ElseStatement:
 	'else' else=Block
 ;
 
-ForEachStatement:
-	'foreach' '(' ((KW_VAR id=Identifier) | ref=Reference) 'in' object=AssignmentExpression ')' do=Block 
+ForStatement:
+	'for' '(' ((KW_VAR id=Identifier) | ref=Reference) (numericForExpr=NumericForExpression | iterableForExpr=IterableForExpression) ')' do=Block
 ;
 
-NumericForStatement:
-	'for' '(' ((KW_VAR id=Identifier) | ref=Reference) OP_ASSIGN start=Addition ',' stop=Addition (',' step=Addition )? ')' do=Block
+NumericForExpression:
+	OP_ASSIGN start=Addition ',' stop=Addition (',' step=Addition )?
 ;
+
+IterableForExpression:
+	':' iterable=Addition 
+;
+
 
 BreakStatement:
 	{BreakStatement}

@@ -79,13 +79,13 @@ public class TinyscriptIndexTest {
 	
 	@Test
 	public void testIndexWithForeach() {
-		Tinyscript ast = parseFromString("var obj = {}; var i=0; foreach (var x in obj) { i=i+1; } assert (i==0); ");
+		Tinyscript ast = parseFromString("var obj = []; var i=0; for (var x: obj) { i=i+1; } assert (i==0); ");
 		// tester.assertNoErrors(ast);
 		Iterable<IEObjectDescription> exported = index.getExportedEObjectDescriptions(ast);
 		assertIterableContainsString("obj", exported);
 		assertIterableContainsString("i", exported);
-		assertIterableContainsString("foreach\\d+", exported);
-		assertIterableContainsString("foreach\\d+.x", exported);
+		assertIterableContainsString("for\\d+", exported);
+		assertIterableContainsString("for\\d+.x", exported);
 
 	}
 	

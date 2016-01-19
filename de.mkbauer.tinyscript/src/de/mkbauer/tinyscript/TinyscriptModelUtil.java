@@ -12,11 +12,10 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Expression;
-import de.mkbauer.tinyscript.ts.ForEachStatement;
+import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
-import de.mkbauer.tinyscript.ts.NumericForStatement;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -189,13 +188,8 @@ public class TinyscriptModelUtil {
 		}
 		if (countDuplicates > 0)
 			return true;
-		if (block.eContainer() instanceof NumericForStatement) {
-			NumericForStatement forStmt = (NumericForStatement) block.eContainer();
-			if (forStmt.getId().getName().equals(name))
-				return true;
-		}
-		if (block.eContainer() instanceof ForEachStatement) {
-			ForEachStatement forStmt = (ForEachStatement) block.eContainer();
+		if (block.eContainer() instanceof ForStatement) {
+			ForStatement forStmt = (ForStatement) block.eContainer();
 			if (forStmt.getId().getName().equals(name))
 				return true;
 		}
@@ -224,16 +218,12 @@ public class TinyscriptModelUtil {
 		}
 		if (countDuplicates > 0)
 			return true;
-		if (block.eContainer() instanceof NumericForStatement) {
-			NumericForStatement forStmt = (NumericForStatement) block.eContainer();
+		if (block.eContainer() instanceof ForStatement) {
+			ForStatement forStmt = (ForStatement) block.eContainer();
 			if (forStmt.getId().getName().equals(name))
 				return true;
 		}
-		if (block.eContainer() instanceof ForEachStatement) {
-			ForEachStatement forStmt = (ForEachStatement) block.eContainer();
-			if (forStmt.getId().getName().equals(name))
-				return true;
-		}
+
 		return false;
 	}
 	

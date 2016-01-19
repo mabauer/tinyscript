@@ -89,6 +89,11 @@ public class StatementsTest extends TinyscriptInterpreterTestHelper {
 		
 	}
 	
+	@Test
+	public void testIterableForOnArray() {
+		TSValue value = executeScriptFromFile("simple_array_for.ts");
+	}
+	
 
 }
 

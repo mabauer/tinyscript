@@ -32,9 +32,11 @@ import de.mkbauer.tinyscript.ts.FunctionDeclaration
 import de.mkbauer.tinyscript.ts.ObjectInitializer
 import de.mkbauer.tinyscript.ts.PropertyAssignment
 import de.mkbauer.tinyscript.ts.ArrayInitializer
-import de.mkbauer.tinyscript.ts.NumericForStatement
+import de.mkbauer.tinyscript.ts.ForStatement
 
 import com.google.inject.Inject
+import de.mkbauer.tinyscript.ts.NumericForExpression
+import de.mkbauer.tinyscript.ts.IterableForExpression
 
 class TinyscriptGenerator  {
 	
@@ -120,7 +122,7 @@ class TinyscriptGenerator  {
 			«func.block.generate»
 		}
 		
-	'''
+	''' 
 
 	def dispatch generate(FunctionDefinition func) '''
 		function «IF (func.id != null)»«func.id.name»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {
@@ -146,17 +148,50 @@ class TinyscriptGenerator  {
 		«ENDIF»
 	'''
 	
-	def dispatch generate(NumericForStatement stmt) '''
-		«IF (stmt.step == null)»
-			for (var «stmt.id.name» = «stmt.start.generate»; «stmt.id.name» <= «stmt.stop.generate»; «stmt.id.name» = «stmt.id.name» + 1) {
+	def dispatch generate(ForStatement stmt) {
+		if (stmt.numericForExpr != null) {
+			generateNumericForStatement(stmt);
+		}
+		else { 
+			generateIterableForStatement(stmt);
+		}
+	}
+	
+	def generateNumericForStatement(ForStatement stmt) {
+		val NumericForExpression expr=stmt.numericForExpr; 
+		var String loopVar; 
+		var String loopVarDefinition;  
+		if (stmt.id != null) {
+			loopVar = stmt.id.generate as String
+			loopVarDefinition = "var " + loopVar;
+		}
+		else {
+			loopVar = stmt.ref.generate as String
+			loopVarDefinition = loopVar;
+		}
+		'''
+		«IF (expr.step == null)»
+			for («loopVarDefinition» = «expr.start.generate»; «loopVar» <= «expr.stop.generate»; «loopVar» = «loopVar» + 1) {
 				«stmt.^do.generate»
 			}
 		«ELSE»
-			for (var «stmt.id.name» = «stmt.start.generate»; («stmt.step.generate» > 0)?(«stmt.id.name» <= «stmt.stop.generate»):(«stmt.id.name» >= «stmt.stop.generate»); «stmt.id.name» = «stmt.id.name» + «stmt.step.generate») {
+			for («loopVarDefinition» = «expr.start.generate»; («expr.step.generate» > 0)?(«loopVar» <= «expr.stop.generate»):(«loopVar» >= «expr.stop.generate»); «loopVar» = «loopVar» + «expr.step.generate») {
 				«stmt.^do.generate»
 			}
-		«ENDIF»
-	'''
+		«ENDIF»'''		
+	}
+	
+	def generateIterableForStatement(ForStatement stmt) {
+		val IterableForExpression expr=stmt.iterableForExpr; 
+		'''
+		if (Array.isArray(«expr.iterable.generate»)) {
+			for (var __ts_i = 0; __ts_i < («expr.iterable.generate»).length; __ts_i++) {
+				var «stmt.id.generate» = «expr.iterable.generate»[__ts_i];
+				«stmt.^do.generate»
+			}	
+		}
+		'''
+	}
 	
 	def dispatch generate(BinaryExpression expr) '''
 		«IF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
