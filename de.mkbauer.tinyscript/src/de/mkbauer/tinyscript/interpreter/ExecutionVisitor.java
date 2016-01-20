@@ -373,6 +373,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			step = stepValue.asDouble();
 		}
 		// TODO: If bounds are NaNs, don't loop!
+		if (Double.isInfinite(start) || Double.isInfinite(stop))
+			return result;
 		for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
 			if (forstmt.getId() != null) {
 				result = executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), new TSValue(loopValue));
@@ -486,32 +488,32 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     			recordStringCreation(result);
     			return new TSValue(result);
     		}
-    		// TODO: return NaN
+    		return TSValue.NAN;
     	}
     	if (op.equals("-")) {
     		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() - right.asDouble());
     		}
-    		// TODO: return NAN
+    		return TSValue.NAN;
     	}
     	if (op.equals("*")) {
        		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() * right.asDouble());
     		}
-       		// TODO: return NaN
+       		return TSValue.NAN;
     	}
     	if (op.equals("/")) {
        		if (left.isNumber() && right.isNumber()) {
        			// TODO: Catch division by 0
     			return new TSValue(left.asDouble() / right.asDouble());
     		}
-       		// TODO: return NaN
+       		return TSValue.NAN;
     	}
     	if (op.equals("%")) {
        		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() % right.asDouble());
     		}
-       		// TODO: return NaN
+       		return TSValue.NAN;
     	}
     	if (op.equals("instanceof")) {
     		if (!(right.isObject() && right.asObject() instanceof Function))

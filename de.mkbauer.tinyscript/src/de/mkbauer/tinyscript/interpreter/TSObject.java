@@ -105,9 +105,9 @@ public class TSObject {
 				return d;
 			}
 			catch (NumberFormatException e) {}
-			return 0.0;
+			return Double.NaN;
 		}
-		return 0.0;
+		return Double.NaN;
 	}
 	
 	public static int toInteger(ExecutionVisitor ev, TSValue value) {
