@@ -11,6 +11,11 @@ public class TSReturnValue extends RuntimeException {
 		this.returnValue = value;
 	}
 	
+	@Override
+	public synchronized Throwable fillInStackTrace() {
+		return null;
+	}
+	
 	public TSValue getReturnValue() {
 		return returnValue;
 	}
