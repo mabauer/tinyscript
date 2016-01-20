@@ -207,7 +207,7 @@ class TinyscriptGenerator  {
 		'''«expr.op»«expr.expr.generate»'''
 		
 	def dispatch generate(NewExpression expr)
-		'''new «expr.expr»'''
+		'''new «expr.expr.generate»'''
 		
 	def dispatch generate(GroupingExpression expr)
 		'''(«expr.expr.generate»)'''
