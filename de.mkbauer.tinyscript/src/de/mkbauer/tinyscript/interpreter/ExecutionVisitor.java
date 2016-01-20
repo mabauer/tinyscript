@@ -628,8 +628,14 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     // @Override
     public TSValue caseReference(Reference expr) {
     	try {
-    		if (expr.isThis())
-    			return new TSValue(currentContext.getThisRef());
+    		if (expr.isThis()) {
+    			TSObject thisRef = currentContext.getThisRef();
+    			// 'this" behaves specified in Javascript strict mode.
+    			if (thisRef != null)
+    				return new TSValue(thisRef);
+    			else
+    				return TSValue.UNDEFINED;
+    		}
     		return currentContext.lookup(expr.getId().getName());
     	}
     	catch (IllegalArgumentException e) {
