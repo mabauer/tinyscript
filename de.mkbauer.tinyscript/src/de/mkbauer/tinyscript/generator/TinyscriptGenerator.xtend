@@ -56,6 +56,9 @@ class TinyscriptGenerator  {
 			}
 		}
 		
+		var System = {};
+		System.currentTimeMillis = Date.now;
+		
 		if (typeof print !== "function") {
 			print = function(s) {
 				console.log(s);

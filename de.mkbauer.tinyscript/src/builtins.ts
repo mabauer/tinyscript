@@ -12,5 +12,7 @@ function String() {
 
 var Math;
 
+var System; 
+
 function print() {
 }

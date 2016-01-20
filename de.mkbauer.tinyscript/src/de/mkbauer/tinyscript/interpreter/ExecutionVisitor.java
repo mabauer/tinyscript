@@ -59,6 +59,7 @@ import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
 import de.mkbauer.tinyscript.runtime.object.ObjectObject;
 import de.mkbauer.tinyscript.runtime.string.StringConstructor;
+import de.mkbauer.tinyscript.runtime.system.SystemObject;
 
 
 /**
@@ -122,6 +123,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		TSObject.defineDefaultProperty(globalObject, "Array", new ArrayConstructor(this));
 		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
 		
+		TSObject.defineDefaultProperty(globalObject, "System", new SystemObject(this));
 		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
 		
 		if (resourceMonitor != null)
