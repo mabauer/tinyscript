@@ -24,6 +24,13 @@ public class ArrayObject extends BuiltinType {
 		defineDefaultProperty(this, "length", new TSValue(0));
 	}
 
+	public TSValue item(int index) {
+		if (index < getLength()) 
+			return items.get(index);
+		else
+			return TSValue.UNDEFINED;
+	}
+	
 	@Override
 	public TSValue get(String key) {
 		try {

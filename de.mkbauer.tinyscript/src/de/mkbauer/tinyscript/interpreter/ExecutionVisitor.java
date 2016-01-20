@@ -396,7 +396,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		if (iterable.isArray()) {
 			ArrayObject arr = (ArrayObject) iterable.asObject();
 			for (int i = 0; i < arr.getLength(); i++) {
-				TSValue loopValue = arr.get(String.valueOf(i));
+				TSValue loopValue = arr.item(i);
 				if (forstmt.getId() != null) {
 					result = executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
 				}
@@ -755,12 +755,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			ComputedPropertyAccessSuffix accessor = (ComputedPropertyAccessSuffix) suffix;
 			keyExpr = execute(accessor.getKey());
 		}
-		if (keyExpr.isString() || keyExpr.isNumber()) {
-			return keyExpr;
-		}
-		else {
-			throw new TinyscriptTypeError("Property accessors should evaluate to String or Number", suffix);
-		}
+		return keyExpr;
 	}
 	
     public TSValue processFunctionCall(EObject expr, Function functionObject, boolean asConstructor, TSObject self, List<Expression> argExprs) {
