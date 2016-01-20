@@ -78,10 +78,26 @@ public class NashornRunnerTest extends TinyscriptInterpreterTestHelper {
 		executeScriptFromString("var result = 0; var i = 10; for (var i = 1, 3) { result = result + i; } assert(result == 6); assert(i == 10);");
 	}
 	
-	
 	@Test
 	public void testIterableFor() {
 		executeScriptFromFileWithNashorn("simple_array_for.ts");
+	}
+	
+	@Test
+	public void testArrowFunction() {
+		executeScriptFromString("var f = x => x*x; assert(9 == f(3));");
+	}
+	
+	@Test
+	public void testMapWithArrowFunction() {
+		executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var squares = arr.map(x => x*x); " 
+				+ "assert(25 == squares[1]); assert(49 == squares[5]);");
+	}
+	
+	@Test
+	public void testFilterWithArrowFunction() {
+		executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var odds = arr.filter(x => x % 2 == 1); " 
+				+ "assert(4 == odds.length);");
 	}
 	
 }

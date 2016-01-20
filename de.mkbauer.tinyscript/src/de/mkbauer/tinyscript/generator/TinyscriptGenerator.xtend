@@ -37,6 +37,7 @@ import de.mkbauer.tinyscript.ts.ForStatement
 import com.google.inject.Inject
 import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
+import de.mkbauer.tinyscript.ts.ArrowFunction
 
 class TinyscriptGenerator  {
 	
@@ -123,6 +124,9 @@ class TinyscriptGenerator  {
 		}
 		
 	''' 
+	
+	def dispatch generate(ArrowFunction func) 
+		'''function («FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») { return «func.block.generate» ;}'''
 
 	def dispatch generate(FunctionDefinition func) '''
 		function «IF (func.id != null)»«func.id.name»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {

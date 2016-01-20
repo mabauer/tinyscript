@@ -189,6 +189,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		case TsPackage.FOR_STATEMENT:
     		return caseForStatement((ForStatement) object);
 		case TsPackage.FUNCTION_DEFINITION:
+		case TsPackage.ARROW_FUNCTION:
     		return caseFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.RETURN_STATEMENT:
     		return caseReturnStatement((ReturnStatement) object);

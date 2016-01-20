@@ -25,6 +25,8 @@ public class ArrayConstructor extends BuiltinConstructor {
 		defineDefaultProperty(getPrototypeProperty().asObject(), "pop", new Pop(ev));
 		defineDefaultProperty(getPrototypeProperty().asObject(), "unshift", new Unshift(ev));
 		defineDefaultProperty(getPrototypeProperty().asObject(), "shift", new Shift(ev));
+		defineDefaultProperty(getPrototypeProperty().asObject(), "map", new Map(ev));
+		defineDefaultProperty(getPrototypeProperty().asObject(), "filter", new Filter(ev));
 	}
 	
 	@Override

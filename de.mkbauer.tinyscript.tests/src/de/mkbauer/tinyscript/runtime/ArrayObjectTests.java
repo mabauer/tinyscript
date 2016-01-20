@@ -35,5 +35,35 @@ public class ArrayObjectTests extends TinyscriptInterpreterTestHelper {
 		TSValue value = executeScriptFromString("var arr = [\"Hallo\", \"Hugo\"]; var x = arr.shift(); " 
 				+ "assert (1 == arr.length); assert(\"Hallo\" == x);");	
 	}
+	
+	@Test
+	public void testMap() {
+		TSValue value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var squares = arr.map(function(x) {return x*x; }); " 
+				+ "assert(25 == squares[1]); assert(49 == squares[5]);");
+	}
+	
+	@Test
+	public void testMapWithArrowFunction() {
+		TSValue value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var squares = arr.map(x => x*x); " 
+				+ "assert(25 == squares[1]); assert(49 == squares[5]);");
+	}
+	
+	@Test
+	public void testMapWithInvalidFunction() {
+		TSValue value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var empty = arr.map({}); " 
+				+ "assert(0 == empty.length);");
+	}
+	
+	@Test
+	public void testFilter() {
+		TSValue value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var odds = arr.filter(function(x) {return (x % 2 == 1); }); " 
+				+ "assert(4 == odds.length);");
+	}
+	
+	@Test
+	public void testFilterWithArrowFunction() {
+		TSValue value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var odds = arr.filter(x => x % 2 == 1); " 
+				+ "assert(4 == odds.length);");
+	}
 
 }

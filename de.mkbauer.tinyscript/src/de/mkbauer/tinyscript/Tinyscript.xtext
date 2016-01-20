@@ -49,7 +49,20 @@ ExpressionStatement:
 ;
 
 AssignmentExpression returns Expression:
-	OrExpression ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)?	
+	(OrExpression|ArrowFunctionDefinition) ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)?	
+;
+
+ArrowFunctionDefinition returns FunctionDefinition:
+	{ArrowFunction}
+	( (params+=Identifier) | ('(' params += Identifier? ')') )  '=>' (block=ArrowFunctionBlock /* | => (code=Block) */ )
+;
+
+ArrowFunctionBlock returns Block:
+	statements += ExpressionStatementWithoutSemicolon
+;
+
+ExpressionStatementWithoutSemicolon returns ExpressionStatement:
+	expr=OrExpression
 ;
 
 OrExpression returns Expression:
