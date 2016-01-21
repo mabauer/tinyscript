@@ -12,6 +12,10 @@ public class ResourceConsumption {
 	
 	protected long memoryMax;
 	
+	protected long mxCpuTime;
+	
+	protected long mxMAlloc;
+	
 	protected int objects;
 	
 	protected int objectsMax;
@@ -76,6 +80,22 @@ public class ResourceConsumption {
 		this.objectsMax = objectsMax;
 	}
 
+	public long getMxCpuTime() {
+		return mxCpuTime;
+	}
+
+	public void setMxCpuTime(long mxCpuTime) {
+		this.mxCpuTime = mxCpuTime;
+	}
+
+	public long getMxMAlloc() {
+		return mxMAlloc;
+	}
+
+	public void setMxMAlloc(long mxMAlloc) {
+		this.mxMAlloc = mxMAlloc;
+	}
+
 	public void add(ResourceConsumption other) {
 		executionTime += other.executionTime;
 		statements += other.statements;
@@ -85,6 +105,8 @@ public class ResourceConsumption {
 		objects = other.objects;
 		objectsMax = Math.max(objectsMax, other.objectsMax);
 		objectCreations += other.objectCreations;
+		mxCpuTime += other.mxCpuTime;
+		mxMAlloc += other.mxMAlloc;
 	}
 	
 }

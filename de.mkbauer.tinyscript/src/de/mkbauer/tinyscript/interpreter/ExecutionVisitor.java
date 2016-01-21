@@ -786,6 +786,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	}
 	
 	private TSValue executeInBlockContext(String name, Block block, Identifier variable, TSValue value) {
+		checkMXCpuTimeAndMemory();
 		TSValue result = null;
     	boolean needsNewContext = true;
     	LexicalEnvironment env = getLexcialEnvironment(block);
@@ -893,5 +894,10 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	public void recordStringCreation(String str) {
 		if (resourceMonitor != null)
 			resourceMonitor.recordStringCreation(str);
+	}
+	
+	protected void checkMXCpuTimeAndMemory() {
+		if (resourceMonitor != null)
+			resourceMonitor.checkMXCpuTimeAndMemory();
 	}
 }

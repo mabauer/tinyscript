@@ -39,6 +39,10 @@ public class InterpretedFunction extends Function {
 	
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+		
+		ResourceMonitor monitor = ev.getResourceMonitor();
+		if (monitor != null)
+			monitor.checkMXCpuTimeAndMemory();
 
 		Block block = getBlock();
 		TSValue result = null;
@@ -48,7 +52,7 @@ public class InterpretedFunction extends Function {
 		
 		// Update and check call depth
 		ev.callDepth++;
-		ResourceMonitor monitor = ev.getResourceMonitor();
+		
 		if (monitor != null)
 			monitor.checkCallDepth(ev.callDepth);
 		

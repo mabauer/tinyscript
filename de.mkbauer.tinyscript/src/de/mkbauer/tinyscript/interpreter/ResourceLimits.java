@@ -12,6 +12,10 @@ public class ResourceLimits {
 	
 	protected long maxMemory;
 	
+	protected long maxMXCpuTime;
+	
+	protected long maxMxMAlloc;
+	
 	protected int maxObjectCreations;
 	
 	protected int maxObjectSize;
@@ -25,6 +29,8 @@ public class ResourceLimits {
 		maxObjectCreations = 0;
 		maxObjectSize = 0;
 		maxStringLength = 0;
+		maxMXCpuTime = 0;
+		maxMxMAlloc = 0;
 	}
 	
 	public int getMaxStatements() {
@@ -59,6 +65,22 @@ public class ResourceLimits {
 		this.maxObjectSize = maxObjectSize;
 	}
 
+	public long getMaxMXCpuTime() {
+		return maxMXCpuTime;
+	}
+
+	public void setMaxMXCpuTime(long maxMXCpuTime) {
+		this.maxMXCpuTime = maxMXCpuTime;
+	}
+
+	public long getMaxMxMAlloc() {
+		return maxMxMAlloc;
+	}
+
+	public void setMaxMxMAlloc(long maxMxMAlloc) {
+		this.maxMxMAlloc = maxMxMAlloc;
+	}
+
 	public int getMaxStringLength() {
 		return maxStringLength;
 	}
@@ -91,5 +113,6 @@ public class ResourceLimits {
 	public void setMaxMemory(long maxMemory) {
 		this.maxMemory = maxMemory;
 	}
+	
 
 }

@@ -1,5 +1,8 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
+
 import de.mkbauer.util.WeakHashMapWithCallBack;
 
 import org.apache.log4j.Logger;
@@ -13,18 +16,25 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	private ResourceConsumption resourceConsumption;
 	private ResourceConsumption totalResourceConsumption;
 	private boolean useObjectTracking;
+	private boolean useMXBeanInspection;
 	
 	long startTime;
 	
 	private WeakHashMapWithCallBack<Object, Integer> objects; 
-	
 	private long totalMemory = 0;
+	
+	private ThreadMXBean tBean = null;
+	private com.sun.management.ThreadMXBean sunBean = null; 
+	private long threadId;
+	private long lastMxCpuTime;
+	private long lastMxMAllocations;
 	
 	private final static Logger logger = Logger.getLogger(ResourceMonitor.class);
 	
 	public ResourceMonitor() {
 		resourceLimits = ResourceLimits.UNLIMITED;
 		useObjectTracking = false;
+		useMXBeanInspection = false;
 		totalResourceConsumption = new ResourceConsumption();
 	}
 	
@@ -55,6 +65,11 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		useObjectTracking = true;
 	}
 	
+	public void enableMXBeanInspection() {
+		useMXBeanInspection = true;
+		setupMXBeans();
+	}
+	
 	public ResourceConsumption getLastResourceConsumption() {
 		return resourceConsumption;
 	}
@@ -67,6 +82,28 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		resourceConsumption.statements++;
 		if (resourceLimits.maxStatements > 0 && resourceConsumption.statements > resourceLimits.maxStatements) {
 			throw new TinyscriptResourceLimitViolation("Statement limit reached");
+		}
+	}
+	
+	protected void checkMXCpuTimeAndMemory() {
+		long cpuTime = getThreadTime();
+		if (cpuTime >= 0) {
+			long delta = cpuTime-lastMxCpuTime;
+			lastMxCpuTime = cpuTime;
+			resourceConsumption.mxCpuTime += delta;
+			if (resourceLimits.maxMXCpuTime > 0 && resourceConsumption.mxCpuTime > resourceLimits.maxMXCpuTime) {
+				throw new TinyscriptResourceLimitViolation("CPU time limit reached");
+			}
+		}
+			
+		long memory = getThreadMAllocations();
+		if (memory >= 0) {
+			long delta = memory-lastMxMAllocations;
+			lastMxMAllocations = memory;
+			resourceConsumption.mxMAlloc += delta;
+			if (resourceLimits.maxMxMAlloc > 0 && resourceConsumption.mxMAlloc > resourceLimits.maxMxMAlloc) {
+				throw new TinyscriptResourceLimitViolation("Memory allocation limit reached");
+			}
 		}
 	}
 	
@@ -119,7 +156,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		if ( currentMemory > resourceConsumption.memoryMax)
 			resourceConsumption.memoryMax = currentMemory;
 		if (resourceLimits.maxMemory > 0 && currentMemory > resourceLimits.maxMemory) {
-			throw new TinyscriptResourceLimitViolation("Memory limit reached");
+			throw new TinyscriptResourceLimitViolation("User Memory limit reached");
 		}
 	}
 
@@ -157,6 +194,48 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		// Forces expunging garbage collected entries...
 		objects.size();
 		return totalMemory;
+	}
+	
+	private void setupMXBeans() {
+	    if(useMXBeanInspection) {
+	    	threadId = Thread.currentThread().getId();
+	        tBean = ManagementFactory.getThreadMXBean();
+	        if(tBean instanceof com.sun.management.ThreadMXBean) { 
+	            sunBean = (com.sun.management.ThreadMXBean)tBean;
+	        }
+
+	        if(tBean.isThreadCpuTimeSupported()) {
+	            if(!tBean.isThreadCpuTimeEnabled()) {
+	                tBean.setThreadCpuTimeEnabled(true);
+	            }
+	        } else {
+	            tBean = null;
+	        }
+
+	        if(sunBean != null && sunBean.isThreadAllocatedMemorySupported()) {
+	            if(!sunBean.isThreadAllocatedMemoryEnabled()) {
+	                sunBean.setThreadAllocatedMemoryEnabled(true);
+	            }
+	        } else {
+	            sunBean = null;
+	        }
+	        lastMxCpuTime = getThreadTime();
+	        lastMxMAllocations = getThreadMAllocations();
+	    }
+	}
+	
+	private long getThreadTime() {
+	    if(tBean != null) {
+	        return tBean.getThreadCpuTime(threadId);
+	    }
+	    return -1;
+	}
+
+	private long getThreadMAllocations() {
+	    if(sunBean != null) {
+	        return sunBean.getThreadAllocatedBytes(threadId);
+	    }
+	    return -1;
 	}
 	
 }

@@ -36,10 +36,11 @@ public class TinyscriptExecutionService {
 	
 	private final static String fileExtension = "ts";
 	
-	public static final int MAX_STATEMENTS = 0;  // 500000;
-	public static final int MAX_CALL_DEPTH = 256;
-	public static final int MAX_OBJECT_SIZE = 0; //1024*32;
+	public static final int MAX_STATEMENTS = 0; // 2000000;  
+	public static final int MAX_CALL_DEPTH = 128;
+	public static final int MAX_OBJECT_SIZE = 0; // 100000;
 	public static final int MAX_STRING_LENGTH = 0; // 1024*8;
+	public static final long MAX_MEMORY = 0 ; // 1024*1024*8;
 	
 	public static final int MAX_OUTPUT_SIZE = 1024*8;
 	
@@ -62,8 +63,10 @@ public class TinyscriptExecutionService {
 		limits.setMaxRecursionDepth(MAX_CALL_DEPTH);
 		limits.setMaxObjectSize(MAX_OBJECT_SIZE);
 		limits.setMaxStringLength(MAX_STRING_LENGTH);
+		limits.setMaxMemory(MAX_MEMORY);
 		ResourceMonitor monitor = new ResourceMonitor();
 		monitor.enableObjectTracking();
+		monitor.enableMXBeanInspection();
 		monitor.configureLimits(limits);
 		ExecutionVisitor executionvisitor = new ExecutionVisitor(monitor);
 		ResourceConsumption statistics = new ResourceConsumption();

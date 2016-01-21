@@ -49,6 +49,8 @@ public class MultipleSessionsTest {
 	    TinyscriptExecutionResult result = restTemplate.postForObject(URI, script, TinyscriptExecutionResult.class); 
 	    ResourceConsumption statistics = result.getStatistics();
 	    System.out.println("Results: time=" + statistics.getExecutionTime() +"ms"
+	    		+ ", cpu=" + statistics.getMxCpuTime() / 1000000 + "ms"
+	    		+ ", malloc=" + statistics.getMxMAlloc()/1024 + "K"
 	    		+ ", objs=" + statistics.getObjects() + "/" + statistics.getObjectsMax()
 	    		+ ", mem=" + statistics.getMemory()/1024 + "K/" + statistics.getMemoryMax()/1014 + "K"
 	    		+ ", creates=" + statistics.getObjectCreations());
