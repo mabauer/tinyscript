@@ -100,4 +100,9 @@ public class NashornRunnerTest extends TinyscriptInterpreterTestHelper {
 				+ "assert(4 == odds.length);");
 	}
 	
+	// @Test
+	public void testBench() {
+		executeScriptFromFileWithNashorn("ianbull_bench.ts");
+	}
+	
 }
