@@ -378,6 +378,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		if (Double.isInfinite(start) || Double.isInfinite(stop))
 			return result;
 		for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
+			checkMXCpuTimeAndMemory();
 			if (forstmt.getId() != null) {
 				result = executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), new TSValue(loopValue));
 			}
@@ -396,6 +397,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		if (iterable.isArray()) {
 			ArrayObject arr = (ArrayObject) iterable.asObject();
 			for (int i = 0; i < arr.getLength(); i++) {
+				checkMXCpuTimeAndMemory();
 				TSValue loopValue = arr.item(i);
 				if (forstmt.getId() != null) {
 					result = executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
@@ -786,7 +788,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	}
 	
 	private TSValue executeInBlockContext(String name, Block block, Identifier variable, TSValue value) {
-		checkMXCpuTimeAndMemory();
+		// checkMXCpuTimeAndMemory();
 		TSValue result = null;
     	boolean needsNewContext = true;
     	LexicalEnvironment env = getLexcialEnvironment(block);

@@ -26,8 +26,8 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	private ThreadMXBean tBean = null;
 	private com.sun.management.ThreadMXBean sunBean = null; 
 	private long threadId;
-	private long lastMxCpuTime;
-	private long lastMxMAllocations;
+	private long startMxCpuTime;
+	private long startMxMAllocations;
 	
 	private final static Logger logger = Logger.getLogger(ResourceMonitor.class);
 	
@@ -45,6 +45,10 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		}
 		resourceConsumption = new ResourceConsumption();
 		startTime = System.nanoTime();
+		if (useMXBeanInspection) {
+			startMxCpuTime = getThreadTime();
+			startMxMAllocations = getThreadMAllocations();
+		}
 	}
 	
 	public void stop() {
@@ -88,9 +92,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	protected void checkMXCpuTimeAndMemory() {
 		long cpuTime = getThreadTime();
 		if (cpuTime >= 0) {
-			long delta = cpuTime-lastMxCpuTime;
-			lastMxCpuTime = cpuTime;
-			resourceConsumption.mxCpuTime += delta;
+			resourceConsumption.mxCpuTime = cpuTime-startMxCpuTime;
 			if (resourceLimits.maxMXCpuTime > 0 && resourceConsumption.mxCpuTime > resourceLimits.maxMXCpuTime) {
 				throw new TinyscriptResourceLimitViolation("CPU time limit reached");
 			}
@@ -98,9 +100,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 			
 		long memory = getThreadMAllocations();
 		if (memory >= 0) {
-			long delta = memory-lastMxMAllocations;
-			lastMxMAllocations = memory;
-			resourceConsumption.mxMAlloc += delta;
+			resourceConsumption.mxMAlloc = memory-startMxMAllocations;
 			if (resourceLimits.maxMxMAlloc > 0 && resourceConsumption.mxMAlloc > resourceLimits.maxMxMAlloc) {
 				throw new TinyscriptResourceLimitViolation("Memory allocation limit reached");
 			}
@@ -219,8 +219,6 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	        } else {
 	            sunBean = null;
 	        }
-	        lastMxCpuTime = getThreadTime();
-	        lastMxMAllocations = getThreadMAllocations();
 	    }
 	}
 	
