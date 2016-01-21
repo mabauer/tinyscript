@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.mkbauer.tinyscript.runtime.function.Call;
-import de.mkbauer.tinyscript.runtime.function.ToString;
+import de.mkbauer.tinyscript.runtime.function.prototype.Call;
+import de.mkbauer.tinyscript.runtime.function.prototype.ToString;
 
 public abstract class Function extends TSObject {
 	

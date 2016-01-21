@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.runtime.array;
+package de.mkbauer.tinyscript.runtime.array.prototype;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -8,13 +8,14 @@ import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 	
 
-public class Pop extends BuiltinFunction {
+public class Shift extends BuiltinFunction {
 	
-	private final static String NAME = "pop";
+	private final static String NAME = "shift";
 
-	public Pop(ExecutionVisitor ev) {
+	public Shift(ExecutionVisitor ev) {
 		super(ev);
 	}
 	
@@ -22,10 +23,10 @@ public class Pop extends BuiltinFunction {
 	public TSValue apply(boolean asConstructor, TSObject self,
 			List<TSValue> args) {
 		if (!(self instanceof ArrayObject))
-			throw new TinyscriptTypeError("Function Array.prototype.pop only works for Array objects.");
+			throw new TinyscriptTypeError("Function Array.prototype.shift only works for Array objects.");
 		ArrayObject arr = (ArrayObject) self;
-		TSValue last = arr.pop();
-		return last; 
+		TSValue first = arr.shift();
+		return first; 
 	}
 
 	@Override

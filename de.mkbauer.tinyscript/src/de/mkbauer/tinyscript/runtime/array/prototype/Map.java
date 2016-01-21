@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.runtime.array;
+package de.mkbauer.tinyscript.runtime.array.prototype;
 
 
 import java.util.ArrayList;
@@ -12,6 +12,7 @@ import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 
 public class Map extends BuiltinFunction {
 	

@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.runtime.function;
+package de.mkbauer.tinyscript.runtime.function.prototype;
 
 import java.util.List;
 

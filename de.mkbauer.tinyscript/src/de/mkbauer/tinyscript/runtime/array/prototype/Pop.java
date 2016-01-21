@@ -1,24 +1,32 @@
-package de.mkbauer.tinyscript.runtime.string;
+package de.mkbauer.tinyscript.runtime.array.prototype;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
-import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
-
-public class ToString extends BuiltinFunction {
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 	
-	private final static String NAME = "toString";
+
+public class Pop extends BuiltinFunction {
+	
+	private final static String NAME = "pop";
+
+	public Pop(ExecutionVisitor ev) {
+		super(ev);
+	}
 	
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self,
 			List<TSValue> args) {
-		if (!(self instanceof StringObject))
-			throw new TinyscriptTypeError("Function String.prototype.toString only works for String objects.");
-		return new TSValue(((StringObject)self).getValue());
+		if (!(self instanceof ArrayObject))
+			throw new TinyscriptTypeError("Function Array.prototype.pop only works for Array objects.");
+		ArrayObject arr = (ArrayObject) self;
+		TSValue last = arr.pop();
+		return last; 
 	}
 
 	@Override
@@ -29,10 +37,6 @@ public class ToString extends BuiltinFunction {
 	@Override
 	public int getLength() {
 		return 0;
-	}
-
-	public ToString(ExecutionVisitor ev) {
-		super(ev);
 	}
 
 }

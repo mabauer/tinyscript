@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.runtime.array;
+package de.mkbauer.tinyscript.runtime.array.prototype;
 
 
 import java.util.List;
@@ -10,6 +10,7 @@ import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 
 public class ToString extends BuiltinFunction {
 	

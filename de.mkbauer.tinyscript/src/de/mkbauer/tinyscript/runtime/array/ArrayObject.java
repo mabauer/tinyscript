@@ -149,7 +149,7 @@ public class ArrayObject extends BuiltinType {
 		return CONSTRUCTOR;
 	}
 
-	protected List<TSValue> getItems() {
+	public List<TSValue> getItems() {
 		return items;
 	}
 	

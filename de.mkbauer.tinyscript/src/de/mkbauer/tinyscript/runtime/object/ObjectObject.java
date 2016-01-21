@@ -6,6 +6,8 @@ import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.runtime.object.prototype.HasOwnProperty;
+import de.mkbauer.tinyscript.runtime.object.prototype.ToString;
 
 
 public class ObjectObject extends BuiltinConstructor {

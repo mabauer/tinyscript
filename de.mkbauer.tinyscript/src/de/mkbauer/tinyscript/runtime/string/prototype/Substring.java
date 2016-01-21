@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.runtime.string;
+package de.mkbauer.tinyscript.runtime.string.prototype;
 
 import java.util.List;
 
@@ -7,6 +7,7 @@ import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.runtime.string.StringObject;
 
 public class Substring extends BuiltinFunction {
 	

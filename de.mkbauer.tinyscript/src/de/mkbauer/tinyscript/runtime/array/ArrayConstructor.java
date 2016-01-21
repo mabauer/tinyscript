@@ -6,7 +6,13 @@ import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
-import de.mkbauer.tinyscript.runtime.array.ToString;
+import de.mkbauer.tinyscript.runtime.array.prototype.Filter;
+import de.mkbauer.tinyscript.runtime.array.prototype.Map;
+import de.mkbauer.tinyscript.runtime.array.prototype.Pop;
+import de.mkbauer.tinyscript.runtime.array.prototype.Push;
+import de.mkbauer.tinyscript.runtime.array.prototype.Shift;
+import de.mkbauer.tinyscript.runtime.array.prototype.ToString;
+import de.mkbauer.tinyscript.runtime.array.prototype.Unshift;
 
 public class ArrayConstructor extends BuiltinConstructor {
 	

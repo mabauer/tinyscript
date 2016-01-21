@@ -6,6 +6,10 @@ import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.runtime.string.prototype.CharAt;
+import de.mkbauer.tinyscript.runtime.string.prototype.IndexOf;
+import de.mkbauer.tinyscript.runtime.string.prototype.Substring;
+import de.mkbauer.tinyscript.runtime.string.prototype.ToString;
 
 public class StringConstructor extends BuiltinConstructor {
 	

@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.runtime.array;
+package de.mkbauer.tinyscript.runtime.array.prototype;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -8,24 +8,27 @@ import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 	
 
-public class Shift extends BuiltinFunction {
+public class Unshift extends BuiltinFunction {
 	
-	private final static String NAME = "shift";
+	private final static String NAME = "unshift";
 
-	public Shift(ExecutionVisitor ev) {
+	public Unshift(ExecutionVisitor ev) {
 		super(ev);
 	}
 	
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self,
 			List<TSValue> args) {
+		checkArgs(args);
 		if (!(self instanceof ArrayObject))
-			throw new TinyscriptTypeError("Function Array.prototype.shift only works for Array objects.");
+			throw new TinyscriptTypeError("Function Array.prototype.unshift only works for Array objects.");
 		ArrayObject arr = (ArrayObject) self;
-		TSValue first = arr.shift();
-		return first; 
+		for (TSValue arg : args) 
+			arr.unshift(arg);
+		return new TSValue(arr.getLength());
 	}
 
 	@Override
@@ -35,7 +38,7 @@ public class Shift extends BuiltinFunction {
 
 	@Override
 	public int getLength() {
-		return 0;
+		return 1;
 	}
 
 }
