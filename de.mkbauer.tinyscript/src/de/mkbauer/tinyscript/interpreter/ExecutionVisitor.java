@@ -569,14 +569,20 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		if (suffix instanceof CallOrPropertyAccessSuffix) {
 			CallOrPropertyAccessSuffix callOrProp = (CallOrPropertyAccessSuffix) suffix;
 			TSValue keyValue = evaluatePropertyKey(callOrProp.getProperty());
-			
+			TSObject baseasObject;
 			if (!base.isObject()) {
 				if (base == TSValue.NULL || base == TSValue.UNDEFINED) {
 					throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
-				}			
+				}	
+				baseasObject = TSObject.toObject(this, base);
 			}
-			TSObject baseasObject = ObjectObject.toObject(this, base);
-			result = baseasObject.get(keyValue.asString());
+			else {
+				baseasObject = base.asObject();
+			}
+			if (baseasObject instanceof ArrayObject && keyValue.isNumber())
+				result = ((ArrayObject) baseasObject).item(keyValue.asInt());
+			else
+				result = baseasObject.get(keyValue.asString());
 			CallSuffix callSuffix = callOrProp.getCall();
 			if (callSuffix != null) {
 				if (result.isObject() && (result.asObject() instanceof Function)) {
@@ -723,19 +729,26 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	if (left instanceof CallOrPropertyAccess) {
     		CallOrPropertyAccess expr = (CallOrPropertyAccess) left;
         	EObject suffix = expr.getSuffix();
-        	TSValue prefix = execute(expr.getExpr());
+        	TSValue base = execute(expr.getExpr());
     		if (suffix instanceof CallOrPropertyAccessSuffix) {
     			PropertyAccessSuffix propSuffix = ((CallOrPropertyAccessSuffix) suffix).getProperty();
     			TSValue keyValue = evaluatePropertyKey(propSuffix);
-    			if (!prefix.isObject()) {
-    				if (prefix == TSValue.NULL || prefix == TSValue.UNDEFINED) {
-    					throw new TinyscriptTypeError("Cannot assign to property of undefined or null", expr);
+    			TSObject baseasObject;
+    			if (!base.isObject()) {
+    				if (base == TSValue.NULL || base == TSValue.UNDEFINED) {
+    					throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
     				}	
+    				baseasObject = TSObject.toObject(this, base);
     			}
+    			else {
+    				baseasObject = base.asObject();
+    			}
+    			if (baseasObject instanceof ArrayObject && keyValue.isNumber())
+    				((ArrayObject) baseasObject).setItem(keyValue.asInt(), value);
+    			else
+    				baseasObject.put(keyValue.asString(), value);
     			if ( ((CallOrPropertyAccessSuffix) suffix).getCall() != null)
     				throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
-    			TSObject prefixasObject = ObjectObject.toObject(this, prefix);
-    			prefixasObject.put(keyValue.asString(), value);
     			return value;
     		}
     		if (suffix instanceof CallSuffix) {

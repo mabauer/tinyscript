@@ -21,18 +21,32 @@ public class ArrayObject extends BuiltinType {
 	public ArrayObject(ExecutionVisitor ev) {
 		super(ev);
 		items = new ArrayList<TSValue>();
-		defineDefaultProperty(this, "length", new TSValue(0));
+		// defineDefaultProperty(this, "length", new TSValue(0));
 	}
-
+	
 	public TSValue item(int index) {
 		if (index < getLength()) 
 			return items.get(index);
 		else
 			return TSValue.UNDEFINED;
 	}
-	
+
+	public void setItem(int index, TSValue value) {
+		if (index < getLength()) 
+			items.set(index, value);
+		else {
+			int len = getLength();
+			for (int i = len; i < index; i++) 
+				items.add(TSValue.UNDEFINED);
+			items.add(value);
+			update();
+		}	
+	}
+
 	@Override
 	public TSValue get(String key) {
+		if (key.equals("length"))
+			return new TSValue(getLength());
 		try {
 			int index = Integer.parseInt(key);
 			if (index < getLength()) 
@@ -48,6 +62,9 @@ public class ArrayObject extends BuiltinType {
 	@Override
 	public void put(String key, TSValue value) {
 		try {
+			// TODO: Special case "length" => resize array and fill with TSValue.UNDEFINED
+			if (key.equals("length"))
+				return;
 			int index = Integer.parseInt(key);
 			if (index < getLength()) 
 				items.set(index, value);
@@ -148,7 +165,7 @@ public class ArrayObject extends BuiltinType {
 	
 	protected void update() {
 		super.update();
-		put("length", new TSValue(getLength()));
+		//put("length", new TSValue(getLength()));
 	}
 	
 	@Override
