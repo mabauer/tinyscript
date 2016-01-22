@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -36,13 +37,15 @@ public class TinyscriptExecutionService {
 	
 	private final static String fileExtension = "ts";
 	
-	public static final int MAX_STATEMENTS = 0; // 2000000;  
+	public static final int MAX_STATEMENTS = 5000000;  
 	public static final int MAX_CALL_DEPTH = 128;
 	public static final int MAX_OBJECT_SIZE = 0; // 100000;
 	public static final int MAX_STRING_LENGTH = 0; // 1024*8;
-	public static final long MAX_MEMORY = 0 ; // 1024*1024*8;
+	public static final long MAX_MEMORY = 1024*1024*16;
 	
 	public static final int MAX_OUTPUT_SIZE = 1024*8;
+	
+	private static final Logger logger = Logger.getLogger(TinyscriptExecutionService.class) ;
 	
 	private Injector injector;
 	
@@ -52,6 +55,8 @@ public class TinyscriptExecutionService {
 	
 	public TinyscriptExecutionResult executeScriptFromString(String script) {
 
+		logger.debug("Script:\n" + script);
+		
 		String resultAsString = "";
 		String errorMessage = "";
 		int errorLine = 0;
@@ -80,6 +85,7 @@ public class TinyscriptExecutionService {
 			resultAsString = result.asString();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
+			logExecution(script, null, statistics);
 			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
 		catch (TinyscriptRuntimeException e) {
@@ -87,6 +93,7 @@ public class TinyscriptExecutionService {
 			errorLine = e.getAffectedLine();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
+			logExecution(script, e, statistics);
 			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
 	}
@@ -94,6 +101,16 @@ public class TinyscriptExecutionService {
 	private String stdoutToString(ByteArrayOutputStream out) {
 		String result = out.toString();
 		return result.substring(Math.max(0, result.length()-MAX_OUTPUT_SIZE));
+	}
+	
+	private void logExecution(String script, TinyscriptRuntimeException e, ResourceConsumption statistics) {
+		if (e == null) {
+			logger.info("Script executed: OK");
+		}
+		else {
+			logger.info("Script executed with errors: " + e.getMessage() + e.getTinyscriptStacktraceAsString());
+		}
+		logger.info("Statistics: " + statistics.toString());
 	}
 	
 	protected Tinyscript parseScriptFromString(String script) {

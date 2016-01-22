@@ -1,4 +1,6 @@
-// Creates an array of "people" and to some searching on it.
+// Creates an array of "people" and performs some searching on it.
+
+// Try increasing N (or R) and see what happens.
 
 // Size of the array
 var N = 1000;

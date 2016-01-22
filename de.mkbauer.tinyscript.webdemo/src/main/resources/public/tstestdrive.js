@@ -31,13 +31,13 @@ function Tinyscript($scope, $http) {
 				}
         	    $scope.result = data;
         	    $scope.statistics = "\n(time=" + $scope.result.statistics.executionTime + "ms"
+        	    	+ (($scope.result.statistics.mxCpuTime > 0)? (", cpu=" + Math.round($scope.result.statistics.mxCpuTime / 1000000) +"ms") : "") 
         	    	+ ", stmts=" + $scope.result.statistics.statements 
         	    	+ ", calldepth=" + $scope.result.statistics.callDepth 
-        	    	+ (($scope.result.statistics.mxCpuTime > 0)? (", cpu=" + Math.round($scope.result.statistics.mxCpuTime / 1000000) +"ms") : "") 
-        	    	+ (($scope.result.statistics.mxMAlloc > 0)? (", malloc=" + Math.round($scope.result.statistics.mxMAlloc / 1024) + "K") : "")
         	    	+ (($scope.result.statistics.objectsMax > 0)? (", objs=" + $scope.result.statistics.objectsMax) : "") 
         	    	+ (($scope.result.statistics.memoryMax > 0)? (", umem=" + Math.round($scope.result.statistics.memoryMax / 1024) + "K") : "")
-        	    	+ ", creates=" + $scope.result.statistics.objectCreations + ")\n";
+        	    	+ ", creates=" + $scope.result.statistics.objectCreations 
+        	    	+ (($scope.result.statistics.mxMAlloc > 0)? (", malloc=" + Math.round($scope.result.statistics.mxMAlloc / 1024) + "K") : "") + ")\n";
 				
         	});	
 	    $scope.codeMirror.focus();

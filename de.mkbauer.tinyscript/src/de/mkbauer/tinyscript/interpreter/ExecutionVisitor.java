@@ -236,6 +236,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		callDepth = 0;
 		if (resourceMonitor != null)
 			resourceMonitor.start();
+		checkMXCpuTimeAndMemory();
 			
 		// Hoist function declarations:
     	// Create function objects (or get them form a cache)

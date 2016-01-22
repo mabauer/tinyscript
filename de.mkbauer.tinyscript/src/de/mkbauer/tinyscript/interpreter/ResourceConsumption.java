@@ -109,4 +109,16 @@ public class ResourceConsumption {
 		mxMAlloc += other.mxMAlloc;
 	}
 	
+	public String toString() {
+		String result = "time=" + executionTime + "ms"
+				+ ((mxCpuTime > 0) ? ", cpu=" + mxCpuTime / 1000000 + "ms" : "")
+				+ ", stmts=" + statements 
+				+ ", calldepth=" + callDepth
+				+ ((objectsMax > 0) ? ", objs=" + objectsMax : "")
+				+ ((memoryMax > 0) ? ", umem=" + memoryMax / 1024 + "K": "")
+				+ ", creates=" + objectCreations
+				+ ((mxMAlloc > 0) ? ", malloc=" + mxMAlloc / 1024 + "K" : "");
+		return result;
+	}
+	
 }
