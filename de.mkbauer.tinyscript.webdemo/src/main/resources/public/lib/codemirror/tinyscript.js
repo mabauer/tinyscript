@@ -571,6 +571,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
   function forspec2(type, value) {
     if (type == ";") return cont(forspec3);
     if (value == "in" || value == "of") { cx.marked = "keyword"; return cont(expression); }
+    if (value == ":" || value == "=") return cont(expression);
     return pass(expression, expect(";"), forspec3);
   }
   function forspec3(type) {
