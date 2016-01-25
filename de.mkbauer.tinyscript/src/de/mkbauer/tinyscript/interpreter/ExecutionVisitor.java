@@ -35,6 +35,7 @@ import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.IterableForExpression;
 import de.mkbauer.tinyscript.ts.NewExpression;
+import de.mkbauer.tinyscript.ts.NullObject;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
 import de.mkbauer.tinyscript.ts.NumericForExpression;
 import de.mkbauer.tinyscript.ts.ObjectInitializer;
@@ -205,6 +206,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     		return caseBooleanLiteral((BooleanLiteral) object);
 		case TsPackage.NEW_EXPRESSION:
     		return caseNewExpression((NewExpression) object);
+		case TsPackage.NULL_OBJECT:
+    		return caseNullObject((NullObject) object); 		
 		case TsPackage.OBJECT_INITIALIZER:
     		return caseObjectInitializer((ObjectInitializer) object);
 		case TsPackage.ARRAY_INITIALIZER:
@@ -669,6 +672,10 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	String result = expr.getValue();
     	recordStringCreation(result);
     	return new TSValue(result); 
+    }
+    
+    public TSValue caseNullObject(NullObject expr) {
+    	return TSValue.NULL;
     }
     
     // @Override

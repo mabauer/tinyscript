@@ -96,6 +96,7 @@ Unary:
 Primary returns Expression:
 	((Atomic  | NewExpression | GroupingExpression ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))* )
 	| TypeOfExpression 
+	| NullObject
 ;
 
 GroupingExpression:
@@ -149,7 +150,6 @@ NumericForExpression:
 IterableForExpression:
 	':' iterable=Addition 
 ;
-
 
 BreakStatement:
 	{BreakStatement}
@@ -219,6 +219,11 @@ RangeExpression:
 
 TypeOfExpression:
 	'typeof' name=ID (suffixes+=DotPropertyAccessSuffix)*
+;
+
+NullObject returns Expression:
+	{NullObject}
+	'null'
 ;
 
 StringLiteral:

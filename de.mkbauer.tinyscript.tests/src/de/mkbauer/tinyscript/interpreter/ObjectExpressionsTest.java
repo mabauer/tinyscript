@@ -16,12 +16,6 @@ public class ObjectExpressionsTest extends TinyscriptInterpreterTestHelper {
 	}
 	
 	@Test
-	public void testChainedObjectExpression() {
-		TSValue value = executeScriptFromString("var o = {}; o.key1 = {}; o.key1.key2 = 1; assert (o.key1.key2==1);");
-		value = executeScriptFromString("var o = {}; o.key1 = {}; var test = o.key1; test.key2 = 1; assert (o.key1.key2==1);");
-	}
-	
-	@Test
 	public void testMixedPropertyAccessExpressions() {
 		TSValue value = executeScriptFromString("var o = {}; o.key = \"Test\"; assert (o[\"key\"]==\"Test\");");
 	}
@@ -37,10 +31,8 @@ public class ObjectExpressionsTest extends TinyscriptInterpreterTestHelper {
 	}
 	
 	@Test
-	public void testArrayAddition() {
-		TSValue value = executeScriptFromString("var a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; var result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
-		value = executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
-		value = executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + s; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
+	public void testNullObject() {
+		TSValue value = executeScriptFromString("var x = null; assert (x == null);");
 	}
 	
 	@Test

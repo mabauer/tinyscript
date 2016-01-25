@@ -146,7 +146,7 @@ public class TSValue { // implements Comparable<TSValue>
 	public boolean equals(TSValue other) {
 		// TODO: Check with ECMAScript Specs
 		if (value == null) {
-			if (other == null) {
+			if (other.value == null) {
 				return true;
 			}
 			else {

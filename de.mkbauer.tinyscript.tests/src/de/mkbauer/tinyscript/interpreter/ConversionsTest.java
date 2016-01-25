@@ -32,8 +32,8 @@ public class ConversionsTest extends TinyscriptInterpreterTestHelper {
 	public void testSpecialsToString() {
 		TSValue undefined = executeScriptFromString("var obj; obj;");
 		assertEquals("[object Undefined]", TSObject.toString(getExecutionVisitor(), undefined));
-		//TSValue nullObject = executeScriptFromString("var obj = null; obj;");
-		//assertEquals("[object Null]", TSObject.toString(getExecutionVisitor(), nullObject));
+		TSValue nullObject = executeScriptFromString("var obj = null; obj;");
+		assertEquals("[object Null]", TSObject.toString(getExecutionVisitor(), nullObject));
 	}
 	
 	@Test
