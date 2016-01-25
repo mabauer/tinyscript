@@ -54,8 +54,13 @@ public class TinyscriptExecutionService {
 	}
 	
 	public TinyscriptExecutionResult executeScriptFromString(String script) {
+		return executeScriptFromString(script, true);
+	}
+	
+	public TinyscriptExecutionResult executeScriptFromString(String script, boolean log) {
 
-		logger.debug("Script:\n" + script);
+		if (log)
+			logger.debug("Script:\n" + script);
 		
 		String resultAsString = "";
 		String errorMessage = "";
@@ -85,7 +90,8 @@ public class TinyscriptExecutionService {
 			resultAsString = result.asString();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
-			logExecution(script, null, statistics);
+			if (log)
+				logExecution(script, null, statistics);
 			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
 		catch (TinyscriptRuntimeException e) {
@@ -93,7 +99,8 @@ public class TinyscriptExecutionService {
 			errorLine = e.getAffectedLine();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
-			logExecution(script, e, statistics);
+			if (log)
+				logExecution(script, e, statistics);
 			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
 	}

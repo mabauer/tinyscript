@@ -52,7 +52,7 @@ public class TinyscriptWebController {
 	@RequestMapping("/test")
 	@ResponseBody
 	public TinyscriptExecutionResult executeSampleProgram() {
-		return this.tinyscriptExecutionService.executeScriptFromString("var hello; hello=\"Hello, Tinyscript\";");
+		return this.tinyscriptExecutionService.executeScriptFromString("var hello; hello=\"Hello, Tinyscript\";", false);
 	}
 	
 	@RequestMapping(value="/execute", method=RequestMethod.POST)
