@@ -20,11 +20,14 @@ function Tinyscript($scope, $http) {
 		    });
 	}
 	
+	$scope.executing = false;
 	$scope.statistics = "";
 	$scope.executeScript = function() {
 		$scope.result = false;
+		$scope.executing = true;
 	    $http.post('execute', $scope.codeMirror.getValue()).
     	    success(function(data) {
+    	    	$scope.executing = false;
 				if (data.errorCode > 0) {
 					$scope.codeMirror.markText({line: data.errorLine-1, ch: 0}, { line: data.errorLine, ch: 0}, 
 							{clearOnEnter: true, css: "background-color: #f2dede"});	
