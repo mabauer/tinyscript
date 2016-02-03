@@ -35,7 +35,9 @@ public class TinyscriptWebController {
 	
 	@Autowired
 	private TinyscriptExecutionService tinyscriptExecutionService;
-
+	
+	@Autowired
+	private TinyscriptCrossCompilingService tinyscriptCrossCompilingService;
 
 	@RequestMapping("/")
 	public String root() {
@@ -59,5 +61,11 @@ public class TinyscriptWebController {
 	@ResponseBody
 	public TinyscriptExecutionResult executeProgram(@RequestBody String script) {
 		return this.tinyscriptExecutionService.executeScriptFromString(script);
+	}
+	
+	@RequestMapping(value="/xcompile", method=RequestMethod.POST)
+	@ResponseBody
+	public TinyscriptCrossCompilingResult crossCompileProgram(@RequestBody String script) {
+		return this.tinyscriptCrossCompilingService.crossCompileScriptFromString(script);
 	}
 }

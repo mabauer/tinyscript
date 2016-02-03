@@ -80,5 +80,24 @@ public class TinyscriptWebApplicationTests {
 		assertFalse(0 == Integer.parseInt(body.get("errorCode").toString()));
 	}
 	
+	@Test
+	public void testXCompile() throws Exception {
+		@SuppressWarnings("rawtypes")
+		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/xcompile", "var hello = \"hello1234\"; hello;", Map.class);
+		assertEquals(HttpStatus.OK, entity.getStatusCode());
+		@SuppressWarnings("unchecked")
+		Map<String, Object> body = entity.getBody();
+		assertEquals(0, body.get("errorCode"));
+	}
+	
+	@Test
+	public void testXCompileWithSyntaxError() throws Exception {
+		@SuppressWarnings("rawtypes")
+		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/xcompile", "var ", Map.class);
+		assertEquals(HttpStatus.OK, entity.getStatusCode());
+		@SuppressWarnings("unchecked")
+		Map<String, Object> body = entity.getBody();
+		assertFalse(0 == Integer.parseInt(body.get("errorCode").toString()));
+	}
 
 }
