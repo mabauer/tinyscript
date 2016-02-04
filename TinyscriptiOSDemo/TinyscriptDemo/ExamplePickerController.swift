@@ -33,7 +33,7 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
         modalPresentationStyle = .Popover
         popoverPresentationController!.delegate = self
     
-        self.preferredContentSize = CGSize(width:320,height:100)
+        self.preferredContentSize = CGSize(width:320,height:450)
     }
     
     func tapCancel(_ : UIBarButtonItem) {
