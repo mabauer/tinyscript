@@ -19,13 +19,13 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 public class NashornRunnerTest extends TinyscriptInterpreterTestHelper {
 
 	@Inject
-	private Provider<NashornRunner> nashornExecutorProvider;
+	private Provider<NashornRunner> nashornRunnerProvider;
 	
 	public TSValue executeScriptFromString(String script) {
 		Tinyscript ast = parseScriptFromString(script);
 		// FIXME: This works but is probably not correct...
 		// NashornExecutor nashorn = injectorProvider.getInjector().getInstance(NashornExecutor.class);
-		NashornRunner nashorn = nashornExecutorProvider.get();
+		NashornRunner nashorn = nashornRunnerProvider.get();
 		nashorn.execute(ast);
 		return TSValue.UNDEFINED;
 	}
@@ -33,7 +33,7 @@ public class NashornRunnerTest extends TinyscriptInterpreterTestHelper {
 	public TSValue executeScriptFromFileWithNashorn(String filename) {
 		Tinyscript ast = parseScriptFromFile(filename);
 		// FIXME: This works but is probably not correct...
-		NashornRunner nashorn = nashornExecutorProvider.get();
+		NashornRunner nashorn = nashornRunnerProvider.get();
 		nashorn.execute(ast);
 		return TSValue.UNDEFINED;
 	}

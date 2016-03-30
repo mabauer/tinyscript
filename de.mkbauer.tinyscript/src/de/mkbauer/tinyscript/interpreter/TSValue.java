@@ -21,9 +21,11 @@ public class TSValue { // implements Comparable<TSValue>
         if (value instanceof Number)
         	value = ((Number) value).doubleValue();
         // only accept boolean, list, number or string types
+        /* 
         if(!(isBoolean() || isDouble() || isString() || isObject())) {
             throw new RuntimeException("invalid data type: " + v + " (" + v.getClass() + ")");
         }
+    	*/
     }
 	
 	private TSValue() {
