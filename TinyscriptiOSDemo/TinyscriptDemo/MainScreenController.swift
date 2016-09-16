@@ -27,14 +27,14 @@ class MainScreenController: UIViewController, SourceViewerDelegate {
         // Dispose of any resources that can be recreated.
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject!) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any!) {
         switch(segue.identifier!) {
         case "pickExample":
-            var examplePicker = (segue.destinationViewController as? ExamplePickerController)!
+            let examplePicker = (segue.destination as? ExamplePickerController)!
             examplePicker.tinyscriptURL = URL
             examplePicker.delegate = self
         case "execute":
-            let resultsView = (segue.destinationViewController as? ResultsViewController)!
+            let resultsView = (segue.destination as? ResultsViewController)!
             resultsView.defineScript(sourceView.text);
             resultsView.tinyscriptURL = URL + "/xcompile"
         default:
@@ -42,7 +42,7 @@ class MainScreenController: UIViewController, SourceViewerDelegate {
         }
     }
     
-    func showSource(script: String) {
+    func showSource(_ script: String) {
         sourceView.text = script
     }
     

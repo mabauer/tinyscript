@@ -36,11 +36,11 @@ class ResultsViewController: UIViewController, UIWebViewDelegate {
     }
     
     // MARK: Script execution
-    func defineScript(script : String) {
+    func defineScript(_ script : String) {
         self.script = script
     }
     
-    func xCompileAndRunScript(script : String) {
+    func xCompileAndRunScript(_ script : String) {
         makeHTTPPostRequest(tinyscriptURL, body: script, onCompletion: {data, error -> Void
             in
             if (data != nil) {
@@ -48,14 +48,14 @@ class ResultsViewController: UIViewController, UIWebViewDelegate {
                 if (json["errorCode"] == 0) {
                     if let jsscript = json["script"].string {
                         self.runJSScript(jsscript)
-                        dispatch_async(dispatch_get_main_queue(), {
+                        DispatchQueue.main.async(execute: {
                             self.outputView.text = self.output
                         })
                     }
                 }
                 else {
                     if let msg = json["errorMessage"].string {
-                        dispatch_async(dispatch_get_main_queue(), {
+                        DispatchQueue.main.async(execute: {
                             self.outputView.text = "// " + msg
                         })
                     }
@@ -65,9 +65,9 @@ class ResultsViewController: UIViewController, UIWebViewDelegate {
         })
     }
     
-    func runJSScript(script : String) {
+    func runJSScript(_ script : String) {
         
-        let context = self.webView.valueForKeyPath("documentView.webView.mainFrame.javaScriptContext") as! JSContext
+        let context = self.webView.value(forKeyPath: "documentView.webView.mainFrame.javaScriptContext") as! JSContext
         
         // Define a print function
         let printFunction : @convention(block) (String) -> Void =
@@ -78,32 +78,33 @@ class ResultsViewController: UIViewController, UIWebViewDelegate {
         }
         
         // ...and register it with the global context
-        context.setObject(unsafeBitCast(printFunction, AnyObject.self),
-            forKeyedSubscript: "print")
+        context.setObject(unsafeBitCast(printFunction, to: AnyObject.self),
+            forKeyedSubscript: "print" as (NSCopying & NSObjectProtocol)!)
         
         let result : JSValue = context.evaluateScript(script)
         // print(result);
     }
     
-    func captureMessage(msg : String) {
+    func captureMessage(_ msg : String) {
         output = output + msg + "\n";
     }
     
 
-    func makeHTTPPostRequest(path: String, body: String,
-        onCompletion: (NSData?, NSError?) -> Void) {
+    func makeHTTPPostRequest(_ path: String, body: String,
+        onCompletion: @escaping (Data?, Error?) -> Void) {
 
         // Setup the request
-        let request = NSMutableURLRequest(URL: NSURL(string: path)!)
-        request.HTTPMethod = "POST"
+        let request = NSMutableURLRequest(url: URL(string: path)!)
+        request.httpMethod = "POST"
         request.setValue("text/plain", forHTTPHeaderField: "Content-Type")
         
         // Set the POST body for the request
-        request.HTTPBody = body.dataUsingEncoding(NSUTF8StringEncoding); // NSJSONSerialization.dataWithJSONObject(body, options: [])
-        let session = NSURLSession.sharedSession()
+        request.httpBody = body.data(using: String.Encoding.utf8); // NSJSONSerialization.dataWithJSONObject(body, options: [])
+        let session = URLSession.shared
         
-        let task = session.dataTaskWithRequest(request, completionHandler: {data, response, error -> Void in
+        let task = session.dataTask(with: request as URLRequest, completionHandler: { data, response, error -> Void in
             onCompletion(data, error)
+            return()
         })
         task.resume()
     }

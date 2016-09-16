@@ -9,7 +9,7 @@
 import UIKit
 
 @objc protocol SourceViewerDelegate {
-    func showSource(script: String)
+    func showSource(_ script: String)
 }
 
 class ExamplePickerController:  UITableViewController, UIPopoverPresentationControllerDelegate {
@@ -27,46 +27,46 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
         super.init(coder: aDecoder)!
     
         // cancel button
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.Cancel, target: self, action: "tapCancel:")
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.cancel, target: self, action: #selector(ExamplePickerController.tapCancel(_:)))
     
         // popover settings
-        modalPresentationStyle = .Popover
+        modalPresentationStyle = .popover
         popoverPresentationController!.delegate = self
     
         self.preferredContentSize = CGSize(width:320,height:450)
     }
     
     func tapCancel(_ : UIBarButtonItem) {
-        dismissViewControllerAnimated(true, completion:nil);
+        dismiss(animated: true, completion:nil);
     }
     
     // MARK: UITableViewController
     
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath){
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath){
 
-        let example = exampleFiles[indexPath.row]
+        let example = exampleFiles[(indexPath as NSIndexPath).row]
         print("Selected example: \(example)")
         loadExample(example)
-        dismissViewControllerAnimated(true, completion:nil)
+        dismiss(animated: true, completion:nil)
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return examples.count
     }
     
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) ->   UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) ->   UITableViewCell {
         let cell = UITableViewCell()
         let label = UILabel(frame: CGRect(x:0, y:0, width:320, height:50))
-        label.text = examples[indexPath.row]
+        label.text = examples[(indexPath as NSIndexPath).row]
         cell.addSubview(label)
         return cell
     }
     
     // MARK: UIPopoverPresentationControllerDelegate
     
-    func adaptivePresentationStyleForPresentationController(PC: UIPresentationController) ->UIModalPresentationStyle {
+    func adaptivePresentationStyle(for PC: UIPresentationController) ->UIModalPresentationStyle {
     
-        return UIModalPresentationStyle.FullScreen
+        return UIModalPresentationStyle.fullScreen
     }
     
     func presentationController(_: UIPresentationController, viewControllerForAdaptivePresentationStyle _: UIModalPresentationStyle) -> UIViewController? {
@@ -75,29 +75,30 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
     }
     
     // MARK: Loading example code
-    func loadExample(example: String) {
+    func loadExample(_ example: String) {
         makeHTTPGetRequest(tinyscriptURL + "/" + example, onCompletion: {data, error -> Void
             in
             if (data != nil) {
-                let script : String = NSString(data: data!, encoding:NSUTF8StringEncoding) as! String
+                let script : String = NSString(data: data!, encoding:String.Encoding.utf8.rawValue) as! String
                 // print(script)
-                dispatch_async(dispatch_get_main_queue(), {
+                DispatchQueue.main.async(execute: {
                     self.delegate!.showSource(script)
                 })
             }
         })
     }
     
-    func makeHTTPGetRequest(path: String,
-        onCompletion: (NSData?, NSError?) -> Void) {
+    func makeHTTPGetRequest(_ path: String,
+        onCompletion: @escaping (Data?, Error?) -> Void) {
             
             // Setup the request
-            let request = NSMutableURLRequest(URL: NSURL(string: path)!)
-            request.HTTPMethod = "GET"
-            let session = NSURLSession.sharedSession()
-            
-            let task = session.dataTaskWithRequest(request, completionHandler: {data, response, error -> Void in
+            var request = NSMutableURLRequest(url: URL(string: path)!) as URLRequest
+            request.httpMethod = "GET"
+            let session = URLSession.shared
+        
+            let task = session.dataTask(with: request, completionHandler: {data, response, error -> Void in
                 onCompletion(data, error)
+                return ()
             })
             task.resume()
     }
