@@ -10,3 +10,4 @@ plugin.xml_gen
 .*.jar
 generated
 *.prefs
+xcuserdata
