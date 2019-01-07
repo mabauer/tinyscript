@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript;
+package de.mkbauer.tinyscript.tests;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -7,12 +7,11 @@ import static org.junit.Assert.fail;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.EcoreUtil2;
-import org.eclipse.xtext.junit4.InjectWith;
-import org.eclipse.xtext.junit4.XtextRunner;
-import org.eclipse.xtext.junit4.util.ParseHelper;
-import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
+import org.eclipse.xtext.testing.InjectWith;
+import org.eclipse.xtext.testing.XtextRunner;
+import org.eclipse.xtext.testing.util.ParseHelper;
+import org.eclipse.xtext.testing.validation.ValidationTestHelper;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.junit.Assert;
 import org.junit.Test;
@@ -21,13 +20,13 @@ import org.junit.runner.RunWith;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
+import de.mkbauer.tinyscript.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.tests.TinyscriptInjectorProvider;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.Identifier;
-import de.mkbauer.tinyscript.ts.VariableStatement;
 
 @RunWith(XtextRunner.class)
 @InjectWith(TinyscriptInjectorProvider.class)

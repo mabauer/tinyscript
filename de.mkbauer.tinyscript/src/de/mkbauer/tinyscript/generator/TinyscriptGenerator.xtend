@@ -38,8 +38,9 @@ import com.google.inject.Inject
 import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
+import org.eclipse.xtext.generator.AbstractGenerator
 
-class TinyscriptGenerator  {
+class TinyscriptGenerator   {
 	
 	@Inject
 	TinyscriptQualifiedNameProvider nameProvider;

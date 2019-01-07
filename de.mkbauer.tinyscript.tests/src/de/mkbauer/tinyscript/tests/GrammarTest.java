@@ -1,28 +1,14 @@
-package de.mkbauer.tinyscript;
+package de.mkbauer.tinyscript.tests;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.EcoreUtil2;
-import org.eclipse.xtext.junit4.InjectWith;
-import org.eclipse.xtext.junit4.XtextRunner;
-import org.eclipse.xtext.junit4.util.ParseHelper;
-import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
-import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.testing.XtextRunner;
 import org.eclipse.xtext.validation.Issue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.ObjectInitializer;
 import de.mkbauer.tinyscript.ts.Tinyscript;

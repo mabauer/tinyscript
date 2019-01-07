@@ -4,16 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.eclipse.xtext.junit4.InjectWith;
-import org.eclipse.xtext.junit4.XtextRunner;
+import org.eclipse.xtext.testing.XtextRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
-import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
+
 
 @RunWith(XtextRunner.class)
 public class FunctionTest extends TinyscriptInterpreterTestHelper {

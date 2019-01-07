@@ -1,22 +1,12 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import org.eclipse.xtext.junit4.InjectWith;
-import org.eclipse.xtext.junit4.XtextRunner;
-import org.eclipse.xtext.junit4.util.ParseHelper;
-import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
+import org.eclipse.xtext.testing.XtextRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.google.inject.Inject;
-
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
-import de.mkbauer.tinyscript.ts.Expression;
-import de.mkbauer.tinyscript.ts.Tinyscript;
+import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 
 @RunWith(XtextRunner.class)
 public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
@@ -115,9 +105,9 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testArrayAddition() {
-		TSValue value = executeScriptFromString("var a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; var result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
-		value = executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
-		value = executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + s; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
+		executeScriptFromString("var a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; var result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
+		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
+		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + s; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
 	}
 
 }

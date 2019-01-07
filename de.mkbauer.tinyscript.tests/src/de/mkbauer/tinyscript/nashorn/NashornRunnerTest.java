@@ -1,18 +1,17 @@
 package de.mkbauer.tinyscript.nashorn;
 
-import org.eclipse.xtext.junit4.InjectWith;
-import org.eclipse.xtext.junit4.XtextRunner;
+
 import org.junit.Test;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 
+import org.eclipse.xtext.testing.XtextRunner;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
-import de.mkbauer.tinyscript.TinyscriptAssertationError;
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 @RunWith(XtextRunner.class)

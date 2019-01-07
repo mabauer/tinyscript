@@ -196,6 +196,8 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		return totalMemory;
 	}
 	
+	// TODO: This code should use reflection in order to avoid
+	// importing com.sun.management.ThreadMXBean
 	private void setupMXBeans() {
 	    if(useMXBeanInspection) {
 	    	threadId = Thread.currentThread().getId();

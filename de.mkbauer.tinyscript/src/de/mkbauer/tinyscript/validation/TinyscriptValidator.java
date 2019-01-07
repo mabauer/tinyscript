@@ -17,10 +17,10 @@ import org.eclipse.xtext.validation.Check;
 /**
  * Validation rules for Tinyscript.
  * 
- * see http://www.eclipse.org/Xtext/documentation.html#validation
+ * see https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#validation
  */
 @SuppressWarnings("all")
-public class TinyscriptJavaValidator extends AbstractTinyscriptJavaValidator {
+public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	
 	/**
 	 * Checks if a variable declaration conflicts with other declared identifiers of the same name in the same block

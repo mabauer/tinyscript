@@ -39,7 +39,7 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 				&& reference == TsPackage.Literals.REFERENCE__ID) {
 			return createBlockScope(context, true);
 		}
-		// For contentassist, references sometimes need to be resolved with other contexts.
+		// For content assist, references sometimes need to be resolved with other contexts.
 		if (reference == TsPackage.Literals.REFERENCE__ID) {
 			if (context instanceof Tinyscript)
 				context = ((Tinyscript) context).getGlobal();
