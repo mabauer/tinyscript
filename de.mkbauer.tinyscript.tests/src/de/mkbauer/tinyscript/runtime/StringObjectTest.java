@@ -2,15 +2,15 @@ package de.mkbauer.tinyscript.runtime;
 
 import static org.junit.Assert.fail;
 
-import org.eclipse.xtext.junit4.XtextRunner;
+import org.eclipse.xtext.testing.XtextRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 
 @RunWith(XtextRunner.class)
-public class StringObjectTests extends TinyscriptInterpreterTestHelper {
+public class StringObjectTest extends TinyscriptInterpreterTestHelper {
 
 	@Test
 	public void testIndexOf() {
