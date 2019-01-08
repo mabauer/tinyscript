@@ -43,30 +43,63 @@ class TinyscriptREPLMain  {
 
 	private Resource currentResource; 
 	
-	private ConsoleReader device;
+	private ConsoleReader device = null;
 		
 	public static void main(String[] args) {
-		try {
-			TinyscriptREPLMain repl = new TinyscriptREPLMain();
-			repl.loop();
+		
+		TinyscriptREPLMain repl = new TinyscriptREPLMain();
+
+		if (args.length >= 1) {
+			String fileName = "";
+			for (int i = 0; i < args.length; i++) {
+				try {
+					fileName = args[i];
+					repl.executeFile(fileName);
+				}
+				catch (IOException e) {
+					System.err.println("File " + fileName + " not found.");
+					System.exit(1);
+				}
+			}
 		}
-		catch (IOException e) {
-			System.err.println("Error initializing console.");
+		else {
+			try {	
+				repl.loop();
+			}
+			catch (IOException e) {
+				System.err.println("Error initializing console.");
+			}
 		}
 	}
 		
-	public TinyscriptREPLMain() throws IOException {	
+	public TinyscriptREPLMain() {	
 		Injector injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
 		resourceSet = injector.getInstance(XtextResourceSet.class);
 		visitor = new ExecutionVisitor();
-		device = new ConsoleReader();
-		device.setExpandEvents(false);
+		
 		visitor.defineStdOut(System.out);
     }  
+	
+	public void executeFile(String fileName) throws IOException {
+		URI uri = URI.createURI(fileName);
+		Resource resource = resourceSet.createResource(uri);
+ 		resource.load(null);
+ 		Tinyscript ast = (Tinyscript) resource.getContents().get(0);
+ 		try {
+ 			TSValue result = execute(ast);
+ 		}
+ 		catch (TinyscriptRuntimeException e) {
+			System.err.println(e.getClass().getSimpleName() + ": " + e.getMessage() 
+				+ " at " + fileName + ":" + e.getAffectedLine());	
+ 		}
+		// System.out.println(result.asString());
+	}
 	
 	public void loop() throws IOException {
 		String line; 
 		String script = "";
+		device = new ConsoleReader();
+		device.setExpandEvents(false);
 		boolean quit = false;
 		boolean multiline = false;
 		while (!quit) {
