@@ -58,6 +58,12 @@ public class InterpretedFunction extends Function {
 		
 		// Set this-Reference
 		currentContext.setThisRef(self);
+		
+		// With an arrow function, `this` is lexically bound. 
+		// It means that it uses `this` from the code that contains the arrow function.
+		if (isArrowFunction()) {
+			currentContext.setThisRef(getOuterContext().getThisRef());
+		}
 		currentContext.setFunctionContext(true);
 		
 		// Put the arguments into the context
@@ -77,7 +83,7 @@ public class InterpretedFunction extends Function {
 		LexicalEnvironment env = ev.getLexcialEnvironment(block);
 		for (TSValue function : env.getFunctions()) {	
 			// Create a variable in the current context pointing to each function object
-			String functionName = ((InterpretedFunction) function.asObject()).getName();
+			String functionName = ((Function) function.asObject()).getName();
 			if (!currentContext.contains(functionName))
 				currentContext.create(functionName);
 			currentContext.store(functionName, function);

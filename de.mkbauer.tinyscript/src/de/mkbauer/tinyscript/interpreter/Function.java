@@ -10,6 +10,7 @@ import de.mkbauer.tinyscript.runtime.function.prototype.ToString;
 public abstract class Function extends TSObject {
 	
 	protected ExecutionVisitor ev;
+	private boolean isArrowFunction = false;
 	
 	public Function(ExecutionVisitor ev) {
 		super(ev);
@@ -86,6 +87,14 @@ public abstract class Function extends TSObject {
 				.map(key->key+": "+properties.get(key).toString())
 				.collect(Collectors.joining(", ")) + " }";
 		return result;
+	}
+
+	public boolean isArrowFunction() {
+		return isArrowFunction;
+	}
+
+	public void setArrowFunction(boolean isArrowFunction) {
+		this.isArrowFunction = isArrowFunction;
 	}
 
 }

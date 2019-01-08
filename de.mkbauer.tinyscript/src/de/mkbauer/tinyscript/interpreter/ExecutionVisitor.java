@@ -192,8 +192,9 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		case TsPackage.FOR_STATEMENT:
     		return caseForStatement((ForStatement) object);
 		case TsPackage.FUNCTION_DEFINITION:
+			return caseFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.ARROW_FUNCTION:
-    		return caseFunctionDefinition((FunctionDefinition) object);
+			return caseArrowFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.RETURN_STATEMENT:
     		return caseReturnStatement((ReturnStatement) object);
 		case TsPackage.GROUPING_EXPRESSION:
@@ -246,7 +247,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	LexicalEnvironment env = getLexcialEnvironment(object.getGlobal());
 		for (TSValue function : env.getFunctions()) {	
 			// Create a variable in the current context pointing to each function object
-			String functionName = ((InterpretedFunction) function.asObject()).getName();
+			String functionName = ((Function) function.asObject()).getName();
 			if (!currentContext.contains(functionName))
 				currentContext.create(functionName);
 			currentContext.store(functionName, function);
@@ -294,6 +295,16 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	function.setAst(object);
     	return new TSValue(function);
     }
+    
+    // @Override 
+    public TSValue caseArrowFunctionDefinition(FunctionDefinition object) {
+    	InterpretedFunction function = new InterpretedFunction(this);
+    	function.setArrowFunction(true);
+    	function.setOuterContext(currentContext);
+    	function.setAst(object);
+    	return new TSValue(function);
+    }
+    
     
     // @Override
     public TSValue caseVariableStatement(VariableStatement object) {
@@ -644,7 +655,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     	try {
     		if (expr.isThis()) {
     			TSObject thisRef = currentContext.getThisRef();
-    			// 'this" behaves specified in Javascript strict mode.
+    			// 'this" behaves as specified in Javascript strict mode.
     			if (thisRef != null)
     				return new TSValue(thisRef);
     			else
@@ -812,7 +823,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 			// Hoist function declarations
 			for (TSValue function : env.getFunctions()) {	
 				// Create a variable in the current context pointing to each function object
-				String functionName = ((InterpretedFunction) function.asObject()).getName();
+				String functionName = ((Function) function.asObject()).getName();
 				if (!currentContext.contains(functionName))
 					currentContext.create(functionName);
 				currentContext.store(functionName, function);

@@ -54,11 +54,11 @@ AssignmentExpression returns Expression:
 
 ArrowFunctionDefinition returns FunctionDefinition:
 	{ArrowFunction}
-	( (params+=Identifier) | ('(' params += Identifier? ')') )  '=>' (block=ArrowFunctionBlock /* | => (code=Block) */ )
+	( (params+=Identifier) | ( '(' params += Identifier? (',' params += Identifier)* ')') )  '=>' block=ArrowFunctionBlock 
 ;
 
 ArrowFunctionBlock returns Block:
-	statements += ExpressionStatementWithoutSemicolon
+	statements += ExpressionStatementWithoutSemicolon | => '{' (statements += Statement)* '}'
 ;
 
 ExpressionStatementWithoutSemicolon returns ExpressionStatement:
