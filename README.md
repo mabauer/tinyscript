@@ -113,6 +113,44 @@ I've included some very simple measurement strategies (execution time (*time*), 
 You can experiment with these features in the demo web app. You could use the last program in the *Examples* drop down menu for this purpose or you could compute the fibonacci numbers > 27. In the demo web app I've picked rather large limits because I wanted to check if my implementation is robust/scalable.  
 
 
+Setup
+-----
+
+When you're done with playing around with the online demo and want to istall your own version of *tinyscript* or start hacking on it, here are a few steps to get started. As *xtext* is a part of the Eclipse project, it is best developed with Eclipse. As of 2018, the current version is developed using *Eclipse Photon* and xtext 2.14.0. The project can be build using *Maven*. *tinyscript* consists of a number of seperate projects:
+
+- The *tinyscript* core language in `de.mkbauer.tinyscript` and the corresponding plugins for an Eclipse editor in `de.mkbauer.tinyscript.ide`, `de.mkbauer.tinyscript.ui` and some Eclipse related helper projects in `de.mkbauer.tinyscript.sdk` and `de.mkbauer.tinyscript.updatesite`
+
+- The *tinyscript* interpreter application in `de.mkbauer.tinyscript.repl` which depends on the core language. This application can be used in an intercative mode (*REPL*) or it can execute *tinyscript* files.
+
+- The *tinyscript* web demo in `de.mkbauer.tinyscript.webdemo`, also depending on the core language.
+
+To build:
+
+- Build and install the core language in the top level project first:
+
+		mvn clean install
+
+- Then build and package the other projects (interpreter appication and webdemo). This will create the *fat jars* for both applications (see `target` folders).
+
+		cd de.mkbauer.tinyscript.repl
+		mvn clean package
+		cd ..
+	
+		cd de.mkbauer.tinyscript.webdemo
+		mvn clean package
+		cd ..
+
+To run:
+
+- The interpreter:
+
+		java -jar de.mkbauer.tinyscript.repl-<version>.jar example.ts
+
+- The webdemo as a *Spring Boot* application:
+
+		java -jar de.mkbauer.tinyscript.webdemo-<version>.jar
+
+
 License
 -------
 
@@ -126,7 +164,7 @@ Open isues, ideas to implement
 
 As of 2018, if I had some time, I'd like to work on the following topics:
 
-- Update the project to a newer version of Eclipse and Xtext. I fear that this would mean quite a bit of work, but it would allow for a couple of cool features (language server support for Visual Studio code).
+- ~~Update the project to a newer version of Eclipse and Xtext~~. I fear that this would mean quite a bit of work, but it would allow for a couple of cool features (such as language server support for Visual Studio Code).
 
 - Improve the documentation.
 

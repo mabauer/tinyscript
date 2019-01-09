@@ -6,7 +6,7 @@ FROM java:8
 VOLUME /tmp
 
 # Add fat jar
-ADD target/tinyscript-webdemo-0.0.1-SNAPSHOT.jar app.jar
+ADD target/tinyscript-webdemo-0.9.0-SNAPSHOT.jar app.jar
 RUN bash -c 'touch /app.jar'
 
 # Run the app using the /dev/urandom-hack to prevent long start-up times

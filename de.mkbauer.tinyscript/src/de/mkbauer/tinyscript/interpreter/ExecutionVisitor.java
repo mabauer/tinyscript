@@ -194,7 +194,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		case TsPackage.FUNCTION_DEFINITION:
 			return caseFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.ARROW_FUNCTION:
-			return caseArrowFunctionDefinition((FunctionDefinition) object);
+			return caseArrowFunction((FunctionDefinition) object);
 		case TsPackage.RETURN_STATEMENT:
     		return caseReturnStatement((ReturnStatement) object);
 		case TsPackage.GROUPING_EXPRESSION:
@@ -297,7 +297,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
     }
     
     // @Override 
-    public TSValue caseArrowFunctionDefinition(FunctionDefinition object) {
+    public TSValue caseArrowFunction(FunctionDefinition object) {
     	InterpretedFunction function = new InterpretedFunction(this);
     	function.setArrowFunction(true);
     	function.setOuterContext(currentContext);

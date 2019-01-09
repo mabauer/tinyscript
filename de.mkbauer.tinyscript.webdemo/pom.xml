@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>tinyscript-webdemo</artifactId>
+	<groupId>de.mkbauer.tinyscript</groupId>
+	<name>Tinyscript Webdemo</name>
+	<description>Webdemo for Tinyscript</description>
+	<version>0.9.0-SNAPSHOT</version>
+
 	<parent>
 		<!-- Your own application should inherit from spring-boot-starter-parent -->
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>1.0.2.RELEASE</version>
+		<relativePath></relativePath>
 	</parent>
-	<artifactId>tinyscript-webdemo</artifactId>
-	<groupId>de.mkbauer.tinyscript</groupId>
-	<name>Tinyscript Webdemo</name>
-	<description>Webdemo for Tinyscript</description>
-	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<main.basedir>${basedir}/../..</main.basedir>
 		<java.version>1.8</java.version>
@@ -51,7 +54,7 @@
 		<dependency>
 			<groupId>de.mkbauer.tinyscript</groupId>
 			<artifactId>de.mkbauer.tinyscript</artifactId>
-			<version>0.0.1-snapshot</version>
+			<version>0.9.0-snapshot</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.xtext</groupId>
