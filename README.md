@@ -150,6 +150,13 @@ To run:
 
 		java -jar de.mkbauer.tinyscript.webdemo-<version>.jar
 
+As an alternative, you can deploy *tinyscript* via docker
+
+- Pull and run the image from *Docker Hub*:
+
+		docker pull mkbauer/tinyscript:latest
+		docker run -p 8080:8080 mkbauer/tinyscript:lastest
+
 
 License
 -------
