@@ -34,13 +34,13 @@ You can play with it online in your browser [here](https://home.mkbauer.de/tinys
 
 * [Control-flow structures](de.mkbauer.tinyscript.webdemo/src/main/resources/public/primes.ts): `for`- and `if`-statements
 
-* [Functions](de.mkbauer.tinyscript.webdemo/src/main/resources/public/fibonacci.ts), including [recursion](de.mkbauer.tinyscript.webdemo/src/main/resources/public/fibonacci.ts) and *arrow* functions
+* [Functions](de.mkbauer.tinyscript.webdemo/src/main/resources/public/fibonacci.ts), including [recursion](de.mkbauer.tinyscript.webdemo/src/main/resources/public/fibonacci_recursive.ts) and *arrow* functions
 
 * [Arrays](de.mkbauer.tinyscript.webdemo/src/main/resources/public/arrays.ts)
 
-* [Closures](de.mkbauer.tinyscript.webdemo/src/main/resources/public/arrays.ts)
+* [Closures](de.mkbauer.tinyscript.webdemo/src/main/resources/public/closures.ts)
 
-* [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/src/main/resources/public/arrays.ts)
+* [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/src/main/resources/public/oo.ts)
 
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 
@@ -55,7 +55,7 @@ What did I do?
 
 -  Definition of *tinyscript*'s grammar. Immplementation of the corresponding parser including an *abstract syntax tree (AST)* using *Xtext* (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript`). 
 
-- Design and impementation of a „high-level“ interpreter in Java (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript.interpreter`. Specifically have a look at class `ExecutionVisitor`) and *tinyscript*'s runtime (package `tinyscript.runtime`).
+- Design and impementation of a „high-level“ interpreter in Java (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript.interpreter`). Specifically have a look at class `ExecutionVisitor`and *tinyscript*'s runtime (package `tinyscript.runtime`).
 
 - Integration of *tinyscript*'s interpreter into a demo web app ((project [`de.mkbauer.tinyscript.webdemo`](de.mkbauer.tinyscript.webdemo)) based on *SpringBoot*. That's the same [web app](https://home.mkbauer.de/tinyscript) I've mentioned above when introducing *tinyscript*'s language features.
 
@@ -80,7 +80,7 @@ Examples:
 - Elements can be appended to arrays using the operator `+`: : `var arr = [„hallo"]; arr = arr + „welt“; -> arr = [„hallo“, „welt“];`
 - There are two types of `for`-loops: a numeric `for`-loop (inspired by *Lua*) and one to iterate over arrays.
 - There is no support for *regular expressions*.
-- *tinyscript* supports *arrow* functions. This will be part of Javascript starting with Ecmascript 6 :-)
+- *tinyscript* supports *arrow* functions. These are part of Javascript starting with Ecmascript 6 :-)
 
 Apart form that, *tinyscript* behaves like Javascript in *strict mode*, i.e. all variables have to be declared before they can be used.
 
