@@ -17,27 +17,13 @@ public abstract class Function extends TSObject {
 		this.ev = ev;
 		
 		TSObject proto = null;
-		// Object Object is a function as well, so we can get it's prototype and use it.
-		TSObject objectobject = ev.getGlobalContext().get("Object").asObject();
+		// Object is a function as well, so we can get it's prototype and use it.
+		Function objectobject = (Function) ev.getGlobalContext().get("Object").asObject();
 		if (objectobject != null) {
 			proto = objectobject.getPrototype();
 			setPrototype(proto);
 		}
-		else {
-			// We don't have the Object Object yet, so we are Object Object (hopefully!)
-			// ... and we have to create the prototype for all functions
-			proto = new TSObject(ev, ev.getDefaultPrototype());
-			// Property: __proto__
-			setPrototype(proto);
-			// Store our unfinished Object Object into the global context, because
-			// other functions that we will add to our prototype next will need it.
-			ev.getGlobalContext().store("Object", new TSValue(this));
-			TSObject.defineDefaultProperty(proto, "toString", new ToString(ev));
-			TSObject.defineDefaultProperty(proto, "call", new Call(ev));
-			TSObject.defineDefaultProperty(proto, "length", new TSValue(getLength()));
-			// TODO: Remove, just for testing
-			TSObject.defineDefaultProperty(proto, "isCallable", new TSValue(true));
-		}
+		
 	}
 	
 	public void setPrototypeProperty(Object prototype) {
@@ -51,12 +37,12 @@ public abstract class Function extends TSObject {
 	public boolean hasInstance(TSValue value) {
 		if (!value.isObject())
 			return false;
-		TSObject object = value.asObject();
+		TSObject object = null;
 		TSValue prototypePropertyAsValue = getPrototypeProperty();
 		if (!prototypePropertyAsValue.isObject())
 			throw new TinyscriptTypeError("Constructor " + getName() + " does not have a prototype property");
 		TSObject prototypeProperty = prototypePropertyAsValue.asObject();
-		for (object = object.getPrototype(); object != null; object = object.getPrototype()) {
+		for (object = value.asObject() ; object != null; object = object.getPrototype()) {
 			if (object == prototypeProperty) 
 				return true;
 		}

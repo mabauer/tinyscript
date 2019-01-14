@@ -58,7 +58,7 @@ import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
-import de.mkbauer.tinyscript.runtime.object.ObjectObject;
+import de.mkbauer.tinyscript.runtime.object.ObjectConstructor;
 import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 import de.mkbauer.tinyscript.runtime.system.SystemObject;
 
@@ -117,13 +117,15 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		globalObject.setPrototype(objectPrototype);
 
 		// Caveat: Object needs to be initialized first!
-		TSObject.defineDefaultProperty(globalObject, "Object", new ObjectObject(this));
+		// TSObject.defineDefaultProperty(globalObject, "Object", new ObjectObject(this));
+		ObjectConstructor objectconstructor = new ObjectConstructor(this);
+		objectconstructor.initialize();
 
 		TSObject.defineDefaultProperty(globalObject, "Function", new FunctionConstructor(this));
 		TSObject.defineDefaultProperty(globalObject, "String", new StringConstructor(this));
 		TSObject.defineDefaultProperty(globalObject, "Array", new ArrayConstructor(this));
+
 		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
-		
 		TSObject.defineDefaultProperty(globalObject, "System", new SystemObject(this));
 		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
 		
@@ -154,7 +156,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		return TSValue.UNDEFINED;
 	}
 	
-	protected GlobalExecutionContext getGlobalContext() {
+	public GlobalExecutionContext getGlobalContext() {
 		return globalContext;
 	}
 

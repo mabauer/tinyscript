@@ -45,6 +45,9 @@ public class InterpretedFunction extends Function {
 			monitor.checkMXCpuTimeAndMemory();
 
 		Block block = getBlock();
+		if (block == null) 
+			return TSValue.UNDEFINED;
+			
 		TSValue result = null;
 		
 		// Create a new execution context

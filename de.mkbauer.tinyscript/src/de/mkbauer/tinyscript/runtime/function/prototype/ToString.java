@@ -18,16 +18,23 @@ public class ToString extends BuiltinFunction {
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self,
 			List<TSValue> args) {
-		if (!(self instanceof Function))
-			throw new TinyscriptTypeError("Function Function.prototype.toString only works for Function objects.");
+		/* if (!(self instanceof Function)) {
+			throw new TinyscriptTypeError("Function Function.prototype.toString only works for Function objects");
+		}
+		*/
 		String result;
 		if (self instanceof InterpretedFunction) {
 			InterpretedFunction function = (InterpretedFunction) self;
 			result = function.getCodeAsString();
 		}
 		else {
-			Function function = (Function) self;
-			result = "function " + function.getName() + "() + { // builtin }";
+			if (self instanceof Function) {
+				Function function = (Function) self;
+				result = "function " + function.getName() + "() { // builtin }";
+			}
+			else {
+				result = "function " + "() { // builtin }";
+			}
 		}
 		return new TSValue(result);
 	}

@@ -21,7 +21,6 @@ public class TSObject {
 	protected TSObject(ExecutionVisitor ev) {
 		this.ev = ev;
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ResourceMonitor monitor = ev.getResourceMonitor();
 		ev.recordObjectCreation(this);
 	}
 	

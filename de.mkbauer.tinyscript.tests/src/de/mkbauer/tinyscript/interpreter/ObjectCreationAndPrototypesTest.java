@@ -46,8 +46,9 @@ public class ObjectCreationAndPrototypesTest extends
 	public void testInstanceOfForBuiltins() {
 		executeScriptFromString("var obj = {}; assert (obj instanceof Object);");
 		executeScriptFromString("function f(x) {return x; } assert (f instanceof Function);");
-		executeScriptFromString("assert (print instanceof Function);");
-		executeScriptFromString("var obj = {}; assert (obj.toString instanceof Function);");
+		executeScriptFromString("assert (print instanceof Function);"); 
+		executeScriptFromString("var obj = {}; assert (obj.toString instanceof Function);"); 
+		executeScriptFromString("var f = function (x){return x*x;}; assert (f.toString instanceof Function);");
 	}
 
 }

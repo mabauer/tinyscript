@@ -6,6 +6,7 @@ public abstract class BuiltinFunction extends Function {
 	
 	public BuiltinFunction(ExecutionVisitor ev) {
 		super(ev);
+		
 	}
 
 	

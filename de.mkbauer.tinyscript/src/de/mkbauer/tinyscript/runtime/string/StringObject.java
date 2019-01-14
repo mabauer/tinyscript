@@ -26,11 +26,6 @@ public class StringObject extends BuiltinType {
 		defineDefaultProperty(this,"length", new TSValue(getLength()));
 	}
 	
-	private void defineStringPrototype() {
-		// TODO Add other String methods
-		defineDefaultProperty(getPrototype(), "indexOf", new IndexOf(ev));
-	}
-	
 	public int getLength() {
 		return value.length();
 	}
