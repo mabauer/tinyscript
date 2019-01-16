@@ -12,6 +12,8 @@ function String() {
 
 var Math;
 
+var fs;
+
 var System; 
 
 function print() {

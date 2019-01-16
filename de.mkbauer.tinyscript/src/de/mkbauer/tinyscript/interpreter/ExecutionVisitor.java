@@ -56,6 +56,7 @@ import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.runtime.fs.FSObject;
 import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
 import de.mkbauer.tinyscript.runtime.object.ObjectConstructor;
@@ -126,6 +127,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		TSObject.defineDefaultProperty(globalObject, "Array", new ArrayConstructor(this));
 
 		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
+		TSObject.defineDefaultProperty(globalObject, "fs", new FSObject(this));		
 		TSObject.defineDefaultProperty(globalObject, "System", new SystemObject(this));
 		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
 		
