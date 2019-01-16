@@ -45,7 +45,7 @@ public class TinyscriptRuntimeException extends RuntimeException {
 		String result = "";
 		if (tsStacktrace != null) {
 			for (TSStacktraceElement elem: tsStacktrace) {
-				result = result + System.lineSeparator() + "at " + elem.toString();
+				result = result + "    at " + elem.toString() + System.lineSeparator();
 			}
 		}
 		return result;

@@ -89,8 +89,8 @@ class TinyscriptREPLMain  {
  			TSValue result = execute(ast);
  		}
  		catch (TinyscriptRuntimeException e) {
-			System.err.println(e.getClass().getSimpleName() + ": " + e.getMessage() 
-				+ " at " + fileName + ":" + e.getAffectedLine());	
+			System.err.println(e.getClass().getSimpleName() + ": " + e.getMessage()); 
+			System.err.println(e.getTinyscriptStacktraceAsString());
  		}
 		// System.out.println(result.asString());
 	}

@@ -264,7 +264,7 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 		catch (TinyscriptRuntimeException e) {
 			if (resourceMonitor != null)
 				resourceMonitor.stop();
-			if (e.getStackTrace() == null)
+			if (e.getTinyscriptStacktrace() == null || (e.getTinyscriptStacktrace().length == 0))
 				attachStackTrace(e);
 			throw e;
 		}

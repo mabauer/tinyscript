@@ -8,11 +8,11 @@ public abstract class BuiltinFunction extends Function {
 		super(ev);
 		
 	}
-
 	
 	public void checkArgs(List <TSValue> args) {
 		if (args.size() < getLength()) {
-			throw new TinyscriptArgumentError("Builtin function " + getName() + " requires at least " + getLength() + " arguments.");
+			throw new TinyscriptArgumentError("Builtin function " + getName() + " requires at least " + getLength() + " arguments.", 
+					ev.getCurrentContext().currentExpression);
 		}
 	}
 
