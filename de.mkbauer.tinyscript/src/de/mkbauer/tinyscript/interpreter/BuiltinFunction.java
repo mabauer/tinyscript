@@ -15,5 +15,12 @@ public abstract class BuiltinFunction extends Function {
 					ev.getCurrentContext().currentExpression);
 		}
 	}
+	
+	public void enforceSandboxing() {
+		if (ev.isSandboxed()) {
+			throw new TinyscriptUnsupportedOperationError("Builtin function " + getName() + " is not available when running sandboxed.",
+					ev.getCurrentContext().currentExpression);
+		}
+	}
 
 }

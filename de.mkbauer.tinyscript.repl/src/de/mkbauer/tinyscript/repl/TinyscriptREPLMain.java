@@ -77,6 +77,7 @@ class TinyscriptREPLMain  {
 		resourceSet = injector.getInstance(XtextResourceSet.class);
 		visitor = new ExecutionVisitor();
 		
+		visitor.setSandboxed(false);
 		visitor.defineStdOut(System.out);
     }  
 	

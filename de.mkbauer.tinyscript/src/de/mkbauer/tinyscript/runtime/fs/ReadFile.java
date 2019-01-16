@@ -26,6 +26,10 @@ public class ReadFile extends BuiltinFunction {
 			checkArgs(args);
 			String result = null;
 			String fileName = args.get(0).asString();
+			
+			// Make sure we do not allow file access in sandboxed mode
+			enforceSandboxing();
+			
 			try {
 				Charset cs = Charset.defaultCharset();
 				result = readFile(fileName, cs);

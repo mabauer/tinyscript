@@ -23,6 +23,10 @@ public class WriteFile extends BuiltinFunction {
 			checkArgs(args);
 			String fileName = args.get(0).asString();
 			String contents = args.get(1).asString();
+			
+			// Make sure we do not allow file access in sandboxed mode
+			enforceSandboxing();
+						
 			try {
 				try (
 					PrintStream out = new PrintStream(new FileOutputStream(fileName))) {

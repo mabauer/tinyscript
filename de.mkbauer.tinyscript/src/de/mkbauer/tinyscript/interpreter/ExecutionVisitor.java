@@ -82,6 +82,8 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	private OutputStream stdOut; 
 	
+	private boolean sandboxed = true; 
+	
 	protected int callDepth;
 	private ResourceMonitor resourceMonitor;
 	
@@ -141,6 +143,14 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	
 	public OutputStream getStdOut() {
 		return stdOut;
+	}
+
+	public boolean isSandboxed() {
+		return sandboxed;
+	}
+
+	public void setSandboxed(boolean sandboxed) {
+		this.sandboxed = sandboxed;
 	}
 
 	public TSObject getDefaultPrototype() {
