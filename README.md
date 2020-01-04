@@ -24,7 +24,7 @@ What is tinyscript?
 	print(fibonacci(50)); // 20365011074
 
 
-You can play with it online in your browser [here](https://home.mkbauer.de/tinyscript). 
+You can play with it online in your browser [here](https://apps.mkbauer.de/tinyscript). 
 
 *tinyscript* offers quite a complete set of interesting language features:
 
@@ -57,7 +57,7 @@ What did I do?
 
 - Design and impementation of a „high-level“ interpreter in Java (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript.interpreter`). Specifically have a look at class `ExecutionVisitor`and *tinyscript*'s runtime (package `tinyscript.runtime`).
 
-- Integration of *tinyscript*'s interpreter into a demo web app ((project [`de.mkbauer.tinyscript.webdemo`](de.mkbauer.tinyscript.webdemo)) based on *SpringBoot*. That's the same [web app](https://home.mkbauer.de/tinyscript) I've mentioned above when introducing *tinyscript*'s language features.
+- Integration of *tinyscript*'s interpreter into a demo web app ((project [`de.mkbauer.tinyscript.webdemo`](de.mkbauer.tinyscript.webdemo)) based on *SpringBoot*. That's the same [web app](https://apps.mkbauer.de/tinyscript) I've mentioned above when introducing *tinyscript*'s language features.
 
 - With *Xtext* it's easy to provide an editor plugin for *Eclipse* (project [`de.mkbauer.tinyscript.ui`](de.mkbauer.tinyscript.ui)).
 
