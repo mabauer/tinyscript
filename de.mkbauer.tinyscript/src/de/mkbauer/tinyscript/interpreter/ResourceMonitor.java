@@ -24,6 +24,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	private long totalMemory = 0;
 	
 	private ThreadMXBean tBean = null;
+	// TODO: Restricted API
 	private com.sun.management.ThreadMXBean sunBean = null; 
 	private long threadId;
 	private long startMxCpuTime;

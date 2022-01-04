@@ -10,7 +10,7 @@
 		<relativePath>../pom.xml</relativePath>
 		<groupId>de.mkbauer.tinyscript</groupId>
 		<artifactId>parent</artifactId>
-		<version>0.9.0-SNAPSHOT</version>
+		<version>0.10.0-SNAPSHOT</version>
 	</parent>
 
 	<build>
