@@ -8,7 +8,7 @@ Set version number correctly e.g. *0.9.0-SNAPSHOT*
 
 1. Define the version number for core project -- this will update the POMs of the parent project and the child projects as well as the OSGi plugin metadata correctly
 
-        mvn mvn tycho-versions:set-version -DnewVersion=0.9.0-SNAPSHOT
+        mvn tycho-versions:set-version -DnewVersion=0.9.0-SNAPSHOT
         mvn tycho-versions:update-eclipse-metadata
 
 2. Build and install the core project to the maven repo
@@ -53,8 +53,8 @@ Publish docker images
 
         cd de.mkbauer.tinyscript.webdemo
 
-        docker docker build mkbauer/tinyscript:0.9.0rc1 .
-        docker run -p 8080:8080 mkbauer/tinyscript:0.9.0rc1 .
+        docker docker build -t mkbauer/tinyscript:0.9.0rc1 .
+        docker run -p 8080:8080 mkbauer/tinyscript:0.9.0rc1
 
 2. Publish it on *Docker Hub*
 

@@ -44,7 +44,7 @@ You can play with it online in your browser [here](https://apps.mkbauer.de/tinys
 
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 
-- I believe every software engineer should and some point design and implement his own language just for the fun of it. I wanted to go a bit further than the usual toy examples taught in compiler construction classes, so I came up with *tinyscript*.
+- I believe every software engineer should at some point design and implement his own language just for the fun of it. I wanted to go a bit further than the usual toy examples taught in compiler construction classes, so I came up with *tinyscript*.
 
 - At that time in my office we were looking into embedding a scripting language into our SaaS business software offering. We were looking for a way to allow for customor / tenant specific business logic that could be run on both our backend servers (mainly written in Java) and in client apps (e.g. written in C# and Xamarin). For such a use case, some kind of sandboxing and resource monitoring is necessary to avoid that ill-behaving, tenant specific code can harm other tenants or the SaaS plattform as a whole. For that purpose we needed a test "vehicle".   
 
@@ -77,7 +77,7 @@ Examples:
 - The rules for ending statements with `;` are roughly the same as in Java.
 - Blocks create real *scopes*, they limit the visibility and validity of local variables.
 - Control structures always need blocks: `if (cond) { stmts; } else { stmts; }`
-- Elements can be appended to arrays using the operator `+`: : `var arr = [„hallo"]; arr = arr + „welt“; -> arr = [„hallo“, „welt“];`
+- Elements can be appended to arrays using the operator `+`: `var arr = [„hallo"]; arr = arr + „welt“; -> arr = [„hallo“, „welt“];`
 - There are two types of `for`-loops: a numeric `for`-loop (inspired by *Lua*) and one to iterate over arrays.
 - There is no support for *regular expressions*.
 - *tinyscript* supports *arrow* functions. These are part of Javascript starting with Ecmascript 6 :-)
@@ -116,7 +116,7 @@ You can experiment with these features in the demo web app. You could use the la
 Setup
 -----
 
-When you're done with playing around with the online demo and want to istall your own version of *tinyscript* or start hacking on it, here are a few steps to get started. As *xtext* is a part of the Eclipse project, it is best developed with Eclipse. As of 2018, the current version is developed using *Eclipse Photon* and xtext 2.14.0. The project can be build using *Maven*. *tinyscript* consists of a number of seperate projects:
+When you're done with playing around with the online demo and want to istall your own version of *tinyscript* or start hacking on it, here are a few steps to get started. As *xtext* is a part of the Eclipse project, it is best developed with Eclipse. As of 2021, the current version is developed using *Eclipse 2021-12* and xtext 2.25.0. The project can be build using *Maven*. *tinyscript* consists of a number of seperate projects:
 
 - The *tinyscript* core language in `de.mkbauer.tinyscript` and the corresponding plugins for an Eclipse editor in `de.mkbauer.tinyscript.ide`, `de.mkbauer.tinyscript.ui` and some Eclipse related helper projects in `de.mkbauer.tinyscript.sdk` and `de.mkbauer.tinyscript.updatesite`
 
@@ -155,7 +155,7 @@ As an alternative, you can deploy *tinyscript* via docker
 - Pull and run the image from *Docker Hub*:
 
 		docker pull mkbauer/tinyscript:latest
-		docker run -p 8080:8080 mkbauer/tinyscript:lastest
+		docker run -p 8080:8080 mkbauer/tinyscript:latest
 
 
 License
