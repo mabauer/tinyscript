@@ -23,8 +23,9 @@ Require-Bundle: org.eclipse.xtext;visibility:=reexport,
  org.eclipse.equinox.common;bundle-version="3.6.200",
  org.eclipse.xtend.lib;bundle-version="2.14.0"
 Import-Package: de.mkbauer.tinyscript,
- org.apache.log4j,
- org.eclipse.xtext.xbase.lib
+ org.eclipse.xtext.xbase.lib,
+ org.slf4j;version="1.7.30",
+ org.apache.log4j
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Export-Package: de.mkbauer.tinyscript,
  de.mkbauer.tinyscript.formatting,

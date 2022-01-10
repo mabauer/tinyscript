@@ -5,7 +5,8 @@ import java.lang.management.ThreadMXBean;
 
 import de.mkbauer.util.WeakHashMapWithCallBack;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListener<Integer> {
 	
@@ -30,7 +31,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	private long startMxCpuTime;
 	private long startMxMAllocations;
 	
-	private final static Logger logger = Logger.getLogger(ResourceMonitor.class);
+	private final static Logger logger = LoggerFactory.getLogger(ResourceMonitor.class);
 	
 	public ResourceMonitor() {
 		resourceLimits = ResourceLimits.UNLIMITED;

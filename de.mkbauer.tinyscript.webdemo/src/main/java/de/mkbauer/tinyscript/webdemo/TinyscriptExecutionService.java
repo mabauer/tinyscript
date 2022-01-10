@@ -6,7 +6,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -45,7 +46,7 @@ public class TinyscriptExecutionService {
 	
 	public static final int MAX_OUTPUT_SIZE = 1024*8;
 	
-	private static final Logger logger = Logger.getLogger(TinyscriptExecutionService.class) ;
+	private static final Logger logger = LoggerFactory.getLogger(TinyscriptExecutionService.class);
 	
 	private Injector injector;
 	
