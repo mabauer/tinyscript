@@ -21,7 +21,7 @@ Require-Bundle: de.mkbauer.tinyscript;visibility:=reexport,
  de.mkbauer.tinyscript.ide
 Import-Package: org.apache.log4j,
  org.eclipse.xtext.xbase.lib
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-RequiredExecutionEnvironment: JavaSE-11
 Export-Package: de.mkbauer.tinyscript.ui.contentassist,
  de.mkbauer.tinyscript.ui,
  de.mkbauer.tinyscript.ui.internal,

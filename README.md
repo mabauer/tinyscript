@@ -88,7 +88,7 @@ Apart form that, *tinyscript* behaves like Javascript in *strict mode*, i.e. all
 Performance
 -----------
 
-The runtime performance of *tinyscript*'s interpreter is rather poor, especially when compared with the highly-optimized Javascript engines. Usually,  *tinyscript* is slower by a factor 10 (*node.js*, *V8*), or factor 5-7 (*Nashorn*) langsamer. 
+The runtime performance of *tinyscript*'s interpreter is rather poor, especially when compared with the highly-optimized Javascript engines. Usually,  *tinyscript* is slower by a factor 10 (*node.js*, *V8*), or factor 5-7 (*Nashorn*). 
 
 But: *tinyscript* is often twice as fast as the Java based Javascript engine [dynJS](http://dynjs.org/). :-)
 
@@ -116,9 +116,9 @@ You can experiment with these features in the demo web app. You could use the la
 Setup
 -----
 
-When you're done with playing around with the online demo and want to istall your own version of *tinyscript* or start hacking on it, here are a few steps to get started. As *xtext* is a part of the Eclipse project, it is best developed with Eclipse. As of 2021, the current version is developed using *Eclipse 2021-12* and xtext 2.25.0. The project can be build using *Maven*. *tinyscript* consists of a number of seperate projects:
+When you're done with playing around with the online demo and want to install your own version of *tinyscript* or start hacking on it, here are a few steps to get started. As *xtext* is a part of the Eclipse project, it is best developed with Eclipse. As of 2021, the current version is developed using *Java 11*, *Eclipse 2021-12* and *xtext 2.25.0*. The project can be build using *Maven*. *tinyscript* consists of a number of seperate projects:
 
-- The *tinyscript* core language in `de.mkbauer.tinyscript` and the corresponding plugins for an Eclipse editor in `de.mkbauer.tinyscript.ide`, `de.mkbauer.tinyscript.ui` and some Eclipse related helper projects in `de.mkbauer.tinyscript.sdk` and `de.mkbauer.tinyscript.updatesite`
+- The *tinyscript* core language in `de.mkbauer.tinyscript` and the corresponding plugins for an Eclipse editor in `de.mkbauer.tinyscript.ide`, `de.mkbauer.tinyscript.ui` and some Eclipse related helper projects in `de.mkbauer.tinyscript.target`, `de.mkbauer.tinyscript.sdk` and `de.mkbauer.tinyscript.updatesite`
 
 - The *tinyscript* interpreter application in `de.mkbauer.tinyscript.repl` which depends on the core language. This application can be used in an intercative mode (*REPL*) or it can execute *tinyscript* files.
 
@@ -161,7 +161,7 @@ As an alternative, you can deploy *tinyscript* via docker
 License
 -------
 
-I did write the code on my own, mostly in my spare time around the turn of the year 2105/2016. Initially, it was intended as a test bed for embedding a scripting language into our SaaS offering at work. However, since we decided to go for another approach, I decided to put the project on github. Maybe it is of interest to somebody or it can serve as an inspiration, if you want to design and implement your own programming language. It is a lot of fun!
+I did write the code on my own, mostly in my spare time around the turn of the year 2015/2016. Initially, it was intended as a test bed for embedding a scripting language into our SaaS offering at work. However, since we decided to go for another approach, I decided to put the project on github. Maybe it is of interest to somebody or it can serve as an inspiration, if you want to design and implement your own programming language. It is a lot of fun!
 
 I decided to release the code under the GPL license. In case you want to do something with the code that GPL does not allow, feel free to contact me.
 
@@ -171,7 +171,7 @@ Open isues, ideas to implement
 
 As of 2018, if I had some time, I'd like to work on the following topics:
 
-- ~~Update the project to a newer version of Eclipse and Xtext~~. I fear that this would mean quite a bit of work, but it would allow for a couple of cool features (such as language server support for Visual Studio Code).
+- ~~Update the project to a newer version of Eclipse and Xtext. I fear that this would mean quite a bit of work, but it would allow for a couple of cool features~~ (such as language server support for Visual Studio Code).
 
 - Improve the documentation.
 
