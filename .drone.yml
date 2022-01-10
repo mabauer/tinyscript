@@ -1,0 +1,24 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+  - name: build and test core language
+    image: maven:3-jdk-11
+    commands:
+      - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+      - mvn test -B
+
+  - name: build repl
+    image: maven:3-jdk-11
+    commands:
+      - cd de.mkbauer.tinyscript.repl
+      - mvn package -Dmaven.javadoc.skip=true -B -V
+      - cd .. 
+
+  - name: build webdemo
+    image: maven:3-jdk-11
+    commands:
+      - cd de.mkbauer.tinyscript.webdemo
+      - mvn package -Dmaven.javadoc.skip=true -B -V
+      - cd .. 
