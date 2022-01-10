@@ -67,12 +67,12 @@ public class TinyscriptLabelProvider extends org.eclipse.xtext.ui.label.DefaultE
 	}
 	
 	public String text(final NumberLiteral ele) {
-		return new Double(ele.getValue()).toString();
+		return Double.valueOf(ele.getValue()).toString();
 	}
 	
 	public String text(final EObject ele) {
 		Class<? extends EObject> _class = ele.getClass();
-		String simpleName = ele.getClass().getSimpleName().replace("Impl", "");
+		String simpleName = _class.getSimpleName().replace("Impl", "");
 		return simpleName;
 	}
 

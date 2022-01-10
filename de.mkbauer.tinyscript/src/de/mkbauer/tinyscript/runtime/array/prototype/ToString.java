@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
@@ -24,10 +24,10 @@ public class ToString extends BuiltinFunction {
 			throw new TinyscriptTypeError("Function Array.prototype.toString only works for Array objects.");
 		ArrayObject arr = (ArrayObject) self;
 		String result = arr.getItems().stream()
-				.map(item->TSObject.toString(ev, item))
+				.map(item->TSObject.toString(engine, item))
 				.collect(Collectors.joining(", "));
-		ResourceMonitor monitor = ev.getResourceMonitor();
-		ev.recordStringCreation(result);
+		ResourceMonitor monitor = engine.getResourceMonitor();
+		engine.recordStringCreation(result);
 		return new TSValue(result);
 	}
 
@@ -41,8 +41,8 @@ public class ToString extends BuiltinFunction {
 		return 0;
 	}
 
-	public ToString(ExecutionVisitor ev) {
-		super(ev);
+	public ToString(TinyscriptEngine engine) {
+		super(engine);
 	}
 
 }

@@ -1,15 +1,15 @@
 package de.mkbauer.tinyscript.runtime.fs;
 
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 
 public class FSObject extends TSObject {
 
-	public FSObject(ExecutionVisitor ev) {
-		super(ev, ev.getDefaultPrototype());
+	public FSObject(TinyscriptEngine engine) {
+		super(engine, engine.getDefaultPrototype());
 		
-		defineDefaultProperty(this, "readFile", new ReadFile(ev));
-		defineDefaultProperty(this, "writeFile", new WriteFile(ev));
+		defineDefaultProperty(this, "readFile", new ReadFile(engine));
+		defineDefaultProperty(this, "writeFile", new WriteFile(engine));
 	}
 
 }

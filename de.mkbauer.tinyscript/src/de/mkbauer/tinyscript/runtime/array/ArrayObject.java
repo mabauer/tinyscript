@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
@@ -18,8 +18,8 @@ public class ArrayObject extends BuiltinType {
 	private List<TSValue> items;
 	
 	// TODO: Check prototype property -- this should equal [].__proto
-	public ArrayObject(ExecutionVisitor ev) {
-		super(ev);
+	public ArrayObject(TinyscriptEngine engine) {
+		super(engine);
 		items = new ArrayList<TSValue>();
 		// defineDefaultProperty(this, "length", new TSValue(0));
 	}
@@ -112,14 +112,14 @@ public class ArrayObject extends BuiltinType {
 	}
 	
 	public ArrayObject clone() {
-		ArrayObject result = new ArrayObject(ev);
+		ArrayObject result = new ArrayObject(engine);
 		result.items.addAll(items);
 		result.update();
 		return result;
 	}
 	
 	public static ArrayObject concat(ArrayObject arr1, ArrayObject arr2) {
-		ArrayObject result = new ArrayObject(arr1.ev);
+		ArrayObject result = new ArrayObject(arr1.engine);
 		result.items.addAll(arr1.items);
 		result.items.addAll(arr2.items);
 		// TODO: Handle named properties

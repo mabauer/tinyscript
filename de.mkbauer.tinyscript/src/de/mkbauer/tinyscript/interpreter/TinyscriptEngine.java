@@ -69,7 +69,7 @@ import de.mkbauer.tinyscript.runtime.system.SystemObject;
  * @author markus.bauer
  *
  */
-public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
+public class TinyscriptEngine {
 	
 	private ExecutionContext currentContext;
 	private GlobalExecutionContext globalContext;
@@ -87,11 +87,11 @@ public class ExecutionVisitor /* extends TsSwitch<TSValue> */ {
 	protected int callDepth;
 	private ResourceMonitor resourceMonitor;
 	
-	public ExecutionVisitor() {
+	public TinyscriptEngine() {
 		initialize();
 	}
 	
-	public ExecutionVisitor(ResourceMonitor resourceMonitor) {
+	public TinyscriptEngine(ResourceMonitor resourceMonitor) {
 		this.resourceMonitor = resourceMonitor;
 		initialize();
 	}

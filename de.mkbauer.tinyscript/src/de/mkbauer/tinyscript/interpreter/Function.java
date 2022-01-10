@@ -9,16 +9,16 @@ import de.mkbauer.tinyscript.runtime.function.prototype.ToString;
 
 public abstract class Function extends TSObject {
 	
-	protected ExecutionVisitor ev;
+	protected TinyscriptEngine engine;
 	private boolean isArrowFunction = false;
 	
-	public Function(ExecutionVisitor ev) {
-		super(ev);
-		this.ev = ev;
+	public Function(TinyscriptEngine engine) {
+		super(engine);
+		this.engine = engine;
 		
 		TSObject proto = null;
 		// Object is a function as well, so we can get it's prototype and use it.
-		Function objectobject = (Function) ev.getGlobalContext().get("Object").asObject();
+		Function objectobject = (Function) engine.getGlobalContext().get("Object").asObject();
 		if (objectobject != null) {
 			proto = objectobject.getPrototype();
 			setPrototype(proto);

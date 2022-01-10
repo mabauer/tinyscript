@@ -12,28 +12,28 @@ public class TSObject {
 	protected HashMap<String, TSPropertyDescriptor> properties;
 	
 	private TSObject proto = null;
-	protected ExecutionVisitor ev;
+	protected TinyscriptEngine engine;
 	
 	protected TSObject() {
 		properties = new HashMap<String, TSPropertyDescriptor>();
 	}
 	
-	protected TSObject(ExecutionVisitor ev) {
-		this.ev = ev;
+	protected TSObject(TinyscriptEngine engine) {
+		this.engine = engine;
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ev.recordObjectCreation(this);
+		engine.recordObjectCreation(this);
 	}
 	
-	public TSObject(ExecutionVisitor ev, TSObject proto) {
-		this.ev = ev;
+	public TSObject(TinyscriptEngine engine, TSObject proto) {
+		this.engine = engine;
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ev.recordObjectCreation(this);
+		engine.recordObjectCreation(this);
 		if (proto != null)
 			setPrototype(proto);
 	}
 	
 	// TODO Write tests and use it instead of TSValue.asString() where appropriate
-	public static String toString(ExecutionVisitor ev, TSValue value) {
+	public static String toString(TinyscriptEngine engine, TSValue value) {
 		if (value == TSValue.UNDEFINED)
 			return "[object Undefined]";
 		if (value == TSValue.NULL)
@@ -55,7 +55,7 @@ public class TSObject {
 		return value.asString();
 	}
 	
-	public static TSObject toObject(ExecutionVisitor ev, TSValue value) throws TinyscriptTypeError {
+	public static TSObject toObject(TinyscriptEngine engine, TSValue value) throws TinyscriptTypeError {
 		if (value == TSValue.UNDEFINED)  {
 			throw new TinyscriptTypeError("Cannot convert 'undefined' to an object");
 		}
@@ -63,24 +63,24 @@ public class TSObject {
 			throw new TinyscriptTypeError("Cannot convert 'null' to an object");
 		}
 		if (value.isPrimitiveString()) {
-			return new StringObject(ev, value);
+			return new StringObject(engine, value);
 		}
 		if (value.isNumber()) {
 			// TODO Create a NumberObject object
-			TSObject result = new TSObject(ev, ev.getDefaultPrototype()); 
+			TSObject result = new TSObject(engine, engine.getDefaultPrototype()); 
 			result.put("value", value);
 			return result; 
 		}
 		if (value.isBoolean()) {
 			// TODO Create a BooleanObject object
-			TSObject result = new TSObject(ev, ev.getDefaultPrototype()); 
+			TSObject result = new TSObject(engine, engine.getDefaultPrototype()); 
 			result.put("value", value);
 			return result;
 		}
 		return value.asObject();
 	}
 	
-	public static TSValue toPrimitive(ExecutionVisitor ev, TSObject object) {
+	public static TSValue toPrimitive(TinyscriptEngine engine, TSObject object) {
 		// TODO Evaluate user defined valueOf property
 		if (object instanceof BuiltinType) {
 			return ((BuiltinType) object).valueOf();
@@ -88,10 +88,10 @@ public class TSObject {
 		return TSValue.UNDEFINED;		
 	}
 	
-	public static double toNumber(ExecutionVisitor ev, TSValue value) {
+	public static double toNumber(TinyscriptEngine engine, TSValue value) {
 		// TODO Return NAN if undefined
 		if (value.isObject()) {
-			value = toPrimitive(ev, value.asObject());
+			value = toPrimitive(engine, value.asObject());
 		}
 		if (value.isBoolean())
 			return (value.asBoolean() ? 1 :0);
@@ -109,10 +109,10 @@ public class TSObject {
 		return Double.NaN;
 	}
 	
-	public static int toInteger(ExecutionVisitor ev, TSValue value) {
+	public static int toInteger(TinyscriptEngine engine, TSValue value) {
 		// TODO Return NAN if undefined
 		if (value.isObject()) {
-			value = toPrimitive(ev, value.asObject());
+			value = toPrimitive(engine, value.asObject());
 		}
 		if (value.isBoolean())
 			return (value.asBoolean() ? 1 :0);
@@ -218,8 +218,8 @@ public class TSObject {
 	}
 	
 	protected void update() {
-		if (ev != null) {
-			ev.recordObjectSizeChange(this);
+		if (engine != null) {
+			engine.recordObjectSizeChange(this);
 		}
 	}
 	

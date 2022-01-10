@@ -55,7 +55,7 @@ What did I do?
 
 -  Definition of *tinyscript*'s grammar. Immplementation of the corresponding parser including an *abstract syntax tree (AST)* using *Xtext* (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript`). 
 
-- Design and impementation of a „high-level“ interpreter in Java (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript.interpreter`). Specifically have a look at class `ExecutionVisitor`and *tinyscript*'s runtime (package `tinyscript.runtime`).
+- Design and impementation of a „high-level“ interpreter in Java (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript.interpreter`). Specifically have a look at class `TinyscriptEngine`and *tinyscript*'s runtime (package `tinyscript.runtime`).
 
 - Integration of *tinyscript*'s interpreter into a demo web app ((project [`de.mkbauer.tinyscript.webdemo`](de.mkbauer.tinyscript.webdemo)) based on *SpringBoot*. That's the same [web app](https://apps.mkbauer.de/tinyscript) I've mentioned above when introducing *tinyscript*'s language features.
 

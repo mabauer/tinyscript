@@ -5,10 +5,10 @@ public class GlobalExecutionContext extends ExecutionContext {
 
 	private TSObject globalObject;
 	
-	public GlobalExecutionContext(ExecutionVisitor ev) {
+	public GlobalExecutionContext(TinyscriptEngine engine) {
 		super("global", null);
 		
-		globalObject = new TSObject(ev, ev.getDefaultPrototype());
+		globalObject = new TSObject(engine, engine.getDefaultPrototype());
 		
 		// TODO: In strict mode, this should be TSValue.undefined
 		thisRef = globalObject;

@@ -4,8 +4,8 @@ import java.util.List;
 
 public class EmptyFunction extends BuiltinFunction {
 	
-	public EmptyFunction(ExecutionVisitor ev) {
-		super(ev);
+	public EmptyFunction(TinyscriptEngine engine) {
+		super(engine);
 	}
 
 	@Override

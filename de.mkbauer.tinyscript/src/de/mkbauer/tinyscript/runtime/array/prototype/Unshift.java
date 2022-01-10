@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
@@ -15,8 +15,8 @@ public class Unshift extends BuiltinFunction {
 	
 	private final static String NAME = "unshift";
 
-	public Unshift(ExecutionVisitor ev) {
-		super(ev);
+	public Unshift(TinyscriptEngine engine) {
+		super(engine);
 	}
 	
 	@Override

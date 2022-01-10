@@ -19,7 +19,7 @@ import com.google.inject.Provider;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeModule;
 import de.mkbauer.tinyscript.tests.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.ExpressionStatement;
@@ -39,7 +39,7 @@ public class TinyscriptInterpreterTestHelper {
 	@Inject
 	private ValidationTestHelper validator;
 	
-	private ExecutionVisitor visitor;
+	private TinyscriptEngine engine;
 
 	public TinyscriptInterpreterTestHelper() {
 		super();
@@ -47,7 +47,7 @@ public class TinyscriptInterpreterTestHelper {
 	
 	@Before
 	public void setUp()  {
-		visitor = new ExecutionVisitor();
+		engine = new TinyscriptEngine();
 	}
 	
 	protected TSValue executeScriptFromFile(String filename) {
@@ -104,7 +104,7 @@ public class TinyscriptInterpreterTestHelper {
 	}
 	
 	protected TSValue execute(Tinyscript ast) {
-		TSValue result = visitor.execute(ast);
+		TSValue result = engine.execute(ast);
 		return result;
 	}
 	
@@ -113,7 +113,7 @@ public class TinyscriptInterpreterTestHelper {
 		Tinyscript ast = parseScriptFromString(statement);
 		getValidator().assertNoErrors(ast);
 		ExpressionStatement expr = (ExpressionStatement) ast.getGlobal().getStatements().get(0);
-		TSValue result = visitor.execute(expr);
+		TSValue result = engine.execute(expr);
 		return result;
 	}
 
@@ -129,8 +129,8 @@ public class TinyscriptInterpreterTestHelper {
 		return validator;
 	}
 	
-	protected ExecutionVisitor getExecutionVisitor() {
-		return visitor;
+	protected TinyscriptEngine getExecutionVisitor() {
+		return engine;
 	}
 
 }

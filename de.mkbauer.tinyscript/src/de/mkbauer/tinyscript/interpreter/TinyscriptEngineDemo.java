@@ -12,7 +12,7 @@ import com.google.inject.Injector;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
-class TinyscriptInterpreter  {
+class TinyscriptEngineDemo  {
 		
 	public static void main(String[] args) {
 		Tinyscript ast = null;
@@ -29,8 +29,8 @@ class TinyscriptInterpreter  {
 		catch (IOException e) {
 			System.exit(1);
 		}
- 		ExecutionVisitor visitor = new ExecutionVisitor();
- 		visitor.execute(ast);		
+ 		TinyscriptEngine engine = new TinyscriptEngine();
+ 		engine.execute(ast);		
     }  
   	
 }

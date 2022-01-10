@@ -14,11 +14,11 @@ public class InterpretedFunction extends Function {
 	
 	private ExecutionContext outerContext;
 	
-	public InterpretedFunction(ExecutionVisitor ev) {
-		super(ev);
+	public InterpretedFunction(TinyscriptEngine engine) {
+		super(engine);
 		this.ast = null;
 		// Each user defined functions gets a new prototype property since it could be used as a constructor
-		setPrototypeProperty(new TSObject(ev, ev.getDefaultPrototype()));
+		setPrototypeProperty(new TSObject(engine, engine.getDefaultPrototype()));
 	}
 	
 	public void setAst(FunctionDefinition ast) {
@@ -40,7 +40,7 @@ public class InterpretedFunction extends Function {
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
 		
-		ResourceMonitor monitor = ev.getResourceMonitor();
+		ResourceMonitor monitor = engine.getResourceMonitor();
 		if (monitor != null)
 			monitor.checkMXCpuTimeAndMemory();
 
@@ -51,13 +51,13 @@ public class InterpretedFunction extends Function {
 		TSValue result = null;
 		
 		// Create a new execution context
-		ExecutionContext currentContext = ev.enterNewExecutionContext(getName(), outerContext);
+		ExecutionContext currentContext = engine.enterNewExecutionContext(getName(), outerContext);
 		
 		// Update and check call depth
-		ev.callDepth++;
+		engine.callDepth++;
 		
 		if (monitor != null)
-			monitor.checkCallDepth(ev.callDepth);
+			monitor.checkCallDepth(engine.callDepth);
 		
 		// Set this-Reference
 		currentContext.setThisRef(self);
@@ -83,7 +83,7 @@ public class InterpretedFunction extends Function {
 		}
 		
 		// Hoist function declarations
-		LexicalEnvironment env = ev.getLexcialEnvironment(block);
+		LexicalEnvironment env = engine.getLexcialEnvironment(block);
 		for (TSValue function : env.getFunctions()) {	
 			// Create a variable in the current context pointing to each function object
 			String functionName = ((Function) function.asObject()).getName();
@@ -93,11 +93,11 @@ public class InterpretedFunction extends Function {
 		}
 		
 		try {
-			result = ev.caseBlock(block);
+			result = engine.caseBlock(block);
 			if (asConstructor)
 				 result = new TSValue(currentContext.getThisRef());
-			ev.leaveExecutionContext();
-			ev.callDepth--;
+			engine.leaveExecutionContext();
+			engine.callDepth--;
 			return result;
 		}
 		catch (TSReturnValue rv) {
@@ -106,14 +106,14 @@ public class InterpretedFunction extends Function {
 				result = new TSValue(currentContext.getThisRef());
 			else
 				result = rv.getReturnValue();
-			ev.leaveExecutionContext();
-			ev.callDepth--;
+			engine.leaveExecutionContext();
+			engine.callDepth--;
 			return result;				
 		}
 		catch (TinyscriptRuntimeException e) {
-			ev.attachStackTrace(e);
-			ev.leaveExecutionContext();
-			ev.callDepth--;
+			engine.attachStackTrace(e);
+			engine.leaveExecutionContext();
+			engine.callDepth--;
 			throw e;
 		}
 	}

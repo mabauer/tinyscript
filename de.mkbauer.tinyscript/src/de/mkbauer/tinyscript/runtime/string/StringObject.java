@@ -3,7 +3,7 @@ package de.mkbauer.tinyscript.runtime.string;
 import java.util.List;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.runtime.string.prototype.IndexOf;
@@ -14,14 +14,14 @@ public class StringObject extends BuiltinType {
 	
 	private String value;
 	
-	public StringObject(ExecutionVisitor ev) {
-		super(ev);
+	public StringObject(TinyscriptEngine engine) {
+		super(engine);
 		setValue(null);
 		defineDefaultProperty(this,"length", new TSValue(0));
 	}
 	
-	public StringObject(ExecutionVisitor ev, TSValue value) {
-		super(ev);
+	public StringObject(TinyscriptEngine engine, TSValue value) {
+		super(engine);
 		setValue(value.asString());
 		defineDefaultProperty(this,"length", new TSValue(getLength()));
 	}

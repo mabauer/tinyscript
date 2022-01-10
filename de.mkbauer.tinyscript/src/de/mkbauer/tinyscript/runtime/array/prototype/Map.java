@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -26,7 +26,7 @@ public class Map extends BuiltinFunction {
 		if (!(self instanceof ArrayObject))
 			throw new TinyscriptTypeError("Function Array.prototype.map only works for Array objects.");
 		ArrayObject arr = (ArrayObject) self;
-		ArrayObject result = new ArrayObject(ev);
+		ArrayObject result = new ArrayObject(engine);
 		TSValue functionAsValue = args.get(0);
 		if (functionAsValue.isCallable()) {
 			Function function = (Function) functionAsValue.asObject();
@@ -52,8 +52,8 @@ public class Map extends BuiltinFunction {
 		return 1;
 	}
 
-	public Map(ExecutionVisitor ev) {
-		super(ev);
+	public Map(TinyscriptEngine engine) {
+		super(engine);
 	}
 
 }

@@ -19,6 +19,7 @@ import org.eclipse.xtext.util.StringInputStream;
 import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.IResourceValidator;
 import org.eclipse.xtext.validation.Issue;
+
 import org.springframework.stereotype.Component;
 
 import com.google.inject.Injector;
@@ -26,7 +27,7 @@ import com.google.inject.Injector;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.ResourceConsumption;
 import de.mkbauer.tinyscript.interpreter.ResourceLimits;
@@ -79,15 +80,15 @@ public class TinyscriptExecutionService {
 		monitor.enableObjectTracking();
 		monitor.enableMXBeanInspection();
 		monitor.configureLimits(limits);
-		ExecutionVisitor executionvisitor = new ExecutionVisitor(monitor);
+		TinyscriptEngine engine = new TinyscriptEngine(monitor);
 		ResourceConsumption statistics = new ResourceConsumption();
 		
 		try {
 			Tinyscript ast = parseScriptFromString(script);
-			executionvisitor.defineStdOut(stdout);
+			engine.defineStdOut(stdout);
 			// executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
 
-			TSValue result = executionvisitor.execute(ast);
+			TSValue result = engine.execute(ast);
 			resultAsString = result.asString();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();

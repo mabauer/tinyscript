@@ -4,7 +4,7 @@ import java.util.List;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.InterpretedFunction;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -49,8 +49,8 @@ public class ToString extends BuiltinFunction {
 		return 0;
 	}
 
-	public ToString(ExecutionVisitor ev) {
-		super(ev);
+	public ToString(TinyscriptEngine engine) {
+		super(engine);
 	}
 
 }
