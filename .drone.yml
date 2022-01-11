@@ -5,12 +5,18 @@ name: default
 steps:
   - name: build and test core language
     image: maven:3-jdk-11
+    volumes:
+      - name: cache
+        path: /root/.m2
     commands:
       - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
       - mvn test -B
 
   - name: build repl
     image: maven:3-jdk-11
+    volumes:
+      - name: cache
+        path: /root/.m2
     commands:
       - cd de.mkbauer.tinyscript.repl
       - mvn install -Dmaven.javadoc.skip=true -B -V
@@ -19,8 +25,15 @@ steps:
 
   - name: build webdemo
     image: maven:3-jdk-11
+    volumes:
+    - name: cache
+      path: /root/.m2
     commands:
       - cd de.mkbauer.tinyscript.webdemo
       - mvn install -Dmaven.javadoc.skip=true -B -V
       - mvn package -Dmaven.javadoc.skip=true -B -V
       - cd .. 
+
+volumes:
+  - name: cache
+    temp: {}
