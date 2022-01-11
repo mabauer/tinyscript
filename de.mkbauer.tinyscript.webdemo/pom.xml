@@ -54,7 +54,7 @@
 		<dependency>
 			<groupId>de.mkbauer.tinyscript</groupId>
 			<artifactId>de.mkbauer.tinyscript</artifactId>
-			<version>0.10.0-snapshot</version>
+			<version>0.10.0-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.xtext</groupId>
