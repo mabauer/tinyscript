@@ -26,8 +26,8 @@ steps:
   - name: build webdemo
     image: maven:3-jdk-11
     volumes:
-    - name: cache
-      path: /root/.m2
+      - name: cache
+        path: /root/.m2
     commands:
       - cd de.mkbauer.tinyscript.webdemo
       - mvn clean install -Dmaven.javadoc.skip=true -B -V
