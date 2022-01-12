@@ -11,7 +11,6 @@ import org.eclipse.xtext.resource.IEObjectDescription;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 import org.eclipse.xtext.scoping.impl.SimpleLocalScopeProvider;
-import org.eclipse.xtext.xbase.typesystem.internal.ExpressionScope.Scope;
 
 import com.google.common.base.Predicate;
 
@@ -45,7 +44,7 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 				context = ((Tinyscript) context).getGlobal();
 			return createBlockScope(context, false);
 		}
-		return Scope.NULLSCOPE; // super.getScope(context, reference);
+		return IScope.NULLSCOPE; // super.getScope(context, reference);
 	}
 
 	public IScope createScopeFromAllIdentifers(Reference reference) {
