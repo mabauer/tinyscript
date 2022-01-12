@@ -70,7 +70,6 @@
 								<artifactId>org.eclipse.core.runtime</artifactId>
 							</exclusion>
 						</exclusions>
-
 					</dependency>
 					<dependency>
 						<groupId>org.eclipse.xtext</groupId>
@@ -82,6 +81,17 @@
 						<artifactId>xtext-antlr-generator</artifactId>
 						<version>[2.1.1, 3)</version>
 					</dependency>
+					<!-- 
+						mwe2Launcher will still use Guice 3.0 for some reason, so it will issue a warning during build:
+							WARNING: An illegal reflective access operation has occurred
+							WARNING: Illegal reflective access by com.google.inject.internal.cglib.core.$ReflectUtils$2
+						The following does not prevent this!
+					<dependency>
+						<groupId>com.google.inject</groupId>
+    					<artifactId>guice</artifactId>
+    					<version>5.0.1</version>
+					</dependency>
+					-->
 				</dependencies>
 			</plugin>
 			<plugin>

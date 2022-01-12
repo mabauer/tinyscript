@@ -76,6 +76,11 @@
 			<artifactId>org.eclipse.equinox.common</artifactId>
 			<version>3.6.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+	    	<artifactId>guice</artifactId>
+	    	<version>5.0.1</version>
+		</dependency>
 	</dependencies>
 	<build>
 	    <testResources>

@@ -40,5 +40,10 @@
 			<repository location="https://download.eclipse.org/tools/orbit/downloads/2021-12"/>
 			<unit id="org.slf4j.api" version="1.7.30.v20200204-2150"/>
 		</location>
+		<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+			<repository location="https://download.eclipse.org/tools/orbit/downloads/2021-12"/>
+			<unit id="com.google.inject" version="5.0.1.v20210324-2015"/>
+			<unit id="com.google.inject.source" version="5.0.1.v20210324-2015"/>
+		</location>
 	</locations>
 </target>

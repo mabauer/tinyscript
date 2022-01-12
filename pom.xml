@@ -124,6 +124,16 @@
 							<version>${project.version}</version>
 						</artifact>
 					</target>
+					<filters>
+				         <filter>
+				            <type>eclipse-plugin</type>
+				            <id>com.google.inject</id>
+				            <restrictTo>
+				                <!-- <version>5.0.1</version> -->
+								<versionRange>[5.0.1,6.0.0)</versionRange>
+				            </restrictTo>
+				         </filter>
+				    </filters>
 					<environments>
 						<environment>
 							<os>macosx</os>
