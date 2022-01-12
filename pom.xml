@@ -10,12 +10,12 @@
 	<packaging>pom</packaging>
 
 	<modules>
+		<module>de.mkbauer.tinyscript.target</module>
 		<module>de.mkbauer.tinyscript</module>
 		<module>de.mkbauer.tinyscript.ide</module>		
 		<module>de.mkbauer.tinyscript.ui</module>
 		<module>de.mkbauer.tinyscript.tests</module>
 		<module>de.mkbauer.tinyscript.sdk</module>
-		<module>de.mkbauer.tinyscript.target</module>
 		<module>de.mkbauer.tinyscript.updatesite</module> 
 	</modules>
 
@@ -115,6 +115,15 @@
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>target-platform-configuration</artifactId>
 				<configuration>
+					<target>
+						<!-- The target platform artifact needs to be specified COMPLETELY, 
+							 i.e. groupID, artifactID and version have to be specified here -->
+						<artifact>
+							<groupId>de.mkbauer.tinyscript</groupId>
+							<artifactId>de.mkbauer.tinyscript.target</artifactId>
+							<version>${project.version}</version>
+						</artifact>
+					</target>
 					<environments>
 						<environment>
 							<os>macosx</os>

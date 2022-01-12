@@ -22,6 +22,10 @@
 				<artifactId>exec-maven-plugin</artifactId>
 				<version>3.0.0</version>
 				<executions>
+					<!-- mwe2Launcher will produce a lot of warnings of the form:
+						WARN: Skipping conflicting project org.eclipse.osgi at 'archive:file:/Users/markus.bauer/.m2/repository/org/eclipse/platform/org.eclipse.osgi/3.16.0/org.eclipse.osgi-3.16.0.jar!/' 
+						and using 'archive:file:/Users/markus.bauer/.m2/repository/p2/osgi/bundle/org.eclipse.osgi/3.17.100.v20211104-1730/org.eclipse.osgi-3.17.100.v20211104-1730.jar!/' instead.
+						These can be ignored, see https://www.eclipse.org/forums/index.php/t/1082958/ -->
 					<execution>
 						<id>mwe2Launcher</id>
 						<phase>generate-sources</phase>

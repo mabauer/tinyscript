@@ -4,7 +4,7 @@ How to create a release for *tinyscript*
 Prepare the release
 -------------------
 
-Set version number correctly e.g. *0.9.0-SNAPSHOT*
+Set version number correctly e.g. *0.9.0-SNAPSHOT* or *0.9.0-RELEASE*
 
 1. Define the version number for core project -- this will update the POMs of the parent project and the child projects as well as the OSGi plugin metadata correctly
 
@@ -26,7 +26,7 @@ Set version number correctly e.g. *0.9.0-SNAPSHOT*
             <dependency>
 			    <groupId>de.mkbauer.tinyscript</groupId>
 			    <artifactId>de.mkbauer.tinyscript</artifactId>
-			    <version>0.9.0-snapshot</version>
+			    <version>0.9.0-SNAPSHOT</version>
 		    </dependency>
 
 4. For *webdemo*: Update the release numbers in `index.html` and `Dockerfile`
