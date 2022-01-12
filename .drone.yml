@@ -10,7 +10,6 @@ steps:
         path: /root/.m2
     commands:
       - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-      - mvn test -B
 
   - name: build repl
     image: maven:3-jdk-11
@@ -20,7 +19,6 @@ steps:
     commands:
       - cd de.mkbauer.tinyscript.repl
       - mvn clean install -Dmaven.javadoc.skip=true -B -V
-      - mvn package -Dmaven.javadoc.skip=true -B -V
       - cd .. 
 
   - name: build webdemo
@@ -31,7 +29,6 @@ steps:
     commands:
       - cd de.mkbauer.tinyscript.webdemo
       - mvn clean install -Dmaven.javadoc.skip=true -B -V
-      - mvn package -Dmaven.javadoc.skip=true -B -V
       - cd .. 
 
 volumes:
