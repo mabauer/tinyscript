@@ -40,7 +40,7 @@ function Student(firstName, subject) {
 // that we don't have anything to give Person for the "firstName" 
 // argument. The correct place to call Person is above, where we call 
 // it from Student.
-Student.prototype = createObject(Person.prototype); // Object.create(Person.prototype)
+Student.prototype = Object.create(Person.prototype) // createObject(Person.prototype);
 
 // Set the "constructor" property to refer to Student
 // Student.prototype.constructor = Student;

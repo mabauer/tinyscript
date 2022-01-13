@@ -41,14 +41,15 @@ public class ObjectConstructor extends BuiltinConstructor {
 		proto.setPrototypeProperty(proto);
 		
 		
-		// Add all the basic stuff our prototype, the prototype of all functions
+		// Add all the basic stuff to our prototype, the prototype of all functions
 		TSObject.defineDefaultProperty(proto, "toString", new de.mkbauer.tinyscript.runtime.function.prototype.ToString(engine));
 		TSObject.defineDefaultProperty(proto, "call", new Call(engine));
 		TSObject.defineDefaultProperty(proto, "length", new TSValue(getLength()));
 		// TODO: Remove, just for testing
 		TSObject.defineDefaultProperty(proto, "isCallable", new TSValue(true));
 		
-		// Object.keys(obj)...
+		// Object.create(proto), Object.keys(obj)...
+		defineDefaultProperty(this, "create", new Create(engine));		
 		defineDefaultProperty(this, "keys", new Keys(engine));
 		
 		// Now, that we have the prototype of all functions, we can safely add functions to the prototype of all objects
