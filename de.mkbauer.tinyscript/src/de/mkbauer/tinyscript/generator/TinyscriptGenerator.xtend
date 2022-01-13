@@ -11,7 +11,6 @@ import de.mkbauer.tinyscript.ts.StringLiteral
 import de.mkbauer.tinyscript.ts.BlockStatement
 import de.mkbauer.tinyscript.ts.Block
 import de.mkbauer.tinyscript.TinyscriptModelUtil
-import org.eclipse.emf.ecore.EObject
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider
 import de.mkbauer.tinyscript.ts.NumberLiteral
 import de.mkbauer.tinyscript.ts.ExpressionStatement
@@ -38,7 +37,6 @@ import com.google.inject.Inject
 import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
-import org.eclipse.xtext.generator.AbstractGenerator
 
 class TinyscriptGenerator   {
 	
@@ -131,7 +129,7 @@ class TinyscriptGenerator   {
 	
 	def dispatch generate(ArrowFunction func) 
 		'''function («FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») { return «func.block.generate» ;}'''
-
+	
 	def dispatch generate(FunctionDefinition func) '''
 		function «IF (func.id !== null)»«func.id.name»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {
 			«func.block.generate»

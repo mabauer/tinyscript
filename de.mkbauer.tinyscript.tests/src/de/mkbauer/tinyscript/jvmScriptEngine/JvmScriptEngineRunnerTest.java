@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.nashorn;
+package de.mkbauer.tinyscript.jvmScriptEngine;
 
 
 import org.junit.Test;
@@ -11,29 +11,32 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.jvmscriptengine.JvmScriptEngineRunner;
 import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 @RunWith(XtextRunner.class)
-public class NashornRunnerTest extends TinyscriptInterpreterTestHelper {
+public class JvmScriptEngineRunnerTest extends TinyscriptInterpreterTestHelper {
+	
+	final static String SCRIPT_ENGINE = "graal.js"; // "nashorn"
 
 	@Inject
-	private Provider<NashornRunner> nashornRunnerProvider;
+	private Provider<JvmScriptEngineRunner> jvmRunnerProvider;
 	
 	public TSValue executeScriptFromString(String script) {
 		Tinyscript ast = parseScriptFromString(script);
 		// FIXME: This works but is probably not correct...
 		// NashornExecutor nashorn = injectorProvider.getInjector().getInstance(NashornExecutor.class);
-		NashornRunner nashorn = nashornRunnerProvider.get();
-		nashorn.execute(ast);
+		JvmScriptEngineRunner engineRunner = jvmRunnerProvider.get();
+		engineRunner.execute(ast);
 		return TSValue.UNDEFINED;
 	}
 	
 	public TSValue executeScriptFromFileWithNashorn(String filename) {
 		Tinyscript ast = parseScriptFromFile(filename);
 		// FIXME: This works but is probably not correct...
-		NashornRunner nashorn = nashornRunnerProvider.get();
-		nashorn.execute(ast);
+		JvmScriptEngineRunner engineRunner = jvmRunnerProvider.get();
+		engineRunner.execute(ast);
 		return TSValue.UNDEFINED;
 	}
 	

@@ -8,7 +8,7 @@ import org.eclipse.xtext.naming.IQualifiedNameProvider;
 import com.google.inject.Provides;
 
 import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
-import de.mkbauer.tinyscript.nashorn.NashornRunner;
+import de.mkbauer.tinyscript.jvmscriptengine.JvmScriptEngineRunner;
 import de.mkbauer.tinyscript.scoping.TinyscriptGlobalScopeProvider;
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
 
@@ -17,7 +17,7 @@ import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
  */
 public class TinyscriptRuntimeModule extends AbstractTinyscriptRuntimeModule {
 	
-	// Introducing a global scope provider 
+	// Introduce a global scope provider 
 	public Class<? extends org.eclipse.xtext.scoping.IGlobalScopeProvider> bindIGlobalScopeProvider() {
 		//return TypesAwareDefaultGlobalScopeProvider.class;
 		return TinyscriptGlobalScopeProvider.class;
@@ -29,7 +29,7 @@ public class TinyscriptRuntimeModule extends AbstractTinyscriptRuntimeModule {
     }
 
 	@Provides
-	public NashornRunner getNashornExecutor(TinyscriptGenerator generator) {
-		return new NashornRunner(generator);
+	public JvmScriptEngineRunner getScriptEngineRunner(TinyscriptGenerator generator) {
+		return new JvmScriptEngineRunner(generator);
 	}
 }
