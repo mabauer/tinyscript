@@ -44,6 +44,18 @@ public class StatementsTest extends TinyscriptInterpreterTestHelper {
 		TSValue value = executeScriptFromString("var i=1; if (i==2) {i=2;} else {i=3;} assert(i==3);");
 		assertTrue(value.asBoolean());
 	}
+	
+	@Test
+	public void testIfthenElseStatementWithBooleanConversion() {
+		TSValue value = executeScriptFromString("var i=1; if (2) {i=2;} else {i=3;} assert(i==2);");
+		assertTrue(value.asBoolean());
+		value = executeScriptFromString("var i=1; if (i=2) {i=2;} else {i=3;} assert(i==2);");
+		assertTrue(value.asBoolean());
+		value = executeScriptFromString("var i=1; if (0) {i=2;} else {i=3;} assert(i==3);");
+		assertTrue(value.asBoolean());
+		value = executeScriptFromString("var i=1; if (i=0) {i=2;} else {i=3;} assert(i==3);");
+		assertTrue(value.asBoolean());		
+	}
 
 	@Test
 	public void testNestedBlocks() {

@@ -57,6 +57,7 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 		assertEquals(false, value.asBoolean());	
 	}
 	
+	@Test
 	public void testBooleanConversion() {
 		TSValue value = evaluateSimpleExpression("1.0");
 		assertEquals(true, value.asBoolean());
@@ -66,6 +67,7 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 		assertEquals(false, value.asBoolean());
 	}
 	
+	@Test
 	public void testDoubleLiteral() {
 		TSValue value = evaluateSimpleExpression("2.0");
 		assertEquals(2.0, value.asDouble(), epsilon);

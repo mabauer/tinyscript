@@ -95,7 +95,7 @@ public class TSValue { // implements Comparable<TSValue>
 		if (isObject())
 			return true;
 		if (isNumber()) 
-			return (asDouble() == 0.0);  // TODO: Use delta
+			return (asDouble() != 0.0);  // TODO: Use delta
 		return ((Boolean)value).booleanValue();
 	}
 	
