@@ -7,6 +7,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.runtime.array.prototype.Filter;
+import de.mkbauer.tinyscript.runtime.array.prototype.Join;
 import de.mkbauer.tinyscript.runtime.array.prototype.Map;
 import de.mkbauer.tinyscript.runtime.array.prototype.Pop;
 import de.mkbauer.tinyscript.runtime.array.prototype.Push;
@@ -33,6 +34,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 		defineDefaultProperty(getPrototypeProperty().asObject(), "shift", new Shift(engine));
 		defineDefaultProperty(getPrototypeProperty().asObject(), "map", new Map(engine));
 		defineDefaultProperty(getPrototypeProperty().asObject(), "filter", new Filter(engine));
+		defineDefaultProperty(getPrototypeProperty().asObject(), "join", new Join(engine));
 	}
 	
 	@Override

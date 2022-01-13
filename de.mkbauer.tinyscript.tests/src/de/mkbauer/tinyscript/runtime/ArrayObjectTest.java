@@ -65,5 +65,13 @@ public class ArrayObjectTest extends TinyscriptInterpreterTestHelper {
 		TSValue value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var odds = arr.filter(x => x % 2 == 1); " 
 				+ "assert(4 == odds.length);");
 	}
+	
+	@Test
+	public void testJoin() {
+		TSValue value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var result = arr.join(\"\"); " 
+				+ "assert(\"154297\" == result);");
+		value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var result = arr.join(\"; \"); " 
+				+ "assert(\"1; 5; 4; 2; 9; 7\" == result);");
+	}
 
 }
