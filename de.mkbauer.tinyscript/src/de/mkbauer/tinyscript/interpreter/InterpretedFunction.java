@@ -93,16 +93,23 @@ public class InterpretedFunction extends Function {
 		}
 		
 		try {
+			
 			result = engine.caseBlock(block);
+			// The result (= value of last statement) of the body in a regular function 
+			// is NOT used as return value, if there is no return statement, the function's result is undefined
+			if (!isArrowFunction()) {
+				result = TSValue.UNDEFINED;
+			}
 			if (asConstructor)
 				 result = new TSValue(currentContext.getThisRef());
 			engine.leaveExecutionContext();
 			engine.callDepth--;
+			
 			return result;
 		}
 		catch (TSReturnValue rv) {
 			// Restore execution context
-			if (asConstructor && rv.equals(TSValue.UNDEFINED))
+			if (asConstructor && rv.getReturnValue().equals(TSValue.UNDEFINED))
 				result = new TSValue(currentContext.getThisRef());
 			else
 				result = rv.getReturnValue();
