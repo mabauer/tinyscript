@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+VERSION="0.10.0-SNAPSHOT"
+TINYSCRIPT_REPL_FAT_JAR="${SCRIPT_DIR}/target/de.mkbauer.tinyscript.repl-${VERSION}-shade.jar"
+
+if [ ! -r "$TINYSCRIPT_REPL_FAT_JAR" ] ; then
+    echo "Error: Tinyscript JAR (at ${TINYSCRIPT_REPL_FAT_JAR}) not found. "
+    exit 1
+fi
+
+echo "Tinyscript Interpreter ${VERSION} (using ${TINYSCRIPT_REPL_FAT_JAR})"
+java -cp ${TINYSCRIPT_REPL_FAT_JAR} de.mkbauer.tinyscript.repl.TinyscriptReplMain $*
+
