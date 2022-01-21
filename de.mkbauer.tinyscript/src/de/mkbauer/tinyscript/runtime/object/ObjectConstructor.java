@@ -49,7 +49,8 @@ public class ObjectConstructor extends BuiltinConstructor {
 		TSObject.defineDefaultProperty(proto, "isCallable", new TSValue(true));
 		
 		// Object.create(proto), Object.keys(obj)...
-		defineDefaultProperty(this, "create", new Create(engine));		
+		defineDefaultProperty(this, "create", new Create(engine));
+		defineDefaultProperty(this, "getPrototypeOf", new GetPrototypeOf(engine));
 		defineDefaultProperty(this, "keys", new Keys(engine));
 		
 		// Now, that we have the prototype of all functions, we can safely add functions to the prototype of all objects
