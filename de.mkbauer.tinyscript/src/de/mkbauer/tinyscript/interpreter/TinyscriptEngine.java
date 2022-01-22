@@ -624,14 +624,8 @@ public class TinyscriptEngine {
 			CallSuffix callSuffix = callOrProp.getCall();
 			if (callSuffix != null) {
 				if (result.isObject() && (result.asObject() instanceof Function)) {
-					TSObject thisRef = null;
-					boolean asConstructor = (expr.getExpr() instanceof NewExpression);
-					if (asConstructor) {
-						thisRef = new TSObject(this, result.asObject().get("prototype").asObject());
-					}
-					else
-						thisRef = baseasObject;
-					result = processFunctionCall(expr, (Function) result.asObject(), asConstructor, thisRef, callSuffix.getArguments());
+					TSObject thisRef = baseasObject;
+					result = processFunctionCall(expr, (Function) result.asObject(), thisRef, callSuffix.getArguments());
 				}
 				else {
 					// TODO: Check for Null or Undefined!
@@ -643,11 +637,7 @@ public class TinyscriptEngine {
     		CallSuffix callSuffix = (CallSuffix) suffix;
         	if (base.isObject() && (base.asObject() instanceof Function)) {
         		TSObject thisRef = null;
-        		boolean asConstructor = (expr.getExpr() instanceof NewExpression);
-				if (asConstructor) {
-					thisRef = new TSObject(this, base.asObject().get("prototype").asObject());
-				}
-        		result = processFunctionCall(expr, (Function) base.asObject(), asConstructor, thisRef, callSuffix.getArguments());
+        		result = processFunctionCall(expr, (Function) base.asObject(), thisRef, callSuffix.getArguments());
     		}
         	else {
         		// TODO: Check for Null or Undefined!
@@ -813,14 +803,31 @@ public class TinyscriptEngine {
 		return keyExpr;
 	}
 	
-    public TSValue processFunctionCall(EObject expr, Function functionObject, boolean asConstructor, TSObject self, List<Expression> argExprs) {
+    public TSValue processFunctionCall(CallOrPropertyAccess expr, Function functionObject, TSObject self, List<Expression> argExprs) {
     	currentContext.currentExpression = expr;
-    	
-			TSValue[] args = new TSValue[argExprs.size()];
-			for (int i = 0; i < argExprs.size(); i++) {
-				args[i] = execute(argExprs.get(i));
-			}		
-		return functionObject.call(asConstructor, self, args);
+
+		// If called with the new-Operator, the function serves as a constructor
+		// It's this-reference will then point to a newly created Object 
+		// (derived from the prototype-Property of the constructor)
+    	// Exception: for built-in constructors, we use their special createObject-methods instead
+    	boolean asConstructor = (expr.getExpr() instanceof NewExpression);
+		if (asConstructor) {
+			if ((functionObject instanceof BuiltinConstructor)) {
+				self = ((BuiltinConstructor) functionObject).createObject();
+			} 
+			else {
+				self = new TSObject(this, functionObject.get("prototype").asObject());
+			}
+		}
+		TSValue[] args = new TSValue[argExprs.size()];
+		for (int i = 0; i < argExprs.size(); i++) {
+			args[i] = execute(argExprs.get(i));
+		}		
+		TSValue result = functionObject.call(asConstructor, self, args);
+		if (asConstructor) {
+			result = new TSValue(self);
+		}
+		return result;
     }
 	
 	private TSValue executeInBlockContext(String name, Block block) {

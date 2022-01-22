@@ -100,8 +100,6 @@ public class InterpretedFunction extends Function {
 			if (!isArrowFunction()) {
 				result = TSValue.UNDEFINED;
 			}
-			if (asConstructor)
-				 result = new TSValue(currentContext.getThisRef());
 			engine.leaveExecutionContext();
 			engine.callDepth--;
 			
@@ -109,10 +107,7 @@ public class InterpretedFunction extends Function {
 		}
 		catch (TSReturnValue rv) {
 			// Restore execution context
-			if (asConstructor && rv.getReturnValue().equals(TSValue.UNDEFINED))
-				result = new TSValue(currentContext.getThisRef());
-			else
-				result = rv.getReturnValue();
+			result = rv.getReturnValue();
 			engine.leaveExecutionContext();
 			engine.callDepth--;
 			return result;				

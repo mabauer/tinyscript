@@ -32,13 +32,16 @@ public class StringConstructor extends BuiltinConstructor {
 	
 	@Override
 	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
-		TSObject newObject = null;
-		if (args.size() > 0)
-			newObject = createObject(args.get(0));
-		else
-			newObject = createObject(null);
-		
-		return new TSValue(newObject);
+		if (args.size() > 0) {
+			String str = args.get(0).asString();
+			if (self instanceof StringObject) {
+				((StringObject) self).setValue(str);
+			}
+			else {
+				return new TSValue(str);
+			}
+		}
+		return new TSValue(self);
 	}
 	
 	@Override

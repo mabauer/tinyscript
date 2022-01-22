@@ -12,8 +12,8 @@ public abstract class BuiltinConstructor extends BuiltinFunction {
 	}
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {		
-		return new TSValue(createObject());
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+		return new TSValue(self);
 	}
 	
 	public abstract TSObject createObject();
