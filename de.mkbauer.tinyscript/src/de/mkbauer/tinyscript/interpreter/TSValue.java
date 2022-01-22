@@ -155,6 +155,9 @@ public class TSValue { // implements Comparable<TSValue>
 				return false;
 			}
 		}
+		if (isString() && other.isString()) {
+			return (toString().equals(other.toString()));
+		}
 		return value.equals(other.value);
 	}	
 
