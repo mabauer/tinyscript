@@ -13,7 +13,7 @@ import de.mkbauer.tinyscript.runtime.object.prototype.HasOwnProperty;
 
 public class ObjectConstructor extends BuiltinConstructor {
 	
-	private final static String NAME = "Object";
+	public final static String NAME = "Object";
 	
 	public ObjectConstructor(TinyscriptEngine engine) {
 		super(engine);
@@ -71,6 +71,13 @@ public class ObjectConstructor extends BuiltinConstructor {
 	public int getLength() {
 		// TODO Find out why?
 		return 1;
+	}
+
+	@Override
+	public TSObject createObject() {
+		TSObject newObject = new TSObject(engine, engine.getDefaultPrototype());
+		newObject.defineDefaultProperty("constructor", new TSValue(this));
+		return newObject;
 	}
 
 

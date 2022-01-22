@@ -4,21 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
-import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
-import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class ArrayObject extends BuiltinType {
-	
-	private static final String CONSTRUCTOR = "Array";
 		
 	private List<TSValue> items;
 	
 	// TODO: Check prototype property -- this should equal [].__proto
-	public ArrayObject(TinyscriptEngine engine) {
+	ArrayObject(TinyscriptEngine engine) {
 		super(engine);
 		items = new ArrayList<TSValue>();
 		// defineDefaultProperty(this, "length", new TSValue(0));
@@ -142,11 +137,6 @@ public class ArrayObject extends BuiltinType {
 	@Override
 	public TSValue valueOf() {
 		return TSValue.UNDEFINED;
-	}
-
-	@Override
-	public String getConstructorName() {
-		return CONSTRUCTOR;
 	}
 
 	public List<TSValue> getItems() {

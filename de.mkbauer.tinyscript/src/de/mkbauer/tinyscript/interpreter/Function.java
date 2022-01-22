@@ -4,17 +4,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.mkbauer.tinyscript.runtime.function.prototype.Call;
-import de.mkbauer.tinyscript.runtime.function.prototype.ToString;
-
 public abstract class Function extends TSObject {
 	
-	protected TinyscriptEngine engine;
 	private boolean isArrowFunction = false;
 	
 	public Function(TinyscriptEngine engine) {
 		super(engine);
-		this.engine = engine;
 		
 		TSObject proto = null;
 		// Object is a function as well, so we can get it's prototype and use it.

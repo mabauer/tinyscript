@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.runtime.array;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -17,7 +15,7 @@ import de.mkbauer.tinyscript.runtime.array.prototype.Unshift;
 
 public class ArrayConstructor extends BuiltinConstructor {
 	
-	private static final String NAME = "Array";
+	public static final String NAME = "Array";
 	
 	public ArrayConstructor(TinyscriptEngine engine) {
 		super(engine);
@@ -46,6 +44,14 @@ public class ArrayConstructor extends BuiltinConstructor {
 	@Override
 	public int getLength() {
 		return 0;
+	}
+
+	@Override
+	public TSObject createObject() {
+		TSObject newObject = new ArrayObject(engine); 
+		newObject.setPrototype(getPrototypeProperty().asObject());
+		newObject.defineDefaultProperty("constructor", new TSValue(this));
+		return newObject;
 	}
 
 }

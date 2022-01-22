@@ -1,29 +1,30 @@
 package de.mkbauer.tinyscript.runtime.string;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
-import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
-import de.mkbauer.tinyscript.runtime.string.prototype.IndexOf;
 
 public class StringObject extends BuiltinType {
 	
-	private static final String CONSTRUCTOR = "String";
 	
 	private String value;
 	
-	public StringObject(TinyscriptEngine engine) {
+	StringObject(TinyscriptEngine engine) {
 		super(engine);
 		setValue(null);
 		defineDefaultProperty("length", new TSValue(0));
 	}
 	
-	public StringObject(TinyscriptEngine engine, TSValue value) {
+	StringObject(TinyscriptEngine engine, TSValue value) {
 		super(engine);
-		setValue(value.asString());
+		if (value == null) {
+			setValue(null);
+			defineDefaultProperty("length", new TSValue(0));
+		}
+		else {
+			setValue(value.asString());
 			defineDefaultProperty("length", new TSValue(getLength()));
+		}
 	}
 	
 	public int getLength() {
@@ -46,11 +47,6 @@ public class StringObject extends BuiltinType {
 	@Override
 	public TSValue valueOf() {
 		return new TSValue(value);
-	}
-
-	@Override
-	public String getConstructorName() {
-		return CONSTRUCTOR;
 	}
 
 }

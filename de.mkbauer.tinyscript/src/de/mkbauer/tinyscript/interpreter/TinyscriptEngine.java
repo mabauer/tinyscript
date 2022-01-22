@@ -105,8 +105,7 @@ public class TinyscriptEngine {
 		if (resourceMonitor != null)
 			resourceMonitor.start();
 		
-		objectPrototype = new TSObject();
-		recordObjectCreation(objectPrototype);
+		objectPrototype = new TSObject(this);
 		
 		globalContext = new GlobalExecutionContext(this);
 		recordObjectCreation(globalContext.getGlobalObject());
@@ -157,15 +156,16 @@ public class TinyscriptEngine {
 		return objectPrototype;
 	}
 	
-	public TSValue getObjectPrototypeFor(String objectName) {
-		TSValue value = globalContext.get(objectName);
-		Function object = null;
+	public BuiltinConstructor getConstructor(String name) {
+		TSValue value = globalContext.get(name);
 		if (value != TSValue.UNDEFINED) {
-			object = (Function) value.asObject();
-			TSValue prototype = object.getPrototypeProperty();
-			return prototype;
+			TSObject ctor = value.asObject();
+			if (ctor instanceof BuiltinConstructor) {
+				return (BuiltinConstructor) ctor;
 		}
-		return TSValue.UNDEFINED;
+		}
+		throw new TinyscriptRuntimeException("Could not find constructor " + name);
+	}
 	}
 	
 	public GlobalExecutionContext getGlobalContext() {
@@ -510,7 +510,7 @@ public class TinyscriptEngine {
     				return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
     			}
     			else {
-    				ArrayObject result = new ArrayObject(this);
+    				ArrayObject result = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject(); 
     				result.push(left);
     				result = ArrayObject.concat(result, right.asArray());
     				return new TSValue(result);
@@ -719,7 +719,7 @@ public class TinyscriptEngine {
     
     // @Override
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
-    	ArrayObject arr = new ArrayObject(this); 
+    	ArrayObject arr = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject(); 
     	int i = 0;
     	for (Expression itemExpr : expr.getValues()) {
     		arr.put(String.valueOf(i), execute(itemExpr));

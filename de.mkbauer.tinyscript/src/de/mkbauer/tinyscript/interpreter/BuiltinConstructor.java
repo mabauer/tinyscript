@@ -7,10 +7,15 @@ public abstract class BuiltinConstructor extends BuiltinFunction {
 	public BuiltinConstructor(TinyscriptEngine engine) {
 		super(engine);
 		
-		TSValue prototype = engine.getObjectPrototypeFor(getName());
-		if (prototype == TSValue.UNDEFINED) {
-			setPrototypeProperty(new TSObject(engine, engine.getDefaultPrototype()));
-		}
+		setPrototypeProperty(new TSObject(engine, engine.getDefaultPrototype()));
+
 	}
+	
+	@Override
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {		
+		return new TSValue(createObject());
+	}
+	
+	public abstract TSObject createObject();
 
 }

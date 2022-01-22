@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 import de.mkbauer.tinyscript.runtime.string.StringObject;
 
 
@@ -13,10 +14,6 @@ public class TSObject {
 	
 	private TSObject proto = null;
 	protected TinyscriptEngine engine;
-	
-	protected TSObject() {
-		properties = new HashMap<String, TSPropertyDescriptor>();
-	}
 	
 	protected TSObject(TinyscriptEngine engine) {
 		this.engine = engine;
@@ -63,7 +60,8 @@ public class TSObject {
 			throw new TinyscriptTypeError("Cannot convert 'null' to an object");
 		}
 		if (value.isPrimitiveString()) {
-			return new StringObject(engine, value);
+			StringConstructor ctor = (StringConstructor) engine.getConstructor(StringConstructor.NAME);
+			return ctor.createObject(value);
 		}
 		if (value.isNumber()) {
 			// TODO Create a NumberObject object

@@ -26,7 +26,7 @@ public class Filter extends BuiltinFunction {
 		if (!(self instanceof ArrayObject))
 			throw new TinyscriptTypeError("Function Array.prototype.filter only works for Array objects.");
 		ArrayObject arr = (ArrayObject) self;
-		ArrayObject result = new ArrayObject(engine);
+		ArrayObject result = (ArrayObject) engine.getConstructor("Array").createObject();
 		TSValue functionAsValue = args.get(0);
 		if (functionAsValue.isCallable()) {
 			Function function = (Function) functionAsValue.asObject();
