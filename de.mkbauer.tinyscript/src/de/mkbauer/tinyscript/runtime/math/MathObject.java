@@ -1,7 +1,10 @@
 package de.mkbauer.tinyscript.runtime.math;
 
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
-import de.mkbauer.tinyscript.interpreter.GlobalExecutionContext;
+
+import java.util.List;
+
+import de.mkbauer.tinyscript.interpreter.BuiltinFunctionImplementation;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
@@ -10,10 +13,23 @@ public class MathObject extends TSObject {
 	public MathObject(TinyscriptEngine engine) {
 		super(engine, engine.getDefaultPrototype());
 		
-		defineDefaultProperty(this, "PI", java.lang.Math.PI);
-		defineDefaultProperty(this, "sqrt", new Sqrt(engine));
-		defineDefaultProperty(this, "round", new Round(engine));
-		defineDefaultProperty(this, "random", new Random(engine));
+		defineDefaultProperty("PI", java.lang.Math.PI);
+		defineBuiltinMethod("sqrt", 
+				(asConstructor, self, args) -> { 
+					return new TSValue(java.lang.Math.sqrt(TSObject.toNumber(engine, args.get(0))));
+				}, 
+				1);
+		defineDefaultProperty("round", engine.defineBuiltinFunction("round", 
+				new BuiltinFunctionImplementation() {
+
+					@Override
+					public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+						return new TSValue(java.lang.Math.round(TSObject.toNumber(engine, args.get(0))));
+					}
+					
+				}, 
+				1));
+		defineDefaultProperty("random", new Random(engine));
 	}
 	
 }

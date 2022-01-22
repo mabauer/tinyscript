@@ -7,6 +7,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
+@Deprecated
 public class Sqrt extends BuiltinFunction {
 	
 	private static final String NAME = "sqrt";

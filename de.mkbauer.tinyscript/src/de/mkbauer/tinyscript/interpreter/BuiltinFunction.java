@@ -2,11 +2,16 @@ package de.mkbauer.tinyscript.interpreter;
 
 import java.util.List;
 
-public abstract class BuiltinFunction extends Function {
+
+public class BuiltinFunction extends Function {
 	
-	public BuiltinFunction(TinyscriptEngine engine) {
+	private String name;
+	private int length;
+	private BuiltinFunctionImplementation implementation;
+	
+	protected BuiltinFunction(TinyscriptEngine engine) {
 		super(engine);
-		
+		implementation = null;
 	}
 	
 	public void checkArgs(List <TSValue> args) {
@@ -22,5 +27,38 @@ public abstract class BuiltinFunction extends Function {
 					engine.getCurrentContext().currentExpression);
 		}
 	}
+	
+	void setName(String name) {
+		this.name = name;
+	}
+	
+	@Override
+	public String getName() {
+		return name;
+	}
+	
+	public void defineImplementation(BuiltinFunctionImplementation implementation) {
+		this.implementation = implementation;
+		
+	}
+
+	@Override
+	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+		checkArgs(args);
+		if (implementation == null)
+			return TSValue.UNDEFINED;
+		return implementation.apply(asConstructor, self, args);
+	}
+	
+	void setLength(int length) {
+		this.length = length;
+	}
+
+	@Override
+	public int getLength() {
+		return length;
+	}
+
+
 
 }

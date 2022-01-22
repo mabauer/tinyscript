@@ -162,10 +162,17 @@ public class TinyscriptEngine {
 			TSObject ctor = value.asObject();
 			if (ctor instanceof BuiltinConstructor) {
 				return (BuiltinConstructor) ctor;
-		}
+			}
 		}
 		throw new TinyscriptRuntimeException("Could not find constructor " + name);
 	}
+	
+	public BuiltinFunction defineBuiltinFunction(String name, BuiltinFunctionImplementation implementation, int length) {
+		BuiltinFunction function = new BuiltinFunction(this);
+		function.setName(name);
+		function.setLength(length);
+		function.defineImplementation(implementation);
+		return function;
 	}
 	
 	public GlobalExecutionContext getGlobalContext() {

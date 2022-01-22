@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.runtime.string.StringConstructor;
-import de.mkbauer.tinyscript.runtime.string.StringObject;
 
 
 public class TSObject {
@@ -157,6 +156,11 @@ public class TSObject {
 	public boolean hasOwnProperty(String key) {
 		return getOwnPropertyDescriptor(key) != null;
 	}
+	
+	public void defineBuiltinMethod(String name, BuiltinFunctionImplementation implementation, int length) {
+		defineDefaultProperty(name, engine.defineBuiltinFunction(name, implementation, length));
+	}
+	
 	
 	public void setPrototype(TSObject proto) {
 		this.proto = proto;
