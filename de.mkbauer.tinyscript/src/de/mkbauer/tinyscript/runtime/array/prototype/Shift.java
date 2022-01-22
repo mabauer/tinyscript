@@ -20,8 +20,7 @@ public class Shift extends BuiltinFunction {
 	}
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		if (!(self instanceof ArrayObject))
 			throw new TinyscriptTypeError("Function Array.prototype.shift only works for Array objects.");
 		ArrayObject arr = (ArrayObject) self;

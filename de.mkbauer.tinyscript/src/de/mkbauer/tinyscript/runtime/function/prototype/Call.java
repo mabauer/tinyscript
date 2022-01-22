@@ -17,12 +17,12 @@ public class Call extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		if (self instanceof Function) {
 			Function function = (Function) self;
 			TSValue this_ = args.get(0);
-			return function.apply(false, this_.asObject(), args.subList(1, args.size()));			
+			return function.apply(this_.asObject(), args.subList(1, args.size()));			
 		}
 		return TSValue.UNDEFINED;
 	}

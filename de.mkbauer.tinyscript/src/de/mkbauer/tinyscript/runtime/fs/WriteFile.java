@@ -19,7 +19,7 @@ public class WriteFile extends BuiltinFunction {
 		}
 
 		@Override
-		public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+		public TSValue apply(TSObject self, List<TSValue> args) {
 			checkArgs(args);
 			String fileName = args.get(0).asString();
 			String contents = args.get(1).asString();

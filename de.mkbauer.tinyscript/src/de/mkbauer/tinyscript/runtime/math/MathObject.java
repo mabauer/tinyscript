@@ -15,7 +15,7 @@ public class MathObject extends TSObject {
 		
 		defineDefaultProperty("PI", java.lang.Math.PI);
 		defineBuiltinMethod("sqrt", 
-				(asConstructor, self, args) -> { 
+				(self, args) -> { 
 					return new TSValue(java.lang.Math.sqrt(TSObject.toNumber(engine, args.get(0))));
 				}, 
 				1);
@@ -23,7 +23,7 @@ public class MathObject extends TSObject {
 				new BuiltinFunctionImplementation() {
 
 					@Override
-					public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+					public TSValue apply(TSObject self, List<TSValue> args) {
 						return new TSValue(java.lang.Math.round(TSObject.toNumber(engine, args.get(0))));
 					}
 					

@@ -18,8 +18,7 @@ public class Keys extends BuiltinFunction {
 	private final static String NAME = "keys";
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		TSValue objectAsValue = args.get(0);
 		ArrayObject result = (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();

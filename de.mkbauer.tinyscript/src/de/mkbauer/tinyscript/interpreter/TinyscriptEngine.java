@@ -823,7 +823,7 @@ public class TinyscriptEngine {
 		for (int i = 0; i < argExprs.size(); i++) {
 			args[i] = execute(argExprs.get(i));
 		}		
-		TSValue result = functionObject.call(asConstructor, self, args);
+		TSValue result = functionObject.call(self, args);
 		if (asConstructor) {
 			result = new TSValue(self);
 		}

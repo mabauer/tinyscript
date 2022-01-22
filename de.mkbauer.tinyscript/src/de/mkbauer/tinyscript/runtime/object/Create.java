@@ -19,8 +19,7 @@ public class Create extends BuiltinFunction {
 	private final static String NAME = "create";
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		TSValue objectAsValue = args.get(0);
 	

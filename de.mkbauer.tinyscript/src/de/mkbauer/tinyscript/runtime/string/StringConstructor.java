@@ -31,7 +31,7 @@ public class StringConstructor extends BuiltinConstructor {
 	}
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		if (args.size() > 0) {
 			String str = args.get(0).asString();
 			if (self instanceof StringObject) {

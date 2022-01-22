@@ -43,11 +43,11 @@ public class BuiltinFunction extends Function {
 	}
 
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		if (implementation == null)
 			return TSValue.UNDEFINED;
-		return implementation.apply(asConstructor, self, args);
+		return implementation.apply(self, args);
 	}
 	
 	void setLength(int length) {

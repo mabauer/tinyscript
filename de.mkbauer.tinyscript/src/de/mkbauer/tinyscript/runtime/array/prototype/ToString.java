@@ -16,7 +16,7 @@ public class ToString extends BuiltinFunction {
 	private final static String NAME = "toString";
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
+	public TSValue apply(TSObject self,
 			List<TSValue> args) {
 		// TODO: Should be generic (implemented by calling join)
 		if (!(self instanceof ArrayObject))

@@ -19,7 +19,7 @@ public class Print extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		OutputStream os = engine.getStdOut();
 		try {

@@ -9,7 +9,7 @@ public class EmptyFunction extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		return TSValue.UNDEFINED;
 	}
 

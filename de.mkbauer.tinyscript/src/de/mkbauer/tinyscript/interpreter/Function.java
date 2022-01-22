@@ -44,11 +44,11 @@ public abstract class Function extends TSObject {
 		return false;
 	}
 	
-	public TSValue call(boolean asConstructor, TSObject self, TSValue... args) {
-		return apply(asConstructor, self, Arrays.<TSValue>asList(args));
+	public TSValue call(TSObject self, TSValue... args) {
+		return apply(self, Arrays.<TSValue>asList(args));
 	}
 	
-	public abstract TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args);
+	public abstract TSValue apply(TSObject self, List<TSValue> args);
 			
 	public abstract String getName();
 	

@@ -22,7 +22,7 @@ public class ReadFile extends BuiltinFunction {
 		}
 
 		@Override
-		public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+		public TSValue apply(TSObject self, List<TSValue> args) {
 			checkArgs(args);
 			String result = null;
 			String fileName = args.get(0).asString();

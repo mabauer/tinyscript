@@ -38,7 +38,7 @@ public class InterpretedFunction extends Function {
 	}
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		
 		ResourceMonitor monitor = engine.getResourceMonitor();
 		if (monitor != null)

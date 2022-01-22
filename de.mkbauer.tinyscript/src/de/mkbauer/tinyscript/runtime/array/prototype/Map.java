@@ -19,8 +19,7 @@ public class Map extends BuiltinFunction {
 	private final static String NAME = "map";
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		// TODO: Should be generic 
 		checkArgs(args);
 		if (!(self instanceof ArrayObject))
@@ -34,7 +33,7 @@ public class Map extends BuiltinFunction {
 				for (int i = 0; i < arr.getLength(); i++) {
 					List<TSValue> argsToFunction =new ArrayList<TSValue>();
 					argsToFunction.add(arr.get(String.valueOf(i)));
-					TSValue newItem = function.apply(false, null, argsToFunction);
+					TSValue newItem = function.apply(null, argsToFunction);
 					result.push(newItem);
 				}
 			}

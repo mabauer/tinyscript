@@ -17,7 +17,7 @@ public class IndexOf extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		checkArgs(args);
 		// TODO: Should try to convert to string (using asString())
 		if (self instanceof StringObject) {

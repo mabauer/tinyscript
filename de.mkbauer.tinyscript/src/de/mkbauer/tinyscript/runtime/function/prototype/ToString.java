@@ -16,8 +16,7 @@ public class ToString extends BuiltinFunction {
 	private final static String NAME = "toString";
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		/* if (!(self instanceof Function)) {
 			throw new TinyscriptTypeError("Function Function.prototype.toString only works for Function objects");
 		}

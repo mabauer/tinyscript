@@ -13,8 +13,7 @@ public class ToString extends BuiltinFunction {
 	private final static String NAME = "toString";
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, List<TSValue> args) {
 		String name = "Object";
 		
 		TSValue ctorValue = self.get("constructor");
