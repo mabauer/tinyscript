@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.runtime.object;
 
-import java.util.List;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.EmptyFunction;
@@ -22,8 +21,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 	}
 	
 	public void initialize() {
-		
-		
+			
 		// In order to correctly initialize the Object constructor function,
 		// we need to define the prototype of all functions and the prototype of all objects.
 		
@@ -42,16 +40,16 @@ public class ObjectConstructor extends BuiltinConstructor {
 		
 		
 		// Add all the basic stuff to our prototype, the prototype of all functions
-		TSObject.defineDefaultProperty(proto, "toString", new de.mkbauer.tinyscript.runtime.function.prototype.ToString(engine));
-		TSObject.defineDefaultProperty(proto, "call", new Call(engine));
-		TSObject.defineDefaultProperty(proto, "length", new TSValue(getLength()));
+		proto.defineDefaultProperty("toString", new de.mkbauer.tinyscript.runtime.function.prototype.ToString(engine));
+		proto.defineDefaultProperty("call", new Call(engine));
+		proto.defineDefaultProperty("length", new TSValue(getLength()));
 		// TODO: Remove, just for testing
-		TSObject.defineDefaultProperty(proto, "isCallable", new TSValue(true));
+		proto.defineDefaultProperty("isCallable", new TSValue(true));
 		
 		// Object.create(proto), Object.keys(obj)...
-		defineDefaultProperty(this, "create", new Create(engine));
-		defineDefaultProperty(this, "getPrototypeOf", new GetPrototypeOf(engine));
-		defineDefaultProperty(this, "keys", new Keys(engine));
+		defineDefaultProperty("create", new Create(engine));
+		defineDefaultProperty("getPrototypeOf", new GetPrototypeOf(engine));
+		defineDefaultProperty("keys", new Keys(engine));
 		
 		// Now, that we have the prototype of all functions, we can safely add functions to the prototype of all objects
 		initializeDefaultPrototype(engine, engine.getDefaultPrototype());
@@ -60,16 +58,10 @@ public class ObjectConstructor extends BuiltinConstructor {
 	}
 	
 	private void initializeDefaultPrototype(TinyscriptEngine engine, TSObject defaultPrototype) {
-		defineDefaultProperty(defaultPrototype, "toString", new de.mkbauer.tinyscript.runtime.object.prototype.ToString(engine));
-		defineDefaultProperty(defaultPrototype, "hasOwnProperty", new HasOwnProperty(engine));
+		defaultPrototype.defineDefaultProperty("toString", new de.mkbauer.tinyscript.runtime.object.prototype.ToString(engine));
+		defaultPrototype.defineDefaultProperty("hasOwnProperty", new HasOwnProperty(engine));
 	}
 	
-	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
-		// TODO Handle arguments
-		return new TSValue(new TSObject(engine, engine.getDefaultPrototype()));
-	}
-
 	@Override
 	public String getName() {
 		return NAME;

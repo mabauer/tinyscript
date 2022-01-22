@@ -135,7 +135,7 @@ public class TSObject {
 		return 0;
 	}
 	
-	public static void defineDefaultProperty(TSObject object, String key, Object value) {
+	public void defineDefaultProperty(String key, Object value) {
 		TSPropertyDescriptor desc = new TSPropertyDescriptor();
 		if (!(value instanceof TSValue))
 			desc.setValue(new TSValue(value));
@@ -145,7 +145,7 @@ public class TSObject {
 		desc.setConfigurable(false);
 		desc.setEnumerable(false);
 		desc.setWriteable(false);
-		object.setOwnPropertyDescriptor(key, desc);
+		setOwnPropertyDescriptor(key, desc);
 	}
 	
 	public TSPropertyDescriptor getOwnPropertyDescriptor(String key) {
@@ -162,7 +162,7 @@ public class TSObject {
 	
 	public void setPrototype(TSObject proto) {
 		this.proto = proto;
-		defineDefaultProperty(this, "__proto__", new TSValue(this.proto));
+		defineDefaultProperty("__proto__", new TSValue(this.proto));
 	}
 	
 	public TSObject getPrototype() {

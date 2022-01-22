@@ -8,7 +8,7 @@ public class SystemObject extends TSObject {
 	public SystemObject(TinyscriptEngine engine) {
 		super(engine, engine.getDefaultPrototype());
 		
-		defineDefaultProperty(this, "currentTimeMillis", new CurrentTimeMillis(engine));
+		defineDefaultProperty("currentTimeMillis", new CurrentTimeMillis(engine));
 	}
 
 }

@@ -17,13 +17,13 @@ public class StringObject extends BuiltinType {
 	public StringObject(TinyscriptEngine engine) {
 		super(engine);
 		setValue(null);
-		defineDefaultProperty(this,"length", new TSValue(0));
+		defineDefaultProperty("length", new TSValue(0));
 	}
 	
 	public StringObject(TinyscriptEngine engine, TSValue value) {
 		super(engine);
 		setValue(value.asString());
-		defineDefaultProperty(this,"length", new TSValue(getLength()));
+			defineDefaultProperty("length", new TSValue(getLength()));
 	}
 	
 	public int getLength() {

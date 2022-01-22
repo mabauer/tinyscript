@@ -22,25 +22,20 @@ public class ArrayConstructor extends BuiltinConstructor {
 	public ArrayConstructor(TinyscriptEngine engine) {
 		super(engine);
 		defineArrayPrototype();
-		defineDefaultProperty(this, "isArray", new IsArray(engine));
+		defineDefaultProperty("isArray", new IsArray(engine));
 	}
 	
 	private void defineArrayPrototype() {
 		// TODO Add other Array methods
-		defineDefaultProperty(getPrototypeProperty().asObject(), "toString", new ToString(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "push", new Push(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "pop", new Pop(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "unshift", new Unshift(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "shift", new Shift(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "map", new Map(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "filter", new Filter(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "join", new Join(engine));
-	}
-	
-	@Override
-	public TSValue apply(boolean asConstrcutor, TSObject self, List<TSValue> args) {
-		// TODO Handle arguments
-		return new TSValue(new ArrayObject(engine));
+		TSObject arrayPrototype = getPrototypeProperty().asObject();
+		arrayPrototype.defineDefaultProperty("toString", new ToString(engine));
+		arrayPrototype.defineDefaultProperty("push", new Push(engine));
+		arrayPrototype.defineDefaultProperty("pop", new Pop(engine));
+		arrayPrototype.defineDefaultProperty("unshift", new Unshift(engine));
+		arrayPrototype.defineDefaultProperty("shift", new Shift(engine));
+		arrayPrototype.defineDefaultProperty("map", new Map(engine));
+		arrayPrototype.defineDefaultProperty("filter", new Filter(engine));
+		arrayPrototype.defineDefaultProperty("join", new Join(engine));
 	}
 
 	@Override

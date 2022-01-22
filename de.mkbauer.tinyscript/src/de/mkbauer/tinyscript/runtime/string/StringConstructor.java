@@ -21,10 +21,11 @@ public class StringConstructor extends BuiltinConstructor {
 	
 	private void defineStringPrototype() {
 		// TODO Add other String methods
-		defineDefaultProperty(getPrototypeProperty().asObject(), "toString", new ToString(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "charAt", new CharAt(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "substring", new Substring(engine));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "indexOf", new IndexOf(engine));
+		TSObject stringPrototypeObject = getPrototypeProperty().asObject();
+		stringPrototypeObject.defineDefaultProperty("toString", new ToString(engine));
+		stringPrototypeObject.defineDefaultProperty("charAt", new CharAt(engine));
+		stringPrototypeObject.defineDefaultProperty("substring", new Substring(engine));
+		stringPrototypeObject.defineDefaultProperty("indexOf", new IndexOf(engine));
 	}
 	
 	@Override

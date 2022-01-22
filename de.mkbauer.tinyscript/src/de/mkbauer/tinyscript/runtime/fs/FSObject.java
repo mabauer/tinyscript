@@ -8,8 +8,8 @@ public class FSObject extends TSObject {
 	public FSObject(TinyscriptEngine engine) {
 		super(engine, engine.getDefaultPrototype());
 		
-		defineDefaultProperty(this, "readFile", new ReadFile(engine));
-		defineDefaultProperty(this, "writeFile", new WriteFile(engine));
+		defineDefaultProperty("readFile", new ReadFile(engine));
+		defineDefaultProperty("writeFile", new WriteFile(engine));
 	}
 
 }

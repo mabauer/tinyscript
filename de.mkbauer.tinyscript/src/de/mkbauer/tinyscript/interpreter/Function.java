@@ -27,7 +27,7 @@ public abstract class Function extends TSObject {
 	}
 	
 	public void setPrototypeProperty(Object prototype) {
-		defineDefaultProperty(this, "prototype", prototype);
+		defineDefaultProperty("prototype", prototype);
 	}
 	
 	public TSValue getPrototypeProperty() {

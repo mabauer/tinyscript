@@ -124,14 +124,14 @@ public class TinyscriptEngine {
 		ObjectConstructor objectconstructor = new ObjectConstructor(this);
 		objectconstructor.initialize();
 
-		TSObject.defineDefaultProperty(globalObject, "Function", new FunctionConstructor(this));
-		TSObject.defineDefaultProperty(globalObject, "String", new StringConstructor(this));
-		TSObject.defineDefaultProperty(globalObject, "Array", new ArrayConstructor(this));
+		globalObject.defineDefaultProperty("Function", new FunctionConstructor(this));
+		globalObject.defineDefaultProperty("String", new StringConstructor(this));
+		globalObject.defineDefaultProperty("Array", new ArrayConstructor(this));
 
-		TSObject.defineDefaultProperty(globalObject, "Math", new MathObject(this));
-		TSObject.defineDefaultProperty(globalObject, "fs", new FSObject(this));		
-		TSObject.defineDefaultProperty(globalObject, "System", new SystemObject(this));
-		TSObject.defineDefaultProperty(globalObject, "print", new Print(this));
+		globalObject.defineDefaultProperty("Math", new MathObject(this));
+		globalObject.defineDefaultProperty("fs", new FSObject(this));		
+		globalObject.defineDefaultProperty("System", new SystemObject(this));
+		globalObject.defineDefaultProperty("print", new Print(this));
 		
 		if (resourceMonitor != null)
 			resourceMonitor.stop();
