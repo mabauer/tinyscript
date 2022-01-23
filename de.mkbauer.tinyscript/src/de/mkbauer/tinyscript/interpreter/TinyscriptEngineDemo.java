@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.xtext.resource.XtextResourceSet;
 
 import com.google.inject.Injector;
@@ -21,16 +20,17 @@ class TinyscriptEngineDemo  {
 	 		URI uri = URI.createURI(fileName);
 	  
 	 		Injector injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
-	 		ResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
+	 		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
 	 		Resource resource = resourceSet.createResource(uri);
 	 		resource.load(null);
 	 		ast = (Tinyscript) resource.getContents().get(0);
+		
+	 		TinyscriptEngine engine = new TinyscriptEngine(resourceSet);
+	 		engine.execute(ast);
 		}
 		catch (IOException e) {
 			System.exit(1);
 		}
- 		TinyscriptEngine engine = new TinyscriptEngine();
- 		engine.execute(ast);		
     }  
   	
 }

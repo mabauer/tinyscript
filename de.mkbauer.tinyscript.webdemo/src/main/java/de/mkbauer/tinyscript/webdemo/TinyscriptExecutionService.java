@@ -3,7 +3,6 @@ package de.mkbauer.tinyscript.webdemo;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -50,9 +49,12 @@ public class TinyscriptExecutionService {
 	private static final Logger logger = LoggerFactory.getLogger(TinyscriptExecutionService.class);
 	
 	private Injector injector;
+	private XtextResourceSet resourceSet;
+	private Resource currentResource;
 	
 	public TinyscriptExecutionService() {
 		injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
+		resourceSet = injector.getInstance(XtextResourceSet.class);
 	}
 	
 	public TinyscriptExecutionResult executeScriptFromString(String script) {
@@ -80,7 +82,7 @@ public class TinyscriptExecutionService {
 		monitor.enableObjectTracking();
 		monitor.enableMXBeanInspection();
 		monitor.configureLimits(limits);
-		TinyscriptEngine engine = new TinyscriptEngine(monitor);
+		TinyscriptEngine engine = new TinyscriptEngine(resourceSet, monitor);
 		ResourceConsumption statistics = new ResourceConsumption();
 		
 		try {
@@ -92,8 +94,14 @@ public class TinyscriptExecutionService {
 			resultAsString = result.asString();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
-			if (log)
-				logExecution(script, null, statistics);
+			logExecution(script, null, statistics);
+			// Unload Xtext resource! 
+			try {
+				currentResource.delete(null);
+			}
+			catch (IOException e) {
+				logger.warn("Deleteing Xtext resource failed");
+			}
 			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
 		catch (TinyscriptRuntimeException e) {
@@ -101,8 +109,7 @@ public class TinyscriptExecutionService {
 			errorLine = e.getAffectedLine();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
-			if (log)
-				logExecution(script, e, statistics);
+			logExecution(script, e, statistics);
 			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
 	}
@@ -124,9 +131,9 @@ public class TinyscriptExecutionService {
 	
 	protected Tinyscript parseScriptFromString(String script) {
 		Tinyscript ast;
-		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
+
 		URI uri = newResourceUri(resourceSet);
-		Resource currentResource = resourceSet.getResource(uri, false);
+		currentResource = resourceSet.getResource(uri, false);
 		if (currentResource == null) {
 			currentResource = resourceSet.createResource(uri);
 		}

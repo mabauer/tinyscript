@@ -8,7 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.resource.XtextResourceSet;
 
 import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
@@ -49,6 +52,7 @@ import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
+import de.mkbauer.tinyscript.ts.TsFactory;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.TypeOfExpression;
 import de.mkbauer.tinyscript.ts.Unary;
@@ -71,6 +75,10 @@ import de.mkbauer.tinyscript.runtime.system.SystemObject;
  */
 public class TinyscriptEngine {
 	
+	private static final String BUILTINSFILE = "__builtins.ts";
+
+	private XtextResourceSet resourceSet;
+	
 	private ExecutionContext currentContext;
 	private GlobalExecutionContext globalContext;
 	
@@ -87,11 +95,13 @@ public class TinyscriptEngine {
 	protected int callDepth;
 	private ResourceMonitor resourceMonitor;
 	
-	public TinyscriptEngine() {
+	public TinyscriptEngine(XtextResourceSet resourceSet) {
+		this.resourceSet = resourceSet;
 		initialize();
 	}
 	
-	public TinyscriptEngine(ResourceMonitor resourceMonitor) {
+	public TinyscriptEngine(XtextResourceSet resourceSet, ResourceMonitor resourceMonitor) {
+		this.resourceSet = resourceSet;
 		this.resourceMonitor = resourceMonitor;
 		initialize();
 	}
@@ -122,18 +132,37 @@ public class TinyscriptEngine {
 		// TSObject.defineDefaultProperty(globalObject, "Object", new ObjectObject(this));
 		ObjectConstructor objectconstructor = new ObjectConstructor(this);
 		objectconstructor.initialize();
+		addIdentifierToBuiltins("Object");
 
-		globalObject.defineDefaultProperty("Function", new FunctionConstructor(this));
-		globalObject.defineDefaultProperty("String", new StringConstructor(this));
-		globalObject.defineDefaultProperty("Array", new ArrayConstructor(this));
+		addToGlobalObject("Function", new FunctionConstructor(this));
+		addToGlobalObject("String", new StringConstructor(this));
+		addToGlobalObject("Array", new ArrayConstructor(this));
 
-		globalObject.defineDefaultProperty("Math", new MathObject(this));
-		globalObject.defineDefaultProperty("fs", new FSObject(this));		
-		globalObject.defineDefaultProperty("System", new SystemObject(this));
-		globalObject.defineDefaultProperty("print", new Print(this));
+		addToGlobalObject("Math", new MathObject(this));
+		addToGlobalObject("fs", new FSObject(this));		
+		addToGlobalObject("System", new SystemObject(this));
+		addToGlobalObject("print", new Print(this));
 		
 		if (resourceMonitor != null)
 			resourceMonitor.stop();
+	}
+	
+	private void addIdentifierToBuiltins(String name) {
+		TsFactory factory = TsFactory.eINSTANCE;
+		Identifier id = factory.createIdentifier();
+		id.setName(name);
+		URI builtinsUri = URI.createURI(BUILTINSFILE);
+		Resource builtinsResource = resourceSet.getResource(builtinsUri, false);
+		if (builtinsResource == null) {
+			builtinsResource = resourceSet.createResource(builtinsUri);
+		}
+		builtinsResource.getContents().add(id);
+	}
+	
+	private void addToGlobalObject(String name, TSObject value) {
+		TSObject globalObject = globalContext.getGlobalObject();
+		globalObject.defineDefaultProperty(name, value);
+		addIdentifierToBuiltins(name);	
 	}
 	
 	public void defineStdOut(OutputStream os) {

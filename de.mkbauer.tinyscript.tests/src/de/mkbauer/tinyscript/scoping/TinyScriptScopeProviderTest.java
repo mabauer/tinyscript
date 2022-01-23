@@ -47,7 +47,7 @@ public class TinyScriptScopeProviderTest extends TinyscriptInterpreterTestHelper
 		Tinyscript ast = parseScriptFromString("var x = 1; var f = function(x) {return x;}; f(x);");
 		getValidator().assertNoErrors(ast);
 
-				// parseFromString("var x =\"Hello, World!\"; var f = function (x) { return x; }; f(x);");
+		// parseFromString("var x =\"Hello, World!\"; var f = function (x) { return x; }; f(x);");
 		List<Identifier> ids = EcoreUtil2.getAllContentsOfType(ast, Identifier.class);
 		Identifier xOuter = ids.get(0);
 		assertEquals(xOuter.getName(), "x");

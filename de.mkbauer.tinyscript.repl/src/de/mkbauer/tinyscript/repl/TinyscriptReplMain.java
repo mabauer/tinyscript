@@ -74,7 +74,7 @@ class TinyscriptReplMain  {
 	public TinyscriptReplMain() {	
 		Injector injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
 		resourceSet = injector.getInstance(XtextResourceSet.class);
-		engine = new TinyscriptEngine();
+		engine = new TinyscriptEngine(resourceSet);
 		
 		engine.setSandboxed(false);
 		engine.defineStdOut(System.out);

@@ -4,7 +4,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
+
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -15,13 +15,10 @@ import org.eclipse.xtext.resource.XtextResourceSet;
 import org.junit.Before;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 
-import de.mkbauer.tinyscript.TinyscriptRuntimeModule;
-import de.mkbauer.tinyscript.tests.TinyscriptInjectorProvider;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
-import de.mkbauer.tinyscript.ts.Expression;
+
 import de.mkbauer.tinyscript.ts.ExpressionStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
@@ -31,7 +28,7 @@ public class TinyscriptInterpreterTestHelper {
 	protected static final double epsilon = 0.000001;
 
 	@Inject
-	private Provider<XtextResourceSet> resourceSetProvider;
+	private XtextResourceSet resourceSet;
 
 	@Inject
 	private ParseHelper<Tinyscript> parser;
@@ -47,7 +44,8 @@ public class TinyscriptInterpreterTestHelper {
 	
 	@Before
 	public void setUp()  {
-		engine = new TinyscriptEngine();
+		engine = new TinyscriptEngine(resourceSet);
+		engine.defineStdOut(System.out);
 	}
 	
 	protected TSValue executeScriptFromFile(String filename) {
@@ -59,7 +57,7 @@ public class TinyscriptInterpreterTestHelper {
 		Tinyscript ast = null;
 		try {
 			URI uri = URI.createURI(filename);
-			Resource resource = resourceSetProvider.get().createResource(uri);
+			Resource resource = resourceSet.createResource(uri);
 			InputStream in = this.getClass().getClassLoader()
                     .getResourceAsStream(filename);
 			resource.load(in, null);
@@ -80,7 +78,7 @@ public class TinyscriptInterpreterTestHelper {
 	protected Tinyscript parseScriptFromString(String line) {
 		Tinyscript ast = null;
 		try {
-			 ast = (Tinyscript) parser.parse(line);	
+			 ast = (Tinyscript) parser.parse(line, resourceSet);	
 			 validator.assertNoErrors(ast);
 		}
 		// TODO: Check exception handling
@@ -115,10 +113,6 @@ public class TinyscriptInterpreterTestHelper {
 		ExpressionStatement expr = (ExpressionStatement) ast.getGlobal().getStatements().get(0);
 		TSValue result = engine.execute(expr);
 		return result;
-	}
-
-	protected Provider<XtextResourceSet> getResourceSetProvider() {
-		return resourceSetProvider;
 	}
 
 	protected ParseHelper<Tinyscript> getParser() {
