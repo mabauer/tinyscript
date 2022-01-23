@@ -27,6 +27,7 @@ import com.google.inject.Provider;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -84,6 +85,14 @@ class TinyscriptReplMain  {
 		URI uri = URI.createURI(fileName);
 		Resource resource = resourceSet.createResource(uri);
  		resource.load(null);
+ 		List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+ 		if (!issues.isEmpty()) {
+			for (Issue issue: issues) {
+				String msg = issue.getMessage();
+				System.err.println("TinyscriptSyntaxError: " + msg + " in " + fileName + ":" + issue.getLineNumber());
+			}
+			System.exit(1);;
+ 		}
  		Tinyscript ast = (Tinyscript) resource.getContents().get(0);
  		try {
  			TSValue result = execute(ast);

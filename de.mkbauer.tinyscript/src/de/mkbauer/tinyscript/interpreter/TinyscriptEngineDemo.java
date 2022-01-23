@@ -23,6 +23,7 @@ class TinyscriptEngineDemo  {
 	 		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
 	 		Resource resource = resourceSet.createResource(uri);
 	 		resource.load(null);
+	 		// FIXME: Add validation
 	 		ast = (Tinyscript) resource.getContents().get(0);
 		
 	 		TinyscriptEngine engine = new TinyscriptEngine(resourceSet);
