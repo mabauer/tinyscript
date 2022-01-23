@@ -62,9 +62,25 @@ public class TSPropertyDescriptor {
 		this.value = value;
 	}
 
-	public TSObject toObject() {
-		// TODO: Complete implementation
-		return null;
+	public TSObject toObject(TinyscriptEngine engine) {
+		TSObject propertyDescObject = new TSObject(engine, engine.getDefaultPrototype());
+		propertyDescObject.put("writeable", new TSValue(isWriteable()));
+		propertyDescObject.put("configurable", new TSValue(isConfigurable()));
+		propertyDescObject.put("enumerable", new TSValue(isEnumerable()));		
+		propertyDescObject.put("value", getValue());
+		return propertyDescObject;
+	}
+	
+	public static TSPropertyDescriptor fromObject(TSObject propertyDescObject) {
+		TSPropertyDescriptor propertyDescriptor = new TSPropertyDescriptor();
+		if (propertyDescObject.contains("writeable") && !propertyDescObject.get("writeable").asBoolean()) 
+			propertyDescriptor.setWriteable(false);
+		if (propertyDescObject.contains("configurable") && !propertyDescObject.get("configurable").asBoolean()) 
+			propertyDescriptor.setConfigurable(false);
+		if (propertyDescObject.contains("enumerable") && !propertyDescObject.get("enumerable").asBoolean()) 
+			propertyDescriptor.setEnumerable(false);
+		propertyDescriptor.setValue(propertyDescObject.get("value"));
+		return propertyDescriptor;
 	}
 	
 	public String toString() {

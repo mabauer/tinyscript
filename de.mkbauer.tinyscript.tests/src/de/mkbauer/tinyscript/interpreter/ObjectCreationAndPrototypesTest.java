@@ -43,6 +43,11 @@ public class ObjectCreationAndPrototypesTest extends
 	}
 	
 	@Test 
+	public void testOO2() {
+		executeScriptFromFile("oo2.ts");
+	}
+	
+	@Test 
 	public void testInstanceOfForBuiltins() {
 		executeScriptFromString("var obj = {}; assert (obj instanceof Object);");
 		executeScriptFromString("function f(x) {return x; } assert (f instanceof Function);");

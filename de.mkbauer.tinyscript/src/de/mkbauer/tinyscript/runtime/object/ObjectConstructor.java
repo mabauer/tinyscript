@@ -49,6 +49,9 @@ public class ObjectConstructor extends BuiltinConstructor {
 		// Object.create(proto), Object.keys(obj)...
 		defineDefaultProperty("create", new Create(engine));
 		defineDefaultProperty("getPrototypeOf", new GetPrototypeOf(engine));
+		defineDefaultProperty("defineProperty", new DefineProperty(engine));
+		defineDefaultProperty("getOwnPropertyNames", new GetOwnPropertyNames(engine));
+		defineDefaultProperty("getOwnPropertyDescriptor", new GetOwnPropertyDescriptor(engine));
 		defineDefaultProperty("keys", new Keys(engine));
 		
 		// Now, that we have the prototype of all functions, we can safely add functions to the prototype of all objects

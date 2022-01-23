@@ -139,9 +139,9 @@ public class TSObject {
 		else
 			desc.setValue( (TSValue) value);
 		// This differs form ECMAScript specs.
-		desc.setConfigurable(false);
+		desc.setConfigurable(true);
 		desc.setEnumerable(false);
-		desc.setWriteable(false);
+		desc.setWriteable(true);
 		setOwnPropertyDescriptor(key, desc);
 	}
 	
@@ -150,6 +150,7 @@ public class TSObject {
 	}
 	
 	public void setOwnPropertyDescriptor(String key, TSPropertyDescriptor desc) {
+		// TODO: if not configurable , throw a TypeException 
 		properties.put(key,  desc);
 	}
 	
@@ -187,8 +188,13 @@ public class TSObject {
 	
 	public void put(String key, TSValue value) {
 		TSPropertyDescriptor desc = properties.get(key);
-		if (desc != null)
-			desc.setValue(value);
+		if (desc != null) {
+			if (desc.isWriteable()) 
+				desc.setValue(value);
+			else {
+				// log.debug("Error: assigning to a non-writeable key: " + key);
+			}
+		}
 		else {
 			desc = new TSPropertyDescriptor(value);
 			properties.put(key, desc);
@@ -209,6 +215,12 @@ public class TSObject {
 	public List<String> getKeys() {
 		return (properties.keySet().stream()
 				.filter(key -> properties.get(key).isEnumerable())
+				.collect(Collectors.toList()));
+	}
+	
+	public List<String> getOwnPropertyNames() {
+		return (properties.keySet().stream()
+				.filter(key -> !key.startsWith("__"))
 				.collect(Collectors.toList()));
 	}
 	
