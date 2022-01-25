@@ -143,6 +143,12 @@ public class ArrayObject extends BuiltinType {
 		return items;
 	}
 	
+	public TSValue[] asJavaArray() {
+		TSValue[] result = new  TSValue[items.size()];
+		items.toArray(result);
+		return result;
+	}
+	
 	@Override
 	public List<String> getKeys() {
 		List<String> result = new ArrayList<String>();

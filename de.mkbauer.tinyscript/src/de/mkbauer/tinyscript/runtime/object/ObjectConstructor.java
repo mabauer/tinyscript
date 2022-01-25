@@ -7,6 +7,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.runtime.function.prototype.Apply;
 import de.mkbauer.tinyscript.runtime.function.prototype.Call;
 import de.mkbauer.tinyscript.runtime.object.prototype.HasOwnProperty;
 
@@ -42,6 +43,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 		// Add all the basic stuff to our prototype, the prototype of all functions
 		proto.defineDefaultProperty("toString", new de.mkbauer.tinyscript.runtime.function.prototype.ToString(engine));
 		proto.defineDefaultProperty("call", new Call(engine));
+		proto.defineDefaultProperty("apply", new Apply(engine));
 		proto.defineDefaultProperty("length", new TSValue(getLength()));
 		// TODO: Remove, just for testing
 		proto.defineDefaultProperty("isCallable", new TSValue(true));
