@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.List;
-
 public abstract class BuiltinConstructor extends BuiltinFunction {
 
 	public BuiltinConstructor(TinyscriptEngine engine) {
@@ -12,7 +10,7 @@ public abstract class BuiltinConstructor extends BuiltinFunction {
 	}
 	
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		return new TSValue(self);
 	}
 	

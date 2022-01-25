@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.runtime.string.prototype;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -17,12 +15,12 @@ public class CharAt extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
 		String result = "";
 		if (self instanceof StringObject) {
 			String str = TSObject.toString(engine, new TSValue(self));
-			int pos = TSObject.toInteger(engine, args.get(0)); 
+			int pos = TSObject.toInteger(engine, args[0]); 
 			if (pos >=0 && pos < str.length()) {
 				result = str.substring(pos, pos+1);
 			} 

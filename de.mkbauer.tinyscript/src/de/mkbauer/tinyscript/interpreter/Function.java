@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class Function extends TSObject {
@@ -44,11 +42,7 @@ public abstract class Function extends TSObject {
 		return false;
 	}
 	
-	public TSValue call(TSObject self, TSValue... args) {
-		return apply(self, Arrays.<TSValue>asList(args));
-	}
-	
-	public abstract TSValue apply(TSObject self, List<TSValue> args);
+	public abstract TSValue apply(TSObject self, TSValue[] args);
 			
 	public abstract String getName();
 	

@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.runtime.string.prototype;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -17,11 +15,11 @@ public class IndexOf extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
 		// TODO: Should try to convert to string (using asString())
 		if (self instanceof StringObject) {
-			String search = args.get(0).asString(); 
+			String search = args[0].asString(); 
 			String value = ((StringObject) self).getValue();
 			int result = value.indexOf(search);
 			return new TSValue(result);

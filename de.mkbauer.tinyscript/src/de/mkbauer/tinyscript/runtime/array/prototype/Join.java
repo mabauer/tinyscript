@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.runtime.array.prototype;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
@@ -19,14 +18,14 @@ public class Join extends BuiltinFunction {
 	}
 	
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		if (!(self instanceof ArrayObject))
 			throw new TinyscriptTypeError("Function Array.prototype.join only works for Array objects.");
 		ArrayObject arr = (ArrayObject) self;
 		String separator = "";
-		if (args.size() >= 1) {
-			if (args.get(0).isString()) {
-				separator = args.get(0).asString();
+		if (args.length >= 1) {
+			if (args[0].isString()) {
+				separator = args[0].asString();
 			}
 		}
 		String result = arr.getItems().stream()

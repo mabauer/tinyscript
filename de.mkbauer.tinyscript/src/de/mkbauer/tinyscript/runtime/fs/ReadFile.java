@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.List;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
@@ -22,10 +21,10 @@ public class ReadFile extends BuiltinFunction {
 		}
 
 		@Override
-		public TSValue apply(TSObject self, List<TSValue> args) {
+		public TSValue apply(TSObject self, TSValue[] args) {
 			checkArgs(args);
 			String result = null;
-			String fileName = args.get(0).asString();
+			String fileName = args[0].asString();
 			
 			// Make sure we do not allow file access in sandboxed mode
 			enforceSandboxing();

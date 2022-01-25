@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.runtime.object.prototype;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -16,9 +14,9 @@ public class HasOwnProperty extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
-		return new TSValue(self.hasOwnProperty(args.get(0).asString()));
+		return new TSValue(self.hasOwnProperty(args[0].asString()));
 	}
 
 

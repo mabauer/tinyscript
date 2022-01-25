@@ -1,8 +1,5 @@
 package de.mkbauer.tinyscript.runtime.array.prototype;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -20,7 +17,7 @@ public class Unshift extends BuiltinFunction {
 	}
 	
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
 		if (!(self instanceof ArrayObject))
 			throw new TinyscriptTypeError("Function Array.prototype.unshift only works for Array objects.");

@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.runtime.string;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -31,9 +29,9 @@ public class StringConstructor extends BuiltinConstructor {
 	}
 	
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
-		if (args.size() > 0) {
-			String str = args.get(0).asString();
+	public TSValue apply(TSObject self, TSValue[] args) {
+		if (args.length > 0) {
+			String str = args[0].asString();
 			if (self instanceof StringObject) {
 				((StringObject) self).setValue(str);
 			}

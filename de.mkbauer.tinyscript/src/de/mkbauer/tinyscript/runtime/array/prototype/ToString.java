@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.runtime.array.prototype;
 
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
@@ -16,8 +15,7 @@ public class ToString extends BuiltinFunction {
 	private final static String NAME = "toString";
 	
 	@Override
-	public TSValue apply(TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		// TODO: Should be generic (implemented by calling join)
 		if (!(self instanceof ArrayObject))
 			throw new TinyscriptTypeError("Function Array.prototype.toString only works for Array objects.");

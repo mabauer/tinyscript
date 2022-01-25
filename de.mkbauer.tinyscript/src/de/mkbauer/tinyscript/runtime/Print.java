@@ -3,7 +3,6 @@ package de.mkbauer.tinyscript.runtime;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.List;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
@@ -19,7 +18,7 @@ public class Print extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
 		OutputStream os = engine.getStdOut();
 		try {

@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
@@ -38,7 +37,7 @@ public class InterpretedFunction extends Function {
 	}
 	
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		
 		ResourceMonitor monitor = engine.getResourceMonitor();
 		if (monitor != null)
@@ -71,12 +70,11 @@ public class InterpretedFunction extends Function {
 		
 		// Put the arguments into the context
 		if (args != null) {
-			int argsN = args.size();
 			int i = 0;
 			for (Identifier param : ast.getParams()) {
 				currentContext.create(param.getName());
-				if (i < argsN) {
-					currentContext.store(param.getName(), args.get(i));
+				if (i < args.length) {
+					currentContext.store(param.getName(), args[i]);
 				}
 				i++;
 			}

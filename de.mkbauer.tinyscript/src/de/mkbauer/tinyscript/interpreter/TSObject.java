@@ -42,7 +42,7 @@ public class TSObject {
 			if (toStringValue.isObject()) {
 				TSObject toString = toStringValue.asObject();
 				if (toString instanceof Function) {
-					TSValue result = ((Function) toString).call(object, new TSValue[0]);
+					TSValue result = ((Function) toString).apply(object, new TSValue[0]);
 					if (result.isString())
 						return result.asString();
 				}

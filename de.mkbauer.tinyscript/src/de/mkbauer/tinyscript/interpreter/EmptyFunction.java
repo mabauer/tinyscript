@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.List;
-
 public class EmptyFunction extends BuiltinFunction {
 	
 	public EmptyFunction(TinyscriptEngine engine) {
@@ -9,7 +7,7 @@ public class EmptyFunction extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		return TSValue.UNDEFINED;
 	}
 

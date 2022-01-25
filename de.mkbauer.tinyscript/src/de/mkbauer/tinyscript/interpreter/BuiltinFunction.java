@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.List;
-
 
 public class BuiltinFunction extends Function {
 	
@@ -14,8 +12,8 @@ public class BuiltinFunction extends Function {
 		implementation = null;
 	}
 	
-	public void checkArgs(List <TSValue> args) {
-		if (args.size() < getLength()) {
+	public void checkArgs(TSValue[] args) {
+		if (args.length < getLength()) {
 			throw new TinyscriptArgumentError("Builtin function " + getName() + " requires at least " + getLength() + " arguments.", 
 					engine.getCurrentContext().currentExpression);
 		}
@@ -43,7 +41,7 @@ public class BuiltinFunction extends Function {
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
 		if (implementation == null)
 			return TSValue.UNDEFINED;

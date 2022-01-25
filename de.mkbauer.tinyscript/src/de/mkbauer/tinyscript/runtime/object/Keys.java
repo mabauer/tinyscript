@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.runtime.object;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -18,9 +16,9 @@ public class Keys extends BuiltinFunction {
 	private final static String NAME = "keys";
 	
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
-		TSValue objectAsValue = args.get(0);
+		TSValue objectAsValue = args[0];
 		ArrayObject result = (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();
 		if (objectAsValue.isObject()) {
 			TSObject object = objectAsValue.asObject();

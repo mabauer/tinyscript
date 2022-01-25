@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.runtime.math;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -17,9 +15,9 @@ public class Round extends BuiltinFunction {
 	}
 
 	@Override
-	public TSValue apply(TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
-		return new TSValue(java.lang.Math.round(TSObject.toNumber(engine, args.get(0))));
+		return new TSValue(java.lang.Math.round(TSObject.toNumber(engine, args[0])));
 	}
 	
 
