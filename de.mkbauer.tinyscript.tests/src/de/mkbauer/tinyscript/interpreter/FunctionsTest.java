@@ -14,14 +14,14 @@ import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 
 
 @RunWith(XtextRunner.class)
-public class FunctionTest extends TinyscriptInterpreterTestHelper {
+public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testSimpleFunctionExpression() {
-		TSValue value = executeScriptFromString("var f = function(x) {return x*x;}; assert (f(2)==4);");
-		value = executeScriptFromString("var f = function(x) {return x*x;}; var result = f(2); assert (result==4);");
-		value = executeScriptFromString("var f = function(x) {return x*x;}; var arg = 2; var result = f(arg); assert (result==4);");
-		value = executeScriptFromString("var f = function(x) {return x*x;}; var arg = 2; var result = f(arg+1); assert (result==9);");
+		executeScriptFromString("var f = function(x) {return x*x;}; assert (f(2)==4);");
+		executeScriptFromString("var f = function(x) {return x*x;}; var result = f(2); assert (result==4);");
+		executeScriptFromString("var f = function(x) {return x*x;}; var arg = 2; var result = f(arg); assert (result==4);");
+		executeScriptFromString("var f = function(x) {return x*x;}; var arg = 2; var result = f(arg+1); assert (result==9);");
 	}
 	
 	@Test
@@ -32,18 +32,18 @@ public class FunctionTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testSimpleFunctionDeclaration() {
-		TSValue value = executeScriptFromString("function f(x) {assert(x==2); return x*x;}; assert (f(2)==4);");
+		executeScriptFromString("function f(x) {assert(x==2); return x*x;}; assert (f(2)==4);");
 	}
 
 	
 	@Test
 	public void testFunctionExpressionWithoutArgs() {
-		TSValue value = executeScriptFromString("var f = function() {return 4;}; assert (f()==4);");
+		executeScriptFromString("var f = function() {return 4;}; assert (f()==4);");
 	}
 	
 	@Test
 	public void testNamedFunctionExpression() {
-		TSValue value = executeScriptFromString("var f = function square(x) {return x*x;}; assert (f(2)==4);");
+		executeScriptFromString("var f = function square(x) {return x*x;}; assert (f(2)==4);");
 	}
 
 	
@@ -51,7 +51,7 @@ public class FunctionTest extends TinyscriptInterpreterTestHelper {
 	public void testFunctionCausingException() {
 		// TODO: Move to an extra test, checking stacktrace generation
 		try {
-			TSValue value = executeScriptFromString("function f(x) {assert(x!=2); return x*x;}; assert (f(2)==4);");
+			executeScriptFromString("function f(x) {assert(x!=2); return x*x;}; assert (f(2)==4);");
 			fail();
 		}
 		catch (TinyscriptAssertationError e) {
