@@ -77,7 +77,7 @@ Examples:
 - The rules for ending statements with `;` are roughly the same as in Java.
 - Blocks create real *scopes*, they limit the visibility and validity of local variables.
 - Control structures always need blocks: `if (cond) { stmts; } else { stmts; }`
-- Elements can be appended to arrays using the operator `+`: `var arr = [„hallo"]; arr = arr + „welt“; -> arr = [„hallo“, „welt“];`
+- The operator `+` also works on arrays: `var arr = [„hallo"]; arr = arr + [„welt“]; -> arr = [„hallo“, „welt“];`
 - There are two types of `for`-loops: a numeric `for`-loop (inspired by *Lua*) and one to iterate over arrays.
 - There is no support for *regular expressions*.
 - *tinyscript* supports *arrow* functions. These are part of Javascript starting with Ecmascript 6 :-)

@@ -531,32 +531,15 @@ public class TinyscriptEngine {
     		if (left.isNumber() && right.isNumber()) {
     			return new TSValue(left.asDouble() + right.asDouble());
     		}
-    		if (left.isArray()) {
-    			if (right.isArray()) {
-    				return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
-    			}
-    			else {
-    				ArrayObject result = left.asArray().clone();
-    				result.push(right);
-    				return new TSValue(result);
-    			}	
-    		}
-    		if (right.isArray()) {
-    			if (left.isArray()) {
-    				return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
-    			}
-    			else {
-    				ArrayObject result = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject(); 
-    				result.push(left);
-    				result = ArrayObject.concat(result, right.asArray());
-    				return new TSValue(result);
-    			}
-    		}
     		if (left.isString() || right.isString()) {
     			String result = left.asString() + right.asString();
     			recordStringCreation(result);
     			return new TSValue(result);
     		}
+    		if (left.isArray() && right.isArray()) {
+    			return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
+    		}
+
     		return TSValue.NAN;
     	}
     	if (op.equals("-")) {

@@ -1,6 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.eclipse.xtext.testing.XtextRunner;
 import org.junit.Test;
@@ -99,17 +100,24 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 	public void testStringAddition() {
 		TSValue value = evaluateSimpleExpression("\"Hello\" + \", \" + \"World!\"");
 		assertEquals("Hello, World!", value.asString());
-		value = evaluateSimpleExpression("\"Hello \" + 2");
+	}
+	
+	@Test
+	public void testStringAdditionWithConversion() {
+		TSValue value = evaluateSimpleExpression("\"Hello \" + 2");
 		assertEquals("Hello 2", value.asString());
 		value = evaluateSimpleExpression("\"Hello, \" + 2 + \" Worlds!\"");
 		assertEquals("Hello, 2 Worlds!", value.asString());
+		value = executeScriptFromString("var s = \"Hello \"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; result;");
+		assertTrue(value.isString());
+		assertEquals("Hello ['Markus', 'Bauer']", value.asString());
 	}
 	
 	@Test
 	public void testArrayAddition() {
 		executeScriptFromString("var a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; var result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
-		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
-		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + s; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
+		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = [s] + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
+		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + [s]; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
 	}
 
 }
