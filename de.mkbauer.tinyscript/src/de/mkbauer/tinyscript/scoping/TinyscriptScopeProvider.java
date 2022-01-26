@@ -97,6 +97,9 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 			FunctionDefinition function = (FunctionDefinition) container;
 			List<Identifier> params = function.getParams();
 			ids.addAll(params);
+			Identifier rest = function.getRest();
+			if (rest != null)
+				ids.add(rest);
 			EObject parent = TinyscriptModelUtil.containingBlock(function);
 			return Scopes.scopeFor(ids, createBlockScope(parent, false));
 		}

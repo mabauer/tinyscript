@@ -91,6 +91,17 @@ public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 		TSValue result = executeScriptFromString("function f(a, b) { return b; }; f(2);");	
 		assertEquals(TSValue.UNDEFINED, result);
 	}
+	
+	@Test
+	public void testFunctionWithRestParameters() {
+		executeScriptFromString("function f(...rest) { return rest; }; var result = f(1, 2, 3); "
+				+ "assert(result[0] == 1);"
+				+ "assert(result[1] == 2);"
+				+ "assert(result[2] == 3);");	
+		executeScriptFromString("function f(a, b, ...rest) { return rest; }; var result = f(1, 2, 3, 4); "
+				+ "assert(result[0] == 3);"
+				+ "assert(result[1] == 4);");	
+	}
 
 }
 

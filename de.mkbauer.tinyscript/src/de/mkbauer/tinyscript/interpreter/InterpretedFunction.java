@@ -3,6 +3,8 @@ package de.mkbauer.tinyscript.interpreter;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
+import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
@@ -68,7 +70,7 @@ public class InterpretedFunction extends Function {
 		}
 		currentContext.setFunctionContext(true);
 		
-		// Put the arguments into the context
+		// Put the arguments into the context		
 		if (args != null) {
 			int i = 0;
 			for (Identifier param : ast.getParams()) {
@@ -78,6 +80,16 @@ public class InterpretedFunction extends Function {
 				}
 				i++;
 			}
+		}
+		
+		// Special case ...rest parameter
+		if (ast.getRest() != null) {
+			currentContext.create(ast.getRest().getName());
+			ArrayObject restArray = (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();
+			for (int i = ast.getParams().size(); i < args.length; i++) {
+				restArray.push(args[i]);
+			}
+			currentContext.store(ast.getRest().getName(), new TSValue(restArray));
 		}
 		
 		// Hoist function declarations
