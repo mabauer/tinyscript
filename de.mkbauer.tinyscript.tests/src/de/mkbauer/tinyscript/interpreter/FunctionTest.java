@@ -45,36 +45,7 @@ public class FunctionTest extends TinyscriptInterpreterTestHelper {
 	public void testNamedFunctionExpression() {
 		TSValue value = executeScriptFromString("var f = function square(x) {return x*x;}; assert (f(2)==4);");
 	}
-	
-	@Test
-	public void testRecursiveFibonacci() {
-		TSValue value = executeScriptFromFile("fibonacci.ts");
-	}
-	
-	@Test
-	public void testIterativeFibonacci() {
-		TSValue value = executeScriptFromFile("fibonacci_loop.ts");
-	}
-	
-	@Test
-	public void testRecursiveFactorial() {
-		TSValue value = executeScriptFromFile("factorial.ts");
-	}
-	
-	@Test
-	public void testRecursiveggT() {
-		TSValue value = executeScriptFromFile("ggt.ts");
-	}
-	
-	@Test
-	public void testRecursiveLinkedList() {
-		TSValue value = executeScriptFromFile("linked_list.ts");
-	}
-	
-	@Test
-	public void testCounterWithClosures() {
-		TSValue value = executeScriptFromFile("counter_with_closures.ts");
-	}	
+
 	
 	@Test
 	public void testFunctionCausingException() {
@@ -88,20 +59,7 @@ public class FunctionTest extends TinyscriptInterpreterTestHelper {
 			assertEquals("f", st[0].getFunctionName());
 			assertEquals("global", st[1].getFunctionName());
 		}
-	}
-	
-/*	
-    @Test
-	public void testModulesWithClosures() {
-		TSValue value = executeScriptFromFile("modules_via_closures.ts");
-	} 
-*/
-	
-	@Test
-	public void testPrimes() {
-		TSValue value = executeScriptFromFile("primes.ts");
 	}	
-	
 	
 	@Test
 	public void testFunctionCallOnLHSExpression() {
@@ -118,8 +76,20 @@ public class FunctionTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testCallToBuiltInFunction() {
-		TSValue value = executeScriptFromString("var x = Math.sqrt(4); assert(x==2);");	
+		executeScriptFromString("var x = Math.sqrt(4); assert(x==2);");	
 		
+	}
+	
+	@Test
+	public void testCallWithTooManyArgs() {
+		executeScriptFromString("function f(a, b) { return a*b; }; assert(f(2, 3, 4)==6);");	
+		
+	}
+	
+	@Test
+	public void testCallWithTooFewArgs() {
+		TSValue result = executeScriptFromString("function f(a, b) { return b; }; f(2);");	
+		assertEquals(TSValue.UNDEFINED, result);
 	}
 
 }
