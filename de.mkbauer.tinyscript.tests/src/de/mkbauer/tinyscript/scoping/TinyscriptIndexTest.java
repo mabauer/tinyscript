@@ -6,18 +6,17 @@ import static org.junit.Assert.fail;
 
 import java.util.regex.Pattern;
 
-import org.eclipse.xtext.EcoreUtil2;
-import org.eclipse.xtext.junit4.InjectWith;
-import org.eclipse.xtext.junit4.XtextRunner;
-import org.eclipse.xtext.junit4.util.ParseHelper;
-import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
+import org.eclipse.xtext.testing.InjectWith;
+import org.eclipse.xtext.testing.XtextRunner;
+import org.eclipse.xtext.testing.util.ParseHelper;
+import org.eclipse.xtext.testing.validation.ValidationTestHelper;
 import org.eclipse.xtext.resource.IEObjectDescription;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.google.inject.Inject;
 
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
+import de.mkbauer.tinyscript.tests.TinyscriptInjectorProvider;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 

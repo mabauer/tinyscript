@@ -5,7 +5,8 @@ import java.lang.management.ThreadMXBean;
 
 import de.mkbauer.util.WeakHashMapWithCallBack;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListener<Integer> {
 	
@@ -24,12 +25,13 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	private long totalMemory = 0;
 	
 	private ThreadMXBean tBean = null;
+	// TODO: Restricted API
 	private com.sun.management.ThreadMXBean sunBean = null; 
 	private long threadId;
 	private long startMxCpuTime;
 	private long startMxMAllocations;
 	
-	private final static Logger logger = Logger.getLogger(ResourceMonitor.class);
+	private final static Logger logger = LoggerFactory.getLogger(ResourceMonitor.class);
 	
 	public ResourceMonitor() {
 		resourceLimits = ResourceLimits.UNLIMITED;
@@ -196,6 +198,8 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		return totalMemory;
 	}
 	
+	// TODO: This code should use reflection in order to avoid
+	// importing com.sun.management.ThreadMXBean
 	private void setupMXBeans() {
 	    if(useMXBeanInspection) {
 	    	threadId = Thread.currentThread().getId();

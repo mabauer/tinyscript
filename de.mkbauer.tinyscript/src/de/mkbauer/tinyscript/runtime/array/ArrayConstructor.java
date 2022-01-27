@@ -1,12 +1,11 @@
 package de.mkbauer.tinyscript.runtime.array;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.runtime.array.prototype.Filter;
+import de.mkbauer.tinyscript.runtime.array.prototype.Join;
 import de.mkbauer.tinyscript.runtime.array.prototype.Map;
 import de.mkbauer.tinyscript.runtime.array.prototype.Pop;
 import de.mkbauer.tinyscript.runtime.array.prototype.Push;
@@ -16,29 +15,25 @@ import de.mkbauer.tinyscript.runtime.array.prototype.Unshift;
 
 public class ArrayConstructor extends BuiltinConstructor {
 	
-	private static final String NAME = "Array";
+	public static final String NAME = "Array";
 	
-	public ArrayConstructor(ExecutionVisitor ev) {
-		super(ev);
+	public ArrayConstructor(TinyscriptEngine engine) {
+		super(engine);
 		defineArrayPrototype();
-		defineDefaultProperty(this, "isArray", new IsArray(ev));
+		defineDefaultProperty("isArray", new IsArray(engine));
 	}
 	
 	private void defineArrayPrototype() {
 		// TODO Add other Array methods
-		defineDefaultProperty(getPrototypeProperty().asObject(), "toString", new ToString(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "push", new Push(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "pop", new Pop(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "unshift", new Unshift(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "shift", new Shift(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "map", new Map(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "filter", new Filter(ev));
-	}
-	
-	@Override
-	public TSValue apply(boolean asConstrcutor, TSObject self, List<TSValue> args) {
-		// TODO Handle arguments
-		return new TSValue(new ArrayObject(ev));
+		TSObject arrayPrototype = getPrototypeProperty().asObject();
+		arrayPrototype.defineDefaultProperty("toString", new ToString(engine));
+		arrayPrototype.defineDefaultProperty("push", new Push(engine));
+		arrayPrototype.defineDefaultProperty("pop", new Pop(engine));
+		arrayPrototype.defineDefaultProperty("unshift", new Unshift(engine));
+		arrayPrototype.defineDefaultProperty("shift", new Shift(engine));
+		arrayPrototype.defineDefaultProperty("map", new Map(engine));
+		arrayPrototype.defineDefaultProperty("filter", new Filter(engine));
+		arrayPrototype.defineDefaultProperty("join", new Join(engine));
 	}
 
 	@Override
@@ -49,6 +44,14 @@ public class ArrayConstructor extends BuiltinConstructor {
 	@Override
 	public int getLength() {
 		return 0;
+	}
+
+	@Override
+	public TSObject createObject() {
+		TSObject newObject = new ArrayObject(engine); 
+		newObject.setPrototype(getPrototypeProperty().asObject());
+		newObject.defineDefaultProperty("constructor", new TSValue(this));
+		return newObject;
 	}
 
 }

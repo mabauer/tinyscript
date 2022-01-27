@@ -1,15 +1,17 @@
 package de.mkbauer.tinyscript.generator
 
 import org.junit.runner.RunWith
-import org.eclipse.xtext.junit4.XtextRunner
+
 import org.junit.Test
-import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper
+import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertTrue
 import com.google.inject.Inject
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider
-import org.eclipse.xtext.junit4.InjectWith
+import de.mkbauer.tinyscript.tests.TinyscriptInjectorProvider
+
 import java.util.regex.Pattern
+import org.eclipse.xtext.testing.InjectWith
+import org.eclipse.xtext.testing.XtextRunner
 
 @InjectWith(TinyscriptInjectorProvider)
 @RunWith(XtextRunner)

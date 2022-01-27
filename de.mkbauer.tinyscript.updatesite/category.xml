@@ -3,5 +3,11 @@
    <feature url="features/de.mkbauer.tinyscript.sdk_0.0.0.jar" id="de.mkbauer.tinyscript.sdk" version="0.0.0">
       <category name="de.mkbauer.tinyscript"/>
    </feature>
+   <bundle id="de.mkbauer.tinyscript" version="0.10.0.qualifier">
+      <category name="de.mkbauer.tinyscript.sdk"/>
+   </bundle>
+   <bundle id="de.mkbauer.tinyscript.ui" version="0.10.0.qualifier">
+      <category name="de.mkbauer.tinyscript.sdk"/>
+   </bundle>
    <category-def name="de.mkbauer.tinyscript.sdk" label="Tinyscript Language"/>
 </site>

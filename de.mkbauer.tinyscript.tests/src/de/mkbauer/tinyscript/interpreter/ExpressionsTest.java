@@ -2,21 +2,12 @@ package de.mkbauer.tinyscript.interpreter;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import org.eclipse.xtext.junit4.InjectWith;
-import org.eclipse.xtext.junit4.XtextRunner;
-import org.eclipse.xtext.junit4.util.ParseHelper;
-import org.eclipse.xtext.junit4.validation.ValidationTestHelper;
+import org.eclipse.xtext.testing.XtextRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.google.inject.Inject;
-
-import de.mkbauer.tinyscript.TinyscriptInjectorProvider;
-import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
-import de.mkbauer.tinyscript.ts.Expression;
-import de.mkbauer.tinyscript.ts.Tinyscript;
+import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 
 @RunWith(XtextRunner.class)
 public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
@@ -67,6 +58,7 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 		assertEquals(false, value.asBoolean());	
 	}
 	
+	@Test
 	public void testBooleanConversion() {
 		TSValue value = evaluateSimpleExpression("1.0");
 		assertEquals(true, value.asBoolean());
@@ -76,6 +68,7 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 		assertEquals(false, value.asBoolean());
 	}
 	
+	@Test
 	public void testDoubleLiteral() {
 		TSValue value = evaluateSimpleExpression("2.0");
 		assertEquals(2.0, value.asDouble(), epsilon);
@@ -107,17 +100,24 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 	public void testStringAddition() {
 		TSValue value = evaluateSimpleExpression("\"Hello\" + \", \" + \"World!\"");
 		assertEquals("Hello, World!", value.asString());
-		value = evaluateSimpleExpression("\"Hello \" + 2");
+	}
+	
+	@Test
+	public void testStringAdditionWithConversion() {
+		TSValue value = evaluateSimpleExpression("\"Hello \" + 2");
 		assertEquals("Hello 2", value.asString());
 		value = evaluateSimpleExpression("\"Hello, \" + 2 + \" Worlds!\"");
 		assertEquals("Hello, 2 Worlds!", value.asString());
+		value = executeScriptFromString("var s = \"Hello \"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; result;");
+		assertTrue(value.isString());
+		assertEquals("Hello ['Markus', 'Bauer']", value.asString());
 	}
 	
 	@Test
 	public void testArrayAddition() {
-		TSValue value = executeScriptFromString("var a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; var result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
-		value = executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
-		value = executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + s; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
+		executeScriptFromString("var a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; var result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
+		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = [s] + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
+		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + [s]; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
 	}
 
 }

@@ -1,9 +1,10 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
+import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
+import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
@@ -14,11 +15,11 @@ public class InterpretedFunction extends Function {
 	
 	private ExecutionContext outerContext;
 	
-	public InterpretedFunction(ExecutionVisitor ev) {
-		super(ev);
+	public InterpretedFunction(TinyscriptEngine engine) {
+		super(engine);
 		this.ast = null;
 		// Each user defined functions gets a new prototype property since it could be used as a constructor
-		setPrototypeProperty(new TSObject(ev, ev.getDefaultPrototype()));
+		setPrototypeProperty(new TSObject(engine, engine.getDefaultPrototype()));
 	}
 	
 	public void setAst(FunctionDefinition ast) {
@@ -38,73 +39,93 @@ public class InterpretedFunction extends Function {
 	}
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		
-		ResourceMonitor monitor = ev.getResourceMonitor();
+		ResourceMonitor monitor = engine.getResourceMonitor();
 		if (monitor != null)
 			monitor.checkMXCpuTimeAndMemory();
 
 		Block block = getBlock();
+		if (block == null) 
+			return TSValue.UNDEFINED;
+			
 		TSValue result = null;
 		
 		// Create a new execution context
-		ExecutionContext currentContext = ev.enterNewExecutionContext(getName(), outerContext);
+		ExecutionContext currentContext = engine.enterNewExecutionContext(getName(), outerContext);
 		
 		// Update and check call depth
-		ev.callDepth++;
+		engine.callDepth++;
 		
 		if (monitor != null)
-			monitor.checkCallDepth(ev.callDepth);
+			monitor.checkCallDepth(engine.callDepth);
 		
 		// Set this-Reference
 		currentContext.setThisRef(self);
+		
+		// With an arrow function, `this` is lexically bound. 
+		// It means that it uses `this` from the code that contains the arrow function.
+		if (isArrowFunction()) {
+			currentContext.setThisRef(getOuterContext().getThisRef());
+		}
 		currentContext.setFunctionContext(true);
 		
-		// Put the arguments into the context
+		// Put the arguments into the context		
 		if (args != null) {
-			int argsN = args.size();
 			int i = 0;
 			for (Identifier param : ast.getParams()) {
 				currentContext.create(param.getName());
-				if (i < argsN) {
-					currentContext.store(param.getName(), args.get(i));
+				if (i < args.length) {
+					currentContext.store(param.getName(), args[i]);
 				}
 				i++;
 			}
 		}
 		
+		// Special case ...rest parameter
+		if (ast.getRest() != null) {
+			currentContext.create(ast.getRest().getName());
+			ArrayObject restArray = (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();
+			for (int i = ast.getParams().size(); i < args.length; i++) {
+				restArray.push(args[i]);
+			}
+			currentContext.store(ast.getRest().getName(), new TSValue(restArray));
+		}
+		
 		// Hoist function declarations
-		LexicalEnvironment env = ev.getLexcialEnvironment(block);
+		LexicalEnvironment env = engine.getLexcialEnvironment(block);
 		for (TSValue function : env.getFunctions()) {	
 			// Create a variable in the current context pointing to each function object
-			String functionName = ((InterpretedFunction) function.asObject()).getName();
+			String functionName = ((Function) function.asObject()).getName();
 			if (!currentContext.contains(functionName))
 				currentContext.create(functionName);
 			currentContext.store(functionName, function);
 		}
 		
 		try {
-			result = ev.caseBlock(block);
-			if (asConstructor)
-				 result = new TSValue(currentContext.getThisRef());
-			ev.leaveExecutionContext();
-			ev.callDepth--;
+			
+			result = engine.caseBlock(block);
+			// The result (= value of last statement) of the body in a regular function 
+			// is NOT used as return value, if there is no return statement, the function's result is undefined
+			if (!isArrowFunction()) {
+				result = TSValue.UNDEFINED;
+			}
+			engine.leaveExecutionContext();
+			engine.callDepth--;
+			
 			return result;
 		}
 		catch (TSReturnValue rv) {
 			// Restore execution context
-			if (asConstructor && rv.equals(TSValue.UNDEFINED))
-				result = new TSValue(currentContext.getThisRef());
-			else
-				result = rv.getReturnValue();
-			ev.leaveExecutionContext();
-			ev.callDepth--;
+			result = rv.getReturnValue();
+			engine.leaveExecutionContext();
+			engine.callDepth--;
 			return result;				
 		}
 		catch (TinyscriptRuntimeException e) {
-			ev.attachStackTrace(e);
-			ev.leaveExecutionContext();
-			ev.callDepth--;
+			engine.attachStackTrace(e);
+			engine.leaveExecutionContext();
+			engine.callDepth--;
 			throw e;
 		}
 	}

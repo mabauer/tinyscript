@@ -21,9 +21,11 @@ public class TSValue { // implements Comparable<TSValue>
         if (value instanceof Number)
         	value = ((Number) value).doubleValue();
         // only accept boolean, list, number or string types
+        /* 
         if(!(isBoolean() || isDouble() || isString() || isObject())) {
             throw new RuntimeException("invalid data type: " + v + " (" + v.getClass() + ")");
         }
+    	*/
     }
 	
 	private TSValue() {
@@ -93,7 +95,7 @@ public class TSValue { // implements Comparable<TSValue>
 		if (isObject())
 			return true;
 		if (isNumber()) 
-			return (asDouble() == 0.0);  // TODO: Use delta
+			return (asDouble() != 0.0);  // TODO: Use delta
 		return ((Boolean)value).booleanValue();
 	}
 	
@@ -152,6 +154,9 @@ public class TSValue { // implements Comparable<TSValue>
 			else {
 				return false;
 			}
+		}
+		if (isString() && other.isString()) {
+			return (toString().equals(other.toString()));
 		}
 		return value.equals(other.value);
 	}	

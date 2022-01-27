@@ -1,9 +1,7 @@
 package de.mkbauer.tinyscript.runtime.string;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.runtime.string.prototype.CharAt;
@@ -14,36 +12,56 @@ import de.mkbauer.tinyscript.runtime.string.prototype.ToString;
 public class StringConstructor extends BuiltinConstructor {
 	
 
-	public StringConstructor(ExecutionVisitor ev) {
-		super(ev);
+	public final static String NAME = "String";
+	
+	public StringConstructor(TinyscriptEngine engine) {
+		super(engine);
 		defineStringPrototype();
 	}
 	
 	private void defineStringPrototype() {
 		// TODO Add other String methods
-		defineDefaultProperty(getPrototypeProperty().asObject(), "toString", new ToString(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "charAt", new CharAt(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "substring", new Substring(ev));
-		defineDefaultProperty(getPrototypeProperty().asObject(), "indexOf", new IndexOf(ev));
+		TSObject stringPrototypeObject = getPrototypeProperty().asObject();
+		stringPrototypeObject.defineDefaultProperty("toString", new ToString(engine));
+		stringPrototypeObject.defineDefaultProperty("charAt", new CharAt(engine));
+		stringPrototypeObject.defineDefaultProperty("substring", new Substring(engine));
+		stringPrototypeObject.defineDefaultProperty("indexOf", new IndexOf(engine));
 	}
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self, List<TSValue> args) {
-		// TODO Handle arguments
-		if (args.size() > 0)
-			return new TSValue(new StringObject(ev, args.get(0)));
-		else
-			return new TSValue(new StringObject(ev));
+	public TSValue apply(TSObject self, TSValue[] args) {
+		if (args.length > 0) {
+			String str = args[0].asString();
+			if (self instanceof StringObject) {
+				((StringObject) self).setValue(str);
+			}
+			else {
+				return new TSValue(str);
+			}
+		}
+		return new TSValue(self);
 	}
 	
 	@Override
 	public String getName() {
-		return "String";
+		return NAME;
 	}
 
 	@Override
 	public int getLength() {
 		return 0;
-	}	
+	}
+
+	@Override
+	public TSObject createObject() {
+		return createObject(null);
+	}
+	
+	public StringObject createObject(TSValue value) {
+		StringObject newObject = new StringObject(engine, value);
+		newObject.setPrototype(getPrototypeProperty().asObject());
+		newObject.defineDefaultProperty("constructor", new TSValue(this));
+		return newObject;
+	}
 
 }

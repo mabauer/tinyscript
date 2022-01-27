@@ -1,9 +1,7 @@
 package de.mkbauer.tinyscript.runtime.array;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
@@ -11,15 +9,14 @@ public class IsArray extends BuiltinFunction {
 	
 	private final static String NAME = "isArray";
 
-	public IsArray(ExecutionVisitor ev) {
-		super(ev);
+	public IsArray(TinyscriptEngine engine) {
+		super(engine);
 	}
 	
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
-		TSValue object = args.get(0);
+		TSValue object = args[0];
 		if (object.isObject() && object.asObject() instanceof ArrayObject) 
 			return new TSValue(true);
 		else 

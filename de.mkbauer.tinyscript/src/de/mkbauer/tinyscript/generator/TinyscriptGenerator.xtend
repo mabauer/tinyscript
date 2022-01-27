@@ -11,7 +11,6 @@ import de.mkbauer.tinyscript.ts.StringLiteral
 import de.mkbauer.tinyscript.ts.BlockStatement
 import de.mkbauer.tinyscript.ts.Block
 import de.mkbauer.tinyscript.TinyscriptModelUtil
-import org.eclipse.emf.ecore.EObject
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider
 import de.mkbauer.tinyscript.ts.NumberLiteral
 import de.mkbauer.tinyscript.ts.ExpressionStatement
@@ -39,7 +38,7 @@ import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
 
-class TinyscriptGenerator  {
+class TinyscriptGenerator   {
 	
 	@Inject
 	TinyscriptQualifiedNameProvider nameProvider;
@@ -122,7 +121,7 @@ class TinyscriptGenerator  {
 	'''
 	
 	def dispatch generate(FunctionDeclaration func) '''
-		function «IF (func.id != null)»«func.id.generate»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {
+		function «IF (func.id !== null)»«func.id.generate»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {
 			«func.block.generate»
 		}
 		
@@ -130,14 +129,14 @@ class TinyscriptGenerator  {
 	
 	def dispatch generate(ArrowFunction func) 
 		'''function («FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») { return «func.block.generate» ;}'''
-
+	
 	def dispatch generate(FunctionDefinition func) '''
-		function «IF (func.id != null)»«func.id.name»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {
+		function «IF (func.id !== null)»«func.id.name»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {
 			«func.block.generate»
 		}'''	
 		
 	def dispatch generate(ReturnStatement stmt) '''
-		return«IF stmt.expr != null» «stmt.expr.generate»«ENDIF»;
+		return«IF stmt.expr !== null» «stmt.expr.generate»«ENDIF»;
 	'''
 	
 	def dispatch generate(AssertStatement stmt) '''
@@ -148,7 +147,7 @@ class TinyscriptGenerator  {
 		if («stmt.cond.generate») {
 			«stmt.then.generate»
 		}
-		«IF stmt.^else!=null»
+		«IF stmt.^else !== null»
 		else {
 			«stmt.^else.^else.generate»
 		}
@@ -156,7 +155,7 @@ class TinyscriptGenerator  {
 	'''
 	
 	def dispatch generate(ForStatement stmt) {
-		if (stmt.numericForExpr != null) {
+		if (stmt.numericForExpr !== null) {
 			generateNumericForStatement(stmt);
 		}
 		else { 
@@ -168,7 +167,7 @@ class TinyscriptGenerator  {
 		val NumericForExpression expr=stmt.numericForExpr; 
 		var String loopVar; 
 		var String loopVarDefinition;  
-		if (stmt.id != null) {
+		if (stmt.id !== null) {
 			loopVar = stmt.id.generate as String
 			loopVarDefinition = "var " + loopVar;
 		}
@@ -177,7 +176,7 @@ class TinyscriptGenerator  {
 			loopVarDefinition = loopVar;
 		}
 		'''
-		«IF (expr.step == null)»
+		«IF (expr.step === null)»
 			for («loopVarDefinition» = «expr.start.generate»; «loopVar» <= «expr.stop.generate»; «loopVar» = «loopVar» + 1) {
 				«stmt.^do.generate»
 			}
@@ -213,10 +212,10 @@ class TinyscriptGenerator  {
 		'''(«expr.expr.generate»)'''
 
 	def dispatch generate(CallOrPropertyAccess expr) 
-		'''«expr.expr.generate»«IF (expr.suffix != null)»«expr.suffix.generate»«ENDIF»'''
+		'''«expr.expr.generate»«IF (expr.suffix !== null)»«expr.suffix.generate»«ENDIF»'''
 	
 	def dispatch generate(CallOrPropertyAccessSuffix suffix) 
-		'''«suffix.property.generate»«IF (suffix.call != null)»«suffix.call.generate»«ENDIF»'''
+		'''«suffix.property.generate»«IF (suffix.call !== null)»«suffix.call.generate»«ENDIF»'''
 
 	def dispatch generate(CallSuffix suffix)
 		'''(«FOR arg: suffix.arguments SEPARATOR ', '»«arg.generate»«ENDFOR»)'''
@@ -228,7 +227,7 @@ class TinyscriptGenerator  {
 		'''.«suffix.key.generate»'''
 	
 	def dispatch generate(PropertyName expr) 
-		'''«IF expr.name != null»«expr.name»«ELSE»expr.expr.generate«ENDIF»'''
+		'''«IF expr.name !== null»«expr.name»«ELSE»expr.expr.generate«ENDIF»'''
 	
 	def dispatch generate(Identifier id) {
 		getName(id);	

@@ -3,10 +3,10 @@ package de.mkbauer.tinyscript.webdemo;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.common.util.WrappedException;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -18,6 +18,7 @@ import org.eclipse.xtext.util.StringInputStream;
 import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.IResourceValidator;
 import org.eclipse.xtext.validation.Issue;
+
 import org.springframework.stereotype.Component;
 
 import com.google.inject.Injector;
@@ -25,7 +26,7 @@ import com.google.inject.Injector;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.ResourceConsumption;
 import de.mkbauer.tinyscript.interpreter.ResourceLimits;
@@ -45,12 +46,15 @@ public class TinyscriptExecutionService {
 	
 	public static final int MAX_OUTPUT_SIZE = 1024*8;
 	
-	private static final Logger logger = Logger.getLogger(TinyscriptExecutionService.class) ;
+	private static final Logger logger = LoggerFactory.getLogger(TinyscriptExecutionService.class);
 	
 	private Injector injector;
+	private XtextResourceSet resourceSet;
+	private Resource currentResource;
 	
 	public TinyscriptExecutionService() {
 		injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
+		resourceSet = injector.getInstance(XtextResourceSet.class);
 	}
 	
 	public TinyscriptExecutionResult executeScriptFromString(String script) {
@@ -78,20 +82,26 @@ public class TinyscriptExecutionService {
 		monitor.enableObjectTracking();
 		monitor.enableMXBeanInspection();
 		monitor.configureLimits(limits);
-		ExecutionVisitor executionvisitor = new ExecutionVisitor(monitor);
+		TinyscriptEngine engine = new TinyscriptEngine(resourceSet, monitor);
 		ResourceConsumption statistics = new ResourceConsumption();
 		
 		try {
 			Tinyscript ast = parseScriptFromString(script);
-			executionvisitor.defineStdOut(stdout);
+			engine.defineStdOut(stdout);
 			// executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
 
-			TSValue result = executionvisitor.execute(ast);
+			TSValue result = engine.execute(ast);
 			resultAsString = result.asString();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
-			if (log)
-				logExecution(script, null, statistics);
+			logExecution(script, null, statistics);
+			// Unload Xtext resource! 
+			try {
+				currentResource.delete(null);
+			}
+			catch (IOException e) {
+				logger.warn("Deleteing Xtext resource failed");
+			}
 			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
 		catch (TinyscriptRuntimeException e) {
@@ -99,8 +109,7 @@ public class TinyscriptExecutionService {
 			errorLine = e.getAffectedLine();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
-			if (log)
-				logExecution(script, e, statistics);
+			logExecution(script, e, statistics);
 			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
 	}
@@ -122,9 +131,9 @@ public class TinyscriptExecutionService {
 	
 	protected Tinyscript parseScriptFromString(String script) {
 		Tinyscript ast;
-		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
+
 		URI uri = newResourceUri(resourceSet);
-		Resource currentResource = resourceSet.getResource(uri, false);
+		currentResource = resourceSet.getResource(uri, false);
 		if (currentResource == null) {
 			currentResource = resourceSet.createResource(uri);
 		}

@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
 	<parent>
-		<relativePath>../de.mkbauer.tinyscript.releng/</relativePath>
+		<relativePath>../pom.xml</relativePath>
 		<groupId>de.mkbauer.tinyscript</groupId>
 		<artifactId>parent</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>0.10.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>de.mkbauer.tinyscript</artifactId>
@@ -19,46 +18,16 @@
 
 		<plugins>
 			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>gen-clean</id>
-						<phase>clean</phase>
-						<!-- Clean up generated files in all projects -->
-						<configuration>
-							<filesets combine.children="append">
-								<fileset>
-									<directory>${basedir}/src-gen/</directory>
-								</fileset>
-								<fileset>
-									<directory>${basedir}/model/generated/</directory>
-								</fileset>
-								<fileset>
-									<directory>${basedir}/../${project.artifactId}.ui/src-gen/</directory>
-								</fileset>
-								<fileset>
-									<directory>${basedir}/../${project.artifactId}.tests/src-gen/</directory>
-								</fileset>
-							</filesets>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.2.1</version>
+				<version>3.0.0</version>
 				<executions>
+					<!-- mwe2Launcher will produce a lot of warnings of the form:
+						WARN: Skipping conflicting project org.eclipse.osgi at 'archive:file:/Users/markus.bauer/.m2/repository/org/eclipse/platform/org.eclipse.osgi/3.16.0/org.eclipse.osgi-3.16.0.jar!/' 
+						and using 'archive:file:/Users/markus.bauer/.m2/repository/p2/osgi/bundle/org.eclipse.osgi/3.17.100.v20211104-1730/org.eclipse.osgi-3.17.100.v20211104-1730.jar!/' instead.
+						These can be ignored, see https://www.eclipse.org/forums/index.php/t/1082958/ -->
 					<execution>
+						<id>mwe2Launcher</id>
 						<phase>generate-sources</phase>
 						<goals>
 							<goal>java</goal>
@@ -66,24 +35,41 @@
 					</execution>
 				</executions>
 				<configuration>
-					<includeProjectDependencies>false</includeProjectDependencies>
-					<includePluginDependencies>true</includePluginDependencies>
 					<mainClass>org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher</mainClass>
 					<arguments>
-						<argument>file://${project.basedir}/src/de/mkbauer/tinyscript/GenerateTinyscript.mwe2</argument>
-						<argument>
-							-p
-						</argument>
-						<argument>
-							runtimeProject=/${project.basedir}
-						</argument>
+						<argument>${project.basedir}/src/de/mkbauer/tinyscript/GenerateTinyscript.mwe2</argument>
+						<argument>-p</argument>
+						<argument>rootPath=/${project.basedir}/..</argument>
 					</arguments>
+					<classpathScope>compile</classpathScope>
+					<includePluginDependencies>true</includePluginDependencies>
+					<cleanupDaemonThreads>false</cleanupDaemonThreads><!-- see https://bugs.eclipse.org/bugs/show_bug.cgi?id=475098#c3 -->
 				</configuration>
 				<dependencies>
 					<dependency>
+						<groupId>org.eclipse.emf</groupId>
+						<artifactId>org.eclipse.emf.mwe2.launch</artifactId>
+						<version>2.12.1</version>
+					</dependency>
+					<dependency>
 						<groupId>org.eclipse.xtext</groupId>
-						<artifactId>org.eclipse.xtext.xtext</artifactId>
+						<artifactId>org.eclipse.xtext.common.types</artifactId>
 						<version>${xtext.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>org.eclipse.xtext</groupId>
+						<artifactId>org.eclipse.xtext.xtext.generator</artifactId>
+						<version>${xtext.version}</version>
+						<exclusions>
+							<exclusion>
+								<groupId>org.eclipse.platform</groupId>
+								<artifactId>org.eclipse.equinox.common</artifactId>
+							</exclusion>
+							<exclusion>
+								<groupId>org.eclipse.platform</groupId>
+								<artifactId>org.eclipse.core.runtime</artifactId>
+							</exclusion>
+						</exclusions>
 					</dependency>
 					<dependency>
 						<groupId>org.eclipse.xtext</groupId>
@@ -91,21 +77,66 @@
 						<version>${xtext.version}</version>
 					</dependency>
 					<dependency>
-						<groupId>org.eclipse.equinox</groupId>
-						<artifactId>common</artifactId>
-						<version>3.6.200-v20130402-1505</version>
+						<groupId>org.eclipse.xtext</groupId>
+						<artifactId>xtext-antlr-generator</artifactId>
+						<version>[2.1.1, 3)</version>
 					</dependency>
+					<!-- 
+						mwe2Launcher will still use Guice 3.0 for some reason, so it will issue a warning during build:
+							WARNING: An illegal reflective access operation has occurred
+							WARNING: Illegal reflective access by com.google.inject.internal.cglib.core.$ReflectUtils$2
+						The following does not prevent this!
+					<dependency>
+						<groupId>com.google.inject</groupId>
+    					<artifactId>guice</artifactId>
+    					<version>5.0.1</version>
+					</dependency>
+					-->
 				</dependencies>
 			</plugin>
 			<plugin>
 				<groupId>org.eclipse.xtend</groupId>
 				<artifactId>xtend-maven-plugin</artifactId>
 			</plugin>
+	
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-clean-plugin</artifactId>
+				<configuration>
+					<filesets combine.children="append">
+						<fileset>
+							<directory>${basedir}/../de.mkbauer.tinyscript/src-gen/</directory>
+							<includes>
+								<include>**/*</include>
+							</includes>
+						</fileset>
+						<fileset>
+							<directory>${basedir}/../de.mkbauer.tinyscript.tests/src-gen/</directory>
+							<includes>
+								<include>**/*</include>
+							</includes>
+						</fileset>
+						<fileset>
+							<directory>${basedir}/../de.mkbauer.tinyscript.ide/src-gen/</directory>
+							<includes>
+								<include>**/*</include>
+							</includes>
+						</fileset>
+						<fileset>
+							<directory>${basedir}/../de.mkbauer.tinyscript.ui/src-gen/</directory>
+							<includes>
+								<include>**/*</include>
+							</includes>
+						</fileset>
+						<fileset>
+							<directory>${basedir}/model/generated/</directory>
+						</fileset>
+					</filesets>
+				</configuration>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
@@ -132,6 +163,7 @@
 										<ignore></ignore>
 									</action>
 								</pluginExecution>
+								
 							</pluginExecutions>
 						</lifecycleMappingMetadata>
 					</configuration>

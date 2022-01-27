@@ -11,7 +11,6 @@ import org.eclipse.xtext.resource.IEObjectDescription;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 import org.eclipse.xtext.scoping.impl.SimpleLocalScopeProvider;
-import org.eclipse.xtext.xbase.typesystem.internal.ExpressionScope.Scope;
 
 import com.google.common.base.Predicate;
 
@@ -39,13 +38,13 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 				&& reference == TsPackage.Literals.REFERENCE__ID) {
 			return createBlockScope(context, true);
 		}
-		// For contentassist, references sometimes need to be resolved with other contexts.
+		// For content assist, references sometimes need to be resolved with other contexts.
 		if (reference == TsPackage.Literals.REFERENCE__ID) {
 			if (context instanceof Tinyscript)
 				context = ((Tinyscript) context).getGlobal();
 			return createBlockScope(context, false);
 		}
-		return Scope.NULLSCOPE; // super.getScope(context, reference);
+		return IScope.NULLSCOPE; // super.getScope(context, reference);
 	}
 
 	public IScope createScopeFromAllIdentifers(Reference reference) {
@@ -98,6 +97,9 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 			FunctionDefinition function = (FunctionDefinition) container;
 			List<Identifier> params = function.getParams();
 			ids.addAll(params);
+			Identifier rest = function.getRest();
+			if (rest != null)
+				ids.add(rest);
 			EObject parent = TinyscriptModelUtil.containingBlock(function);
 			return Scopes.scopeFor(ids, createBlockScope(parent, false));
 		}

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
@@ -16,10 +15,8 @@ import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
-import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
-import de.mkbauer.tinyscript.ts.TsFactory;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 
 /**
@@ -228,7 +225,6 @@ public class TinyscriptModelUtil {
 	}
 	
 	public static String getNameIfNamedElement(EObject elem) {
-		String name = null;
 		if (elem instanceof FunctionDeclaration) {
 			return ((FunctionDeclaration) elem).getId().getName();
 		}

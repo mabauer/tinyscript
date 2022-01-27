@@ -1,20 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.mkbauer.tinyscript.repl</groupId>
 	<artifactId>de.mkbauer.tinyscript.repl</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.10.0-SNAPSHOT</version>
 	<name>TinyscriptREPL</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<xtext-version>2.8.4</xtext-version>
+		<xtext-version>2.25.0</xtext-version>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>de.mkbauer.tinyscript</groupId>
 			<artifactId>de.mkbauer.tinyscript</artifactId>
-			<version>0.0.1-snapshot</version>
+			<version>0.10.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -33,14 +33,14 @@
 			<version>3.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.eclipse.equinox</groupId>
-			<artifactId>org.eclipse.equinox.common</artifactId>
-			<version>3.6.0</version>
-		</dependency>
-		<dependency>
 			<groupId>jline</groupId>
 			<artifactId>jline</artifactId>
-			<version>2.13</version>
+			<version>2.14.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+	    	<artifactId>guice</artifactId>
+	    	<version>5.0.1</version>
 		</dependency>
 	</dependencies>
 
@@ -55,13 +55,11 @@
      		</resource>
      	</resources>
 		<plugins>
-
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>3.8.1</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+				  	<release>11</release>
 				</configuration>
 			</plugin>
 
@@ -77,37 +75,56 @@
 						</goals>
 						<configuration>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+             				<shadedClassifierName>shade</shadedClassifierName>
 							<transformers>
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>de.mkbauer.tinyscript.repl.TinyscriptREPLMain</mainClass>
+									<mainClass>de.mkbauer.tinyscript.repl.TinyscriptReplMain</mainClass>
 								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  					<resource>plugin.properties</resource>
+               					 </transformer>
 							</transformers>
 							<filters>
-								<filter>
-									<artifact>org.eclipse.equinox:org.eclipse.equinox.common</artifact>
+						   		<filter>
+									<artifact>org.eclipse.platform:org.eclipse.equinox.common</artifact>
 									<includes>
 										<include>org/eclipse/core/runtime/*</include>
 									</includes>
 								</filter>
+								<!-- The command line tool does not need OSGI stuff
+								 -->
 								<filter>
-									<artifact>org.eclipse.osgi:org.eclipse.osgi</artifact>
+									<artifact>org.eclipse.platform:org.eclipse.osgi</artifact>
 									<excludes>
 										<exclude>**</exclude>
 									</excludes>
 								</filter>
-								<filter>
+								<!-- <filter>
 									<artifact>jline:jline</artifact>
 									<excludes>
 										<exclude>org/fusesource/**</exclude>
 									</excludes>
 								</filter>
+								-->
+								<!-- Omit xtext.util's empty plugin.properties, 
+									 because we assemble one (see transformer above) -->
+								<filter>
+									<artifact>org.eclipse.xtext:org.eclipse.xtext.util</artifact>
+									<excludes>
+										<exclude>plugin.properties</exclude>
+									</excludes>
+								</filter>								
 								<filter>
 									<artifact>*:*</artifact>
 									<excludes>
 										<exclude>META-INF/*.SF</exclude>
 										<exclude>META-INF/*.DSA</exclude>
 										<exclude>META-INF/*.RSA</exclude>
+										<!-- For now, exclude the module-info.classes of Java 9 and above
+											 TODO: Find a better solution -->
+										<exclude>module-info.class</exclude>
 									</excludes>
 								</filter>
 							</filters>

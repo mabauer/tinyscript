@@ -41,7 +41,10 @@ BlockStatement:
 
 FunctionDeclaration returns FunctionDefinition:
 	{FunctionDeclaration}
-	'function' ( id=Identifier ) '(' (params += Identifier)? (',' params += Identifier)* ')' block=Block 
+	'function' ( id=Identifier ) 
+	( '(' (params += Identifier)? (',' params += Identifier)* (',' '...' rest=Identifier)? ')' 
+		| '(' '...' rest=Identifier ')'  )
+	block=Block 
 ;
 
 ExpressionStatement:
@@ -54,11 +57,14 @@ AssignmentExpression returns Expression:
 
 ArrowFunctionDefinition returns FunctionDefinition:
 	{ArrowFunction}
-	( (params+=Identifier) | ('(' params += Identifier? ')') )  '=>' (block=ArrowFunctionBlock /* | => (code=Block) */ )
+	( (params+=Identifier) 
+		| ( '(' params += Identifier? (',' params += Identifier)* (',' '...' rest=Identifier)? ')')
+		| ( '(' '...' rest=Identifier ')' )
+	)  '=>' block=ArrowFunctionBlock 
 ;
 
 ArrowFunctionBlock returns Block:
-	statements += ExpressionStatementWithoutSemicolon
+	statements += ExpressionStatementWithoutSemicolon | => '{' (statements += Statement)* '}'
 ;
 
 ExpressionStatementWithoutSemicolon returns ExpressionStatement:
@@ -118,7 +124,10 @@ Atomic:
 ;
 
 FunctionExpression returns FunctionDefinition:
-	'function' ( id=Identifier )? '(' (params += Identifier)? (',' params += Identifier)* ')' block=Block 
+	'function' ( id=Identifier )? 
+		( '(' (params += Identifier)? (',' params += Identifier)* (',' '...' rest=Identifier)? ')' 
+		| '(' '...' rest=Identifier ')'  )
+	block=Block 
 ;
 
 ReturnStatement:

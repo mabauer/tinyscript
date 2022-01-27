@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import de.mkbauer.tinyscript.runtime.string.StringObject;
+import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 
 
 public class TSObject {
@@ -12,29 +12,24 @@ public class TSObject {
 	protected HashMap<String, TSPropertyDescriptor> properties;
 	
 	private TSObject proto = null;
-	protected ExecutionVisitor ev;
+	protected TinyscriptEngine engine;
 	
-	protected TSObject() {
+	protected TSObject(TinyscriptEngine engine) {
+		this.engine = engine;
 		properties = new HashMap<String, TSPropertyDescriptor>();
+		engine.recordObjectCreation(this);
 	}
 	
-	protected TSObject(ExecutionVisitor ev) {
-		this.ev = ev;
+	public TSObject(TinyscriptEngine engine, TSObject proto) {
+		this.engine = engine;
 		properties = new HashMap<String, TSPropertyDescriptor>();
-		ResourceMonitor monitor = ev.getResourceMonitor();
-		ev.recordObjectCreation(this);
-	}
-	
-	public TSObject(ExecutionVisitor ev, TSObject proto) {
-		this.ev = ev;
-		properties = new HashMap<String, TSPropertyDescriptor>();
-		ev.recordObjectCreation(this);
+		engine.recordObjectCreation(this);
 		if (proto != null)
 			setPrototype(proto);
 	}
 	
 	// TODO Write tests and use it instead of TSValue.asString() where appropriate
-	public static String toString(ExecutionVisitor ev, TSValue value) {
+	public static String toString(TinyscriptEngine engine, TSValue value) {
 		if (value == TSValue.UNDEFINED)
 			return "[object Undefined]";
 		if (value == TSValue.NULL)
@@ -47,7 +42,7 @@ public class TSObject {
 			if (toStringValue.isObject()) {
 				TSObject toString = toStringValue.asObject();
 				if (toString instanceof Function) {
-					TSValue result = ((Function) toString).call(false, object, new TSValue[0]);
+					TSValue result = ((Function) toString).apply(object, new TSValue[0]);
 					if (result.isString())
 						return result.asString();
 				}
@@ -56,7 +51,7 @@ public class TSObject {
 		return value.asString();
 	}
 	
-	public static TSObject toObject(ExecutionVisitor ev, TSValue value) throws TinyscriptTypeError {
+	public static TSObject toObject(TinyscriptEngine engine, TSValue value) throws TinyscriptTypeError {
 		if (value == TSValue.UNDEFINED)  {
 			throw new TinyscriptTypeError("Cannot convert 'undefined' to an object");
 		}
@@ -64,24 +59,25 @@ public class TSObject {
 			throw new TinyscriptTypeError("Cannot convert 'null' to an object");
 		}
 		if (value.isPrimitiveString()) {
-			return new StringObject(ev, value);
+			StringConstructor ctor = (StringConstructor) engine.getConstructor(StringConstructor.NAME);
+			return ctor.createObject(value);
 		}
 		if (value.isNumber()) {
 			// TODO Create a NumberObject object
-			TSObject result = new TSObject(ev, ev.getDefaultPrototype()); 
+			TSObject result = new TSObject(engine, engine.getDefaultPrototype()); 
 			result.put("value", value);
 			return result; 
 		}
 		if (value.isBoolean()) {
 			// TODO Create a BooleanObject object
-			TSObject result = new TSObject(ev, ev.getDefaultPrototype()); 
+			TSObject result = new TSObject(engine, engine.getDefaultPrototype()); 
 			result.put("value", value);
 			return result;
 		}
 		return value.asObject();
 	}
 	
-	public static TSValue toPrimitive(ExecutionVisitor ev, TSObject object) {
+	public static TSValue toPrimitive(TinyscriptEngine engine, TSObject object) {
 		// TODO Evaluate user defined valueOf property
 		if (object instanceof BuiltinType) {
 			return ((BuiltinType) object).valueOf();
@@ -89,10 +85,10 @@ public class TSObject {
 		return TSValue.UNDEFINED;		
 	}
 	
-	public static double toNumber(ExecutionVisitor ev, TSValue value) {
+	public static double toNumber(TinyscriptEngine engine, TSValue value) {
 		// TODO Return NAN if undefined
 		if (value.isObject()) {
-			value = toPrimitive(ev, value.asObject());
+			value = toPrimitive(engine, value.asObject());
 		}
 		if (value.isBoolean())
 			return (value.asBoolean() ? 1 :0);
@@ -110,10 +106,10 @@ public class TSObject {
 		return Double.NaN;
 	}
 	
-	public static int toInteger(ExecutionVisitor ev, TSValue value) {
+	public static int toInteger(TinyscriptEngine engine, TSValue value) {
 		// TODO Return NAN if undefined
 		if (value.isObject()) {
-			value = toPrimitive(ev, value.asObject());
+			value = toPrimitive(engine, value.asObject());
 		}
 		if (value.isBoolean())
 			return (value.asBoolean() ? 1 :0);
@@ -136,17 +132,17 @@ public class TSObject {
 		return 0;
 	}
 	
-	public static void defineDefaultProperty(TSObject object, String key, Object value) {
+	public void defineDefaultProperty(String key, Object value) {
 		TSPropertyDescriptor desc = new TSPropertyDescriptor();
 		if (!(value instanceof TSValue))
 			desc.setValue(new TSValue(value));
 		else
 			desc.setValue( (TSValue) value);
 		// This differs form ECMAScript specs.
-		desc.setConfigurable(false);
+		desc.setConfigurable(true);
 		desc.setEnumerable(false);
-		desc.setWriteable(false);
-		object.setOwnPropertyDescriptor(key, desc);
+		desc.setWriteable(true);
+		setOwnPropertyDescriptor(key, desc);
 	}
 	
 	public TSPropertyDescriptor getOwnPropertyDescriptor(String key) {
@@ -154,6 +150,7 @@ public class TSObject {
 	}
 	
 	public void setOwnPropertyDescriptor(String key, TSPropertyDescriptor desc) {
+		// TODO: if not configurable , throw a TypeException 
 		properties.put(key,  desc);
 	}
 	
@@ -161,9 +158,14 @@ public class TSObject {
 		return getOwnPropertyDescriptor(key) != null;
 	}
 	
+	public void defineBuiltinMethod(String name, BuiltinFunctionImplementation implementation, int length) {
+		defineDefaultProperty(name, engine.defineBuiltinFunction(name, implementation, length));
+	}
+	
+	
 	public void setPrototype(TSObject proto) {
 		this.proto = proto;
-		defineDefaultProperty(this, "__proto__", new TSValue(this.proto));
+		defineDefaultProperty("__proto__", new TSValue(this.proto));
 	}
 	
 	public TSObject getPrototype() {
@@ -186,8 +188,13 @@ public class TSObject {
 	
 	public void put(String key, TSValue value) {
 		TSPropertyDescriptor desc = properties.get(key);
-		if (desc != null)
-			desc.setValue(value);
+		if (desc != null) {
+			if (desc.isWriteable()) 
+				desc.setValue(value);
+			else {
+				// log.debug("Error: assigning to a non-writeable key: " + key);
+			}
+		}
 		else {
 			desc = new TSPropertyDescriptor(value);
 			properties.put(key, desc);
@@ -211,6 +218,12 @@ public class TSObject {
 				.collect(Collectors.toList()));
 	}
 	
+	public List<String> getOwnPropertyNames() {
+		return (properties.keySet().stream()
+				.filter(key -> !key.startsWith("__"))
+				.collect(Collectors.toList()));
+	}
+	
 	public String toString() {
 		return properties.keySet().stream()
 				.filter(key -> properties.get(key).isEnumerable())
@@ -219,8 +232,8 @@ public class TSObject {
 	}
 	
 	protected void update() {
-		if (ev != null) {
-			ev.recordObjectSizeChange(this);
+		if (engine != null) {
+			engine.recordObjectSizeChange(this);
 		}
 	}
 	

@@ -1,10 +1,7 @@
 package de.mkbauer.tinyscript.runtime.string.prototype;
 
-import java.util.List;
-
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
-import de.mkbauer.tinyscript.interpreter.ExecutionVisitor;
-import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
+import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.runtime.string.StringObject;
@@ -13,21 +10,20 @@ public class Substring extends BuiltinFunction {
 	
 	private static final String NAME = "substring";
 
-	public Substring(ExecutionVisitor ev) {
-		super(ev);
+	public Substring(TinyscriptEngine engine) {
+		super(engine);
 	}
 
 	@Override
-	public TSValue apply(boolean asConstructor, TSObject self,
-			List<TSValue> args) {
+	public TSValue apply(TSObject self, TSValue[] args) {
 		checkArgs(args);
 		String result = "";
 		if (self instanceof StringObject) {
-			String str = TSObject.toString(ev, new TSValue(self));
-			int start = TSObject.toInteger(ev, args.get(0)); 
+			String str = TSObject.toString(engine, new TSValue(self));
+			int start = TSObject.toInteger(engine, args[0]); 
 			int end = str.length();
-			if (args.size() > 1) {
-				end = TSObject.toInteger(ev, args.get(1)); 
+			if (args.length > 1) {
+				end = TSObject.toInteger(engine, args[1]); 
 			}
 			if (start < 0)
 				start = 0;
@@ -42,7 +38,7 @@ public class Substring extends BuiltinFunction {
 			else
 				result = str.substring(end, start);
 		}
-		ev.recordStringCreation(result);
+		engine.recordStringCreation(result);
 		return new TSValue(result);
 	}
 

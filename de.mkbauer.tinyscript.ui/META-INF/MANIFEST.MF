@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: de.mkbauer.tinyscript.ui
 Bundle-Vendor: My Company
-Bundle-Version: 0.0.1.qualifier
+Bundle-Version: 0.10.0.qualifier
 Bundle-SymbolicName: de.mkbauer.tinyscript.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: de.mkbauer.tinyscript;visibility:=reexport,
@@ -15,13 +15,16 @@ Require-Bundle: de.mkbauer.tinyscript;visibility:=reexport,
  org.antlr.runtime,
  org.eclipse.xtext.common.types.ui,
  org.eclipse.xtext.ui.codetemplates.ui,
- org.eclipse.compare
+ org.eclipse.compare,
+ org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
+ org.eclipse.xtend.lib;resolution:=optional,
+ de.mkbauer.tinyscript.ide
 Import-Package: org.apache.log4j,
  org.eclipse.xtext.xbase.lib
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Export-Package: de.mkbauer.tinyscript.ui.quickfix,
- de.mkbauer.tinyscript.ui.contentassist,
- de.mkbauer.tinyscript.ui.contentassist.antlr,
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: de.mkbauer.tinyscript.ui.contentassist,
+ de.mkbauer.tinyscript.ui,
  de.mkbauer.tinyscript.ui.internal,
- de.mkbauer.tinyscript.ui.contentassist.antlr.internal
+ de.mkbauer.tinyscript.ui.quickfix
 Bundle-Activator: de.mkbauer.tinyscript.ui.internal.TinyscriptActivator
+Automatic-Module-Name: de.mkbauer.tinyscript.ui

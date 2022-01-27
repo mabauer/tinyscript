@@ -3,13 +3,13 @@ package de.mkbauer.tinyscript.interpreter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import org.eclipse.xtext.junit4.XtextRunner;
+import org.eclipse.xtext.testing.XtextRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
-import de.mkbauer.tinyscript.TinyscriptInterpreterTestHelper;
+import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 
 @RunWith(XtextRunner.class)
 public class StacktraceTest extends TinyscriptInterpreterTestHelper {
