@@ -27,7 +27,7 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
         super.init(coder: aDecoder)!
     
         // cancel button
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.cancel, target: self, action: #selector(ExamplePickerController.tapCancel(_:)))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.cancel, target: self, action: #selector(ExamplePickerController.tapCancel(_:)))
     
         // popover settings
         modalPresentationStyle = .popover
@@ -36,7 +36,7 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
         self.preferredContentSize = CGSize(width:320,height:450)
     }
     
-    func tapCancel(_ : UIBarButtonItem) {
+    @objc func tapCancel(_ : UIBarButtonItem) {
         dismiss(animated: true, completion:nil);
     }
     
@@ -79,7 +79,7 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
         makeHTTPGetRequest(tinyscriptURL + "/" + example, onCompletion: {data, error -> Void
             in
             if (data != nil) {
-                let script : String = NSString(data: data!, encoding:String.Encoding.utf8.rawValue) as! String
+                let script : String = NSString(data: data!, encoding:String.Encoding.utf8.rawValue)! as String
                 // print(script)
                 DispatchQueue.main.async(execute: {
                     self.delegate!.showSource(script)

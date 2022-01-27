@@ -14,7 +14,8 @@ class MainScreenController: UIViewController, SourceViewerDelegate {
 
     @IBOutlet weak var sourceView: UITextView!
     
-    let URL = "http://home.mkbauer.de/tinyscript"
+    let URL = "https://apps.mkbauer.de/tinyscript"
+    // let URL = "http://CAS-M04165.home.cas.de:8080"
     
     override func viewDidLoad() {
         super.viewDidLoad()

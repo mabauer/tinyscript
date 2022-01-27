@@ -10,12 +10,11 @@ import UIKit
 import JavaScriptCore
 
 
-class ResultsViewController: UIViewController, UIWebViewDelegate {
+class ResultsViewController: UIViewController  {
     
     // MARK: Properties
     
     @IBOutlet weak var outputView: UITextView!
-    var webView : UIWebView = UIWebView()
     
     var script : String = ""
     var output : String = ""
@@ -25,7 +24,6 @@ class ResultsViewController: UIViewController, UIWebViewDelegate {
     //MARK: UIViewController
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.webView.delegate = self
         self.outputView.text = "// Please wait..."
         xCompileAndRunScript(script)
     }
@@ -43,31 +41,39 @@ class ResultsViewController: UIViewController, UIWebViewDelegate {
     func xCompileAndRunScript(_ script : String) {
         makeHTTPPostRequest(tinyscriptURL, body: script, onCompletion: {data, error -> Void
             in
+            var text = ""
             if (data != nil) {
-                var json: JSON = JSON(data: data!)
-                if (json["errorCode"] == 0) {
-                    if let jsscript = json["script"].string {
-                        self.runJSScript(jsscript)
-                        DispatchQueue.main.async(execute: {
-                            self.outputView.text = self.output
-                        })
+                do {
+                    let json: JSON = try JSON(data: data!)
+                    if (json["errorCode"] == 0) {
+                        if let jsscript = json["script"].string {
+                            self.runJSScript(jsscript)
+                            text = self.output
+                        }
+                    }
+                    else {
+                        if let msg = json["errorMessage"].string {
+                            text = "// " + msg
+                        }
+                        else {
+                            text = "// Internal server error"
+                        }
+
                     }
                 }
-                else {
-                    if let msg = json["errorMessage"].string {
-                        DispatchQueue.main.async(execute: {
-                            self.outputView.text = "// " + msg
-                        })
-                    }
-
+                catch {
+                    text = "// Internal server error"
                 }
             }
+            DispatchQueue.main.async(execute: {
+                self.outputView.text = text
+            })
         })
     }
     
     func runJSScript(_ script : String) {
         
-        let context = self.webView.value(forKeyPath: "documentView.webView.mainFrame.javaScriptContext") as! JSContext
+        let context = JSContext();
         
         // Define a print function
         let printFunction : @convention(block) (String) -> Void =
@@ -78,11 +84,12 @@ class ResultsViewController: UIViewController, UIWebViewDelegate {
         }
         
         // ...and register it with the global context
-        context.setObject(unsafeBitCast(printFunction, to: AnyObject.self),
-            forKeyedSubscript: "print" as (NSCopying & NSObjectProtocol)!)
+        context?.setObject(unsafeBitCast(printFunction, to: AnyObject.self),
+            forKeyedSubscript: "print" as (NSCopying & NSObjectProtocol))
         
-        let result : JSValue = context.evaluateScript(script)
+        context?.evaluateScript(script)
         // print(result);
+        
     }
     
     func captureMessage(_ msg : String) {

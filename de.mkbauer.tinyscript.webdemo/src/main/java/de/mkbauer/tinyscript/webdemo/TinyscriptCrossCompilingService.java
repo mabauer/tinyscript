@@ -43,7 +43,6 @@ public class TinyscriptCrossCompilingService {
 	
 	public TinyscriptCrossCompilingResult crossCompileScriptFromString(String script) {
 		String jsscript = "";
-		int errorCode = 0;
 		try {
 			Tinyscript ast = parseScriptFromString(script);
 			injector.injectMembers(this);
