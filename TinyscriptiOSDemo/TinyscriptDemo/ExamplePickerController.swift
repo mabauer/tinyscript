@@ -42,7 +42,7 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
     
     // MARK: UITableViewController
     
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath){
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 
         let example = exampleFiles[(indexPath as NSIndexPath).row]
         print("Selected example: \(example)")
@@ -76,8 +76,7 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
     
     // MARK: Loading example code
     func loadExample(_ example: String) {
-        makeHTTPGetRequest(tinyscriptURL + "/" + example, onCompletion: {data, error -> Void
-            in
+        makeHTTPGetRequest(tinyscriptURL + "/" + example, onCompletion: {data, error -> Void in
             if (data != nil) {
                 let script : String = NSString(data: data!, encoding:String.Encoding.utf8.rawValue)! as String
                 // print(script)
