@@ -48,13 +48,8 @@ public class TinyscriptExecutionService {
 	
 	private static final Logger logger = LoggerFactory.getLogger(TinyscriptExecutionService.class);
 	
-	private Injector injector;
-	private XtextResourceSet resourceSet;
-	private Resource currentResource;
 	
 	public TinyscriptExecutionService() {
-		injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
-		resourceSet = injector.getInstance(XtextResourceSet.class);
 	}
 	
 	public TinyscriptExecutionResult executeScriptFromString(String script) {
@@ -63,6 +58,9 @@ public class TinyscriptExecutionService {
 	
 	public TinyscriptExecutionResult executeScriptFromString(String script, boolean log) {
 
+		Injector injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
+		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
+		
 		if (log)
 			logger.debug("Script:\n" + script);
 		
@@ -86,21 +84,40 @@ public class TinyscriptExecutionService {
 		ResourceConsumption statistics = new ResourceConsumption();
 		
 		try {
-			Tinyscript ast = parseScriptFromString(script);
+			Tinyscript ast;
+
+			// Load string as Xtext resource and validate/parse it
+			URI uri = newResourceUri(resourceSet);
+			Resource currentResource = resourceSet.getResource(uri, false);
+			if (currentResource == null) {
+				currentResource = resourceSet.createResource(uri);
+			}
+			try {
+				currentResource.load(new StringInputStream(script), null);
+				ast = (Tinyscript) (currentResource.getContents().isEmpty() ? null : currentResource.getContents().get(0));
+			} catch (IOException e) {
+				logger.error("Creating Xtext resource failed");
+				throw new WrappedException(e);
+			}	
+			List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
+			if (issues.size()!=0)
+				throw new TinyscriptSyntaxError(issues.get(0).getMessage(), currentResource.getURI().toString(), issues.get(0).getLineNumber());
+
 			engine.defineStdOut(stdout);
 			// executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
-
 			TSValue result = engine.execute(ast);
 			resultAsString = result.asString();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
-			logExecution(script, null, statistics);
+			if (log)
+				logExecution(script, null, statistics);
+			
 			// Unload Xtext resource! 
 			try {
 				currentResource.delete(null);
 			}
 			catch (IOException e) {
-				logger.warn("Deleteing Xtext resource failed");
+				logger.error("Deleteing Xtext resource failed");
 			}
 			return new TinyscriptExecutionResult(resultAsString, output, statistics);
 		}
@@ -109,7 +126,8 @@ public class TinyscriptExecutionService {
 			errorLine = e.getAffectedLine();
 			String output = stdoutToString(stdout);
 			statistics = monitor.getTotalResourceConsumption();
-			logExecution(script, e, statistics);
+			if (log)
+				logExecution(script, e, statistics);
 			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
 	}
@@ -129,25 +147,6 @@ public class TinyscriptExecutionService {
 		logger.info("Statistics: " + statistics.toString());
 	}
 	
-	protected Tinyscript parseScriptFromString(String script) {
-		Tinyscript ast;
-
-		URI uri = newResourceUri(resourceSet);
-		currentResource = resourceSet.getResource(uri, false);
-		if (currentResource == null) {
-			currentResource = resourceSet.createResource(uri);
-		}
-		try {
-			currentResource.load(new StringInputStream(script), null);
-			ast = (Tinyscript) (currentResource.getContents().isEmpty() ? null : currentResource.getContents().get(0));
-		} catch (IOException e) {
-			throw new WrappedException(e);
-		}	
-		List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
-		if (issues.size()!=0)
-			throw new TinyscriptSyntaxError(issues.get(0).getMessage(), currentResource.getURI().toString(), issues.get(0).getLineNumber());
-		return ast;
-	}
 	
 	protected IResourceValidator getValidator(Resource resource) {
 		return ((XtextResource) resource).getResourceServiceProvider().getResourceValidator();

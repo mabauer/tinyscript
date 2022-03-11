@@ -17,7 +17,6 @@ import org.eclipse.xtext.validation.IResourceValidator;
 import org.eclipse.xtext.validation.Issue;
 import org.springframework.stereotype.Component;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
@@ -31,22 +30,36 @@ public class TinyscriptCrossCompilingService {
 	
 	private static final String fileExtension = "ts";
 	
-	@Inject
-	private TinyscriptGenerator generator;
-
-	private Injector injector;
-	
 	public TinyscriptCrossCompilingService() {
-		injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
+		
 	}
 	
 	
 	public TinyscriptCrossCompilingResult crossCompileScriptFromString(String script) {
+
+		Injector injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
+		TinyscriptGenerator generator = injector.getInstance(TinyscriptGenerator.class);
+		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
+
 		String jsscript = "";
 		try {
-			Tinyscript ast = parseScriptFromString(script);
-			injector.injectMembers(this);
-			// TinyscriptGenerator generator = new TinyscriptGenerator();
+
+			Tinyscript ast = null;
+			URI uri = newResourceUri(resourceSet);
+			Resource currentResource = resourceSet.getResource(uri, false);
+			if (currentResource == null) {
+				currentResource = resourceSet.createResource(uri);
+			}
+			try {
+				currentResource.load(new StringInputStream(script), null);
+				ast = (Tinyscript) (currentResource.getContents().isEmpty() ? null : currentResource.getContents().get(0));
+			} catch (IOException e) {
+				throw new WrappedException(e);
+			}	
+			List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
+			if (issues.size()!=0)
+				throw new TinyscriptSyntaxError(issues.get(0).getMessage(), currentResource.getURI().toString(), issues.get(0).getLineNumber());
+
 			jsscript = generator.generate(ast, true).toString();
 			return new TinyscriptCrossCompilingResult(jsscript);
 		}
@@ -59,26 +72,6 @@ public class TinyscriptCrossCompilingService {
 		
 	}
 	
-	
-	protected Tinyscript parseScriptFromString(String script) {
-		Tinyscript ast;
-		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
-		URI uri = newResourceUri(resourceSet);
-		Resource currentResource = resourceSet.getResource(uri, false);
-		if (currentResource == null) {
-			currentResource = resourceSet.createResource(uri);
-		}
-		try {
-			currentResource.load(new StringInputStream(script), null);
-			ast = (Tinyscript) (currentResource.getContents().isEmpty() ? null : currentResource.getContents().get(0));
-		} catch (IOException e) {
-			throw new WrappedException(e);
-		}	
-		List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
-		if (issues.size()!=0)
-			throw new TinyscriptSyntaxError(issues.get(0).getMessage(), currentResource.getURI().toString(), issues.get(0).getLineNumber());
-		return ast;
-	}
 	
 	protected IResourceValidator getValidator(Resource resource) {
 		return ((XtextResource) resource).getResourceServiceProvider().getResourceValidator();
