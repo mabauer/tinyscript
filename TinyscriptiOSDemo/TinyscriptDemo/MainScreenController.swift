@@ -20,10 +20,10 @@ class MainScreenController: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any!) {
         switch(segue.identifier!) {
-        case "pickExample":
+        case K.pickExampleSegue:
             let examplePicker = (segue.destination as? ExamplePickerController)!
             examplePicker.delegate = self
-        case "execute":
+        case K.executeSegue:
             let resultsView = (segue.destination as? ResultsViewController)!
             resultsView.script = sourceView.text;
         default:
@@ -48,10 +48,6 @@ extension MainScreenController: TinyscriptServiceDelegate {
         DispatchQueue.main.async(execute: {
             self.sourceView.text = script
         })
-    }
-    
-    func didFailWithError(_ service: TinyscriptService, error: Error) {
-        
     }
   
 }

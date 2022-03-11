@@ -36,9 +36,7 @@
                         <barButtonItem key="leftBarButtonItem" title="Pick Example" id="XEe-Xv-eIG">
                             <color key="tintColor" systemColor="linkColor"/>
                             <connections>
-                                <segue destination="rpA-jV-imL" kind="popoverPresentation" identifier="pickExample" popoverAnchorBarButtonItem="XEe-Xv-eIG" id="etb-qc-Jb6">
-                                    <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
-                                </segue>
+                                <segue destination="3jt-1s-YbK" kind="show" identifier="pickExample" id="bzq-yb-1nx"/>
                             </connections>
                         </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" title="Execute" id="Vrd-Ht-pta">
@@ -91,32 +89,54 @@
             <point key="canvasLocation" x="729" y="464"/>
         </scene>
         <!--Example Picker Controller-->
-        <scene sceneID="roZ-pZ-pd5">
+        <scene sceneID="MFh-nI-MO3">
             <objects>
-                <tableViewController id="rpA-jV-imL" customClass="ExamplePickerController" customModule="TinyscriptDemo" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" id="Zk6-JT-xWT">
-                        <rect key="frame" x="0.0" y="0.0" width="414" height="842"/>
+                <viewController id="3jt-1s-YbK" customClass="ExamplePickerController" customModule="TinyscriptDemo" customModuleProvider="target" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="GH2-0K-mtu"/>
+                        <viewControllerLayoutGuide type="bottom" id="srg-Vy-Rhb"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="Yb4-vQ-knL">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="yUz-71-Skl">
+                                <rect key="frame" x="20" y="88" width="374" height="774"/>
+                                <subviews>
+                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" id="Zk6-JT-xWT">
+                                        <rect key="frame" x="0.0" y="0.0" width="374" height="774"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <prototypes>
+                                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Example Picker Cell" id="bau-eq-3sm">
+                                                <rect key="frame" x="0.0" y="44.5" width="374" height="44"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="bau-eq-3sm" id="5IN-Of-y7T">
+                                                    <rect key="frame" x="0.0" y="0.0" width="374" height="44"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                </tableViewCellContentView>
+                                            </tableViewCell>
+                                        </prototypes>
+                                    </tableView>
+                                </subviews>
+                            </stackView>
+                        </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="Example Picker Cell" id="bau-eq-3sm">
-                                <rect key="frame" x="0.0" y="44.5" width="414" height="44"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="bau-eq-3sm" id="5IN-Of-y7T">
-                                    <rect key="frame" x="0.0" y="0.0" width="414" height="44"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                </tableViewCellContentView>
-                            </tableViewCell>
-                        </prototypes>
-                        <connections>
-                            <outlet property="dataSource" destination="rpA-jV-imL" id="O3Z-Y2-t98"/>
-                            <outlet property="delegate" destination="rpA-jV-imL" id="baY-a9-cLw"/>
-                        </connections>
-                    </tableView>
-                </tableViewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="Zwa-gJ-Ayz" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                        <constraints>
+                            <constraint firstItem="yUz-71-Skl" firstAttribute="leading" secondItem="Yb4-vQ-knL" secondAttribute="leadingMargin" id="H0f-6u-uhn"/>
+                            <constraint firstItem="srg-Vy-Rhb" firstAttribute="top" secondItem="yUz-71-Skl" secondAttribute="bottom" id="KHc-e9-1Ky"/>
+                            <constraint firstItem="yUz-71-Skl" firstAttribute="top" secondItem="GH2-0K-mtu" secondAttribute="bottom" id="plG-85-3Yp"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="yUz-71-Skl" secondAttribute="trailing" id="xMU-T5-Oxh"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="yMG-7S-oB4"/>
+                    <connections>
+                        <outlet property="exampleTable" destination="Zk6-JT-xWT" id="ip4-kp-ZE6"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="JR8-DL-wdf" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1661" y="-324"/>
+            <point key="canvasLocation" x="1663.7681159420292" y="-323.4375"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="jVG-vP-67h">

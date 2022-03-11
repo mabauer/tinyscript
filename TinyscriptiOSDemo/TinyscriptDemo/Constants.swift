@@ -13,4 +13,7 @@ struct K {
     static var TinyscriptServiceUrl = "https://apps.mkbauer.de/tinyscript"
     // let TinyscriptServiceUrl = "http://CAS-M04165.home.cas.de:8080"
     
+    static var pickExampleSegue = "pickExample"
+    static var executeSegue = "execute"
+    
 }
