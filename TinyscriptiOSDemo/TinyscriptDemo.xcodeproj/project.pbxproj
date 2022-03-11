@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		FD1069441C626779000AC2FC /* SwiftyJSON.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1069431C626779000AC2FC /* SwiftyJSON.swift */; };
+		FD19C6EA27DB8B1B00C27B36 /* TinyscriptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD19C6E927DB8B1B00C27B36 /* TinyscriptService.swift */; };
+		FD19C6EC27DB8B4900C27B36 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD19C6EB27DB8B4900C27B36 /* Constants.swift */; };
 		FD4E11751C60D5A100A8DDB4 /* ResultsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD4E11741C60D5A100A8DDB4 /* ResultsViewController.swift */; };
 		FD7190B71C5792FE0021D7DB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7190B61C5792FE0021D7DB /* AppDelegate.swift */; };
 		FD7190B91C5792FE0021D7DB /* MainScreenController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7190B81C5792FE0021D7DB /* MainScreenController.swift */; };
@@ -38,6 +40,8 @@
 
 /* Begin PBXFileReference section */
 		FD1069431C626779000AC2FC /* SwiftyJSON.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftyJSON.swift; sourceTree = "<group>"; };
+		FD19C6E927DB8B1B00C27B36 /* TinyscriptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TinyscriptService.swift; sourceTree = "<group>"; };
+		FD19C6EB27DB8B4900C27B36 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		FD4E11741C60D5A100A8DDB4 /* ResultsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ResultsViewController.swift; sourceTree = "<group>"; };
 		FD7190B31C5792FE0021D7DB /* TinyscriptDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TinyscriptDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FD7190B61C5792FE0021D7DB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -112,6 +116,8 @@
 				FD7190C11C5792FE0021D7DB /* LaunchScreen.storyboard */,
 				FD7190C41C5792FE0021D7DB /* Info.plist */,
 				FD4E11741C60D5A100A8DDB4 /* ResultsViewController.swift */,
+				FD19C6E927DB8B1B00C27B36 /* TinyscriptService.swift */,
+				FD19C6EB27DB8B4900C27B36 /* Constants.swift */,
 			);
 			path = TinyscriptDemo;
 			sourceTree = "<group>";
@@ -273,7 +279,9 @@
 			files = (
 				FD7190B71C5792FE0021D7DB /* AppDelegate.swift in Sources */,
 				FD7190E91C57A3BB0021D7DB /* ExamplePickerController.swift in Sources */,
+				FD19C6EA27DB8B1B00C27B36 /* TinyscriptService.swift in Sources */,
 				FD7190B91C5792FE0021D7DB /* MainScreenController.swift in Sources */,
+				FD19C6EC27DB8B4900C27B36 /* Constants.swift in Sources */,
 				FD1069441C626779000AC2FC /* SwiftyJSON.swift in Sources */,
 				FD4E11751C60D5A100A8DDB4 /* ResultsViewController.swift in Sources */,
 			);

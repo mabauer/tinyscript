@@ -8,46 +8,51 @@
 
 import UIKit
 
-class MainScreenController: UIViewController, SourceViewerDelegate {
-
-    // MARK: Properties
+class MainScreenController: UIViewController {
 
     @IBOutlet weak var sourceView: UITextView!
-    
-    let URL = "https://apps.mkbauer.de/tinyscript"
-    // let URL = "http://CAS-M04165.home.cas.de:8080"
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         sourceView.text = "var hello = \"hello, world\";\nprint(hello);"
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any!) {
         switch(segue.identifier!) {
         case "pickExample":
             let examplePicker = (segue.destination as? ExamplePickerController)!
-            examplePicker.tinyscriptURL = URL
             examplePicker.delegate = self
         case "execute":
             let resultsView = (segue.destination as? ResultsViewController)!
-            resultsView.defineScript(sourceView.text);
-            resultsView.tinyscriptURL = URL + "/xcompile"
+            resultsView.script = sourceView.text;
         default:
             break
         }
     }
     
-    func showSource(_ script: String) {
-        sourceView.text = script
+}
+
+extension MainScreenController: ExamplePickerDelegate {
+    
+    func didSelectExample(_ example: String) {
+        let ts = TinyscriptService(delegate: self)
+        ts.loadExample(example)
     }
     
+}
+
+extension MainScreenController: TinyscriptServiceDelegate {
     
+    func didLoadExample(_ service: TinyscriptService, script: String) {
+        DispatchQueue.main.async(execute: {
+            self.sourceView.text = script
+        })
+    }
+    
+    func didFailWithError(_ service: TinyscriptService, error: Error) {
+        
+    }
   
 }
 

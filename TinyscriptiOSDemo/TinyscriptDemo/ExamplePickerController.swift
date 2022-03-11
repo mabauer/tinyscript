@@ -8,17 +8,15 @@
 
 import UIKit
 
-@objc protocol SourceViewerDelegate {
-    func showSource(_ script: String)
+protocol ExamplePickerDelegate {
+    func didSelectExample(_ example: String)
 }
 
 class ExamplePickerController:  UITableViewController, UIPopoverPresentationControllerDelegate {
     
     // MARK: Properties
     
-    weak var delegate : SourceViewerDelegate?
-    var tinyscriptURL : String = ""
-    
+    var delegate : ExamplePickerDelegate?
     
     var examples: [String] = ["Hello World", "Basic Expressions", "Strings", "Control flow", "Functions", "Functions: recursion", "Arrays", "Closures", "Object and Prototypes", "People"]
     var exampleFiles: [String] = ["helloworld.ts", "expressions.ts", "strings.ts", "primes.ts", "fibonacci.ts", "fibonacci_recursive.ts", "arrays.ts", "closures.ts", "oo.ts", "people.ts"]
@@ -46,7 +44,7 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
 
         let example = exampleFiles[(indexPath as NSIndexPath).row]
         print("Selected example: \(example)")
-        loadExample(example)
+        delegate!.didSelectExample(example)
         dismiss(animated: true, completion:nil)
     }
     
@@ -72,34 +70,6 @@ class ExamplePickerController:  UITableViewController, UIPopoverPresentationCont
     func presentationController(_: UIPresentationController, viewControllerForAdaptivePresentationStyle _: UIModalPresentationStyle) -> UIViewController? {
         return UINavigationController(rootViewController: self)
     
-    }
-    
-    // MARK: Loading example code
-    func loadExample(_ example: String) {
-        makeHTTPGetRequest(tinyscriptURL + "/" + example, onCompletion: {data, error -> Void in
-            if (data != nil) {
-                let script : String = NSString(data: data!, encoding:String.Encoding.utf8.rawValue)! as String
-                // print(script)
-                DispatchQueue.main.async(execute: {
-                    self.delegate!.showSource(script)
-                })
-            }
-        })
-    }
-    
-    func makeHTTPGetRequest(_ path: String,
-        onCompletion: @escaping (Data?, Error?) -> Void) {
-            
-            // Setup the request
-            var request = NSMutableURLRequest(url: URL(string: path)!) as URLRequest
-            request.httpMethod = "GET"
-            let session = URLSession.shared
-        
-            let task = session.dataTask(with: request, completionHandler: {data, response, error -> Void in
-                onCompletion(data, error)
-                return ()
-            })
-            task.resume()
     }
     
 }
