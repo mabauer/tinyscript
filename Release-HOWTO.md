@@ -43,7 +43,7 @@ Set version number correctly e.g. *0.9.0-SNAPSHOT* or *0.9.0-RELEASE*
 Publish the release
 -------------------
 
-Commit the version to *github*. Then create a release on *github* and upload the files from step 4, use a tag of the form `v0.9.0rc1`
+Commit the version to *github*. Then create a release on *github* and upload the files from step 5, use a tag of the form `v0.9.0rc1`
 
 
 Publish docker images
