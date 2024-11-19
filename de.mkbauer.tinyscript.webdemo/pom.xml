@@ -19,7 +19,7 @@
 		<main.basedir>${basedir}/../..</main.basedir>
 		<java.version>11</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<xtext-version>2.25.0</xtext-version>
+		<xtext-version>2.32.0</xtext-version>
 	</properties>
 	<dependencies>
 		<dependency>
