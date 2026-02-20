@@ -125,9 +125,13 @@ Expected test result: all interpreter tests pass; `JvmScriptEngineRunnerTest` sh
 
 1. Install Eclipse IDE matching the new release train (e.g. 2025-12 for RCP/RAP Developers).
 2. Install Xtext SDK into the host Eclipse (Help → Install New Software, use the Xtext release P2 URL).
-3. In Window → Preferences → Plug-in Development → Target Platform, reload `de.mkbauer.tinyscript.target`.
-4. Right-click `GenerateTinyscript.mwe2` → Run As → MWE2 Workflow to regenerate `src-gen/`.
-5. Project → Clean all projects. Verify Problems view is error-free.
+3. Add Java 21 JDK: Window → Preferences → Java → Installed JREs → Add. Then map it: Java → Installed JREs → **Execution Environments** → select **JavaSE-21** → tick the Java 21 JDK. Without this mapping Eclipse reports "release 21 is not found in the system".
+4. In Window → Preferences → Plug-in Development → Target Platform, reload `de.mkbauer.tinyscript.target`.
+5. Add the ANTLR generator JAR to the build path (needed for the MWE2 workflow; Maven fetches it automatically but Eclipse does not):
+   - Download `antlr-generator-3.2.0-patch.jar` from `https://download.itemis.com/antlr-generator-3.2.0-patch.jar`
+   - Right-click `de.mkbauer.tinyscript` → Properties → Java Build Path → Libraries → **Add JARs…** (or Add External JARs) → select the downloaded JAR
+6. Right-click `GenerateTinyscript.mwe2` → Run As → MWE2 Workflow to regenerate `src-gen/`.
+7. Project → Clean all projects. Verify Problems view is error-free.
 
 ---
 
@@ -159,3 +163,9 @@ When debugging target resolution issues, run `mvn install -pl de.mkbauer.tinyscr
 
 ### No JavaScript engine on standard OpenJDK 21
 Nashorn was removed from the JDK in Java 15. Graal.js is only available in GraalVM distributions. `JvmScriptEngineRunnerTest` uses `Assume.assumeNotNull()` to skip gracefully. This is expected and correct — the 12 skipped tests are not failures.
+
+### Eclipse IDE: JavaSE-21 execution environment must be explicitly mapped
+Adding Java 21 to Installed JREs is not enough. Eclipse also requires the **Execution Environments** mapping (Window → Preferences → Java → Installed JREs → Execution Environments → JavaSE-21 → tick the JDK) to be set, otherwise projects with `Bundle-RequiredExecutionEnvironment: JavaSE-21` fail to compile with "release 21 is not found in the system".
+
+### Eclipse IDE: ANTLR generator JAR is not available as an OSGi bundle
+The `XtextGenerator` MWE2 component requires `antlr-generator-3.2.0-patch.jar` on the classpath. In Maven this is provided as a dependency of `exec-maven-plugin`. In Eclipse, it is not part of any OSGi bundle in the target platform, so it must be added manually to the Java Build Path of `de.mkbauer.tinyscript` (project Properties → Java Build Path → Add JARs). Download from `https://download.itemis.com/antlr-generator-3.2.0-patch.jar`. Without it the MWE2 workflow fails with: `It is required to use ANTLR's parser generator`.
