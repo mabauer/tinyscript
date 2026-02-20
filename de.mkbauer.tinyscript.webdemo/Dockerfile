@@ -1,8 +1,6 @@
 # Dockerfile for tinyscript
 
-# Spring boot needs Java 8
-# FROM java:8
-FROM openjdk:11-jre-slim
+FROM openjdk:17-jre-slim
 
 VOLUME /tmp
 

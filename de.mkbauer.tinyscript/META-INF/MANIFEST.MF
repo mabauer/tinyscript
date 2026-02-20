@@ -7,8 +7,6 @@ Bundle-SymbolicName: de.mkbauer.tinyscript; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.xtext;visibility:=reexport,
  org.eclipse.xtext.xbase;resolution:=optional;visibility:=reexport,
- org.eclipse.xtext.generator;resolution:=optional,
- org.apache.commons.logging;bundle-version="1.0.4";resolution:=optional,
  org.eclipse.emf.codegen.ecore;resolution:=optional,
  org.eclipse.emf.mwe.utils;resolution:=optional,
  org.eclipse.emf.mwe2.launch;bundle-version="2.12.1";resolution:=optional,
@@ -26,7 +24,7 @@ Import-Package: de.mkbauer.tinyscript,
  org.eclipse.xtext.xbase.lib,
  org.slf4j;version="1.7.30",
  org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: de.mkbauer.tinyscript,
  de.mkbauer.tinyscript.formatting,
  de.mkbauer.tinyscript.generator,

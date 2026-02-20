@@ -20,7 +20,7 @@
 		<!-- This is the java.version used by Spring Boot -->
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<xtext-version>2.32.0</xtext-version>
+		<xtext-version>2.41.0</xtext-version>
 	</properties>
 	<dependencies>
 <!--		

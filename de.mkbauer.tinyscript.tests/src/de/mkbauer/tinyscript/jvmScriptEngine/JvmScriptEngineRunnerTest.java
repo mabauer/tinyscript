@@ -1,10 +1,14 @@
 package de.mkbauer.tinyscript.jvmScriptEngine;
 
 
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.eclipse.xtext.testing.XtextRunner;
+
+import de.mkbauer.tinyscript.jvmscriptengine.JvmScriptEngineRunner;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -17,10 +21,14 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 @RunWith(XtextRunner.class)
 public class JvmScriptEngineRunnerTest extends TinyscriptInterpreterTestHelper {
 	
-	final static String SCRIPT_ENGINE = "graal.js"; // "nashorn"
-
 	@Inject
 	private Provider<JvmScriptEngineRunner> jvmRunnerProvider;
+
+	@Before
+	public void requireJavascriptEngine() {
+		Assume.assumeNotNull("Skipping JvmScriptEngine tests: no JavaScript engine available",
+				JvmScriptEngineRunner.getJavascriptEngine());
+	}
 	
 	public TSValue executeScriptFromString(String script) {
 		Tinyscript ast = parseScriptFromString(script);

@@ -8,7 +8,6 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: de.mkbauer.tinyscript,
  de.mkbauer.tinyscript.ui,
  org.eclipse.core.runtime,
- org.eclipse.xtext.junit4,
  org.eclipse.ui.workbench;resolution:=optional,
  org.objectweb.asm;bundle-version="5.0.1";resolution:=optional,
  org.eclipse.xtext.xbase.lib;bundle-version="2.14.0",
@@ -22,6 +21,6 @@ Import-Package: org.apache.log4j,
  org.junit.runners;version="4.5.0",
  org.junit.runners.model;version="4.5.0",
  org.hamcrest.core
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: de.mkbauer.tinyscript.tests;x-internal=true
 Automatic-Module-Name: de.mkbauer.tinyscript.tests
