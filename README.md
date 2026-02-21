@@ -24,7 +24,7 @@ What is tinyscript?
 	print(fibonacci(50)); // 20365011074
 
 
-You can play with it online in your browser [here](https://apps.mkbauer.de/tinyscript). 
+You can play with it online in your browser [here](https://tinyscript.mkbauer.de). 
 
 *tinyscript* offers quite a complete set of interesting language features:
 
