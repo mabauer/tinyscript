@@ -24,6 +24,6 @@
     "vue-tsc":             "^2.0.0",
     "vitest":              "^3.0.0",
     "@vue/test-utils":     "^2.4.0",
-    "happy-dom":           "^16.0.0"
+    "happy-dom":           "^20.7.0"
   }
 }
