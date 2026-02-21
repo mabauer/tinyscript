@@ -487,11 +487,27 @@ Spring Boot application. REST endpoints:
 
 | Path | Method | Action |
 |---|---|---|
-| `/execute` | POST | Run Tinyscript; returns output + execution stats |
+| `/execute` | POST | Run Tinyscript; returns JSON (`ExecutionResult`) with output + stats |
 | `/xcompile` | POST | Transpile to JavaScript; returns JS source |
 | `/test` | GET | Run a hardcoded sample program |
 
 The `TinyscriptExecutionService` creates a fresh sandboxed `TinyscriptEngine` per request (stateless). Output is captured via a custom `OutputStream` with an 8 KB limit. Sandboxing is **on**.
+
+**Frontend:** Vue 3 + Vite + TypeScript, Bootstrap 5, CodeMirror 6.
+
+The frontend source lives in `frontend/` and is built by `frontend-maven-plugin` (Node.js v22, Vite) into `src/main/resources/public/`, which Spring Boot serves as static files. Key components:
+
+| File | Role |
+|---|---|
+| `frontend/src/App.vue` | Root component — manages `code`, `result`, `executing` state; calls `/execute` |
+| `frontend/src/components/Toolbar.vue` | Examples dropdown + Execute button |
+| `frontend/src/components/Editor.vue` | CodeMirror 6 editor; error-line decoration; Ctrl-Enter shortcut |
+| `frontend/src/components/tinyscript-lang.ts` | CM6 `StreamLanguage` tokenizer for Tinyscript syntax |
+| `frontend/src/components/Output.vue` | Spinner, success/error alerts, formatted statistics |
+| `frontend/src/types.ts` | TypeScript interfaces: `ExecutionResult`, `Statistics` |
+| `frontend/public/*.ts` | 10 example scripts served as static files |
+
+Frontend unit tests (Vitest) cover `Output`, `Toolbar`, and the `tinyscript-lang` tokenizer. They run as part of the Maven build before the Spring Boot tests.
 
 ### JVM ScriptEngine
 

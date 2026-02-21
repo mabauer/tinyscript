@@ -159,9 +159,57 @@ docker run -p 8080:8080 tinyscript-webdemo
 
 ## Technology Stack
 
-- **Java 17** (minimum; configured in root POM)
+- **Java 17** (minimum for Maven build; Java 21 recommended for IDE runs)
 - **Xtext 2.41.0** — language engineering framework
 - **Maven + Tycho 5.0.2** — build system for Eclipse plugins
-- **Spring Boot 3.5** — web demo
+- **Spring Boot 3.5** — web demo backend
+- **Vue 3 + Vite + TypeScript** — web demo frontend
+- **Bootstrap 5 + Bootstrap Icons** — web demo UI
+- **CodeMirror 6** — web demo editor (with custom Tinyscript StreamLanguage)
+- **Vitest + @vue/test-utils** — frontend unit tests
 - **JUnit 4** — test framework (via `org.junit.vintage` bridge)
 - **Apache Commons Exec 1.4** — used by `NodeJsRunner` to invoke `node` in standalone tests
+
+## Frontend Development (web demo)
+
+The frontend lives in `de.mkbauer.tinyscript.webdemo/frontend/`. The Maven build runs `npm install`, `npm test`, and `npm build` automatically via `frontend-maven-plugin` during the `generate-resources` phase, so a normal `mvn package` requires no extra steps.
+
+For iterative frontend work, run the Vite toolchain directly:
+
+```bash
+cd de.mkbauer.tinyscript.webdemo/frontend
+
+npm install        # first time only
+npm run test       # Vitest unit tests (Output, Toolbar, tinyscript-lang)
+npm run build      # rebuild → ../src/main/resources/public/
+```
+
+After `npm run build`, trigger an Eclipse project refresh (**F5**) so the updated files are copied from `src/main/resources/public/` to `target/classes/public/`, then refresh the browser. Alternatively:
+
+```bash
+npm run build && mvn resources:resources -f de.mkbauer.tinyscript.webdemo/pom.xml
+```
+
+**Frontend source layout:**
+
+```
+frontend/
+├── index.html
+├── vite.config.ts
+├── tsconfig.json
+├── package.json
+├── public/           ← 10 example .ts scripts (served as static files)
+└── src/
+    ├── main.ts
+    ├── style.css
+    ├── types.ts      ← ExecutionResult, Statistics interfaces
+    ├── App.vue
+    └── components/
+        ├── Toolbar.vue
+        ├── Editor.vue
+        ├── tinyscript-lang.ts   ← CM6 StreamLanguage tokenizer
+        ├── Output.vue
+        └── __tests__/           ← Vitest specs
+```
+
+The Vite build outputs to `src/main/resources/public/` (Spring Boot's static resource directory). The built assets are committed to the repository so the app can be started directly from the JAR without running npm.

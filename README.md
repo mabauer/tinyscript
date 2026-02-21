@@ -28,19 +28,19 @@ You can play with it online in your browser [here](https://apps.mkbauer.de/tinys
 
 *tinyscript* offers quite a complete set of interesting language features:
 
-* [Basic expressions](de.mkbauer.tinyscript.webdemo/src/main/resources/public/expressions.ts)
+* [Basic expressions](de.mkbauer.tinyscript.webdemo/frontend/public/expressions.ts)
 
-* [Handling of strings](de.mkbauer.tinyscript.webdemo/src/main/resources/public/strings.ts)
+* [Handling of strings](de.mkbauer.tinyscript.webdemo/frontend/public/strings.ts)
 
-* [Control-flow structures](de.mkbauer.tinyscript.webdemo/src/main/resources/public/primes.ts): `for`- and `if`-statements
+* [Control-flow structures](de.mkbauer.tinyscript.webdemo/frontend/public/primes.ts): `for`- and `if`-statements
 
-* [Functions](de.mkbauer.tinyscript.webdemo/src/main/resources/public/fibonacci.ts), including [recursion](de.mkbauer.tinyscript.webdemo/src/main/resources/public/fibonacci_recursive.ts) and *arrow* functions
+* [Functions](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci.ts), including [recursion](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci_recursive.ts) and *arrow* functions
 
-* [Arrays](de.mkbauer.tinyscript.webdemo/src/main/resources/public/arrays.ts)
+* [Arrays](de.mkbauer.tinyscript.webdemo/frontend/public/arrays.ts)
 
-* [Closures](de.mkbauer.tinyscript.webdemo/src/main/resources/public/closures.ts)
+* [Closures](de.mkbauer.tinyscript.webdemo/frontend/public/closures.ts)
 
-* [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/src/main/resources/public/oo.ts)
+* [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/frontend/public/oo.ts)
 
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 
@@ -116,7 +116,7 @@ You can experiment with these features in the demo web app. You could use the la
 Setup
 -----
 
-When you're done with playing around with the online demo and want to install your own version of *tinyscript* or start hacking on it, here are a few steps to get started. As *xtext* is a part of the Eclipse project, it is best developed with Eclipse. As of 2021, the current version is developed using *Java 11*, *Eclipse 2021-12* and *xtext 2.25.0*. The project can be build using *Maven*. *tinyscript* consists of a number of seperate projects:
+When you're done with playing around with the online demo and want to install your own version of *tinyscript* or start hacking on it, here are a few steps to get started. As *xtext* is a part of the Eclipse project, it is best developed with Eclipse. The current version is developed using *Java 21*, *Eclipse 2025-12* and *Xtext 2.41.0*. The project can be build using *Maven*. *tinyscript* consists of a number of seperate projects:
 
 - The *tinyscript* core language in `de.mkbauer.tinyscript` and the corresponding plugins for an Eclipse editor in `de.mkbauer.tinyscript.ide`, `de.mkbauer.tinyscript.ui` and some Eclipse related helper projects in `de.mkbauer.tinyscript.target`, `de.mkbauer.tinyscript.sdk` and `de.mkbauer.tinyscript.updatesite`
 
