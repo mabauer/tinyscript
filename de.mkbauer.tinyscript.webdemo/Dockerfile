@@ -5,7 +5,7 @@ FROM openjdk:21-jre-slim
 VOLUME /tmp
 
 # Add fat jar
-ADD target/tinyscript-webdemo-0.10.0-SNAPSHOT.jar app.jar
+ADD target/tinyscript-webdemo.jar app.jar
 RUN bash -c 'touch /app.jar'
 
 # Run the app using the /dev/urandom-hack to prevent long start-up times
