@@ -6,7 +6,7 @@
 	<groupId>de.mkbauer.tinyscript</groupId>
 	<name>Tinyscript Webdemo</name>
 	<description>Webdemo for Tinyscript</description>
-	<version>0.11.0</version>
+	<version>0.11.1-SNAPSHOT</version>
 
 	<parent>
 		<!-- Your own application should inherit from spring-boot-starter-parent -->
@@ -62,7 +62,7 @@
 		<dependency>
 			<groupId>de.mkbauer.tinyscript</groupId>
 			<artifactId>de.mkbauer.tinyscript</artifactId>
-			<version>0.11.0</version>
+			<version>0.11.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.xtext</groupId>
