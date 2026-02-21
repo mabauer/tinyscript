@@ -157,9 +157,39 @@ docker build -t tinyscript-webdemo .
 docker run -p 8080:8080 tinyscript-webdemo
 ```
 
+## Releasing
+
+See `Release-HOWTO.md` for the full procedure. Key commands:
+
+```bash
+# 1. Bump version in OSGi modules (pom.xml + MANIFEST.MF + feature.xml)
+mvn org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
+
+# 2. Bump plain Maven modules
+mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.repl/pom.xml
+mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.webdemo/pom.xml
+mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.standalone.tests/pom.xml
+# Also manually update the de.mkbauer.tinyscript dependency version in repl and webdemo pom.xml
+
+# 3. Commit, tag, push — Docker workflow triggers automatically
+git add -A && git commit -m "Release version X.Y.Z"
+git tag vX.Y.Z && git push && git push --tags
+
+# 4. Bump to next SNAPSHOT (repeat steps 1-2 with X.Y.(Z+1)-SNAPSHOT)
+```
+
+## CI/CD
+
+Two GitHub Actions workflows in `.github/workflows/`:
+
+- **`ci.yml`** — runs on every push/PR to `master`: full Tycho build + all tests + REPL + webdemo (Vitest + Spring Boot tests)
+- **`docker.yml`** — runs on `vX.Y.Z` tags: builds webdemo JAR and pushes `mkbauer/tinyscript:X.Y.Z` + `:latest` to Docker Hub
+
+Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
+
 ## Technology Stack
 
-- **Java 17** (minimum for Maven build; Java 21 recommended for IDE runs)
+- **Java 21** — required for IDE runs; build minimum is effectively 21 (Tycho 5 + Spring Boot 3.5)
 - **Xtext 2.41.0** — language engineering framework
 - **Maven + Tycho 5.0.2** — build system for Eclipse plugins
 - **Spring Boot 3.5** — web demo backend
@@ -169,6 +199,7 @@ docker run -p 8080:8080 tinyscript-webdemo
 - **Vitest + @vue/test-utils** — frontend unit tests
 - **JUnit 4** — test framework (via `org.junit.vintage` bridge)
 - **Apache Commons Exec 1.4** — used by `NodeJsRunner` to invoke `node` in standalone tests
+- **eclipse-temurin:21-jre** — Docker base image
 
 ## Frontend Development (web demo)
 

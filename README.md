@@ -148,6 +148,8 @@ To run:
 
 For a full description of the build system — module taxonomy, build stages, frontend development workflow, and build outputs — see [docs/build.md](docs/build.md).
 
+Builds and tests run automatically on GitHub Actions on every push to `master`. Pushing a `vX.Y.Z` tag triggers the Docker workflow, which publishes the image to Docker Hub automatically. See [Release-HOWTO.md](Release-HOWTO.md) for the release process.
+
 
 License
 -------

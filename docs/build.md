@@ -123,15 +123,16 @@ Standard Maven compilation of the Spring Boot application classes.
 
 `ExamplesTests` and `TinyscriptWebApplicationTests` start a Spring Boot test context and exercise the REST endpoints with the real interpreter. These run after the frontend is built, so the full application (backend + frontend assets) is tested together.
 
-Output: `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo-*.jar`
+Output: `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar`
+(fixed name via `<finalName>` — no version suffix, works for both SNAPSHOT and release builds)
 
 Run:
 ```bash
-java -jar de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo-*.jar
+java -jar de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar
 # open http://localhost:8080
 ```
 
-Skip tests (skips Vitest, frontend build still runs):
+Skip Java tests (`-DskipTests` skips Surefire/Failsafe but **not** the Vitest run, which is in the `generate-resources` phase):
 ```bash
 mvn clean package -f de.mkbauer.tinyscript.webdemo/pom.xml -DskipTests
 ```
@@ -179,7 +180,7 @@ This module is in the Tycho reactor but is a plain Maven/JUnit module — no OSG
 |---|---|
 | Core OSGi bundle | `de.mkbauer.tinyscript/target/de.mkbauer.tinyscript-*.jar` |
 | REPL fat JAR | `de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar` |
-| Web demo fat JAR | `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo-*.jar` |
+| Web demo fat JAR | `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar` |
 | Frontend static assets | `de.mkbauer.tinyscript.webdemo/src/main/resources/public/` |
 | Eclipse update site | `de.mkbauer.tinyscript.updatesite/target/repository/` |
 | Local Maven cache | `~/.m2/repository/de/mkbauer/tinyscript/` |
@@ -194,4 +195,21 @@ docker build -t tinyscript-webdemo .
 docker run -p 8080:8080 tinyscript-webdemo
 ```
 
-The Dockerfile uses `openjdk:21-jre-slim`. The fat JAR must be built first (`mvn package`).
+The Dockerfile uses `eclipse-temurin:21-jre`. The fat JAR must be built first (`mvn package`).
+
+---
+
+## 11. CI/CD (GitHub Actions)
+
+Two workflows live in `.github/workflows/`:
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| `ci.yml` | Push / PR to `master` | Full build + all tests (Tycho reactor, REPL, webdemo incl. Vitest + Spring Boot) |
+| `docker.yml` | Push of `vX.Y.Z` tag | Builds webdemo JAR, pushes `mkbauer/tinyscript:X.Y.Z` and `:latest` to Docker Hub |
+
+Both workflows cache `~/.m2/repository` (Maven/Tycho artifacts) and the Node.js v22.14.0 runtime across runs.
+
+The Docker workflow requires two GitHub repository secrets: `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
+
+For the full release procedure, see [`Release-HOWTO.md`](../Release-HOWTO.md).

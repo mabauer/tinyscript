@@ -1,68 +1,83 @@
 How to create a release for *tinyscript*
 ========================================
 
-Prepare the release
--------------------
+Releases are version-tagged in Git. Pushing a `vX.Y.Z` tag automatically
+triggers the GitHub Actions Docker workflow, which builds and pushes
+`mkbauer/tinyscript:X.Y.Z` and `:latest` to Docker Hub — no manual Docker
+steps required.
 
-Set version number correctly e.g. *0.9.0-SNAPSHOT* or *0.9.0-RELEASE*
+## 1. Update version numbers
 
-1. Define the version number for core project -- this will update the POMs of the parent project and the child projects as well as the OSGi plugin metadata correctly
+**OSGi modules** — updates the root `pom.xml`, all child `pom.xml` files, every
+`META-INF/MANIFEST.MF` (`Bundle-Version`), and `feature.xml` in one shot:
 
-        mvn tycho-versions:set-version -DnewVersion=0.9.0-SNAPSHOT
-        mvn tycho-versions:update-eclipse-metadata
+    mvn org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
 
-2. Build and install the core project to the maven repo
+**Plain Maven modules** — these are outside the Tycho reactor and must be updated
+separately:
 
-        mvn clean install
+    mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
+        -f de.mkbauer.tinyscript.repl/pom.xml
+    mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
+        -f de.mkbauer.tinyscript.webdemo/pom.xml
+    mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
+        -f de.mkbauer.tinyscript.standalone.tests/pom.xml
 
-3. Define the version numbers for the two application projects *repl* and *webdemo* and update their dependency on the core project accordingly
+**Core dependency references** — `versions:set` only updates the project's own
+`<version>`, not dependency versions. Manually set the `de.mkbauer.tinyscript`
+dependency version to `X.Y.Z` in:
 
-        <artifactId>tinyscript-webdemo</artifactId>
-	    <groupId>de.mkbauer.tinyscript</groupId>
-	    <name>Tinyscript Webdemo</name>
-	    <description>Webdemo for Tinyscript</description>
-	    <version>0.9.0-SNAPSHOT</version>
-        ...
-            <dependency>
-			    <groupId>de.mkbauer.tinyscript</groupId>
-			    <artifactId>de.mkbauer.tinyscript</artifactId>
-			    <version>0.9.0-SNAPSHOT</version>
-		    </dependency>
-
-4. For *webdemo*: Update the release numbers in `index.html` and `Dockerfile`
-
-5. Build and package the application projects
-
-        cd de.mkbauer.tinyscript.repl
-        mvn package
-
-        cd de.mkbauer.tinyscript.webdemo
-        mvn package
+- `de.mkbauer.tinyscript.repl/pom.xml`
+- `de.mkbauer.tinyscript.webdemo/pom.xml`
 
 
-Publish the release
--------------------
+## 2. Verify no old version remains
 
-Commit the version to *github*. Then create a release on *github* and upload the files from step 5, use a tag of the form `v0.9.0rc1`
-
-
-Publish docker images
----------------------
-
-1. Create a docker image for the *webdemo*
-
-        cd de.mkbauer.tinyscript.webdemo
-
-        docker docker build -t mkbauer/tinyscript:0.9.0rc1 .
-        docker run -p 8080:8080 mkbauer/tinyscript:0.9.0rc1
-
-2. Publish it on *Docker Hub*
-
-        docker push build mkbauer/tinyscript:0.9.0rc1
-
-        docker tag  <image_id> mkbauer/tinyscript:latest
-        docker push mkbauer/tinyscript:latest
+    grep -r "OLD_VERSION" --include="*.xml" --include="MANIFEST.MF" . \
+        | grep -v "target/" | grep -v ".git/" | grep -v "bin/"
 
 
+## 3. Commit, tag, push
 
-        
+    git add -A
+    git commit -m "Release version X.Y.Z"
+    git tag vX.Y.Z
+    git push && git push --tags
+
+Pushing the `vX.Y.Z` tag triggers `.github/workflows/docker.yml`, which:
+
+- Builds the Tycho reactor (skip tests)
+- Builds the webdemo fat JAR (Vitest still runs; Spring Boot tests skipped)
+- Pushes `mkbauer/tinyscript:X.Y.Z` and `:latest` to Docker Hub
+
+Monitor progress at: https://github.com/mabauer/tinyscript/actions
+
+
+## 4. Bump to next SNAPSHOT
+
+    mvn org.eclipse.tycho:tycho-versions-plugin:set-version \
+        -DnewVersion=X.Y.(Z+1)-SNAPSHOT
+    mvn versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
+        -f de.mkbauer.tinyscript.repl/pom.xml
+    mvn versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
+        -f de.mkbauer.tinyscript.webdemo/pom.xml
+    mvn versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
+        -f de.mkbauer.tinyscript.standalone.tests/pom.xml
+
+Then manually update the `de.mkbauer.tinyscript` dependency version in
+`repl/pom.xml` and `webdemo/pom.xml` to `X.Y.(Z+1)-SNAPSHOT`.
+
+    git add -A
+    git commit -m "Bump to X.Y.(Z+1)-SNAPSHOT"
+    git push
+
+
+## Notes
+
+- **GitHub secrets required:** the Docker workflow reads `DOCKERHUB_USERNAME`
+  and `DOCKERHUB_TOKEN` from repository secrets (Settings → Secrets and
+  variables → Actions → Repository secrets).
+- **CI workflow** (`.github/workflows/ci.yml`) runs the full test suite on every
+  push to master and on pull requests — no action needed.
+- **Docker base image:** `eclipse-temurin:21-jre` (`openjdk` images are deprecated).
+- See `docs/build.md` for a full description of the build system.
