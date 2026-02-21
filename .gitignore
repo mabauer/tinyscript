@@ -35,6 +35,7 @@ xcuserdata/
 
 ## Frontend
 de.mkbauer.tinyscript.webdemo/frontend/node_modules
+de.mkbauer.tinyscript.webdemo/frontend/node
 
 ## Obj-C/Swift specific
 *.hmap
