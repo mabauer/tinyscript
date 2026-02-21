@@ -55,6 +55,27 @@ The MWE2 workflow requires an ANTLR generator JAR that is not part of any OSGi b
 - Project → Clean → Clean all projects
 - Check the Problems view — expect no errors
 
+## After a version bump (SNAPSHOT → release → next SNAPSHOT)
+
+Whenever the Maven version changes (e.g. after a release cycle bumps master to `0.11.2-SNAPSHOT`), the new SNAPSHOT artifacts are not yet in your local `~/.m2` repository. Eclipse m2e will show a red error on the `webdemo` and `repl` projects:
+
+> Could not find artifact de.mkbauer.tinyscript:de.mkbauer.tinyscript:jar:X.Y.Z-SNAPSHOT
+
+**Fix — run the tier 1 install from the terminal** (not from within Eclipse):
+
+```bash
+mvn clean install -DskipTests
+```
+
+This builds and installs all OSGi/Tycho artifacts into `~/.m2` at the new version. Then back in Eclipse:
+
+- Select all projects (Ctrl+A in Package Explorer)
+- **Alt+F5** → Maven → Update Project
+- Tick **"Force Update of Snapshots/Releases"**
+- Click OK
+
+The errors will clear. The "Force Update" checkbox is required — without it m2e reuses its cached failed-resolution result for SNAPSHOTs.
+
 ## Running tests
 
 Launch the JUnit tests from the `de.mkbauer.tinyscript.tests` project as you would any Eclipse plug-in test. The 12 tests in `JvmScriptEngineRunnerTest` will appear as **skipped** (not failed) on standard OpenJDK 21, which has no built-in JavaScript engine (Nashorn was removed in Java 15; Graal.js is only available in GraalVM distributions). All other tests should pass.
