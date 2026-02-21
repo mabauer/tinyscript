@@ -28,19 +28,19 @@ You can play with it online in your browser [here](https://tinyscript.mkbauer.de
 
 *tinyscript* offers quite a complete set of interesting language features:
 
-* [Basic expressions](de.mkbauer.tinyscript.webdemo/src/main/resources/public/expressions.ts)
+* [Basic expressions](de.mkbauer.tinyscript.webdemo/frontend/public/expressions.ts)
 
-* [Handling of strings](de.mkbauer.tinyscript.webdemo/src/main/resources/public/strings.ts)
+* [Handling of strings](de.mkbauer.tinyscript.webdemo/frontend/public/strings.ts)
 
-* [Control-flow structures](de.mkbauer.tinyscript.webdemo/src/main/resources/public/primes.ts): `for`- and `if`-statements
+* [Control-flow structures](de.mkbauer.tinyscript.webdemo/frontend/public/primes.ts): `for`- and `if`-statements
 
-* [Functions](de.mkbauer.tinyscript.webdemo/src/main/resources/public/fibonacci.ts), including [recursion](de.mkbauer.tinyscript.webdemo/src/main/resources/public/fibonacci_recursive.ts) and *arrow* functions
+* [Functions](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci.ts), including [recursion](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci_recursive.ts) and *arrow* functions
 
-* [Arrays](de.mkbauer.tinyscript.webdemo/src/main/resources/public/arrays.ts)
+* [Arrays](de.mkbauer.tinyscript.webdemo/frontend/public/arrays.ts)
 
-* [Closures](de.mkbauer.tinyscript.webdemo/src/main/resources/public/closures.ts)
+* [Closures](de.mkbauer.tinyscript.webdemo/frontend/public/closures.ts)
 
-* [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/src/main/resources/public/oo.ts)
+* [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/frontend/public/oo.ts)
 
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 
@@ -116,46 +116,37 @@ You can experiment with these features in the demo web app. You could use the la
 Setup
 -----
 
-When you're done with playing around with the online demo and want to install your own version of *tinyscript* or start hacking on it, here are a few steps to get started. As *xtext* is a part of the Eclipse project, it is best developed with Eclipse. As of 2021, the current version is developed using *Java 11*, *Eclipse 2021-12* and *xtext 2.25.0*. The project can be build using *Maven*. *tinyscript* consists of a number of seperate projects:
+When you're done playing around with the online demo and want to install your own version of *tinyscript* or start hacking on it, here is a quick overview. The project is built with *Maven* and requires *Java 21*. It is best developed with *Eclipse 2025-12* and *Xtext 2.41.0*.
 
-- The *tinyscript* core language in `de.mkbauer.tinyscript` and the corresponding plugins for an Eclipse editor in `de.mkbauer.tinyscript.ide`, `de.mkbauer.tinyscript.ui` and some Eclipse related helper projects in `de.mkbauer.tinyscript.target`, `de.mkbauer.tinyscript.sdk` and `de.mkbauer.tinyscript.updatesite`
+The build has two tiers: a *Tycho* reactor at the root for the OSGi/Eclipse plugin modules, and separate plain Maven builds for the runnable applications (REPL and web demo). Build in this order:
 
-- The *tinyscript* interpreter application in `de.mkbauer.tinyscript.repl` which depends on the core language. This application can be used in an intercative mode (*REPL*) or it can execute *tinyscript* files.
-
-- The *tinyscript* web demo in `de.mkbauer.tinyscript.webdemo`, also depending on the core language.
-
-To build:
-
-- Build and install the core language in the top level project first:
+1. Install the core language and Eclipse plugins into the local Maven repository:
 
 		mvn clean install
 
-- Then build and package the other projects (interpreter appication and webdemo). This will create the *fat jars* for both applications (see `target` folders).
+2. Build the REPL and web demo fat JARs:
 
-		cd de.mkbauer.tinyscript.repl
-		mvn clean package
-		cd ..
-	
-		cd de.mkbauer.tinyscript.webdemo
-		mvn clean package
-		cd ..
+		mvn clean package -f de.mkbauer.tinyscript.repl/pom.xml
+		mvn clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
+
+The web demo build also runs the Vue 3 frontend through Vite (npm install → test → build) automatically.
 
 To run:
 
 - The interpreter:
 
-		java -jar de.mkbauer.tinyscript.repl-<version>.jar example.ts
+		java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar example.ts
 
-- The webdemo as a *Spring Boot* application:
+- The web demo as a *Spring Boot* application:
 
-		java -jar de.mkbauer.tinyscript.webdemo-<version>.jar
+		java -jar de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo-*.jar
 
-As an alternative, you can deploy *tinyscript* via docker
-
-- Pull and run the image from *Docker Hub*:
+- Via Docker:
 
 		docker pull mkbauer/tinyscript:latest
 		docker run -p 8080:8080 mkbauer/tinyscript:latest
+
+For a full description of the build system — module taxonomy, build stages, frontend development workflow, and build outputs — see [docs/build.md](docs/build.md).
 
 
 License
