@@ -60,7 +60,7 @@ async function executeScript(): Promise<void> {
     </div>
 
     <div id="content" class="container">
-      <div id="code" class="row">
+      <div id="code" class="row mt-3">
         <div class="col-md-12">
           <Editor ref="editorRef" v-model="code" @execute="executeScript" />
         </div>

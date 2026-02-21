@@ -45,7 +45,7 @@ const errorLineField = StateField.define<DecorationSet>({
 
 // --- Editor theme ---
 const editorTheme = EditorView.theme({
-  '&': { height: '400px', overflow: 'auto' },
+  '&': { height: '400px', overflow: 'auto', fontSize: '14px' },
   '.cm-scroller': { fontFamily: 'monospace' },
   '.cm-error-line': { backgroundColor: '#f2dede' },
 })
