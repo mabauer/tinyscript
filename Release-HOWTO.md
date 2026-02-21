@@ -30,6 +30,12 @@ dependency version to `X.Y.Z` in:
 - `de.mkbauer.tinyscript.repl/pom.xml`
 - `de.mkbauer.tinyscript.webdemo/pom.xml`
 
+**REPL MANIFEST.MF** — the repl module is outside the Tycho reactor, so
+`tycho-versions-plugin` does not touch its `META-INF/MANIFEST.MF`. Update
+`Bundle-Version` manually to `X.Y.Z.qualifier` in:
+
+- `de.mkbauer.tinyscript.repl/META-INF/MANIFEST.MF`
+
 
 ## 2. Verify no old version remains
 
