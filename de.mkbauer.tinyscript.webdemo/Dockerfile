@@ -1,6 +1,6 @@
 # Dockerfile for tinyscript
 
-FROM openjdk:21-jre-slim
+FROM eclipse-temurin:21-jre
 
 VOLUME /tmp
 
