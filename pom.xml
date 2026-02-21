@@ -32,7 +32,7 @@
 		<module>de.mkbauer.tinyscript.tests</module>
 		<module>de.mkbauer.tinyscript.sdk</module>
 		<module>de.mkbauer.tinyscript.updatesite</module>
-		<module>de.mkbauer.tinyscript.generator.tests</module>
+		<module>de.mkbauer.tinyscript.standalone.tests</module>
 	</modules>
 	
 	<dependencyManagement>

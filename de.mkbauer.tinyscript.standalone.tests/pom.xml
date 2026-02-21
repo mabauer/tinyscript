@@ -3,10 +3,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>de.mkbauer.tinyscript.generator.tests</artifactId>
+	<artifactId>de.mkbauer.tinyscript.standalone.tests</artifactId>
 	<groupId>de.mkbauer.tinyscript</groupId>
-	<name>Tinyscript Generator Tests</name>
-	<description>Differential transpiler and interpreter reference tests (plain JUnit, no OSGi)</description>
+	<name>Tinyscript Standalone Tests</name>
+	<description>Standalone (no-OSGi) tests: interpreter reference + transpiler differential (plain JUnit)</description>
 	<version>0.10.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 

@@ -1,4 +1,4 @@
-package de.mkbauer.tinyscript.generator.tests;
+package de.mkbauer.tinyscript.standalone.tests;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
