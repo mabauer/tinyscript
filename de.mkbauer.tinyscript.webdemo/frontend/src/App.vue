@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
-import type { ExecutionResult } from './types'
+import type { AppInfo, ExecutionResult } from './types'
 import Toolbar from './components/Toolbar.vue'
 import Editor from './components/Editor.vue'
 import Output from './components/Output.vue'
@@ -10,6 +10,19 @@ const code: Ref<string> = ref('// Load an example from the dropdown or type your
 const result: Ref<ExecutionResult | null> = ref(null)
 const executing: Ref<boolean> = ref(false)
 const editorRef = ref<InstanceType<typeof Editor> | null>(null)
+const appVersion = ref('...')
+
+onMounted(async () => {
+  try {
+    const res = await fetch('actuator/info')
+    if (res.ok) {
+      const info: AppInfo = await res.json()
+      appVersion.value = info.build?.version ?? 'unknown'
+    }
+  } catch {
+    appVersion.value = 'dev'
+  }
+})
 
 async function loadScript(url: string): Promise<void> {
   try {
@@ -78,7 +91,7 @@ async function executeScript(): Promise<void> {
       <div id="footer" class="container">
         <div class="row">
           <div class="col-md-12">
-            <small><a href="https://github.com/mabauer/tinyscript">Tinyscript</a> Version 0.10.0, Markus Bauer</small>
+            <small><a href="https://github.com/mabauer/tinyscript">Tinyscript</a> Version {{ appVersion }}, Markus Bauer</small>
           </div>
         </div>
       </div>
