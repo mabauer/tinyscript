@@ -33,6 +33,9 @@ xcuserdata/
 *.xccheckout
 *.xcscmblueprint
 
+## Frontend
+de.mkbauer.tinyscript.webdemo/frontend/node_modules
+
 ## Obj-C/Swift specific
 *.hmap
 *.ipa
