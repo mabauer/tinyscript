@@ -1,13 +1,3 @@
-export interface AppInfo {
-  build: {
-    version: string
-    artifact: string
-    name:     string
-    time:     string
-    group:    string
-  }
-}
-
 export interface Statistics {
   executionTime:    number
   mxCpuTime:        number

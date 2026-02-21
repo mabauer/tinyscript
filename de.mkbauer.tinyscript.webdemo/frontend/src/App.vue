@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
-import type { AppInfo, ExecutionResult } from './types'
+import type { ExecutionResult } from './types'
 import Toolbar from './components/Toolbar.vue'
 import Editor from './components/Editor.vue'
 import Output from './components/Output.vue'
@@ -14,10 +14,12 @@ const appVersion = ref('...')
 
 onMounted(async () => {
   try {
-    const res = await fetch('actuator/info')
+    const res = await fetch('/api/version')
     if (res.ok) {
-      const info: AppInfo = await res.json()
-      appVersion.value = info.build?.version ?? 'unknown'
+      const data = await res.json()
+      appVersion.value = data.version ?? 'unknown'
+    } else {
+      appVersion.value = 'unknown'
     }
   } catch {
     appVersion.value = 'dev'

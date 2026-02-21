@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +29,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class TinyscriptWebController {
+
+	@Autowired(required = false)
+	private BuildProperties buildProperties;
 
 	@Autowired
 	private HelloWorldService helloWorldService;
@@ -41,6 +45,13 @@ public class TinyscriptWebController {
 	@RequestMapping("/")
 	public String root() {
 		return "redirect:index.html";
+	}
+
+	@RequestMapping("/api/version")
+	@ResponseBody
+	public Map<String, String> version() {
+		String v = (buildProperties != null) ? buildProperties.getVersion() : "dev";
+		return Collections.singletonMap("version", v);
 	}
 
 	@RequestMapping("/hello")
