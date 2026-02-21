@@ -27,11 +27,12 @@
 	<modules>
 		<module>de.mkbauer.tinyscript.target</module>
 		<module>de.mkbauer.tinyscript</module>
-		<module>de.mkbauer.tinyscript.ide</module>		
+		<module>de.mkbauer.tinyscript.ide</module>
 		<module>de.mkbauer.tinyscript.ui</module>
 		<module>de.mkbauer.tinyscript.tests</module>
 		<module>de.mkbauer.tinyscript.sdk</module>
-		<module>de.mkbauer.tinyscript.updatesite</module> 
+		<module>de.mkbauer.tinyscript.updatesite</module>
+		<module>de.mkbauer.tinyscript.generator.tests</module>
 	</modules>
 	
 	<dependencyManagement>
