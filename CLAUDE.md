@@ -162,6 +162,6 @@ docker run -p 8080:8080 tinyscript-webdemo
 - **Java 17** (minimum; configured in root POM)
 - **Xtext 2.41.0** — language engineering framework
 - **Maven + Tycho 5.0.2** — build system for Eclipse plugins
-- **Spring Boot 3.3** — web demo
+- **Spring Boot 3.5** — web demo
 - **JUnit 4** — test framework (via `org.junit.vintage` bridge)
 - **Apache Commons Exec 1.4** — used by `NodeJsRunner` to invoke `node` in standalone tests
