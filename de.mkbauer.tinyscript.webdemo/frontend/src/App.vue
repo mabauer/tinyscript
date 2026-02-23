@@ -65,9 +65,9 @@ async function executeScript(): Promise<void> {
   <div id="main">
     <div class="page-header">
       <div id="header" class="container">
-        <div class="row">
+        <div class="row mt-3 mb-3">
           <div class="col-md-12">
-            <h1>Tinyscript Testdrive</h1>
+            <h1 class="fs-3">Tinyscript Testdrive</h1>
           </div>
         </div>
         <Toolbar :executing="executing" @load-script="loadScript" @execute="executeScript" />
