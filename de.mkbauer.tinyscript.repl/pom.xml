@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.mkbauer.tinyscript.repl</groupId>
 	<artifactId>de.mkbauer.tinyscript.repl</artifactId>
-	<version>0.11.2</version>
+	<version>0.11.3-SNAPSHOT</version>
 	<name>TinyscriptREPL</name>
 
 	<properties>
@@ -14,7 +14,7 @@
 		<dependency>
 			<groupId>de.mkbauer.tinyscript</groupId>
 			<artifactId>de.mkbauer.tinyscript</artifactId>
-			<version>0.11.2</version>
+			<version>0.11.3-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>

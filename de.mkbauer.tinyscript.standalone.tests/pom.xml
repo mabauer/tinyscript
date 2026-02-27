@@ -7,7 +7,7 @@
 	<groupId>de.mkbauer.tinyscript</groupId>
 	<name>Tinyscript Standalone Tests</name>
 	<description>Standalone (no-OSGi) tests: interpreter reference + transpiler differential (plain JUnit)</description>
-	<version>0.11.2</version>
+	<version>0.11.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -21,7 +21,7 @@
 		<dependency>
 			<groupId>de.mkbauer.tinyscript</groupId>
 			<artifactId>de.mkbauer.tinyscript</artifactId>
-			<version>0.11.2</version>
+			<version>0.11.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.xtext</groupId>

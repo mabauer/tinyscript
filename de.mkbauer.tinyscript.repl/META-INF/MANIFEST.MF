@@ -2,5 +2,5 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Repl
 Bundle-SymbolicName: de.mkbauer.tinyscript.repl
-Bundle-Version: 0.11.2.qualifier
+Bundle-Version: 0.11.3.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-21
