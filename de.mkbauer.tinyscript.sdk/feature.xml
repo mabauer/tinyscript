@@ -2,7 +2,7 @@
 <feature
       id="de.mkbauer.tinyscript.sdk"
       label="Tinyscript SDK Feature "
-      version="0.11.2.qualifier">
+      version="0.11.2">
 
    <plugin
          id="de.mkbauer.tinyscript"
