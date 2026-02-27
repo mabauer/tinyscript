@@ -15,10 +15,10 @@ This is a Maven multi-module project using Eclipse Tycho for OSGi/Eclipse plugin
 mvn clean install
 
 # Build only the REPL fat JAR
-mvn clean package -pl de.mkbauer.tinyscript.repl
+mvn clean package -f de.mkbauer.tinyscript.repl/pom.xml
 
 # Build only the web demo fat JAR
-mvn clean package -pl de.mkbauer.tinyscript.webdemo
+mvn clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
 
 # Skip tests during build
 mvn clean install -DskipTests
@@ -176,6 +176,8 @@ git add -A && git commit -m "Release version X.Y.Z"
 git tag vX.Y.Z && git push && git push --tags
 
 # 4. Bump to next SNAPSHOT (repeat steps 1-2 with X.Y.(Z+1)-SNAPSHOT)
+# Also manually update Bundle-Version in de.mkbauer.tinyscript.repl/META-INF/MANIFEST.MF
+# to X.Y.(Z+1).qualifier
 ```
 
 ## CI/CD

@@ -73,6 +73,9 @@ Monitor progress at: https://github.com/mabauer/tinyscript/actions
 Then manually update the `de.mkbauer.tinyscript` dependency version in
 `repl/pom.xml` and `webdemo/pom.xml` to `X.Y.(Z+1)-SNAPSHOT`.
 
+Also update `Bundle-Version` in `de.mkbauer.tinyscript.repl/META-INF/MANIFEST.MF`
+to `X.Y.(Z+1).qualifier` (tycho-versions-plugin does not touch the REPL module).
+
     git add -A
     git commit -m "Bump to X.Y.(Z+1)-SNAPSHOT"
     git push
@@ -80,6 +83,10 @@ Then manually update the `de.mkbauer.tinyscript` dependency version in
 
 ## Notes
 
+- **Java 21 required for Maven:** `tycho-versions-plugin` (Tycho 5) requires
+  Java 21. If your shell's default `java` is older, prefix every `mvn` command
+  with `export JAVA_HOME=$(/usr/libexec/java_home)` (macOS) or set `JAVA_HOME`
+  appropriately before running any Maven command in this procedure.
 - **GitHub secrets required:** the Docker workflow reads `DOCKERHUB_USERNAME`
   and `DOCKERHUB_TOKEN` from repository secrets (Settings → Secrets and
   variables → Actions → Repository secrets).
