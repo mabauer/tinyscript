@@ -22,7 +22,7 @@
     "vite":                "^6.0.0",
     "typescript":          "^5.7.0",
     "vue-tsc":             "^3.2.5",
-    "vitest":              "^3.0.0",
+    "vitest":              "^3.2.6",
     "@vue/test-utils":     "^2.4.0",
     "happy-dom":           "^20.0.0"
   },
