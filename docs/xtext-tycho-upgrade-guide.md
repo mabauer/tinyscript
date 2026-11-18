@@ -159,6 +159,9 @@ Eclipse 2025-12 ships Lucene 10, which declares `Bundle-RequiredExecutionEnviron
 - `org.eclipse.xtext.generator` — **merged** into `org.eclipse.xtext`; remove from `Require-Bundle`
 - `org.eclipse.xtext.junit4` — **removed**; use `org.eclipse.xtext.testing` (which was already the correct import)
 
+### Tycho picks the JUnit 4 provider for Jupiter tests
+`org.eclipse.xtext.testing` requires the `org.junit` 4 bundle even when the tests use Jupiter. Tycho's provider auto-detection therefore selects `junit4`, finds no tests, and reports BUILD SUCCESS with "No tests found". The tests module pins `<providerHint>junit6</providerHint>` and sets `<failIfNoTests>true</failIfNoTests>`. Check the log for `Selected test framework junit (6.0.0) with provider junit6` after any Tycho or Xtext upgrade.
+
 ### Tycho 5 test phase change
 `eclipse-test-plugin` tests now run in the `integration-test` lifecycle phase, not `test`. Use `./mvnw clean verify` to run them. Using `./mvnw clean test` silently skips the tests. An explicit `<execution><id>default-test</id>...</execution>` must be present in the tests module `pom.xml` for Tycho to bind the goal.
 

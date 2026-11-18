@@ -1,20 +1,20 @@
 package de.mkbauer.tinyscript.generator
 
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.^extension.ExtendWith
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertTrue
+import static org.junit.jupiter.api.Assertions.assertEquals
+import static org.junit.jupiter.api.Assertions.assertTrue
 import com.google.inject.Inject
 import de.mkbauer.tinyscript.tests.TinyscriptInjectorProvider
 
 import java.util.regex.Pattern
 import org.eclipse.xtext.testing.InjectWith
-import org.eclipse.xtext.testing.XtextRunner
+import org.eclipse.xtext.testing.extensions.InjectionExtension
 
 @InjectWith(TinyscriptInjectorProvider)
-@RunWith(XtextRunner)
+@ExtendWith(InjectionExtension)
 class GeneratorTest extends TinyscriptInterpreterTestHelper {
 	
 	@Inject 

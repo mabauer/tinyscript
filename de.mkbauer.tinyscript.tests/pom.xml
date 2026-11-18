@@ -47,6 +47,10 @@
 					</execution>
 				</executions>
 				<configuration>
+					<!-- org.eclipse.xtext.testing still requires org.junit 4, so Tycho's
+					     auto-detection would pick the JUnit 4 provider and find no tests -->
+					<providerHint>junit6</providerHint>
+					<failIfNoTests>true</failIfNoTests>
 					<useUIHarness>false</useUIHarness>
 					<useUIThread>false</useUIThread>
 				</configuration>

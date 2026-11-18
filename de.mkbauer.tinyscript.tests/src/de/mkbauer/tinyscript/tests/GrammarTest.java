@@ -1,19 +1,19 @@
 package de.mkbauer.tinyscript.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 
 import org.eclipse.xtext.EcoreUtil2;
-import org.eclipse.xtext.testing.XtextRunner;
+import org.eclipse.xtext.testing.extensions.InjectionExtension;
 import org.eclipse.xtext.validation.Issue;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.ObjectInitializer;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
-@RunWith(XtextRunner.class)
+@ExtendWith(InjectionExtension.class)
 public class GrammarTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
