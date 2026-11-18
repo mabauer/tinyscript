@@ -1,0 +1,33 @@
+version: 2
+updates:
+  # Plain Maven modules (the Tycho reactor resolves its dependencies from p2 and is not covered)
+  - package-ecosystem: maven
+    directories:
+      - /de.mkbauer.tinyscript.webdemo
+      - /de.mkbauer.tinyscript.repl
+      - /de.mkbauer.tinyscript.standalone.tests
+    schedule:
+      interval: weekly
+    groups:
+      maven:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /de.mkbauer.tinyscript.webdemo/frontend
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /de.mkbauer.tinyscript.webdemo
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

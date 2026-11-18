@@ -188,8 +188,10 @@ git tag vX.Y.Z && git push && git push --tags
 
 Two GitHub Actions workflows in `.github/workflows/`:
 
-- **`ci.yml`** — runs on every push/PR to `master`: full Tycho build + all tests + REPL + webdemo (Vitest + Spring Boot tests)
-- **`docker.yml`** — runs on `vX.Y.Z` tags: builds webdemo JAR and pushes `mkbauer/tinyscript:X.Y.Z` + `:latest` to Docker Hub
+- **`ci.yml`** — runs on every push/PR to `master`: full Tycho build + all tests + REPL + webdemo (Vitest + Spring Boot tests), then builds the Docker image (not pushed) and scans it with Trivy
+- **`docker.yml`** — runs on `vX.Y.Z` tags: builds webdemo JAR and image, scans it with Trivy, and only then pushes `mkbauer/tinyscript:X.Y.Z` + `:latest` to Docker Hub
+
+Both Trivy scans fail on fixable HIGH/CRITICAL vulnerabilities (`ignore-unfixed: true`). `.github/dependabot.yml` covers Maven (plain modules only, not the Tycho reactor), npm, the Docker base image and GitHub Actions.
 
 Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 
