@@ -1,6 +1,6 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Level 2 integration tests: runs complete {@code .ts} programs through both
