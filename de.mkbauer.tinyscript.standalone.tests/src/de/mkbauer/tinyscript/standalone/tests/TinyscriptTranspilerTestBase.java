@@ -1,7 +1,7 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -18,8 +18,8 @@ import org.eclipse.xtext.util.StringInputStream;
 import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.IResourceValidator;
 import org.eclipse.xtext.validation.Issue;
-import org.junit.Assume;
-import org.junit.Before;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.google.inject.Injector;
 
@@ -59,7 +59,7 @@ public abstract class TinyscriptTranspilerTestBase {
     // Setup
     // -------------------------------------------------------------------------
 
-    @Before
+    @BeforeEach
     public void setUpInjector() {
         injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         generator = injector.getInstance(TinyscriptGenerator.class);
@@ -69,10 +69,10 @@ public abstract class TinyscriptTranspilerTestBase {
     /**
      * Skips any test that requires node.js if {@code node} is not on the PATH.
      * Subclasses that want auto-skip behaviour should call this from a
-     * {@code @Before} method.
+     * {@code @BeforeEach} method.
      */
     protected void assumeNodeAvailable() {
-        Assume.assumeTrue("Skipping: node.js not found on PATH", NodeJsRunner.isAvailable());
+        Assumptions.assumeTrue(NodeJsRunner.isAvailable(), "Skipping: node.js not found on PATH");
     }
 
     // -------------------------------------------------------------------------

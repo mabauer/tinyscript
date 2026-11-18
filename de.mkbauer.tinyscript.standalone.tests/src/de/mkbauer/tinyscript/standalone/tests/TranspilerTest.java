@@ -1,9 +1,9 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Differential transpiler tests: verifies that the Tinyscript generator
@@ -20,7 +20,7 @@ import org.junit.Test;
  */
 public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
-    @Before
+    @BeforeEach
     @Override
     public void setUpInjector() {
         super.setUpInjector();

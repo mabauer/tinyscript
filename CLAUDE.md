@@ -40,7 +40,7 @@ This is the fastest feedback loop (< 5 s, no OSGi startup) and catches both inte
 
 ### Test modules
 
-**`de.mkbauer.tinyscript.standalone.tests`** — plain Maven/JUnit module, no OSGi:
+**`de.mkbauer.tinyscript.standalone.tests`** — plain Maven/JUnit 6 (Jupiter) module, no OSGi:
 
 Tests run in this order (alphabetical class order enforced by Surefire):
 
@@ -205,7 +205,7 @@ Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 - **Bootstrap 5 + Bootstrap Icons** — web demo UI
 - **CodeMirror 6** — web demo editor (with custom Tinyscript StreamLanguage)
 - **Vitest + @vue/test-utils** — frontend unit tests
-- **JUnit 4** — test framework (via `org.junit.vintage` bridge)
+- **JUnit 4** — OSGi plugin tests (`XtextRunner`); **JUnit 6 (Jupiter)** — standalone tests
 - **Apache Commons Exec 1.4** — used by `NodeJsRunner` to invoke `node` in standalone tests
 - **eclipse-temurin:21-jre** — Docker base image
 
