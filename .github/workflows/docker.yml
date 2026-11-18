@@ -46,6 +46,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: de.mkbauer.tinyscript.webdemo
+          pull: true
           push: true
           tags: |
             mkbauer/tinyscript:${{ env.VERSION }}
