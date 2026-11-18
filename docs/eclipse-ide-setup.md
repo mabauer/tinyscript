@@ -1,17 +1,17 @@
 # Eclipse IDE Setup
 
-These instructions apply to the `eclipse_2025_12` branch and later, which targets Xtext 2.41.0, Eclipse 2025-12, and Java 21.
+These instructions target Xtext 2.44.0, Eclipse 2026-09, and Java 21.
 
 ## 1. Install/update the host Eclipse IDE
 
-You need **Eclipse IDE for RCP and RAP Developers** (or Plug-in Developers) from **Eclipse 2025-12** or later. Download from eclipse.org/downloads, or update an existing Eclipse via Help → Check for Updates.
+You need **Eclipse IDE for RCP and RAP Developers** (or Plug-in Developers) from **Eclipse 2026-09** or later. Download from eclipse.org/downloads, or update an existing Eclipse via Help → Check for Updates.
 
-## 2. Install Xtext SDK 2.41.0 into the host Eclipse
+## 2. Install Xtext SDK 2.44.0 into the host Eclipse
 
 The host IDE needs Xtext tooling (editor, Xtend compiler, MWE2 runner) — this is separate from the target platform.
 
 - Help → Install New Software
-- Add site: `https://download.eclipse.org/modeling/tmf/xtext/updates/releases/2.41.0/`
+- Add site: `https://download.eclipse.org/modeling/tmf/xtext/updates/releases/2.44.0/`
 - Install: **Xtext SDK** (includes Xtend IDE and MWE2)
 
 ## 3. Add Java 21 to Eclipse and map the execution environment
@@ -32,7 +32,7 @@ The host IDE needs Xtext tooling (editor, Xtend compiler, MWE2 runner) — this 
 - Open the `tinyscript` workspace in Eclipse
 - Window → Preferences → Plug-in Development → Target Platform
 - Select `de.mkbauer.tinyscript.target` and click **Reload**
-- Eclipse will download bundles from the updated P2 sites (Eclipse 2025-12, Xtext 2.41.0, Orbit 2025-12) — this takes a few minutes
+- Eclipse will download bundles from the updated P2 sites (Eclipse 2026-09, Xtext 2.44.0, Orbit 2026-09) — this takes a few minutes
 - Click Apply and Close
 
 ## 5. Regenerate Xtext sources

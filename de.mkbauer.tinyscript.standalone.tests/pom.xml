@@ -13,7 +13,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<xtext-version>2.41.0</xtext-version>
+		<xtext-version>2.44.0</xtext-version>
 		<maven.compiler.release>17</maven.compiler.release>
 	</properties>
 

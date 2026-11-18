@@ -22,13 +22,13 @@ The root `pom.xml` is the **Tycho reactor**. It lists the OSGi modules (includin
 | Tool | Required version | Notes |
 |---|---|---|
 | Java | 21 | Required by Tycho 5; also needed by Spring Boot 4.1 at runtime |
-| Maven | via `./mvnw` (3.9.11) | Use the wrapper; Maven < 3.9.9 and 3.10+ are incompatible with Tycho 5.0.2 |
+| Maven | via `./mvnw` (3.9.16) | Use the wrapper; Maven < 3.9.9 and 3.10+ are incompatible with Tycho 5.0.x |
 | Node.js | Installed automatically | `frontend-maven-plugin` downloads Node v22.23.5 into `frontend/node/` on first webdemo build |
 
 Check your environment:
 ```bash
 java -version    # must be 21
-./mvnw --version  # wrapper pins Maven 3.9.11; Maven 3.10+ breaks the Tycho build
+./mvnw --version  # wrapper pins Maven 3.9.16; Maven 3.10+ breaks the Tycho build
 ```
 
 ---

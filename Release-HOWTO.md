@@ -84,7 +84,7 @@ to `X.Y.(Z+1).qualifier` (tycho-versions-plugin does not touch the REPL module).
 ## Notes
 
 - **Use the Maven wrapper:** run `./mvnw`, not a system `mvn`. The wrapper
-  pins Maven 3.9.11; Maven 3.10+ fails on the Tycho build with
+  pins Maven 3.9.16; Maven 3.10+ fails on the Tycho build with
   `Invalid Collect Request: null`.
 - **Java 21 required for Maven:** `tycho-versions-plugin` (Tycho 5) requires
   Java 21. If your shell's default `java` is older, prefix every `./mvnw` command
