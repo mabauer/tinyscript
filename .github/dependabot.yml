@@ -1,6 +1,6 @@
 version: 2
 # Major upgrades (incl. the Java base image, e.g. 21 -> 24) are done deliberately in a minor
-# release. Security updates are not affected by these ignore rules.
+# release. Security updates are not affected by the update-types rules.
 updates:
   # Plain Maven modules (the Tycho reactor resolves its dependencies from p2 and is not covered)
   - package-ecosystem: maven
@@ -13,6 +13,12 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      # Must stay in lockstep with the Tycho target platform (Xtext) and the generated parser (Xtext
+      # requires ANTLR 3.2). Name-only rules also suppress security PRs for these; the Trivy scan in CI
+      # still reports vulnerabilities, and fixes go through a target platform upgrade.
+      - dependency-name: "org.eclipse.xtext:*"
+      - dependency-name: "org.eclipse.emf:*"
+      - dependency-name: "org.antlr:antlr-runtime"
     groups:
       maven:
         patterns: ["*"]
