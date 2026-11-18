@@ -10,18 +10,20 @@ Tinyscript is a proof-of-concept JavaScript-like scripting language built on Ecl
 
 This is a Maven multi-module project using Eclipse Tycho for OSGi/Eclipse plugin builds.
 
+Always build with the Maven wrapper (`./mvnw`), which pins Maven 3.9.11. Maven 3.10+ fails on the core module with `Invalid Collect Request: null` because its resolver rejects the `system`-scoped p2 dependencies that Tycho 5.0.2 injects. `JAVA_HOME` must point to a JDK 21.
+
 ```bash
 # Build everything (runs from repo root)
-mvn clean install
+./mvnw clean install
 
 # Build only the REPL fat JAR
-mvn clean package -f de.mkbauer.tinyscript.repl/pom.xml
+./mvnw clean package -f de.mkbauer.tinyscript.repl/pom.xml
 
 # Build only the web demo fat JAR
-mvn clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
+./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
 
 # Skip tests during build
-mvn clean install -DskipTests
+./mvnw clean install -DskipTests
 ```
 
 ## Running Tests
@@ -31,7 +33,7 @@ mvn clean install -DskipTests
 After changing anything in the interpreter (`TinyscriptEngine`) or the generator (`TinyscriptGenerator`), always run:
 
 ```bash
-mvn test -pl de.mkbauer.tinyscript.standalone.tests
+./mvnw test -pl de.mkbauer.tinyscript.standalone.tests
 ```
 
 This is the fastest feedback loop (< 5 s, no OSGi startup) and catches both interpreter regressions and transpiler/interpreter divergence. If node.js is not on PATH the differential tests skip cleanly; the interpreter reference tests always run.
@@ -54,28 +56,30 @@ Base class `TinyscriptTranspilerTestBase` provides:
 
 ```bash
 # Run standalone tests only (fast, use after interpreter or generator changes)
-mvn test -pl de.mkbauer.tinyscript.standalone.tests
+./mvnw test -pl de.mkbauer.tinyscript.standalone.tests
 
 # Run a single test class
-mvn test -pl de.mkbauer.tinyscript.standalone.tests -Dtest=InterpreterReferenceTest
+./mvnw test -pl de.mkbauer.tinyscript.standalone.tests -Dtest=InterpreterReferenceTest
 
 # Run a single test method
-mvn test -pl de.mkbauer.tinyscript.standalone.tests -Dtest=InterpreterReferenceTest#testRecursiveFibonacci
+./mvnw test -pl de.mkbauer.tinyscript.standalone.tests -Dtest=InterpreterReferenceTest#testRecursiveFibonacci
 ```
 
 **`de.mkbauer.tinyscript.tests`** — OSGi/Eclipse plugin tests via `tycho-surefire-plugin`:
 
 Tests the interpreter and language features via Xtext's `XtextRunner` / `@InjectWith`. Slower (requires OSGi container startup). Run after confirming the standalone tests pass.
 
+`tycho-surefire-plugin` runs in the `integration-test` phase, so these tests need `verify` (or `install`) — `./mvnw test` builds the module but runs no tests.
+
 ```bash
 # Run all OSGi tests
-mvn test -pl de.mkbauer.tinyscript.tests
+./mvnw verify -pl de.mkbauer.tinyscript.tests
 
 # Run a specific test class
-mvn test -pl de.mkbauer.tinyscript.tests -Dtest=ExpressionsTest
+./mvnw verify -pl de.mkbauer.tinyscript.tests -Dtest=ExpressionsTest
 
 # Run a specific test method
-mvn test -pl de.mkbauer.tinyscript.tests -Dtest=ExpressionsTest#testIntAddition
+./mvnw verify -pl de.mkbauer.tinyscript.tests -Dtest=ExpressionsTest#testIntAddition
 ```
 
 Test helper base class `TinyscriptInterpreterTestHelper` provides:
@@ -87,7 +91,7 @@ Test helper base class `TinyscriptInterpreterTestHelper` provides:
 ### Full test run
 
 ```bash
-mvn clean test
+./mvnw clean verify
 ```
 
 ## Architecture
@@ -163,12 +167,12 @@ See `Release-HOWTO.md` for the full procedure. Key commands:
 
 ```bash
 # 1. Bump version in OSGi modules (pom.xml + MANIFEST.MF + feature.xml)
-mvn org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
+./mvnw org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
 
 # 2. Bump plain Maven modules
-mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.repl/pom.xml
-mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.webdemo/pom.xml
-mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.standalone.tests/pom.xml
+./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.repl/pom.xml
+./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.webdemo/pom.xml
+./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.standalone.tests/pom.xml
 # Also manually update the de.mkbauer.tinyscript dependency version in repl and webdemo pom.xml
 
 # 3. Commit, tag, push — Docker workflow triggers automatically
@@ -205,7 +209,7 @@ Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 
 ## Frontend Development (web demo)
 
-The frontend lives in `de.mkbauer.tinyscript.webdemo/frontend/`. The Maven build runs `npm install`, `npm test`, and `npm build` automatically via `frontend-maven-plugin` during the `generate-resources` phase, so a normal `mvn package` requires no extra steps.
+The frontend lives in `de.mkbauer.tinyscript.webdemo/frontend/`. The Maven build runs `npm install`, `npm test`, and `npm build` automatically via `frontend-maven-plugin` during the `generate-resources` phase, so a normal `./mvnw package` requires no extra steps.
 
 For iterative frontend work, run the Vite toolchain directly:
 
@@ -220,7 +224,7 @@ npm run build      # rebuild → ../src/main/resources/public/
 After `npm run build`, trigger an Eclipse project refresh (**F5**) so the updated files are copied from `src/main/resources/public/` to `target/classes/public/`, then refresh the browser. Alternatively:
 
 ```bash
-npm run build && mvn resources:resources -f de.mkbauer.tinyscript.webdemo/pom.xml
+npm run build && ./mvnw resources:resources -f de.mkbauer.tinyscript.webdemo/pom.xml
 ```
 
 **Frontend source layout:**
