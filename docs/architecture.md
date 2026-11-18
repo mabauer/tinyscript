@@ -495,7 +495,7 @@ The `TinyscriptExecutionService` creates a fresh sandboxed `TinyscriptEngine` pe
 
 **Frontend:** Vue 3 + Vite + TypeScript, Bootstrap 5, CodeMirror 6.
 
-The frontend source lives in `frontend/` and is built by `frontend-maven-plugin` (Node.js v22, Vite) into `src/main/resources/public/`, which Spring Boot serves as static files. Key components:
+The frontend source lives in `frontend/` and is built by `frontend-maven-plugin` (Node.js v24 LTS, Vite) into `src/main/resources/public/`, which Spring Boot serves as static files. Key components:
 
 | File | Role |
 |---|---|
