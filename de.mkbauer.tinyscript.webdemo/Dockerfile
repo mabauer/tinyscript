@@ -1,6 +1,6 @@
 # Dockerfile for tinyscript
 
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:24-jre
 
 # Run as an unprivileged user. The container can also run with a read-only
 # root filesystem (docker run --read-only); Tomcat only needs a writable /tmp.
