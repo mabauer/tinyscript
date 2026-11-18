@@ -27,10 +27,10 @@ jobs:
           key: node-${{ runner.os }}-v22.14.0
 
       - name: Build and test core (Tycho reactor)
-        run: mvn clean install
+        run: ./mvnw clean install
 
       - name: Build REPL
-        run: mvn clean package -f de.mkbauer.tinyscript.repl/pom.xml
+        run: ./mvnw clean package -f de.mkbauer.tinyscript.repl/pom.xml
 
       - name: Build and test web demo
-        run: mvn clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
+        run: ./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml

@@ -25,10 +25,10 @@ jobs:
           key: node-${{ runner.os }}-v22.14.0
 
       - name: Build core (Tycho reactor, skip tests)
-        run: mvn clean install -DskipTests
+        run: ./mvnw clean install -DskipTests
 
       - name: Build web demo JAR (skip Java tests, Vitest still runs)
-        run: mvn clean package -f de.mkbauer.tinyscript.webdemo/pom.xml -DskipTests
+        run: ./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml -DskipTests
 
       - name: Extract version from tag
         run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV

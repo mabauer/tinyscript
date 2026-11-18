@@ -11,16 +11,16 @@ steps required.
 **OSGi modules** — updates the root `pom.xml`, all child `pom.xml` files, every
 `META-INF/MANIFEST.MF` (`Bundle-Version`), and `feature.xml` in one shot:
 
-    mvn org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
+    ./mvnw org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
 
 **Plain Maven modules** — these are outside the Tycho reactor and must be updated
 separately:
 
-    mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
+    ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
         -f de.mkbauer.tinyscript.repl/pom.xml
-    mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
+    ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
         -f de.mkbauer.tinyscript.webdemo/pom.xml
-    mvn versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
+    ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
         -f de.mkbauer.tinyscript.standalone.tests/pom.xml
 
 **Core dependency references** — `versions:set` only updates the project's own
@@ -61,13 +61,13 @@ Monitor progress at: https://github.com/mabauer/tinyscript/actions
 
 ## 4. Bump to next SNAPSHOT
 
-    mvn org.eclipse.tycho:tycho-versions-plugin:set-version \
+    ./mvnw org.eclipse.tycho:tycho-versions-plugin:set-version \
         -DnewVersion=X.Y.(Z+1)-SNAPSHOT
-    mvn versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
+    ./mvnw versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
         -f de.mkbauer.tinyscript.repl/pom.xml
-    mvn versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
+    ./mvnw versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
         -f de.mkbauer.tinyscript.webdemo/pom.xml
-    mvn versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
+    ./mvnw versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
         -f de.mkbauer.tinyscript.standalone.tests/pom.xml
 
 Then manually update the `de.mkbauer.tinyscript` dependency version in
@@ -83,9 +83,12 @@ to `X.Y.(Z+1).qualifier` (tycho-versions-plugin does not touch the REPL module).
 
 ## Notes
 
+- **Use the Maven wrapper:** run `./mvnw`, not a system `mvn`. The wrapper
+  pins Maven 3.9.11; Maven 3.10+ fails on the Tycho build with
+  `Invalid Collect Request: null`.
 - **Java 21 required for Maven:** `tycho-versions-plugin` (Tycho 5) requires
-  Java 21. If your shell's default `java` is older, prefix every `mvn` command
-  with `export JAVA_HOME=$(/usr/libexec/java_home)` (macOS) or set `JAVA_HOME`
+  Java 21. If your shell's default `java` is older, prefix every `./mvnw` command
+  with `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` (macOS) or set `JAVA_HOME`
   appropriately before running any Maven command in this procedure.
 - **GitHub secrets required:** the Docker workflow reads `DOCKERHUB_USERNAME`
   and `DOCKERHUB_TOKEN` from repository secrets (Settings → Secrets and
