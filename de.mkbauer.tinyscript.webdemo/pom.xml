@@ -107,7 +107,7 @@
 				<version>1.15.1</version>
 				<configuration>
 					<workingDirectory>frontend</workingDirectory>
-					<nodeVersion>v22.14.0</nodeVersion>
+					<nodeVersion>v22.23.5</nodeVersion>
 				</configuration>
 				<executions>
 					<execution>

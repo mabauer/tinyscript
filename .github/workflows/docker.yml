@@ -22,7 +22,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: de.mkbauer.tinyscript.webdemo/frontend/node
-          key: node-${{ runner.os }}-v22.14.0
+          key: node-${{ runner.os }}-v22.23.5
 
       - name: Build core (Tycho reactor, skip tests)
         run: ./mvnw clean install -DskipTests
