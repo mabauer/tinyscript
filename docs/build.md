@@ -23,7 +23,7 @@ The root `pom.xml` is the **Tycho reactor**. It lists the OSGi modules (includin
 |---|---|---|
 | Java | 21 | Required by Tycho 5; also needed by Spring Boot 4.1 at runtime |
 | Maven | via `./mvnw` (3.9.16) | Use the wrapper; Maven < 3.9.9 and 3.10+ are incompatible with Tycho 5.0.x |
-| Node.js | Installed automatically | `frontend-maven-plugin` downloads Node v22.23.5 into `frontend/node/` on first webdemo build |
+| Node.js | Installed automatically | `frontend-maven-plugin` downloads Node v24.22.3 into `frontend/node/` on first webdemo build |
 
 Check your environment:
 ```bash
@@ -108,12 +108,14 @@ The `frontend-maven-plugin` runs four goals in order:
 
 | Goal | What it does |
 |---|---|
-| `install-node-and-npm` | Downloads Node.js v22.23.5 into `frontend/node/` (first run only; cached) |
+| `install-node-and-npm` | Downloads Node.js v24.22.3 into `frontend/node/` (first run only; cached) |
 | `npm` (install) | Runs `npm install` in `frontend/`; populates `frontend/node_modules/` |
 | `npm` (test) | Runs `npm run test` — Vitest unit tests for `Output`, `Toolbar`, `tinyscript-lang` |
 | `npm` (build) | Runs `npm run build` — Vite bundles the Vue 3 app into `src/main/resources/public/` |
 
 **The build fails here if any Vitest test fails.** Frontend tests run before Java compilation and before the Spring Boot integration tests.
+
+**After changing `<nodeVersion>`, delete `frontend/node/`** (`rm -rf de.mkbauer.tinyscript.webdemo/frontend/node`). `mvn clean` does not remove it, and the plugin unpacks the new npm over the old one. The leftover modules break `npm install` with `Class extends value undefined is not a constructor or null`. CI is not affected, because its Node cache key contains the version.
 
 ### Stage 2 — Java compilation
 
@@ -208,7 +210,7 @@ Two workflows live in `.github/workflows/`:
 | `ci.yml` | Push / PR to `master` | Full build + all tests (Tycho reactor, REPL, webdemo incl. Vitest + Spring Boot) |
 | `docker.yml` | Push of `vX.Y.Z` tag | Builds webdemo JAR, pushes `mkbauer/tinyscript:X.Y.Z` and `:latest` to Docker Hub |
 
-Both workflows cache `~/.m2/repository` (Maven/Tycho artifacts) and the Node.js v22.23.5 runtime across runs.
+Both workflows cache `~/.m2/repository` (Maven/Tycho artifacts) and the Node.js v24.22.3 runtime across runs.
 
 The Docker workflow requires two GitHub repository secrets: `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 
