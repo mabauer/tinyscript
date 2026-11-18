@@ -10,11 +10,11 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<xtext.version>2.41.0</xtext.version>
-		<mwe2Version>2.24.0</mwe2Version>
+		<xtext.version>2.44.0</xtext.version>
+		<mwe2Version>2.27.0</mwe2Version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		
-		<tycho-version>5.0.2</tycho-version>
+		<tycho-version>5.0.4</tycho-version>
 		<!-- Define overridable properties for tycho-surefire-plugin -->
 		<platformSystemProperties></platformSystemProperties>
 		<moduleProperties></moduleProperties>

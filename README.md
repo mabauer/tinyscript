@@ -116,7 +116,7 @@ You can experiment with these features in the demo web app. You could use the la
 Setup
 -----
 
-When you're done playing around with the online demo and want to install your own version of *tinyscript* or start hacking on it, here is a quick overview. The project is built with *Maven* and requires *Java 21*. It is best developed with *Eclipse 2025-12* and *Xtext 2.41.0*.
+When you're done playing around with the online demo and want to install your own version of *tinyscript* or start hacking on it, here is a quick overview. The project is built with *Maven* and requires *Java 21*. It is best developed with *Eclipse 2026-09* and *Xtext 2.44.0*.
 
 The build has two tiers: a *Tycho* reactor at the root for the OSGi/Eclipse plugin modules, and separate plain Maven builds for the runnable applications (REPL and web demo). Build in this order:
 

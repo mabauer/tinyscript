@@ -2,15 +2,16 @@
 
 A concise checklist for upgrading the toolchain. Each section describes what to change; the **Gotchas** section captures everything that went wrong during the 2023-09 → 2025-12 migration so you don't have to rediscover it.
 
-## Current versions (as of eclipse_2025_12 branch)
+## Current versions
 
 | Component | Version |
 |---|---|
-| Xtext | 2.41.0 |
-| MWE2 | 2.24.0 |
-| Tycho | 5.0.2 |
-| Eclipse platform | 2025-12 |
-| Orbit bundles | 2025-12 |
+| Xtext | 2.44.0 |
+| MWE2 | 2.27.0 |
+| Tycho | 5.0.4 |
+| Eclipse platform | 2026-09 |
+| Orbit bundles | 2026-09 |
+| Maven (wrapper) | 3.9.16 |
 | BREE (all bundles) | JavaSE-21 |
 
 ---
@@ -134,6 +135,15 @@ Expected test result: all interpreter tests pass; `JvmScriptEngineRunnerTest` sh
 7. Project → Clean all projects. Verify Problems view is error-free.
 
 ---
+
+## Notes from the 2025-12 → 2026-09 upgrade (Xtext 2.41 → 2.44)
+
+A version bump only — no changes to MANIFEST.MF files, the MWE2 workflow or Java sources were needed.
+
+- **JUnit 4 still works.** Xtext 2.43 dropped JUnit 5 in favour of JUnit 6, but `org.eclipse.xtext.testing` 2.44 still ships `XtextRunner` and requires `org.junit` 4.13.2. Its Jupiter imports are now `[6.0.0,7.0.0)`, which Orbit 2026-09 satisfies.
+- **Xtext-Web/GWT removed in 2.44.** Only relevant if the MWE2 workflow contains `web = {…}` or `webSupport = {…}` — `GenerateTinyscript.mwe2` doesn't.
+- **LSP4J 1.0.0** since Xtext 2.42; the project does not use LSP4J directly.
+- Release notes: https://eclipse.dev/Xtext/releasenotes.html
 
 ## Gotchas from the 2023-09 → 2025-12 migration
 

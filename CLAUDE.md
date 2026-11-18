@@ -10,7 +10,7 @@ Tinyscript is a proof-of-concept JavaScript-like scripting language built on Ecl
 
 This is a Maven multi-module project using Eclipse Tycho for OSGi/Eclipse plugin builds.
 
-Always build with the Maven wrapper (`./mvnw`), which pins Maven 3.9.11. Maven 3.10+ fails on the core module with `Invalid Collect Request: null` because its resolver rejects the `system`-scoped p2 dependencies that Tycho 5.0.2 injects. `JAVA_HOME` must point to a JDK 21.
+Always build with the Maven wrapper (`./mvnw`), which pins Maven 3.9.16. Maven 3.10+ fails on the core module with `Invalid Collect Request: null` because its resolver rejects the `system`-scoped p2 dependencies that Tycho 5.0.x injects (verified with Tycho 5.0.2; not re-tested with 5.0.4). `JAVA_HOME` must point to a JDK 21.
 
 ```bash
 # Build everything (runs from repo root)
@@ -136,7 +136,7 @@ Source text
 
 ### Language Differences from JavaScript
 
-- Semicolons are optional (newline-terminated)
+- Semicolons are required after statements; `if`/`else` bodies must be `{ … }` blocks
 - Variables are block-scoped (no `var` hoisting)
 - `for (x in array)` iterates values, not keys
 - Arrow functions use `=>` syntax
@@ -198,8 +198,8 @@ Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 ## Technology Stack
 
 - **Java 21** — required for IDE runs; build minimum is effectively 21 (Tycho 5 + Spring Boot 4.1)
-- **Xtext 2.41.0** — language engineering framework
-- **Maven + Tycho 5.0.2** — build system for Eclipse plugins
+- **Xtext 2.44.0** — language engineering framework
+- **Maven + Tycho 5.0.4** — build system for Eclipse plugins
 - **Spring Boot 4.1** — web demo backend (no Actuator; version info via `/api/version`)
 - **Vue 3 + Vite + TypeScript** — web demo frontend
 - **Bootstrap 5 + Bootstrap Icons** — web demo UI
