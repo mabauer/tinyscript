@@ -195,10 +195,10 @@ Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 
 ## Technology Stack
 
-- **Java 21** — required for IDE runs; build minimum is effectively 21 (Tycho 5 + Spring Boot 3.5)
+- **Java 21** — required for IDE runs; build minimum is effectively 21 (Tycho 5 + Spring Boot 4.1)
 - **Xtext 2.41.0** — language engineering framework
 - **Maven + Tycho 5.0.2** — build system for Eclipse plugins
-- **Spring Boot 3.5** — web demo backend
+- **Spring Boot 4.1** — web demo backend (no Actuator; version info via `/api/version`)
 - **Vue 3 + Vite + TypeScript** — web demo frontend
 - **Bootstrap 5 + Bootstrap Icons** — web demo UI
 - **CodeMirror 6** — web demo editor (with custom Tinyscript StreamLanguage)

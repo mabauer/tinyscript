@@ -2,11 +2,17 @@
 
 FROM eclipse-temurin:21-jre
 
+# Run as an unprivileged user. The container can also run with a read-only
+# root filesystem (docker run --read-only); Tomcat only needs a writable /tmp.
+RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin tinyscript
+
 VOLUME /tmp
 
 # Add fat jar
-ADD target/tinyscript-webdemo.jar app.jar
-RUN bash -c 'touch /app.jar'
+COPY target/tinyscript-webdemo.jar /app.jar
+
+USER 10001
+EXPOSE 8080
 
 # Run the app using the /dev/urandom-hack to prevent long start-up times
 # see: http://www.thezonemanager.com/2015/07/whats-so-special-about-devurandom.html
