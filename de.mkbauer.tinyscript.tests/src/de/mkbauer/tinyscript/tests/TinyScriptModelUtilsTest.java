@@ -1,21 +1,21 @@
 package de.mkbauer.tinyscript.tests;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.testing.InjectWith;
-import org.eclipse.xtext.testing.XtextRunner;
+import org.eclipse.xtext.testing.extensions.InjectionExtension;
 import org.eclipse.xtext.testing.util.ParseHelper;
 import org.eclipse.xtext.testing.validation.ValidationTestHelper;
 import org.eclipse.xtext.resource.XtextResourceSet;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -28,7 +28,7 @@ import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.Identifier;
 
-@RunWith(XtextRunner.class)
+@ExtendWith(InjectionExtension.class)
 @InjectWith(TinyscriptInjectorProvider.class)
 public class TinyScriptModelUtilsTest {
 	
@@ -70,9 +70,9 @@ public class TinyScriptModelUtilsTest {
 		Tinyscript ast = parseFromString("var x = 2; var f = function (x) { var local = x*x; return local; }; f(x)==4;");
 		List<Identifier> vars = TinyscriptModelUtil.declaredVariablesInBlock(ast.getGlobal());
 		List<String> names = vars.stream().map(var -> var.getName()).collect(Collectors.toList());
-		Assert.assertTrue(names.stream().anyMatch(s -> s.equals("x")));
-		Assert.assertTrue(names.stream().anyMatch(s -> s.equals("f")));
-		Assert.assertFalse(names.stream().anyMatch(s -> s.equals("local")));
+		Assertions.assertTrue(names.stream().anyMatch(s -> s.equals("x")));
+		Assertions.assertTrue(names.stream().anyMatch(s -> s.equals("f")));
+		Assertions.assertFalse(names.stream().anyMatch(s -> s.equals("local")));
 	}
 	
 	@Test
@@ -81,9 +81,9 @@ public class TinyScriptModelUtilsTest {
 		FunctionDefinition f = EcoreUtil2.getAllContentsOfType(ast.getGlobal(), FunctionDefinition.class).get(0);
 		List<Identifier> vars = TinyscriptModelUtil.declaredVariablesInBlock(f.getBlock());
 		List<String> names = vars.stream().map(var -> var.getName()).collect(Collectors.toList());
-		Assert.assertTrue(names.stream().anyMatch(s -> s.equals("local")));
-		Assert.assertFalse(names.stream().anyMatch(s -> s.equals("x")));
-		Assert.assertFalse(names.stream().anyMatch(s -> s.equals("f")));
+		Assertions.assertTrue(names.stream().anyMatch(s -> s.equals("local")));
+		Assertions.assertFalse(names.stream().anyMatch(s -> s.equals("x")));
+		Assertions.assertFalse(names.stream().anyMatch(s -> s.equals("f")));
 	}
 	
 	
@@ -94,12 +94,12 @@ public class TinyScriptModelUtilsTest {
 				
 		List<FunctionDefinition> functions = TinyscriptModelUtil.functionDeclarationsInBlock(ast.getGlobal());
 		List<String> names = functions.stream().map(f -> f.getId().getName()).collect(Collectors.toList());
-		Assert.assertTrue(names.stream().anyMatch(s -> s.equals("f")));
+		Assertions.assertTrue(names.stream().anyMatch(s -> s.equals("f")));
 		
 		source = "var x = 2; (function (x) { var local = x*x; return local; })(2) == 4;";
 		ast = parseFromString(source);
 		functions = TinyscriptModelUtil.functionDeclarationsInBlock(ast.getGlobal());
-		Assert.assertEquals(0, functions.size());
+		Assertions.assertEquals(0, functions.size());
 	}
 	
 	@Test

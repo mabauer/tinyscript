@@ -1,15 +1,15 @@
 package de.mkbauer.tinyscript.runtime;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import org.eclipse.xtext.testing.XtextRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.eclipse.xtext.testing.extensions.InjectionExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 
-@RunWith(XtextRunner.class)
+@ExtendWith(InjectionExtension.class)
 public class StringObjectTest extends TinyscriptInterpreterTestHelper {
 
 	@Test

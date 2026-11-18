@@ -6,13 +6,13 @@ package de.mkbauer.tinyscript.tests
 import com.google.inject.Inject
 import de.mkbauer.tinyscript.ts.Tinyscript
 import org.eclipse.xtext.testing.InjectWith
-import org.eclipse.xtext.testing.XtextRunner
+import org.eclipse.xtext.testing.extensions.InjectionExtension
 import org.eclipse.xtext.testing.util.ParseHelper
-import org.junit.Assert
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.^extension.ExtendWith
 
-@RunWith(XtextRunner)
+@ExtendWith(InjectionExtension)
 @InjectWith(TinyscriptInjectorProvider)
 class TinyscriptParsingTest {
 	@Inject
@@ -23,8 +23,8 @@ class TinyscriptParsingTest {
 		val result = parseHelper.parse('''
 			print("Hello!");
 		''')
-		Assert.assertNotNull(result)
+		Assertions.assertNotNull(result)
 		val errors = result.eResource.errors
-		Assert.assertTrue('''Unexpected errors: «errors.join(", ")»''', errors.isEmpty)
+		Assertions.assertTrue(errors.isEmpty, '''Unexpected errors: «errors.join(", ")»''')
 	}
 }

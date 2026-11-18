@@ -1,14 +1,14 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.eclipse.xtext.testing.XtextRunner;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.eclipse.xtext.testing.extensions.InjectionExtension;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 
-@RunWith(XtextRunner.class)
+@ExtendWith(InjectionExtension.class)
 public class TypeOfExpressionTest extends TinyscriptInterpreterTestHelper {
 
 	@Test

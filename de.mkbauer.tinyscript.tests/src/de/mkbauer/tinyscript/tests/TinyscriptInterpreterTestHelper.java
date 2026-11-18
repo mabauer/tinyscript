@@ -1,6 +1,6 @@
 package de.mkbauer.tinyscript.tests;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +12,7 @@ import org.eclipse.xtext.testing.InjectWith;
 import org.eclipse.xtext.testing.util.ParseHelper;
 import org.eclipse.xtext.testing.validation.ValidationTestHelper;
 import org.eclipse.xtext.resource.XtextResourceSet;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.google.inject.Inject;
 
@@ -42,7 +42,7 @@ public class TinyscriptInterpreterTestHelper {
 		super();
 	}
 	
-	@Before
+	@BeforeEach
 	public void setUp()  {
 		engine = new TinyscriptEngine(resourceSet);
 		engine.defineStdOut(System.out);

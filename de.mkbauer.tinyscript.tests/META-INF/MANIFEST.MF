@@ -14,13 +14,8 @@ Require-Bundle: de.mkbauer.tinyscript,
  org.eclipse.xtext.xbase.testing,
  org.eclipse.xtext.testing
 Import-Package: org.apache.log4j,
- org.junit;version="4.5.0",
- org.junit.runner;version="4.5.0",
- org.junit.runner.manipulation;version="4.5.0",
- org.junit.runner.notification;version="4.5.0",
- org.junit.runners;version="4.5.0",
- org.junit.runners.model;version="4.5.0",
- org.hamcrest.core
+ org.junit.jupiter.api;version="[6.0.0,7.0.0)",
+ org.junit.jupiter.api.extension;version="[6.0.0,7.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-21
 Export-Package: de.mkbauer.tinyscript.tests;x-internal=true
 Automatic-Module-Name: de.mkbauer.tinyscript.tests
