@@ -1,4 +1,6 @@
 version: 2
+# Major upgrades (incl. the Java base image, e.g. 21 -> 24) are done deliberately in a minor
+# release. Security updates are not affected by these ignore rules.
 updates:
   # Plain Maven modules (the Tycho reactor resolves its dependencies from p2 and is not covered)
   - package-ecosystem: maven
@@ -8,6 +10,9 @@ updates:
       - /de.mkbauer.tinyscript.standalone.tests
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       maven:
         patterns: ["*"]
@@ -17,6 +22,9 @@ updates:
     directory: /de.mkbauer.tinyscript.webdemo/frontend
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       npm:
         patterns: ["*"]
@@ -26,8 +34,14 @@ updates:
     directory: /de.mkbauer.tinyscript.webdemo
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
