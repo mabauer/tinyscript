@@ -21,7 +21,7 @@
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/test-utils": "^2.6.0",
     "happy-dom": "^21.0.4",
-    "typescript": "^5.7.0",
+    "typescript": "^7.0.2",
     "vite": "^6.4.6",
     "vitest": "^4.1.12",
     "vue-tsc": "^3.3.14"
