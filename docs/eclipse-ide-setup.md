@@ -64,7 +64,7 @@ Whenever the Maven version changes (e.g. after a release cycle bumps master to `
 **Fix — run the tier 1 install from the terminal** (not from within Eclipse):
 
 ```bash
-mvn clean install -DskipTests
+./mvnw clean install -DskipTests
 ```
 
 This builds and installs all OSGi/Tycho artifacts into `~/.m2` at the new version. Then back in Eclipse:

@@ -583,11 +583,11 @@ Tests run alphabetically: `InterpreterReferenceTest` → `TranspilerTest` → `T
 After any change to `TinyscriptEngine` or `TinyscriptGenerator`, run the standalone tests first:
 
 ```bash
-mvn test -pl de.mkbauer.tinyscript.standalone.tests
+./mvnw test -pl de.mkbauer.tinyscript.standalone.tests
 ```
 
 Then run the full OSGi test suite before merging:
 
 ```bash
-mvn clean test
+./mvnw clean verify
 ```

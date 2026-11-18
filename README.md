@@ -122,12 +122,12 @@ The build has two tiers: a *Tycho* reactor at the root for the OSGi/Eclipse plug
 
 1. Install the core language and Eclipse plugins into the local Maven repository:
 
-		mvn clean install
+		./mvnw clean install
 
 2. Build the REPL and web demo fat JARs:
 
-		mvn clean package -f de.mkbauer.tinyscript.repl/pom.xml
-		mvn clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
+		./mvnw clean package -f de.mkbauer.tinyscript.repl/pom.xml
+		./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
 
 The web demo build also runs the Vue 3 frontend through Vite (npm install → test → build) automatically.
 

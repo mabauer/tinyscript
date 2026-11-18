@@ -2,31 +2,32 @@
   "name": "tinyscript-webdemo-frontend",
   "private": true,
   "scripts": {
-    "dev":     "vite",
-    "build":   "vite build",
+    "dev": "vite",
+    "build": "vite build",
     "preview": "vite preview",
-    "test":    "vitest run"
+    "test": "vitest run"
   },
   "dependencies": {
-    "vue":                   "^3.5.0",
-    "bootstrap":             "^5.3.3",
-    "bootstrap-icons":       "^1.11.3",
-    "@codemirror/state":     "^6.4.0",
-    "@codemirror/view":      "^6.30.0",
-    "@codemirror/language":  "^6.10.0",
-    "@codemirror/commands":  "^6.6.0",
-    "codemirror":            "^6.0.1"
+    "@codemirror/commands": "^6.6.0",
+    "@codemirror/language": "^6.10.0",
+    "@codemirror/state": "^6.4.0",
+    "@codemirror/view": "^6.30.0",
+    "bootstrap": "^5.3.9",
+    "bootstrap-icons": "^1.13.2",
+    "codemirror": "^6.0.1",
+    "vue": "^3.5.45"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue":  "^5.2.0",
-    "vite":                "^6.0.0",
-    "typescript":          "^5.7.0",
-    "vue-tsc":             "^3.2.5",
-    "vitest":              "^3.0.0",
-    "@vue/test-utils":     "^2.4.0",
-    "happy-dom":           "^20.0.0"
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/test-utils": "^2.6.0",
+    "happy-dom": "^21.0.4",
+    "typescript": "^5.7.0",
+    "vite": "^6.4.6",
+    "vitest": "^4.1.12",
+    "vue-tsc": "^3.3.14"
   },
   "overrides": {
-    "minimatch": "^10.0.0"
+    "minimatch": "^11.0.1",
+    "glob": "^14.0.2"
   }
 }

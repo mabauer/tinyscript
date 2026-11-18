@@ -20,7 +20,7 @@ A concise checklist for upgrading the toolchain. Each section describes what to 
 - **Java 21** as the Maven runtime (Tycho 5+ hard requirement). Set `JAVA_HOME` if needed:
   ```bash
   export JAVA_HOME=/opt/homebrew/opt/openjdk@21
-  java -version && mvn --version
+  java -version && ./mvnw --version
   ```
 - **Maven 3.9.9+**
 - Create a working branch before touching anything.
@@ -98,20 +98,20 @@ Update `<xtext-version>`.
 
 ```bash
 # 1. Install target first (other modules resolve against the local repo copy)
-mvn clean install -pl de.mkbauer.tinyscript.target
+./mvnw clean install -pl de.mkbauer.tinyscript.target
 
 # 2. Full build, skip tests
-mvn clean install -DskipTests
+./mvnw clean install -DskipTests
 
 # 3. Run tests (eclipse-test-plugin runs in integration-test phase — use verify, not test)
-mvn clean verify
+./mvnw clean verify
 
 # 4. Smoke-test REPL
-mvn clean package -pl de.mkbauer.tinyscript.repl
+./mvnw clean package -pl de.mkbauer.tinyscript.repl
 echo 'print(1 + 1);' | java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*-shade.jar
 
 # 5. Smoke-test webdemo
-mvn clean package -pl de.mkbauer.tinyscript.webdemo
+./mvnw clean package -pl de.mkbauer.tinyscript.webdemo
 java -jar de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo-*.jar &
 curl -s -X POST http://localhost:8080/execute -H 'Content-Type: text/plain' --data 'print(1 + 1);'
 kill %1
@@ -150,13 +150,13 @@ Eclipse 2025-12 ships Lucene 10, which declares `Bundle-RequiredExecutionEnviron
 - `org.eclipse.xtext.junit4` — **removed**; use `org.eclipse.xtext.testing` (which was already the correct import)
 
 ### Tycho 5 test phase change
-`eclipse-test-plugin` tests now run in the `integration-test` lifecycle phase, not `test`. Use `mvn clean verify` to run them. Using `mvn clean test` silently skips the tests. An explicit `<execution><id>default-test</id>...</execution>` must be present in the tests module `pom.xml` for Tycho to bind the goal.
+`eclipse-test-plugin` tests now run in the `integration-test` lifecycle phase, not `test`. Use `./mvnw clean verify` to run them. Using `./mvnw clean test` silently skips the tests. An explicit `<execution><id>default-test</id>...</execution>` must be present in the tests module `pom.xml` for Tycho to bind the goal.
 
 ### `${additionalTestArguments}` undefined in Tycho 5
 If the surefire `<argLine>` references an undefined Maven property (like the old `${additionalTestArguments}`), Tycho 5 passes the literal string to the JVM, which immediately exits with code 1. Use only properties that are defined (e.g. `${tycho.testArgLine}`, `${platformSystemProperties}`).
 
 ### Target module must be installed before other modules
-When debugging target resolution issues, run `mvn install -pl de.mkbauer.tinyscript.target` first. Other modules resolve the target platform against the version in the local Maven repository, not the workspace file.
+When debugging target resolution issues, run `./mvnw install -pl de.mkbauer.tinyscript.target` first. Other modules resolve the target platform against the version in the local Maven repository, not the workspace file.
 
 ### MWE2 bundle-version is a minimum constraint
 `org.eclipse.emf.mwe2.launch;bundle-version="2.12.1"` means "at least 2.12.1". This is satisfied by MWE2 2.24.x — do not change it to 2.24.0, as that would require exactly that version or higher and may break older setups unnecessarily.
