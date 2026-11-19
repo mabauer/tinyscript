@@ -126,7 +126,7 @@ Source text
 - `interpreter/TinyscriptEngine.java` — main tree-walking evaluator; handles all AST node types via visitor-style `switch`/`instanceof` dispatch
 - `interpreter/ExecutionContext.java` — per-call-frame variable scope; forms a chain for closure lookup
 - `interpreter/GlobalExecutionContext.java` — global scope; initializes built-in objects at startup
-- `interpreter/TSValue.java` — wraps all runtime values (number, string, boolean, null, undefined, object, function); handles type coercion
+- `interpreter/TSValue.java` — sealed interface for all runtime values: `TSUndefined`, `TSNull`, records `TSBoolean` / `TSNumber` / `TSString`, and `TSObject` (objects, arrays, functions); create primitives with `TSValue.of(…)`
 - `interpreter/TSObject.java` — property map + prototype reference; backing store for all objects and functions
 - `interpreter/ResourceMonitor.java` — sandboxing: enforces limits on wall time, CPU time, statement count, call depth, and memory
 

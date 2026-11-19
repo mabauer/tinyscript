@@ -31,7 +31,7 @@ public class FunctionConstructor extends BuiltinConstructor {
 	@Override
 	public TSObject createObject() {
 		TSObject newObject = new InterpretedFunction(engine);
-		newObject.defineDefaultProperty("constructor", new TSValue(this));
+		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 

@@ -12,7 +12,7 @@ public class SystemObject extends TSObject {
 	}
 
 	private TSValue currentTimeMillis(TSObject self, TSValue[] args) {
-		return new TSValue(java.lang.System.currentTimeMillis());
+		return TSValue.of(java.lang.System.currentTimeMillis());
 	}
 
 }

@@ -367,7 +367,7 @@ public class TinyscriptEngine {
     	function.setArrowFunction(isArrowFunction);
     	function.setOuterContext(currentContext);
     	function.setAst(definition);
-    	return new TSValue(function);
+    	return function;
     }
 
     
@@ -446,7 +446,7 @@ public class TinyscriptEngine {
 			return result;
 		try {
 			for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
-				result = executeLoopIteration(forstmt, new TSValue(loopValue));
+				result = executeLoopIteration(forstmt, TSValue.of(loopValue));
 			}
 		}
 		catch (TSBreak b) {
@@ -522,15 +522,15 @@ public class TinyscriptEngine {
     		case "=":
     			return assignValue(expr.getLeft(), execute(expr.getRight()));
     		case "&&":
-    			return new TSValue(execute(expr.getLeft()).asBoolean() && execute(expr.getRight()).asBoolean());
+    			return TSValue.of(execute(expr.getLeft()).asBoolean() && execute(expr.getRight()).asBoolean());
     		case "||":
-    			return new TSValue(execute(expr.getLeft()).asBoolean() || execute(expr.getRight()).asBoolean());
+    			return TSValue.of(execute(expr.getLeft()).asBoolean() || execute(expr.getRight()).asBoolean());
     	}
     	TSValue left = execute(expr.getLeft());
     	TSValue right = execute(expr.getRight());
     	return switch (op) {
-    		case "==" -> new TSValue(left.tinyscriptEquals(right));
-    		case "!=" -> new TSValue(!left.tinyscriptEquals(right));
+    		case "==" -> TSValue.of(left.tinyscriptEquals(right));
+    		case "!=" -> TSValue.of(!left.tinyscriptEquals(right));
     		case "<", "<=", ">", ">=" -> compare(op, left, right, expr);
     		case "+" -> add(left, right, expr);
     		case "-", "*", "/", "%" -> arithmetic(op, left, right);
@@ -552,7 +552,7 @@ public class TinyscriptEngine {
     	else
     		throw new TinyscriptTypeError("'" + op + "' compares two numbers or two strings, not "
     				+ left.typeOf() + " and " + right.typeOf(), expr);
-    	return new TSValue(switch (op) {
+    	return TSValue.of(switch (op) {
     		case "<" -> comparison < 0;
     		case "<=" -> comparison <= 0;
     		case ">" -> comparison > 0;
@@ -567,7 +567,7 @@ public class TinyscriptEngine {
     	if (left.isString() || right.isString()) {
     		String result = left.asString() + right.asString();
     		recordStringCreation(result);
-    		return new TSValue(result);
+    		return TSValue.of(result);
     	}
     	if (left.isArray() || right.isArray()) {
     		if (!(left.isArray() && right.isArray()))
@@ -575,10 +575,10 @@ public class TinyscriptEngine {
     		ArrayObject result = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject();
     		left.asArray().getItems().forEach(result::push);
     		right.asArray().getItems().forEach(result::push);
-    		return new TSValue(result);
+    		return result;
     	}
     	if (left.isNumber() && right.isNumber())
-    		return new TSValue(left.asDouble() + right.asDouble());
+    		return TSValue.of(left.asDouble() + right.asDouble());
     	return TSValue.NAN;
     }
 
@@ -587,7 +587,7 @@ public class TinyscriptEngine {
     		return TSValue.NAN;
     	double l = left.asDouble();
     	double r = right.asDouble();
-    	return new TSValue(switch (op) {
+    	return TSValue.of(switch (op) {
     		case "-" -> l - r;
     		case "*" -> l * r;
     		case "/" -> l / r;
@@ -598,7 +598,7 @@ public class TinyscriptEngine {
     private TSValue instanceOf(TSValue left, TSValue right) {
     	if (!(right.isObject() && right.asObject() instanceof Function constructor))
     		throw new TinyscriptTypeError("'instanceof' requires a function object as right-hand operand");
-    	return new TSValue(constructor.hasInstance(left));
+    	return TSValue.of(constructor.hasInstance(left));
     }
 
     public TSValue caseUnary(Unary expr) {
@@ -607,9 +607,9 @@ public class TinyscriptEngine {
     		case "-" -> {
     			if (!value.isNumber())
     				throw new TinyscriptTypeError("Unsupported unary expression operand: " + expr.getExpr());
-    			yield new TSValue(-value.asDouble());
+    			yield TSValue.of(-value.asDouble());
     		}
-    		case "!" -> new TSValue(!value.asBoolean());
+    		case "!" -> TSValue.of(!value.asBoolean());
     		default -> throw new TinyscriptUnsupportedOperationError("Unsupported unary expression: " + expr.getOp(), expr);
     	};
     }
@@ -674,7 +674,7 @@ public class TinyscriptEngine {
 
     public TSValue casePropertyName(PropertyName expr) {
     	if (expr.getName() != null)
-    		return new TSValue(expr.getName());
+    		return TSValue.of(expr.getName());
     	return execute(expr.getExpr());
     }
     
@@ -687,23 +687,23 @@ public class TinyscriptEngine {
 		if (expr.isThis()) {
 			// 'this' behaves as specified in Javascript strict mode.
 			TSObject thisRef = currentContext.getThisRef();
-			return (thisRef != null) ? new TSValue(thisRef) : TSValue.UNDEFINED;
+			return (thisRef != null) ? thisRef : TSValue.UNDEFINED;
 		}
 		return currentContext.lookup(expr.getId().getName());
     }
     
     public TSValue caseBooleanLiteral(BooleanLiteral expr) {
-    	return new TSValue(expr.isValue()); 
+    	return TSValue.of(expr.isValue()); 
     }
     
     public TSValue caseNumberLiteral(NumberLiteral expr) {
-    	return new TSValue(expr.getValue()); 
+    	return TSValue.of(expr.getValue()); 
     }
     
     public TSValue caseStringLiteral(StringLiteral expr) {
     	String result = expr.getValue();
     	recordStringCreation(result);
-    	return new TSValue(result); 
+    	return TSValue.of(result); 
     }
     
     public TSValue caseNullObject(NullObject expr) {
@@ -720,7 +720,7 @@ public class TinyscriptEngine {
     			obj.put(key, execute(assignment.getValue()));
     		}
     	}
-    	return new TSValue(obj);
+    	return obj;
     }
     
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
@@ -730,7 +730,7 @@ public class TinyscriptEngine {
     		arr.put(String.valueOf(i), execute(itemExpr));
     		i++;
     	}
-    	return new TSValue(arr);
+    	return arr;
     }
     
     public TSValue caseTypeOfExpression(TypeOfExpression expr) {
@@ -747,7 +747,7 @@ public class TinyscriptEngine {
     		}
     		
     	}
-    	return new TSValue(value.typeOf());
+    	return TSValue.of(value.typeOf());
     }
     
     public TSValue assignValue(Expression left, TSValue value) {
@@ -806,7 +806,7 @@ public class TinyscriptEngine {
 		}		
 		TSValue result = functionObject.apply(self, args);
 		if (asConstructor) {
-			result = new TSValue(self);
+			result = self;
 		}
 		return result;
     }

@@ -11,19 +11,19 @@ public class StringObject extends BuiltinType {
 	
 	StringObject(TinyscriptEngine engine) {
 		super(engine);
-		setValue(null);
-		defineDefaultProperty("length", new TSValue(0));
+		setValue("");
+		defineDefaultProperty("length", TSValue.of(0));
 	}
 	
 	StringObject(TinyscriptEngine engine, TSValue value) {
 		super(engine);
 		if (value == null) {
-			setValue(null);
-			defineDefaultProperty("length", new TSValue(0));
+			setValue("");
+			defineDefaultProperty("length", TSValue.of(0));
 		}
 		else {
 			setValue(value.asString());
-			defineDefaultProperty("length", new TSValue(getLength()));
+			defineDefaultProperty("length", TSValue.of(getLength()));
 		}
 	}
 	
@@ -46,7 +46,7 @@ public class StringObject extends BuiltinType {
 
 	@Override
 	public TSValue valueOf() {
-		return new TSValue(value);
+		return TSValue.of(value);
 	}
 
 }

@@ -87,7 +87,7 @@ public class InterpretedFunction extends Function {
 				for (int i = ast.getParams().size(); i < args.length; i++) {
 					restArray.push(args[i]);
 				}
-				currentContext.store(ast.getRest().getName(), new TSValue(restArray));
+				currentContext.store(ast.getRest().getName(), restArray);
 			}
 
 			engine.hoistFunctionDeclarations(engine.getLexicalEnvironment(block));

@@ -32,7 +32,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 		// We are the Object constructor, aka function Object()
 		// Store ourselves into the global context, because
 		// other functions that we will add to our prototype next will need this.
-		engine.getGlobalContext().store("Object", new TSValue(this));
+		engine.getGlobalContext().store("Object", this);
 
 		// Let's define our prototype (__proto__), the prototype of all functions
 		Function proto = new EmptyFunction(engine);
@@ -46,9 +46,9 @@ public class ObjectConstructor extends BuiltinConstructor {
 		proto.defineBuiltinMethod("toString", this::functionToString, 0);
 		proto.defineBuiltinMethod("call", this::functionCall, 1);
 		proto.defineBuiltinMethod("apply", this::functionApply, 1);
-		proto.defineDefaultProperty("length", new TSValue(getLength()));
+		proto.defineDefaultProperty("length", TSValue.of(getLength()));
 		// TODO: Remove, just for testing
-		proto.defineDefaultProperty("isCallable", new TSValue(true));
+		proto.defineDefaultProperty("isCallable", TSValue.of(true));
 
 		// Object.create(proto), Object.keys(obj)...
 		defineBuiltinMethod("create", this::create, 1);
@@ -80,7 +80,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 	@Override
 	public TSObject createObject() {
 		TSObject newObject = new TSObject(engine, engine.getDefaultPrototype());
-		newObject.defineDefaultProperty("constructor", new TSValue(this));
+		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 
@@ -88,15 +88,15 @@ public class ObjectConstructor extends BuiltinConstructor {
 
 	private TSValue create(TSObject self, TSValue[] args) {
 		if (args[0].equals(TSValue.NULL))
-			return new TSValue(new TSObject(engine, null));
+			return new TSObject(engine, null);
 		if (args[0].isObject())
-			return new TSValue(new TSObject(engine, args[0].asObject()));
+			return new TSObject(engine, args[0].asObject());
 		throw new TinyscriptTypeError("Object.create(proto): proto must be an object!");
 	}
 
 	private TSValue getPrototypeOf(TSObject self, TSValue[] args) {
-		if (args[0].isObject())
-			return new TSValue(args[0].asObject().getPrototype());
+		if (args[0].isObject() && args[0].asObject().getPrototype() != null)
+			return args[0].asObject().getPrototype();
 		return TSValue.NULL;
 	}
 
@@ -106,7 +106,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 		TSObject object = args[0].asObject();
 		if (args[2].isObject())
 			object.setOwnPropertyDescriptor(args[1].asString(), TSPropertyDescriptor.fromObject(args[2].asObject()));
-		return new TSValue(object);
+		return object;
 	}
 
 	private TSValue getOwnPropertyNames(TSObject self, TSValue[] args) {
@@ -117,7 +117,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 		TSObject result = null;
 		if (args[0].isObject())
 			result = args[0].asObject().getOwnPropertyDescriptor(args[1].asString()).toObject(engine);
-		return new TSValue(result);
+		return result;
 	}
 
 	private TSValue keys(TSObject self, TSValue[] args) {
@@ -127,10 +127,10 @@ public class ObjectConstructor extends BuiltinConstructor {
 	private TSValue stringArray(List<String> strings) {
 		ArrayObject result = (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();
 		for (String str : strings) {
-			result.push(new TSValue(str));
+			result.push(TSValue.of(str));
 			engine.recordStringCreation(str);
 		}
-		return new TSValue(result);
+		return result;
 	}
 
 	// Object.prototype methods (the prototype of all objects)
@@ -140,20 +140,20 @@ public class ObjectConstructor extends BuiltinConstructor {
 		TSValue ctorValue = self.get("constructor");
 		if (ctorValue.isObject() && ctorValue.asObject() instanceof Function)
 			name = ((Function) ctorValue.asObject()).getName();
-		return new TSValue("[object " + name + "]");
+		return TSValue.of("[object " + name + "]");
 	}
 
 	private TSValue hasOwnProperty(TSObject self, TSValue[] args) {
-		return new TSValue(self.hasOwnProperty(args[0].asString()));
+		return TSValue.of(self.hasOwnProperty(args[0].asString()));
 	}
 
 	// Function.prototype methods (the prototype of all functions)
 
 	private TSValue functionToString(TSObject self, TSValue[] args) {
 		if (self instanceof InterpretedFunction)
-			return new TSValue(((InterpretedFunction) self).getCodeAsString());
+			return TSValue.of(((InterpretedFunction) self).getCodeAsString());
 		String name = (self instanceof Function) ? ((Function) self).getName() : "";
-		return new TSValue("function " + name + "() { // builtin }");
+		return TSValue.of("function " + name + "() { // builtin }");
 	}
 
 	private TSValue functionCall(TSObject self, TSValue[] args) {

@@ -27,10 +27,10 @@ public class StringConstructor extends BuiltinConstructor {
 				((StringObject) self).setValue(str);
 			}
 			else {
-				return new TSValue(str);
+				return TSValue.of(str);
 			}
 		}
-		return new TSValue(self);
+		return self;
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class StringConstructor extends BuiltinConstructor {
 	public StringObject createObject(TSValue value) {
 		StringObject newObject = new StringObject(engine, value);
 		newObject.setPrototype(getPrototypeProperty().asObject());
-		newObject.defineDefaultProperty("constructor", new TSValue(this));
+		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 
@@ -60,25 +60,25 @@ public class StringConstructor extends BuiltinConstructor {
 	private TSValue stringToString(TSObject self, TSValue[] args) {
 		if (!(self instanceof StringObject))
 			throw new TinyscriptTypeError("Function String.prototype.toString only works for String objects.");
-		return new TSValue(((StringObject) self).getValue());
+		return TSValue.of(((StringObject) self).getValue());
 	}
 
 	private TSValue charAt(TSObject self, TSValue[] args) {
 		String result = "";
 		if (self instanceof StringObject) {
-			String str = TSObject.toString(engine, new TSValue(self));
+			String str = TSObject.toString(engine, self);
 			int pos = TSObject.toInteger(engine, args[0]);
 			if (pos >= 0 && pos < str.length()) {
 				result = str.substring(pos, pos + 1);
 			}
 		}
-		return new TSValue(result);
+		return TSValue.of(result);
 	}
 
 	private TSValue substring(TSObject self, TSValue[] args) {
 		String result = "";
 		if (self instanceof StringObject) {
-			String str = TSObject.toString(engine, new TSValue(self));
+			String str = TSObject.toString(engine, self);
 			int start = TSObject.toInteger(engine, args[0]);
 			int end = (args.length > 1) ? TSObject.toInteger(engine, args[1]) : str.length();
 			// Clamp both indices to the string and swap them if necessary (like JavaScript)
@@ -87,14 +87,14 @@ public class StringConstructor extends BuiltinConstructor {
 			result = str.substring(Math.min(start, end), Math.max(start, end));
 		}
 		engine.recordStringCreation(result);
-		return new TSValue(result);
+		return TSValue.of(result);
 	}
 
 	private TSValue indexOf(TSObject self, TSValue[] args) {
 		if (self instanceof StringObject) {
-			return new TSValue(((StringObject) self).getValue().indexOf(args[0].asString()));
+			return TSValue.of(((StringObject) self).getValue().indexOf(args[0].asString()));
 		}
-		return new TSValue(-1);
+		return TSValue.of(-1);
 	}
 
 }

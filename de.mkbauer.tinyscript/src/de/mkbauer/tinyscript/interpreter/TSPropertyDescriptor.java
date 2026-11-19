@@ -64,9 +64,9 @@ public class TSPropertyDescriptor {
 
 	public TSObject toObject(TinyscriptEngine engine) {
 		TSObject propertyDescObject = new TSObject(engine, engine.getDefaultPrototype());
-		propertyDescObject.put("writable", new TSValue(isWritable()));
-		propertyDescObject.put("configurable", new TSValue(isConfigurable()));
-		propertyDescObject.put("enumerable", new TSValue(isEnumerable()));		
+		propertyDescObject.put("writable", TSValue.of(isWritable()));
+		propertyDescObject.put("configurable", TSValue.of(isConfigurable()));
+		propertyDescObject.put("enumerable", TSValue.of(isEnumerable()));		
 		propertyDescObject.put("value", getValue());
 		return propertyDescObject;
 	}

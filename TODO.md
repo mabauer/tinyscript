@@ -48,7 +48,7 @@ Language
 Interpreter and code quality
 ----------------------------
 
-- **`TSValue` as sealed interface + records.** Large refactoring, split into 2–3 PRs.
+- **`TSValue` cleanup (part 3 of the sealed-interface refactoring).** Value semantics and the sealed hierarchy are done. Remaining: `switch` pattern matching in the engine (`add`, `compare`, `instanceOf`) and the builtins instead of `isX()` / `asX()` chains; make `asObject()` strict (today it returns Java `null` for `undefined` / `null`, and callers check for that); drop helpers that are no longer needed.
 
 - **Triage the TODO comments in the code** (about 40). Also: the grammar rule `RangeExpression` is unused; there is an empty validator check.
 

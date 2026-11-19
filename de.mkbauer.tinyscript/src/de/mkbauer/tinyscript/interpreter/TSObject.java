@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 
 
-public class TSObject {
+public non-sealed class TSObject implements TSValue {
 	
 	protected HashMap<String, TSPropertyDescriptor> properties;
 	
@@ -134,10 +134,7 @@ public class TSObject {
 	
 	public void defineDefaultProperty(String key, Object value) {
 		TSPropertyDescriptor desc = new TSPropertyDescriptor();
-		if (!(value instanceof TSValue))
-			desc.setValue(new TSValue(value));
-		else
-			desc.setValue( (TSValue) value);
+		desc.setValue(TSValue.fromJava(value));
 		// This differs form ECMAScript specs.
 		desc.setConfigurable(true);
 		desc.setEnumerable(false);
@@ -165,7 +162,7 @@ public class TSObject {
 	
 	public void setPrototype(TSObject proto) {
 		this.proto = proto;
-		defineDefaultProperty("__proto__", new TSValue(this.proto));
+		defineDefaultProperty("__proto__", proto != null ? proto : TSValue.NULL);
 	}
 	
 	public TSObject getPrototype() {

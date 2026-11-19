@@ -16,7 +16,7 @@ public class ArrayObject extends BuiltinType {
 	ArrayObject(TinyscriptEngine engine) {
 		super(engine);
 		items = new ArrayList<TSValue>();
-		// defineDefaultProperty(this, "length", new TSValue(0));
+		// defineDefaultProperty(this, "length", TSValue.of(0));
 	}
 	
 	public TSValue item(int index) {
@@ -41,7 +41,7 @@ public class ArrayObject extends BuiltinType {
 	@Override
 	public TSValue get(String key) {
 		if (key.equals("length"))
-			return new TSValue(getLength());
+			return TSValue.of(getLength());
 		try {
 			int index = Integer.parseInt(key);
 			if (index < getLength()) 
@@ -145,7 +145,7 @@ public class ArrayObject extends BuiltinType {
 	
 	protected void update() {
 		super.update();
-		//put("length", new TSValue(getLength()));
+		//put("length", TSValue.of(getLength()));
 	}
 	
 	@Override
