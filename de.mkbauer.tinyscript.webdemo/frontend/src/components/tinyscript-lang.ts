@@ -5,13 +5,14 @@ interface State {
   inBlockComment: boolean
 }
 
+// Keywords and literals of the tinyscript grammar (Tinyscript.xtext)
 const KEYWORDS = new Set([
-  'var', 'function', 'if', 'else', 'for', 'while', 'return',
-  'break', 'continue', 'new', 'delete',
+  'var', 'let', 'function', 'if', 'else', 'for', 'while', 'break', 'return',
+  'new', 'this', 'typeof', 'instanceof',
 ])
 
 const ATOMS = new Set([
-  'assert', 'true', 'false', 'null', 'undefined',
+  'assert', 'true', 'false', 'null',
 ])
 
 /**

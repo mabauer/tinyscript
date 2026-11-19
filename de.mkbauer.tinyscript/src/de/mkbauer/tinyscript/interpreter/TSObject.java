@@ -141,7 +141,7 @@ public class TSObject {
 		// This differs form ECMAScript specs.
 		desc.setConfigurable(true);
 		desc.setEnumerable(false);
-		desc.setWriteable(true);
+		desc.setWritable(true);
 		setOwnPropertyDescriptor(key, desc);
 	}
 	
@@ -189,10 +189,10 @@ public class TSObject {
 	public void put(String key, TSValue value) {
 		TSPropertyDescriptor desc = properties.get(key);
 		if (desc != null) {
-			if (desc.isWriteable()) 
+			if (desc.isWritable()) 
 				desc.setValue(value);
 			else {
-				// log.debug("Error: assigning to a non-writeable key: " + key);
+				// log.debug("Error: assigning to a non-writable key: " + key);
 			}
 		}
 		else {

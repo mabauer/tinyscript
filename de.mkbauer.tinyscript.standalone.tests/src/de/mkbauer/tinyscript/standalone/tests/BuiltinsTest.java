@@ -150,13 +150,22 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testObjectGetOwnPropertyDescriptor() {
-        // Note: the attribute is currently named "writeable" (JavaScript: "writable")
         assertEquals("1\ntrue\ntrue\ntrue\n", interpreterOutput(
                 "var d = Object.getOwnPropertyDescriptor({ a: 1 }, \"a\");\n"
                 + "print(d.value);\n"
                 + "print(d.enumerable);\n"
-                + "print(d.writeable);\n"
+                + "print(d.writable);\n"
                 + "print(d.configurable);"));
+    }
+
+    @Test
+    public void testObjectDefinePropertyReadOnly() {
+        assertEquals("1\nfalse\n", interpreterOutput(
+                "var o = {};\n"
+                + "Object.defineProperty(o, \"a\", { value: 1, writable: false });\n"
+                + "o.a = 2;\n"
+                + "print(o.a);\n"
+                + "print(Object.getOwnPropertyDescriptor(o, \"a\").writable);"));
     }
 
     @Test
