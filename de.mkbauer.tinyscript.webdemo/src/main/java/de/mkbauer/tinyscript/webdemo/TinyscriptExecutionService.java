@@ -40,7 +40,7 @@ public class TinyscriptExecutionService {
 	
 	public static final int MAX_STATEMENTS = 5000000;  
 	public static final int MAX_CALL_DEPTH = 128;
-	public static final int MAX_OBJECT_SIZE = 0; // 100000;
+	public static final int MAX_OBJECT_SIZE = 100000;
 	public static final int MAX_STRING_LENGTH = 1024*8;
 	public static final long MAX_MEMORY = 1024*1024*16;
 	

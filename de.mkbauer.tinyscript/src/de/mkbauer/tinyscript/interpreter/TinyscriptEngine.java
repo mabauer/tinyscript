@@ -668,16 +668,21 @@ public class TinyscriptEngine {
 
     // Arrays store numeric keys as items
     private TSValue getProperty(TSObject object, TSValue key) {
-    	if (object instanceof ArrayObject arr && key.isNumber())
+    	if (object instanceof ArrayObject arr && isArrayIndex(key))
     		return arr.item(key.asInt());
     	return object.get(key.asString());
     }
 
     private void putProperty(TSObject object, TSValue key, TSValue value) {
-    	if (object instanceof ArrayObject arr && key.isNumber())
+    	if (object instanceof ArrayObject arr && isArrayIndex(key))
     		arr.setItem(key.asInt(), value);
     	else
     		object.put(key.asString(), value);
+    }
+
+    // Like Javascript, only non-negative integers are array indexes; a[-1] or a[1.5] are properties
+    private static boolean isArrayIndex(TSValue key) {
+    	return key.isMathematicalInteger() && key.asDouble() >= 0 && key.asDouble() <= Integer.MAX_VALUE;
     }
 
     public TSValue casePropertyName(PropertyName expr) {
@@ -912,6 +917,14 @@ public class TinyscriptEngine {
 	public void recordStringCreation(String str) {
 		if (resourceMonitor != null)
 			resourceMonitor.recordStringCreation(str);
+	}
+
+	/**
+	 * Checks the object size limit before an object grows to {@code size} entries.
+	 */
+	public void checkObjectSize(int size) {
+		if (resourceMonitor != null)
+			resourceMonitor.checkObjectSize(size);
 	}
 
 	public void recordOutput(int length) {
