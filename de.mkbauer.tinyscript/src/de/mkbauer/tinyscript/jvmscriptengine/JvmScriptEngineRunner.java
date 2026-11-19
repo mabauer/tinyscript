@@ -45,7 +45,7 @@ public class JvmScriptEngineRunner {
 			engine.eval(jsCode);
 		}
 		catch (ScriptException e) {
-			// TODO: Improve error handling
+			// TODO(TODO.md: JvmScriptEngineRunner): Improve error handling
 			if (e.getMessage().contains("Assertation failed"))
 				throw new TinyscriptAssertationError(e);
 			throw new TinyscriptRuntimeException(e);

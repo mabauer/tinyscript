@@ -35,15 +35,27 @@ Language
 
 - **Remaining syntax restrictions** (decide consciously): computed keys like `[a > b]` only allow additions, no `!!x`.
 
+- **Primitive wrapper objects.** Property access on a number or boolean (`(5).toString()`, `true.toString()`) creates a plain object with a `value` property, so it has none of the expected methods. Decide: real `Number` / `Boolean` objects (like `String`), or a `TypeError`.
+
+- **Conversions.** Builtins convert their arguments with `TSObject.toNumber` / `toInteger` / `toString`. Today `undefined` and non-numeric strings become `0` (Javascript: `NaN`), a user-defined `valueOf` is ignored, and some code uses `TSValue.asString()` where `TSObject.toString(engine, value)` (which calls a user-defined `toString`) would be right. Decide how much of Javascript's conversion rules tinyscript wants, then write tests.
+
+- **Global `this`.** At top level `this` is the global object. In Javascript's strict mode (which tinyscript otherwise follows) it is `undefined`.
+
 - **More functions in the runtime library.**
 
 
 Interpreter and code quality
 ----------------------------
 
-- **Remaining TODO comments in the code.** Obsolete markers, the unused `RangeExpression` rule, the empty validator check and `TinyscriptEngineDemo` are gone. Left: real bugs (`Print` swallows `IOException`; `defineProperty` ignores non-configurable properties; `GlobalExecutionContext.create` does not check for existing names; `arr.length = n` does not resize; named properties on arrays) and language decisions (Number/Boolean wrapper objects, `toNumber(undefined)` should be `NaN`, user-defined `valueOf`, global `this` in strict mode, own `GlobalScopeProvider` with modules). Next: turn the decisions into entries here and let the code markers point to them (see CLAUDE.md).
+- **`print` and I/O errors.** `print` silently ignores an `IOException` of the output stream. Log it or turn it into a runtime error.
 
-- **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it.
+- **`defineProperty` on non-configurable properties.** `Object.defineProperty` replaces a property even if it is not configurable; Javascript throws a `TypeError`.
+
+- **Redeclared globals.** `GlobalExecutionContext.create` overwrites an existing global with `undefined`. Check first whether that can happen at all (the validator rejects duplicate declarations), then either assert or drop the marker.
+
+- **Arrays: `length` and named properties.** Assigning `arr.length = n` does not resize the array, and `toString` ignores named properties on arrays.
+
+- **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it (decision deferred). Its error handling is minimal.
 
 
 Build and operations

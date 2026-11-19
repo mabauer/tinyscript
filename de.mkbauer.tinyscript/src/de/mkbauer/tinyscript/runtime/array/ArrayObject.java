@@ -56,7 +56,7 @@ public class ArrayObject extends BuiltinType {
 	@Override
 	public void put(String key, TSValue value) {
 		try {
-			// TODO: Special case "length" => resize array and fill with TSValue.UNDEFINED
+			// TODO(TODO.md: Arrays: length and named properties): Special case "length" => resize array and fill with TSValue.UNDEFINED
 			if (key.equals("length"))
 				return;
 			int index = Integer.parseInt(key);
@@ -107,7 +107,7 @@ public class ArrayObject extends BuiltinType {
 	
 	@Override
 	public String toString() {
-		// TODO: Handle named properties
+		// TODO(TODO.md: Arrays: length and named properties): Handle named properties
 		return items.stream()
 				.map(item->item.toString())
 				.collect(Collectors.joining(", ", "[", "]"));
