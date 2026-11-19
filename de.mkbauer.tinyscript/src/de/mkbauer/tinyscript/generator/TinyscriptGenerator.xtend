@@ -152,7 +152,9 @@ class TinyscriptGenerator   {
 		if («stmt.cond.generate») {
 			«stmt.then.generate»
 		}
-		«IF stmt.^else !== null»
+		«IF stmt.^else?.elseIf !== null»
+		else «stmt.^else.elseIf.generate»
+		«ELSEIF stmt.^else !== null»
 		else {
 			«stmt.^else.^else.generate»
 		}

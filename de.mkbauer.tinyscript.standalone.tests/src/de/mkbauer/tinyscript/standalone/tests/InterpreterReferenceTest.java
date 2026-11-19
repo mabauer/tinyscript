@@ -88,6 +88,52 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         assertEquals("",      interpreterOutput("if (false) { print(\"yes\"); }"));
     }
 
+    @Test
+    public void testElseIf() {
+        assertEquals("negative\nzero\npositive\n", interpreterOutput(
+                "function sign(n) {\n"
+                + "  if (n < 0) { return \"negative\"; }\n"
+                + "  else if (n == 0) { return \"zero\"; }\n"
+                + "  else { return \"positive\"; }\n"
+                + "}\n"
+                + "print(sign(-1)); print(sign(0)); print(sign(1));"));
+    }
+
+    @Test
+    public void testElseIfWithoutFinalElse() {
+        assertEquals("b\n", interpreterOutput(
+                "var x = 2;\n"
+                + "if (x == 1) { print(\"a\"); } else if (x == 2) { print(\"b\"); } else if (x == 3) { print(\"c\"); }"));
+        assertEquals("", interpreterOutput(
+                "var x = 4;\n"
+                + "if (x == 1) { print(\"a\"); } else if (x == 2) { print(\"b\"); }"));
+    }
+
+    @Test
+    public void testElseIfEvaluatesConditionsOnlyUntilOneMatches() {
+        assertEquals("check 1\ncheck 2\nb\n", interpreterOutput(
+                "function check(n, result) { print(\"check \" + n); return result; }\n"
+                + "if (check(1, false)) { print(\"a\"); }\n"
+                + "else if (check(2, true)) { print(\"b\"); }\n"
+                + "else if (check(3, true)) { print(\"c\"); }"));
+    }
+
+    @Test
+    public void testElseIfBranchesHaveTheirOwnScope() {
+        assertEquals("2\n1\n", interpreterOutput(
+                "var x = 1;\n"
+                + "if (false) { var y = 1; } else if (true) { var y = 2; var x = 2; print(x); }\n"
+                + "print(x);"));
+    }
+
+    @Test
+    public void testBreakInsideElseIf() {
+        assertEquals("1\ntwo\n", interpreterOutput(
+                "for (var i = 1, 5) {\n"
+                + "  if (i == 2) { print(\"two\"); } else if (i == 3) { break; } else { print(i); }\n"
+                + "}"));
+    }
+
     // =========================================================================
     // Control structures — numeric for loop
     // =========================================================================
