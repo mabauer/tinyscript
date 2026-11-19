@@ -52,8 +52,6 @@ Interpreter and code quality
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it.
 
-- **Generator: `==` / `!=` are emitted unchanged**, so the generated Javascript coerces types (`1 == "1"` is `true` there, `false` in the interpreter). Emit `===` / `!==`, except for comparisons with `null`, which must keep `null == undefined`.
-
 - **To verify** (noticed while reading the code):
   - The generator ignores `for (x : arr)` without `var` and evaluates the iterable three times.
   - `new Foo` without parentheses returns the function itself.

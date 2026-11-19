@@ -80,6 +80,17 @@ class TinyscriptGenerator   {
 			return obj1 + obj2;
 		}
 		
+		// Tinyscript's ==: no type coercion, but null == undefined; String objects equal their strings
+		function __ts_eq(obj1, obj2) {
+			if (obj1 == null || obj2 == null) {
+				return obj1 == obj2;
+			}
+			if ((typeof obj1 === "string" || obj1 instanceof String) && (typeof obj2 === "string" || obj2 instanceof String)) {
+				return String(obj1) === String(obj2);
+			}
+			return obj1 === obj2;
+		}
+		
 	'''
 	
 	def generate(Tinyscript script, boolean includeBuiltins) '''
@@ -208,7 +219,7 @@ class TinyscriptGenerator   {
 	}
 	
 	def dispatch generate(BinaryExpression expr) '''
-		«IF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
+		«IF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
 
 	def dispatch generate(Unary expr)
 		'''«expr.op»«expr.expr.generate»'''
