@@ -16,7 +16,7 @@ Language
 - **`typeof` on arbitrary expressions.** Today `typeof` only accepts a name with optional `.property` suffixes (`TypeOfExpression` in the grammar). Plan:
   - Drop `TypeOfExpression` and make `typeof` a unary operator: `Unary: op=('-' | OP_NOT | 'typeof') expr=Primary`. This also gives JavaScript precedence (`typeof 1 + "x"` is `"numberx"`).
   - Interpreter: add `case "typeof"` to `caseUnary`, delete `caseTypeOfExpression`.
-  - Generator: emit `typeof (…)` in `generate(Unary)`. The generator currently has no case for `typeof` at all, so the transpiler probably fails on it (unverified).
+  - Generator: emit `typeof (…)` in `generate(Unary)`. The generator currently has no case for `typeof` at all, so the transpiler fails on it ("Unhandled parameter types: TypeOfExpressionImpl"). Then add the differential test to `ValuesTest.testTypeOf`.
   - Consequences: `typeof undeclared` becomes a linking error (consistent, since all names are known statically) and `typeof a.b.c` with `a.b` undefined becomes a `TypeError` (as in JavaScript).
   - Tests: `typeof f()`, `typeof a[0]`, `typeof (1 + 2)`, `typeof o.x`, precedence, plus differential tests.
 
@@ -53,6 +53,8 @@ Interpreter and code quality
 - **Triage the TODO comments in the code** (about 40). Also: the grammar rule `RangeExpression` is unused; there is an empty validator check.
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it.
+
+- **Generator: `==` / `!=` are emitted unchanged**, so the generated Javascript coerces types (`1 == "1"` is `true` there, `false` in the interpreter). Emit `===` / `!==`, except for comparisons with `null`, which must keep `null == undefined`.
 
 - **To verify** (noticed while reading the code):
   - The generator ignores `for (x : arr)` without `var` and evaluates the iterable three times.

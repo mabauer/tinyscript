@@ -39,6 +39,7 @@ import com.google.inject.Inject
 import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
+import de.mkbauer.tinyscript.ts.NullObject
 
 class TinyscriptGenerator   {
 	
@@ -272,6 +273,8 @@ class TinyscriptGenerator   {
 	def dispatch generate(BooleanLiteral expr) {
 		String.valueOf(expr.value);	
 	}
+
+	def dispatch generate(NullObject expr) '''null'''
 	
 	def String getName(Identifier id) {
 		var String name = null;

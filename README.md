@@ -74,7 +74,7 @@ Design decisions
 - **Scoping:** blocks create real *scopes*; `var` is block-scoped and there is no hoisting. Like Javascript in *strict mode*, all variables have to be declared before they can be used.
 - **Blocks are mandatory:** control structures always need blocks: `if (cond) { stmts; } else if (cond) { stmts; } else { stmts; }`
 - **Loops:** there are two types of `for` loops: a numeric one inspired by *Lua*, where the end value is inclusive and an optional step can be given (`for (var i = 1, 10) { … }`, `for (var i = 10, 1, -1) { … }`), and one that iterates over the *values* of an array (`for (var x : arr) { … }`). Additionally there is `while (cond) { … }`; `break` leaves the innermost loop.
-- **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). There is no `===` / `!==`.
+- **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). The one deliberate exception: `null == undefined` is `true`, so `o.x == null` checks for a missing property. Numbers compare like in Javascript (`NaN != NaN`). There is no `===` / `!==`.
 - **Strict comparisons:** `<`, `<=`, `>` and `>=` compare a number with a number or a string with a string; anything else is a `TypeError`.
 - **Logical operators return booleans:** `&&` and `||` short-circuit like in Javascript, but always return `true` or `false`, never one of their operands.
 - **Arrays can be added:** the operator `+` also works on arrays: `var arr = ["hello"]; arr = arr + ["world"];` results in `["hello", "world"]`. With a string on either side, `+` concatenates strings (`"arr: " + arr`); an array plus anything else is a `TypeError`.
