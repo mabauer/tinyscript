@@ -3,12 +3,12 @@ package de.mkbauer.tinyscript.interpreter;
 public class TSPropertyDescriptor {
 	
 	private static final boolean DEFAULT_CONFIGURABLE = true;
-	private static final boolean DEFAULT_WRITEABLE = true;
+	private static final boolean DEFAULT_WRITABLE = true;
 	private static final boolean DEFAULT_ENUMERABLE = true;
 	
 	private boolean configurable;
 	
-	private boolean writeable;
+	private boolean writable;
 	
 	private boolean enumerable;
 	
@@ -26,7 +26,7 @@ public class TSPropertyDescriptor {
 	
 	protected void initialize() {
 		this.configurable = DEFAULT_CONFIGURABLE;
-		this.writeable = DEFAULT_WRITEABLE;
+		this.writable = DEFAULT_WRITABLE;
 		this.enumerable = DEFAULT_ENUMERABLE;
 	}
 	
@@ -38,12 +38,12 @@ public class TSPropertyDescriptor {
 		this.configurable = configurable;
 	}
 
-	public boolean isWriteable() {
-		return writeable;
+	public boolean isWritable() {
+		return writable;
 	}
 
-	public void setWriteable(boolean writeable) {
-		this.writeable = writeable;
+	public void setWritable(boolean writable) {
+		this.writable = writable;
 	}
 
 	public boolean isEnumerable() {
@@ -64,7 +64,7 @@ public class TSPropertyDescriptor {
 
 	public TSObject toObject(TinyscriptEngine engine) {
 		TSObject propertyDescObject = new TSObject(engine, engine.getDefaultPrototype());
-		propertyDescObject.put("writeable", new TSValue(isWriteable()));
+		propertyDescObject.put("writable", new TSValue(isWritable()));
 		propertyDescObject.put("configurable", new TSValue(isConfigurable()));
 		propertyDescObject.put("enumerable", new TSValue(isEnumerable()));		
 		propertyDescObject.put("value", getValue());
@@ -73,8 +73,8 @@ public class TSPropertyDescriptor {
 	
 	public static TSPropertyDescriptor fromObject(TSObject propertyDescObject) {
 		TSPropertyDescriptor propertyDescriptor = new TSPropertyDescriptor();
-		if (propertyDescObject.contains("writeable") && !propertyDescObject.get("writeable").asBoolean()) 
-			propertyDescriptor.setWriteable(false);
+		if (propertyDescObject.contains("writable") && !propertyDescObject.get("writable").asBoolean()) 
+			propertyDescriptor.setWritable(false);
 		if (propertyDescObject.contains("configurable") && !propertyDescObject.get("configurable").asBoolean()) 
 			propertyDescriptor.setConfigurable(false);
 		if (propertyDescObject.contains("enumerable") && !propertyDescObject.get("enumerable").asBoolean()) 

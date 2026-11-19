@@ -30,18 +30,18 @@ public class ObjectObjectTest extends TinyscriptInterpreterTestHelper {
 	public void testgetOwnPropertyDescriptor() {
 		executeScriptFromString("var obj = {key1: \"Markus\"}; var pd = Object.getOwnPropertyDescriptor(obj, \"key1\"); "
 				+ "assert (pd.value == \"Markus\"); "
-				+ "assert ((pd.writeable == true) && (pd.enumerable == true) && (pd.configurable == true));"
+				+ "assert ((pd.writable == true) && (pd.enumerable == true) && (pd.configurable == true));"
 				);
 	}
 	
 	@Test
 	public void testdefineProperty() {
 		executeScriptFromString("var obj = {key1: \"Bauer\"}; "
-				+ "Object.defineProperty(obj, \"key2\", {value: \"Markus\", writeable: false}); "
+				+ "Object.defineProperty(obj, \"key2\", {value: \"Markus\", writable: false}); "
 				+ "assert (obj.key2 == \"Markus\"); "
 				+ "var pd = Object.getOwnPropertyDescriptor(obj, \"key2\"); "
 				+ "assert (pd.value == \"Markus\"); "
-				+ "assert ((pd.writeable == false) && (pd.enumerable == true) && (pd.configurable == true));"
+				+ "assert ((pd.writable == false) && (pd.enumerable == true) && (pd.configurable == true));"
 				);
 	}
 	

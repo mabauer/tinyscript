@@ -17,14 +17,20 @@ describe('tinyscript-lang tokenizer', () => {
     expect(typeOf('false', 'false')).toBe('atom')
   })
 
-  it('null and undefined tokenize as atom', () => {
+  it('null tokenizes as atom', () => {
     expect(typeOf('null', 'null')).toBe('atom')
-    expect(typeOf('undefined', 'undefined')).toBe('atom')
   })
 
   it('keywords tokenize as keyword', () => {
-    for (const kw of ['var', 'function', 'if', 'for', 'return', 'else', 'while', 'break', 'continue', 'new', 'delete']) {
+    for (const kw of ['var', 'let', 'function', 'if', 'else', 'for', 'while', 'break', 'return',
+                      'new', 'this', 'typeof', 'instanceof']) {
       expect(typeOf(kw, kw)).toBe('keyword')
+    }
+  })
+
+  it('words that are not part of tinyscript tokenize as variableName', () => {
+    for (const word of ['continue', 'delete', 'undefined', 'const', 'switch']) {
+      expect(typeOf(word, word)).toBe('variableName')
     }
   })
 
