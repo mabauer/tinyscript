@@ -593,6 +593,17 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         assertEquals(2, e.getAffectedLine());
     }
 
+    @Test
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void testGrowingArrayLengthIsCheckedBeforeAllocating() {
+        ResourceLimits limits = new ResourceLimits();
+        limits.setMaxObjectSize(1000);
+        TinyscriptResourceLimitViolation e = assertThrows(TinyscriptResourceLimitViolation.class,
+                () -> interpreterOutput("var a = [];\na.length = 2000000000;", limits));
+        assertEquals("Object size limit reached", e.getMessage());
+        assertEquals(2, e.getAffectedLine());
+    }
+
     // =========================================================================
     // Errors report the line where they happened
     // =========================================================================

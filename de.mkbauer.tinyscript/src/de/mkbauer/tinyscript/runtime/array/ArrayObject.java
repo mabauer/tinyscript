@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
+import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
 public class ArrayObject extends BuiltinType {
@@ -39,8 +40,8 @@ public class ArrayObject extends BuiltinType {
 	}
 
 	/**
-	 * Returns the array index a property key stands for, or -1 if the key is a
-	 * named property (like in Javascript, "-1" or "01" are not array indexes).
+	 * Returns the array index a property key stands for, or -1 if the key is not
+	 * an index (like in Javascript, "-1" or "01" are not array indexes).
 	 */
 	private static int arrayIndex(String key) {
 		try {
@@ -62,16 +63,39 @@ public class ArrayObject extends BuiltinType {
 		return item(index);
 	}
 
+	/**
+	 * Arrays are lists: besides their items only length can be set. Unlike Javascript,
+	 * named properties (including a[-1] or a[1.5]) are a TypeError.
+	 */
 	@Override
 	public void put(String key, TSValue value) {
-		// TODO(TODO.md: Arrays: length and named properties): Special case "length" => resize array and fill with TSValue.UNDEFINED
-		if (key.equals("length"))
+		if (key.equals("length")) {
+			setLength(value);
 			return;
+		}
 		int index = arrayIndex(key);
 		if (index < 0)
-			super.put(key, value);
-		else
-			setItem(index, value);
+			throw new TinyscriptTypeError("Arrays only have integer indexes, cannot set '" + key + "'");
+		setItem(index, value);
+	}
+
+	/**
+	 * Like Javascript, setting length truncates the array or fills it with undefined.
+	 */
+	private void setLength(TSValue value) {
+		if (!(value.isMathematicalInteger() && value.asDouble() >= 0 && value.asDouble() <= Integer.MAX_VALUE))
+			throw new TinyscriptTypeError("Invalid array length: " + value.asString());
+		int length = value.asInt();
+		if (length < items.size()) {
+			items.subList(length, items.size()).clear();
+		}
+		else {
+			// Check the size limit before filling with undefined, not after
+			engine.checkObjectSize(length + properties.size());
+			while (items.size() < length)
+				items.add(TSValue.UNDEFINED);
+		}
+		update();
 	}
 	
 	public void push(TSValue value) {
@@ -106,7 +130,6 @@ public class ArrayObject extends BuiltinType {
 	
 	@Override
 	public String toString() {
-		// TODO(TODO.md: Arrays: length and named properties): Handle named properties
 		return items.stream()
 				.map(item->item.toString())
 				.collect(Collectors.joining(", ", "[", "]"));

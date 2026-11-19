@@ -521,14 +521,18 @@ var nums = [1, 2, 3];
 var mixed = ["hello", 42, true, null];
 ```
 
-### Element access
+### Element access and `length`
 
 ```
-nums[0]       // 1 (zero-based)
-nums[nums.length - 1]   // last element... wait — .length is not yet implemented
+nums[0]                 // 1 (zero-based)
+nums[nums.length - 1]   // 3, the last element
+nums[10]                // undefined
+nums[5] = 6;            // grows the array, the gap is filled with undefined
+nums.length = 2;        // truncates the array to [1, 2]
+nums.length = 4;        // grows it again: [1, 2, undefined, undefined]
 ```
 
-> Note: `.length` is not a built-in property. Use index counting or `pop`/`push` patterns instead.
+Arrays are lists: besides their items, only `length` can be set. Unlike Javascript, writing any other key is a `TypeError`, including `nums.x = 1`, `nums[-1] = 1` and `nums[1.5] = 1`; `Object.defineProperty` on an array is a `TypeError` as well. Reading such a key gives `undefined`. An invalid `length` (negative, fractional, not a number) is a `TypeError` (Javascript: `RangeError`).
 
 ### Array methods
 

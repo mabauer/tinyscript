@@ -53,7 +53,7 @@ Interpreter and code quality
 
 - **Redeclared globals.** `GlobalExecutionContext.create` overwrites an existing global with `undefined`. Check first whether that can happen at all (the validator rejects duplicate declarations), then either assert or drop the marker.
 
-- **Arrays: `length` and named properties.** Assigning `arr.length = n` does not resize the array, and `toString` ignores named properties on arrays.
+- **`at()` for arrays (and strings).** `a.at(-1)` as the explicit way to index from the end (ES2022), since `a[-1]` is a `TypeError`.
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it (decision deferred). Its error handling is minimal.
 
