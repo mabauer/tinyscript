@@ -1,6 +1,9 @@
 # Dockerfile for tinyscript
 
-FROM eclipse-temurin:25-jre
+# Ubuntu 24.04 LTS variant: since 2026-11-16 the plain 25-jre tag is based on
+# Ubuntu 26.04, whose image ships pebble with a vulnerable Go runtime
+# (CVE-2026-97054); the noble image has no pebble.
+FROM eclipse-temurin:25-jre-noble
 
 # Run as an unprivileged user. The container can also run with a read-only
 # root filesystem (docker run --read-only); Tomcat only needs a writable /tmp.

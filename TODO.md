@@ -53,7 +53,7 @@ Interpreter and code quality
 Build and operations
 --------------------
 
-- **Drop the CVE-2026-114938 workaround** (`-XX:-UseBASE64Intrinsics` in the webdemo `Dockerfile`) once the `eclipse-temurin:25-jre` image ships 25.0.5.1.
+- **Drop the CVE-2026-114938 workaround** (`-XX:-UseBASE64Intrinsics` in the webdemo `Dockerfile`) once the `eclipse-temurin:25-jre-noble` image ships 25.0.5.1.
 
 - **Webdemo: CPU time limit** (`maxMXCpuTime`) as a second safety net besides the statement limit.
 

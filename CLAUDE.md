@@ -215,7 +215,7 @@ Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 - **Vitest + @vue/test-utils** — frontend unit tests
 - **JUnit 6 (Jupiter)** — test framework for both OSGi and standalone tests
 - **Apache Commons Exec 1.4** — used by `NodeJsRunner` to invoke `node` in standalone tests
-- **eclipse-temurin:25-jre** — Docker base image
+- **eclipse-temurin:25-jre-noble** — Docker base image (Ubuntu 24.04; the plain `25-jre` tag moved to Ubuntu 26.04, whose image ships `pebble` with a vulnerable Go runtime)
 
 ## Frontend Development (web demo)
 

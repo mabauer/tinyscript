@@ -197,7 +197,7 @@ docker build -t tinyscript-webdemo .
 docker run -p 8080:8080 tinyscript-webdemo
 ```
 
-The Dockerfile uses `eclipse-temurin:25-jre`. The fat JAR must be built first (`./mvnw package`).
+The Dockerfile uses `eclipse-temurin:25-jre-noble` (Ubuntu 24.04). The fat JAR must be built first (`./mvnw package`).
 
 ---
 
