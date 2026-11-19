@@ -96,5 +96,5 @@ to `X.Y.(Z+1).qualifier` (tycho-versions-plugin does not touch the REPL module).
   variables → Actions → Repository secrets).
 - **CI workflow** (`.github/workflows/ci.yml`) runs the full test suite on every
   push to master and on pull requests — no action needed.
-- **Docker base image:** `eclipse-temurin:25-jre` (`openjdk` images are deprecated).
+- **Docker base image:** `eclipse-temurin:25-jre-noble` (Ubuntu 24.04; `openjdk` images are deprecated). The plain `25-jre` tag is Ubuntu 26.04, whose image ships `pebble` with a vulnerable Go runtime (CVE-2026-97054).
 - See `docs/build.md` for a full description of the build system.
