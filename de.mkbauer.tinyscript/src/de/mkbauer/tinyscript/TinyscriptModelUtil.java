@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
@@ -147,7 +148,9 @@ public class TinyscriptModelUtil {
 	}
 	
 	public static String getFilenameOfASTNode(EObject elem) {
-		return elem.eResource().getURI().toString();
+		URI uri = elem.eResource().getURI();
+		// Files are shown as paths (not file: URIs) in error messages and stack traces
+		return uri.isFile() ? uri.toFileString() : uri.toString();
 	}
 
 	public static boolean isShadowing(EObject elem) {

@@ -84,13 +84,17 @@ Skip tests:
 
 Requires the core module to already be installed (i.e., `./mvnw install` from the root first).
 
-Output: `de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar`
+Output: `de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar` (fixed name, version in the manifest)
 
-Run:
+Run, via the helper script (follows symlinks, checks for Java 25) or directly:
 ```bash
-java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar
-java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar example.tys
+de.mkbauer.tinyscript.repl/tinyscript                 # interactive session
+de.mkbauer.tinyscript.repl/tinyscript example.tys     # run a file
+de.mkbauer.tinyscript.repl/tinyscript --help
+java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar example.tys
 ```
+
+Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage (unknown option, missing file, not a `.tys` file).
 
 ---
 
@@ -181,7 +185,7 @@ This module is in the Tycho reactor but is a plain Maven/JUnit module — no OSG
 | What | Where |
 |---|---|
 | Core OSGi bundle | `de.mkbauer.tinyscript/target/de.mkbauer.tinyscript-*.jar` |
-| REPL fat JAR | `de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar` |
+| REPL fat JAR | `de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar` |
 | Web demo fat JAR | `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar` |
 | Frontend static assets | `de.mkbauer.tinyscript.webdemo/src/main/resources/public/` |
 | Eclipse update site | `de.mkbauer.tinyscript.updatesite/target/repository/` |

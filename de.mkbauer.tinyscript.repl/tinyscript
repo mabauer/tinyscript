@@ -1,14 +1,44 @@
 #!/usr/bin/env bash
+#
+# Runs tinyscript files or the interactive REPL (see: tinyscript --help).
+#
+# Build the jar first:  ./mvnw package -f de.mkbauer.tinyscript.repl/pom.xml
+# To call it from anywhere, link it into a directory on your PATH, e.g.:
+#   ln -s "$PWD/de.mkbauer.tinyscript.repl/tinyscript" ~/bin/tinyscript
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-VERSION="0.10.0-SNAPSHOT"
-TINYSCRIPT_REPL_FAT_JAR="${SCRIPT_DIR}/target/de.mkbauer.tinyscript.repl-${VERSION}-shade.jar"
+set -euo pipefail
 
-if [ ! -r "$TINYSCRIPT_REPL_FAT_JAR" ] ; then
-    echo "Error: Tinyscript JAR (at ${TINYSCRIPT_REPL_FAT_JAR}) not found. "
-    exit 1
+# Find the directory of this script, following symlinks
+source="${BASH_SOURCE[0]}"
+while [ -L "$source" ]; do
+    dir="$(cd -P "$(dirname "$source")" && pwd)"
+    source="$(readlink "$source")"
+    [[ "$source" != /* ]] && source="$dir/$source"
+done
+script_dir="$(cd -P "$(dirname "$source")" && pwd)"
+jar="$script_dir/target/tinyscript-repl.jar"
+
+if [ ! -r "$jar" ]; then
+    echo "tinyscript: $jar not found; build it with:" >&2
+    echo "  ./mvnw package -f de.mkbauer.tinyscript.repl/pom.xml" >&2
+    exit 2
 fi
 
-echo "Tinyscript Interpreter ${VERSION} (using ${TINYSCRIPT_REPL_FAT_JAR})"
-java -cp ${TINYSCRIPT_REPL_FAT_JAR} de.mkbauer.tinyscript.repl.TinyscriptReplMain $*
+# Prefer JAVA_HOME, otherwise the java on the PATH
+if [ -n "${JAVA_HOME:-}" ]; then
+    java="$JAVA_HOME/bin/java"
+else
+    java="$(command -v java || true)"
+fi
+if [ -z "$java" ] || [ ! -x "$java" ]; then
+    echo "tinyscript: no Java found; install Java 25 or set JAVA_HOME" >&2
+    exit 2
+fi
 
+java_version="$("$java" -XshowSettings:properties -version 2>&1 | awk -F' = ' '/java.specification.version/ { print $2 }')"
+if [ -z "$java_version" ] || [ "${java_version%%.*}" -lt 25 ]; then
+    echo "tinyscript: needs Java 25 or later, found ${java_version:-unknown} ($java)" >&2
+    exit 2
+fi
+
+exec "$java" -jar "$jar" "$@"

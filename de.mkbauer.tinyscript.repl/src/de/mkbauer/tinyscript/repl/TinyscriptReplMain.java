@@ -1,10 +1,15 @@
 package de.mkbauer.tinyscript.repl;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import jline.console.ConsoleReader;
+import jline.console.history.FileHistory;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.common.util.WrappedException;
@@ -12,7 +17,6 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.util.CancelIndicator;
-import org.eclipse.xtext.util.LazyStringInputStream;
 import org.eclipse.xtext.util.StringInputStream;
 import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.IResourceValidator;
@@ -22,187 +26,268 @@ import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
-import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
-
+/**
+ * The tinyscript command line: runs .tys files, or starts an interactive session.
+ */
 class TinyscriptReplMain  {
-	
-	private static final String fileExtension = "tys"; 
-	
-	private TinyscriptEngine engine = null;
 
-	private XtextResourceSet resourceSet;
+	static final int EXIT_OK = 0;
+	/** A syntax or runtime error in a script. */
+	static final int EXIT_ERROR = 1;
+	/** Wrong usage: unknown option, missing file, not a .tys file. */
+	static final int EXIT_USAGE = 2;
 
-	private Resource currentResource; 
-	
-	private ConsoleReader device = null;
-		
+	private static final String FILE_EXTENSION = "tys";
+
+	private static final String USAGE = """
+			Usage: tinyscript [options] [file.tys ...]
+
+			Runs the given tinyscript files in order and stops at the first error.
+			Without files, starts an interactive session.
+
+			Options:
+			  -h, --help     show this help
+			  --version      show the version
+
+			Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage
+			""";
+
+	private static final String INTERACTIVE_HELP = """
+			Enter tinyscript statements; an incomplete statement continues on the next line.
+			  !help          show this help
+			  !quit, !bye    leave (or Ctrl-D)
+			""";
+
+	private final PrintStream out;
+
+	private final PrintStream err;
+
+	private final TinyscriptEngine engine;
+
+	private final XtextResourceSet resourceSet;
+
+	private Resource currentResource;
+
 	public static void main(String[] args) {
-
 		// Guice's bytecode generation (AOP, unused by Xtext) calls sun.misc.Unsafe,
 		// which prints a deprecation warning on Java 24+ and will be removed.
 		if (System.getProperty("guice_bytecode_gen_option") == null)
 			System.setProperty("guice_bytecode_gen_option", "DISABLED");
 
-		TinyscriptReplMain repl = new TinyscriptReplMain();
-
-		if (args.length >= 1) {
-			String fileName = "";
-			for (int i = 0; i < args.length; i++) {
-				try {
-					fileName = args[i];
-					repl.executeFile(fileName);
-				}
-				catch (IOException e) {
-					System.err.println("File " + fileName + " not found.");
-					System.exit(1);
-				}
-			}
-		}
-		else {
-			try {	
-				repl.loop();
-			}
-			catch (IOException e) {
-				System.err.println("Error initializing console.");
-			}
-		}
+		System.exit(new TinyscriptReplMain(System.out, System.err).run(args));
 	}
-		
-	public TinyscriptReplMain() {	
+
+	TinyscriptReplMain(PrintStream out, PrintStream err) {
+		this.out = out;
+		this.err = err;
 		Injector injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
 		resourceSet = injector.getInstance(XtextResourceSet.class);
 		engine = new TinyscriptEngine(resourceSet);
-		
 		engine.setSandboxed(false);
-		engine.defineStdOut(System.out);
-    }  
-	
-	public void executeFile(String fileName) throws IOException {
-		URI uri = URI.createURI(fileName);
-		Resource resource = resourceSet.createResource(uri);
- 		resource.load(null);
- 		List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
- 		if (!issues.isEmpty()) {
-			for (Issue issue: issues) {
-				String msg = issue.getMessage();
-				System.err.println("TinyscriptSyntaxError: " + msg + " in " + fileName + ":" + issue.getLineNumber());
-			}
-			System.exit(1);;
- 		}
- 		Tinyscript ast = (Tinyscript) resource.getContents().get(0);
- 		try {
- 			TSValue result = execute(ast);
- 		}
- 		catch (TinyscriptRuntimeException e) {
-			System.err.println(e.getClass().getSimpleName() + ": " + e.getMessage()); 
-			System.err.println(e.getTinyscriptStacktraceAsString());
- 		}
-		// System.out.println(result.asString());
+		engine.defineStdOut(out);
 	}
-	
-	public void loop() throws IOException {
-		String line; 
-		String script = "";
-		device = new ConsoleReader();
-		device.setExpandEvents(false);
-		boolean quit = false;
-		boolean multiline = false;
-		while (!quit) {
-			if (multiline) {
-				device.setPrompt("... ");
-			}
-			else {
-				device.setPrompt("> ");
-			}
-			device.flush();
-			line = device.readLine();
-			try {
-				if (line == null || line.trim().equals("!bye")) {
-					quit = true;
+
+	/**
+	 * Runs the command line and returns the exit code.
+	 */
+	int run(String[] args) {
+		if (args.length == 0)
+			return interactive();
+		List<Path> files = new ArrayList<>();
+		for (String arg : args) {
+			switch (arg) {
+				case "-h", "--help" -> {
+					out.print(USAGE);
+					return EXIT_OK;
 				}
-				else {
+				case "--version" -> {
+					out.println("tinyscript " + version());
+					return EXIT_OK;
+				}
+				default -> {
+					if (arg.startsWith("-")) {
+						err.println("Unknown option: " + arg);
+						err.print(USAGE);
+						return EXIT_USAGE;
+					}
+					files.add(Path.of(arg));
+				}
+			}
+		}
+		// Check all files before running any of them
+		for (Path file : files) {
+			if (!Files.isReadable(file)) {
+				err.println("File not found: " + file);
+				return EXIT_USAGE;
+			}
+			if (!file.getFileName().toString().endsWith("." + FILE_EXTENSION)) {
+				err.println("Not a tinyscript file (expected ." + FILE_EXTENSION + "): " + file);
+				return EXIT_USAGE;
+			}
+		}
+		for (Path file : files) {
+			int exitCode = executeFile(file);
+			if (exitCode != EXIT_OK)
+				return exitCode;
+		}
+		return EXIT_OK;
+	}
+
+	private int executeFile(Path file) {
+		Resource resource = resourceSet.createResource(URI.createFileURI(file.toAbsolutePath().toString()));
+		try {
+			resource.load(null);
+		}
+		catch (IOException e) {
+			err.println("Cannot read " + file + ": " + e.getMessage());
+			return EXIT_USAGE;
+		}
+		List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+		if (!issues.isEmpty()) {
+			for (Issue issue : issues)
+				err.println("TinyscriptSyntaxError: " + issue.getMessage() + " in " + file + ":" + issue.getLineNumber());
+			return EXIT_ERROR;
+		}
+		try {
+			engine.execute((Tinyscript) resource.getContents().get(0));
+		}
+		catch (TinyscriptRuntimeException e) {
+			err.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+			err.print(e.getTinyscriptStacktraceAsString());
+			return EXIT_ERROR;
+		}
+		return EXIT_OK;
+	}
+
+	private int interactive() {
+		ConsoleReader device;
+		try {
+			device = new ConsoleReader();
+		}
+		catch (IOException e) {
+			err.println("Error initializing console: " + e.getMessage());
+			return EXIT_USAGE;
+		}
+		device.setExpandEvents(false);
+		FileHistory history = loadHistory(device);
+		out.println("tinyscript " + version() + " - !help for help, !quit to leave");
+		String script = "";
+		boolean multiline = false;
+		try {
+			while (true) {
+				device.setPrompt(multiline ? "... " : "> ");
+				String line = device.readLine();
+				if (line == null || line.trim().equals("!quit") || line.trim().equals("!bye"))
+					break;
+				if (line.trim().equals("!help")) {
+					device.print(INTERACTIVE_HELP);
+					continue;
+				}
+				try {
 					Tinyscript ast = parse(script + line, multiline);
 					if (ast != null) {
-						TSValue result = execute(ast);
+						TSValue result = engine.execute(ast);
 						device.println(result.asString());
 						multiline = false;
 						script = "";
 					}
 					else {
 						multiline = true;
-						script = script + line;
+						script = script + line + "\n";
 					}
 				}
-			}
-			catch (TinyscriptRuntimeException e) {
-				device.println(e.getClass().getSimpleName() + ": " + e.getMessage());
-				if (!multiline)
+				catch (TinyscriptRuntimeException e) {
+					device.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+					multiline = false;
 					script = "";
+				}
 			}
+			device.println("Bye!");
+			device.flush();
 		}
-		device.println("Bye!");
-		device.flush();
+		catch (IOException e) {
+			err.println("Console error: " + e.getMessage());
+			return EXIT_ERROR;
+		}
+		finally {
+			saveHistory(history);
+		}
+		return EXIT_OK;
 	}
-	
-	protected Tinyscript parse(String script, boolean reuseResource) {
-		Tinyscript ast = null;
-		if (!reuseResource) {
-			URI uri = newResourceUri();
-			currentResource = resourceSet.getResource(uri, false);
-			if (currentResource == null) {
-				currentResource = resourceSet.createResource(uri);
-			}
-		} 
+
+	/**
+	 * Parses a statement typed in the interactive session. Returns null if it is incomplete.
+	 */
+	private Tinyscript parse(String script, boolean reuseResource) {
+		if (!reuseResource || currentResource == null) {
+			currentResource = resourceSet.createResource(newResourceUri());
+		}
 		else {
-			if (currentResource != null) {
-				currentResource.unload();
-			}
+			currentResource.unload();
 		}
 		try {
 			currentResource.load(new StringInputStream(script), null);
-			ast = (Tinyscript) (currentResource.getContents().isEmpty() ? null : currentResource.getContents().get(0));
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new WrappedException(e);
-		}	
+		}
 		List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
 		if (!issues.isEmpty()) {
-			String msg = issues.get(0).getMessage();
-			if (msg.contains("mismatched input '<EOF>'"))
+			Issue issue = issues.get(0);
+			if (issue.getMessage().contains("mismatched input '<EOF>'")) {
 				if (issues.size() == 1)
 					return null;
-				else
-					msg = issues.get(1).getMessage();
-			throw new TinyscriptRuntimeException("in '" + script + "': " + msg);	
+				issue = issues.get(1);
+			}
+			throw new TinyscriptRuntimeException("line " + issue.getLineNumber() + ": " + issue.getMessage());
 		}
-		return ast;
+		return currentResource.getContents().isEmpty() ? null : (Tinyscript) currentResource.getContents().get(0);
 	}
-	
-	protected TSValue execute(Tinyscript ast) {
- 		TSValue result = engine.execute(ast);
- 		return result;	
+
+	private FileHistory loadHistory(ConsoleReader device) {
+		try {
+			FileHistory history = new FileHistory(new File(System.getProperty("user.home"), ".tinyscript_history"));
+			device.setHistory(history);
+			return history;
+		}
+		catch (IOException e) {
+			// The session works without history
+			return null;
+		}
 	}
-	
-	protected IResourceValidator getValidator(Resource resource) {
+
+	private void saveHistory(FileHistory history) {
+		if (history == null)
+			return;
+		try {
+			history.flush();
+		}
+		catch (IOException e) {
+			// Losing the history is not worth an error
+		}
+	}
+
+	private static String version() {
+		String version = TinyscriptReplMain.class.getPackage().getImplementationVersion();
+		return version != null ? version : "(development build)";
+	}
+
+	private IResourceValidator getValidator(Resource resource) {
 		return ((XtextResource) resource).getResourceServiceProvider().getResourceValidator();
 	}
-	
-	protected URI newResourceUri() {
+
+	private URI newResourceUri() {
 		String name = "__repl";
 		for (int i = 0; i < Integer.MAX_VALUE; i++) {
-			URI syntheticUri = URI.createURI(name + i + "." + fileExtension);
+			URI syntheticUri = URI.createURI(name + i + "." + FILE_EXTENSION);
 			if (resourceSet.getResource(syntheticUri, false) == null)
 				return syntheticUri;
 		}
 		throw new IllegalStateException();
 	}
 
-	protected InputStream getAsStream(CharSequence text) {
-		return new LazyStringInputStream(text == null ? "" : text.toString());
-	}
-  	
 }
-

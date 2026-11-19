@@ -109,7 +109,7 @@ Update `<xtext-version>`.
 
 # 4. Smoke-test REPL
 ./mvnw clean package -pl de.mkbauer.tinyscript.repl
-echo 'print(1 + 1);' | java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*-shade.jar
+echo 'print(1 + 1);' | java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar
 
 # 5. Smoke-test webdemo
 ./mvnw clean package -pl de.mkbauer.tinyscript.webdemo
