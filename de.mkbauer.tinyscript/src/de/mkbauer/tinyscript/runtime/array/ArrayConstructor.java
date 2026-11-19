@@ -19,6 +19,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 
 		TSObject arrayPrototype = getPrototypeProperty().asObject();
 		arrayPrototype.defineBuiltinMethod("toString", this::arrayToString, 0);
+		arrayPrototype.defineBuiltinMethod("at", this::at, 1);
 		arrayPrototype.defineBuiltinMethod("push", this::push, 1);
 		arrayPrototype.defineBuiltinMethod("pop", this::pop, 0);
 		arrayPrototype.defineBuiltinMethod("unshift", this::unshift, 1);
@@ -122,6 +123,13 @@ public class ArrayConstructor extends BuiltinConstructor {
 	/**
 	 * The Array.prototype methods only work on arrays.
 	 */
+	// Array.prototype.at(index): like a[index], but a negative index counts from the end
+	private TSValue at(TSObject self, TSValue[] args) {
+		ArrayObject arr = thisArray(self, "at");
+		int index = TSObject.toRelativeIndex(args[0], arr.getLength());
+		return index < 0 ? TSValue.UNDEFINED : arr.item(index);
+	}
+
 	private static ArrayObject thisArray(TSObject self, String method) {
 		if (!(self instanceof ArrayObject))
 			throw new TinyscriptTypeError("Function Array.prototype." + method + " only works for Array objects.");

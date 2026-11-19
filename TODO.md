@@ -41,7 +41,7 @@ Language
 
 - **Global `this`.** At top level `this` is the global object. In Javascript's strict mode (which tinyscript otherwise follows) it is `undefined`.
 
-- **More functions in the runtime library.**
+- **More functions in the runtime library.** For example `Array.prototype.indexOf` and `concat` (the language reference listed them, but they never existed).
 
 
 Interpreter and code quality
@@ -52,8 +52,6 @@ Interpreter and code quality
 - **`defineProperty` on non-configurable properties.** `Object.defineProperty` replaces a property even if it is not configurable; Javascript throws a `TypeError`.
 
 - **Redeclared globals.** `GlobalExecutionContext.create` overwrites an existing global with `undefined`. Check first whether that can happen at all (the validator rejects duplicate declarations), then either assert or drop the marker.
-
-- **`at()` for arrays (and strings).** `a.at(-1)` as the explicit way to index from the end (ES2022), since `a[-1]` is a `TypeError`.
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it (decision deferred). Its error handling is minimal.
 
