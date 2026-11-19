@@ -77,6 +77,7 @@ Design decisions
 - **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). The one deliberate exception: `null == undefined` is `true`, so `o.x == null` checks for a missing property. Numbers compare like in Javascript (`NaN != NaN`). There is no `===` / `!==`.
 - **Strict comparisons:** `<`, `<=`, `>` and `>=` compare a number with a number or a string with a string; anything else is a `TypeError`.
 - **Logical operators return booleans:** `&&` and `||` short-circuit like in Javascript, but always return `true` or `false`, never one of their operands.
+- **Arrays are lists:** besides their items only `length` can be set; `a.x = 1` or `a[-1] = 1` is a `TypeError` instead of silently creating a property.
 - **Arrays can be added:** the operator `+` also works on arrays: `var arr = ["hello"]; arr = arr + ["world"];` results in `["hello", "world"]`. With a string on either side, `+` concatenates strings (`"arr: " + arr`); an array plus anything else is a `TypeError`.
 - **Arrow functions** are supported. These are part of Javascript starting with Ecmascript 6 :-)
 - **Sandboxing:** in sandboxed mode every loop iteration counts against the statement limit, so even endless loops cannot exceed the resource limits (see [Sandboxing](#sandboxing)).

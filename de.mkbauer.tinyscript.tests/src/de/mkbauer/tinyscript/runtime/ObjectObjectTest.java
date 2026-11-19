@@ -17,8 +17,9 @@ public class ObjectObjectTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testkeysOnArray() {
-		executeScriptFromString("var arr = [\"Markus\", \"Bauer\"]; arr.key = \"Test\"; var keys = Object.keys(arr); "
-				+ "assert (\"0\" == keys[0]); assert (\"1\" == keys[1]); assert (\"key\" == keys[2]);");
+		// Arrays have no named properties, so their keys are the indexes
+		executeScriptFromString("var arr = [\"Markus\", \"Bauer\"]; var keys = Object.keys(arr); "
+				+ "assert (keys.length == 2); assert (\"0\" == keys[0]); assert (\"1\" == keys[1]);");
 	}
 	
 	@Test 

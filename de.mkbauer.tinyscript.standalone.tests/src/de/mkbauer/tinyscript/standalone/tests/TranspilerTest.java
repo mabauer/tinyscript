@@ -189,10 +189,23 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    public void testNegativeArrayIndexIsAProperty() {
-        String code = "var a = [1]; a[-1] = 5; a[1.5] = 7; print(a[-1]); print(a[1.5]); print(a.length); print(a[0]);\n"
-                + "var b = []; print(b[-1] == null);";
-        assertEquals("5\n7\n1\n1\ntrue\n", interpreterOutput(code));
+    public void testSettingArrayLengthTruncates() {
+        String code = "var a = [1, 2, 3]; a.length = 1; print(a.length); print(a[1] == null); print(a.join(\",\"));";
+        assertEquals("1\ntrue\n1\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testSettingArrayLengthGrows() {
+        String code = "var a = [1]; a.length = 3; print(a.length); print(a[2] == null); a.push(4); print(a[3]);";
+        assertEquals("3\ntrue\n4\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testReadingNonIndexKeysOfArraysIsUndefined() {
+        String code = "var a = [1]; print(a[-1] == null); print(a[1.5] == null); print(a.x == null); print(a.length);";
+        assertEquals("true\ntrue\ntrue\n1\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 

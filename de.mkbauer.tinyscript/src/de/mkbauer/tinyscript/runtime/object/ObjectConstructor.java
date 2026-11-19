@@ -101,6 +101,8 @@ public class ObjectConstructor extends BuiltinConstructor {
 	private TSValue defineProperty(TSObject self, TSValue[] args) {
 		if (!(args[0] instanceof TSObject object))
 			throw new TinyscriptTypeError("Object.defineProperty called on non-object");
+		if (object instanceof ArrayObject)
+			throw new TinyscriptTypeError("Object.defineProperty is not supported for arrays");
 		if (args[2] instanceof TSObject descriptor)
 			object.setOwnPropertyDescriptor(args[1].asString(), TSPropertyDescriptor.fromObject(descriptor));
 		return object;

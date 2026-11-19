@@ -68,6 +68,23 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testInvalidArrayLengthIsATypeError() {
+        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a.length = -1;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a.length = 1.5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a.length = \"2\";");
+    }
+
+    @Test
+    public void testArraysHaveNoNamedProperties() {
+        // Arrays are lists: writing anything but an integer index or length is a TypeError
+        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a.x = 5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a[\"name\"] = 5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var a = [1]; a[-1] = 5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var a = [1]; a[1.5] = 5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; Object.defineProperty(a, \"x\", { value: 1 });");
+    }
+
+    @Test
     public void testArrayMethodOnNonArrayIsATypeError() {
         assertInterpreterThrows(TinyscriptTypeError.class,
                 "var o = {};\no.push = [].push;\no.push(1);");
