@@ -19,13 +19,6 @@ public class BuiltinFunction extends Function {
 		}
 	}
 	
-	public void enforceSandboxing() {
-		if (engine.isSandboxed()) {
-			throw new TinyscriptUnsupportedOperationError("Builtin function " + getName() + " is not available when running sandboxed.",
-					engine.getCurrentContext().currentExpression);
-		}
-	}
-	
 	void setName(String name) {
 		this.name = name;
 	}

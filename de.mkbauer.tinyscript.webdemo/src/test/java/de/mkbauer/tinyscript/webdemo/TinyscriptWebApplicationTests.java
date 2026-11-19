@@ -46,16 +46,31 @@ public class TinyscriptWebApplicationTests {
 	private int port;
 
 	@Test
-	public void testHello() throws Exception {
+	public void testVersion() throws Exception {
 		@SuppressWarnings("rawtypes")
 		ResponseEntity<Map> entity = new TestRestTemplate().getForEntity(
-				"http://localhost:" + port + "/hello", Map.class);
+				"http://localhost:" + port + "/api/version", Map.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
 		@SuppressWarnings("unchecked")
 		Map<String, Object> body = entity.getBody();
-		assertEquals("Hello World", body.get("message"));
+		assertFalse(body.get("version").toString().isEmpty());
 	}
 	
+	/**
+	 * /test is the health check endpoint used by external monitoring (checkmk).
+	 */
+	@Test
+	public void testHealthCheckEndpoint() throws Exception {
+		@SuppressWarnings("rawtypes")
+		ResponseEntity<Map> entity = new TestRestTemplate().getForEntity(
+				"http://localhost:" + port + "/test", Map.class);
+		assertEquals(HttpStatus.OK, entity.getStatusCode());
+		@SuppressWarnings("unchecked")
+		Map<String, Object> body = entity.getBody();
+		assertEquals(0, body.get("errorCode"));
+		assertEquals("Hello, Tinyscript", body.get("value"));
+	}
+
 	@Test
 	public void testExecute() throws Exception {
 		@SuppressWarnings("rawtypes")

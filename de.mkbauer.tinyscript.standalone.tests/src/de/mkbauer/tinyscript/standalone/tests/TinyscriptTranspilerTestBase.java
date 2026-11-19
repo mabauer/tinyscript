@@ -155,6 +155,18 @@ public abstract class TinyscriptTranspilerTestBase {
      * {@code limits == null} runs without resource monitoring.
      */
     public String interpreterOutput(String tsCode, ResourceLimits limits) {
+        return interpreterOutput(tsCode, limits, true);
+    }
+
+    /**
+     * Like {@link #interpreterOutput(String)}, but with sandboxing switched off
+     * (as in the REPL), e.g. to test the file system builtins.
+     */
+    public String interpreterOutputUnsandboxed(String tsCode) {
+        return interpreterOutput(tsCode, null, false);
+    }
+
+    private String interpreterOutput(String tsCode, ResourceLimits limits, boolean sandboxed) {
         // Fresh injector + engine per call so tests are independent.
         Injector localInjector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
@@ -182,6 +194,7 @@ public abstract class TinyscriptTranspilerTestBase {
             monitor.configureLimits(limits);
             engine = new TinyscriptEngine(localResourceSet, monitor);
         }
+        engine.setSandboxed(sandboxed);
         engine.defineStdOut(stdout);
         engine.execute(ast);
         return stdout.toString();
