@@ -62,7 +62,7 @@ public class AssociativityTest {
 
 		@Override
 		public String caseNumberLiteral(NumberLiteral object) {	
-			TSValue value = new TSValue(object.getValue());
+			TSValue value = TSValue.of(object.getValue());
 			return value.asString();
 		}
 

@@ -164,28 +164,26 @@ Before executing a `Block`, `TinyscriptEngine` pre-scans it for `FunctionDeclara
 
 ### `TSValue`
 
-**File:** `interpreter/TSValue.java` (191 lines)
+**File:** `interpreter/TSValue.java`
 
-All runtime values are wrapped in a `TSValue`. Internally it holds a single `Object value` field — a boxed Java type:
+`TSValue` is a sealed interface; every runtime value is one of its implementations:
 
-| Tinyscript type | Java storage |
+| Tinyscript type | Java type |
 |---|---|
-| number | `Double` (always normalized from any `Number`) |
-| string (primitive) | `String` |
-| string (object) | `StringObject` |
-| boolean | `Boolean` |
-| object / array / function | `TSObject` (or subclass) |
-| `undefined` | `null` (identity = `TSValue.UNDEFINED`) |
-| `null` | `null` (identity = `TSValue.NULL`) |
-| `NaN` | `Double.NaN` (singleton = `TSValue.NAN`) |
+| `undefined` | `TSUndefined` (enum, single instance `TSValue.UNDEFINED`) |
+| `null` | `TSNull` (enum, single instance `TSValue.NULL`) |
+| boolean | `record TSBoolean(boolean value)` |
+| number (including `NaN`, `Infinity`) | `record TSNumber(double value)` (`TSValue.NAN` for convenience) |
+| string (primitive) | `record TSString(String value)` |
+| object / array / function / `String` object | `TSObject` and its subclasses (`non-sealed`, implements `TSValue` directly) |
 
-`UNDEFINED` and `NULL` are distinguished purely by Java object identity (`this == TSValue.UNDEFINED`), not by the `value` field content.
+Values are created with `TSValue.of(double | boolean | String)`; objects are values themselves, so there is no wrapper. Because the interface is sealed, a `switch` over a `TSValue` is checked for exhaustiveness by the compiler (see `asString()`, `asBoolean()`, `typeOf()`).
 
-**Type query methods:** `isString()`, `isDouble()`, `isNumber()`, `isBoolean()`, `isObject()`, `isArray()`, `isCallable()`, `isInfinity()`, `isObjectCoercible()`
+**Type query methods:** `isString()` (primitive or `String` object), `isPrimitiveString()`, `isDouble()`, `isNumber()` (not `NaN`), `isBoolean()`, `isObject()`, `isArray()`, `isCallable()`
 
-**Coercion methods:** `asString()`, `asDouble()`, `asInt()`, `asBoolean()`, `asObject()`, `typeOf()`
+**Conversion methods:** `asString()`, `asDouble()`, `asInt()`, `asBoolean()`, `asObject()` (Java `null` for `undefined` / `null`), `typeOf()`
 
-`typeOf()` returns `"object"` for `NULL`, matching the ECMAScript specification.
+**Equality:** `tinyscriptEquals()` implements the language's `==` (no type coercion, `null == undefined`, `NaN != NaN`); `equals()` / `hashCode()` are the Java value contract of the records.
 
 ### `TSObject`
 

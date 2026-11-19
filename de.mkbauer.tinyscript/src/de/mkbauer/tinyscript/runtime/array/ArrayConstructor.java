@@ -42,13 +42,13 @@ public class ArrayConstructor extends BuiltinConstructor {
 	public TSObject createObject() {
 		TSObject newObject = new ArrayObject(engine);
 		newObject.setPrototype(getPrototypeProperty().asObject());
-		newObject.defineDefaultProperty("constructor", new TSValue(this));
+		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 
 	// Array.isArray(value)
 	private TSValue isArray(TSObject self, TSValue[] args) {
-		return new TSValue(args[0].isObject() && args[0].asObject() instanceof ArrayObject);
+		return TSValue.of(args[0].isObject() && args[0].asObject() instanceof ArrayObject);
 	}
 
 	// Array.prototype methods
@@ -58,14 +58,14 @@ public class ArrayConstructor extends BuiltinConstructor {
 				.map(item -> TSObject.toString(engine, item))
 				.collect(Collectors.joining(", "));
 		engine.recordStringCreation(result);
-		return new TSValue(result);
+		return TSValue.of(result);
 	}
 
 	private TSValue push(TSObject self, TSValue[] args) {
 		ArrayObject arr = thisArray(self, "push");
 		for (TSValue arg : args)
 			arr.push(arg);
-		return new TSValue(arr.getLength());
+		return TSValue.of(arr.getLength());
 	}
 
 	private TSValue pop(TSObject self, TSValue[] args) {
@@ -76,7 +76,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 		ArrayObject arr = thisArray(self, "unshift");
 		for (TSValue arg : args)
 			arr.unshift(arg);
-		return new TSValue(arr.getLength());
+		return TSValue.of(arr.getLength());
 	}
 
 	private TSValue shift(TSObject self, TSValue[] args) {
@@ -92,7 +92,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 				result.push(function.apply(null, new TSValue[] { arr.get(String.valueOf(i)) }));
 			}
 		}
-		return new TSValue(result);
+		return result;
 	}
 
 	private TSValue filter(TSObject self, TSValue[] args) {
@@ -106,7 +106,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 					result.push(item);
 			}
 		}
-		return new TSValue(result);
+		return result;
 	}
 
 	private TSValue join(TSObject self, TSValue[] args) {
@@ -116,7 +116,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 				.map(item -> TSObject.toString(engine, item))
 				.collect(Collectors.joining(separator));
 		engine.recordStringCreation(result);
-		return new TSValue(result);
+		return TSValue.of(result);
 	}
 
 	/**

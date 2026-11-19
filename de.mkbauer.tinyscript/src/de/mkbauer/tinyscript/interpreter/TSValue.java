@@ -1,197 +1,149 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.Objects;
-
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.string.StringObject;
 
 /**
- * Represents values used in expressions in Tinyscript. 
- * @author markus.bauer
+ * A value in Tinyscript: {@code undefined}, {@code null}, a boolean, a number,
+ * a string or an object (including arrays and functions).
  *
+ * <p>The interface is sealed, so a {@code switch} over a {@code TSValue} is
+ * checked for exhaustiveness by the compiler.
  */
-public class TSValue { // implements Comparable<TSValue> 
-	
-	public static final TSValue UNDEFINED = new TSValue();
-	public static final TSValue NULL = new TSValue();
-	public static final TSValue NAN = new TSValue(Double.NaN);
+public sealed interface TSValue permits TSUndefined, TSNull, TSBoolean, TSNumber, TSString, TSObject {
 
-	private Object value;
-	
-    public TSValue(Object v) {
-        value = v;
-        if (value instanceof Number)
-        	value = ((Number) value).doubleValue();
-        // only accept boolean, list, number or string types
-        /* 
-        if(!(isBoolean() || isDouble() || isString() || isObject())) {
-            throw new RuntimeException("invalid data type: " + v + " (" + v.getClass() + ")");
-        }
-    	*/
-    }
-	
-	private TSValue() {
-		value = null;
+	TSValue UNDEFINED = TSUndefined.INSTANCE;
+	TSValue NULL = TSNull.INSTANCE;
+	TSValue NAN = new TSNumber(Double.NaN);
+
+	static TSValue of(double value) {
+		return new TSNumber(value);
 	}
-	
-	public void assign(TSValue other) {
-		value = other.value;
+
+	static TSValue of(boolean value) {
+		return value ? TSBoolean.TRUE : TSBoolean.FALSE;
 	}
-	
-	public String asString() {
-		if (this == TSValue.UNDEFINED) 
-			return "Undefined";
-		if (this == TSValue.NULL) 
-			return "Null";
-		if (isPrimitiveString()) 
-			return (String)value;
-		else if (isMathematicalInteger())
-			return String.format("%.0f", value) ;
-		else
-			return value.toString();
+
+	static TSValue of(String value) {
+		return new TSString(value);
 	}
-	
-	public boolean isString() {
-		return (value != null && (value instanceof String || value instanceof StringObject));
+
+	/**
+	 * Converts a Java value (a {@code TSValue}, number, boolean or string) into a {@code TSValue}.
+	 */
+	static TSValue fromJava(Object value) {
+		return switch (value) {
+			case TSValue v -> v;
+			case Number n -> of(n.doubleValue());
+			case Boolean b -> of(b.booleanValue());
+			case String s -> of(s);
+			default -> throw new IllegalArgumentException("Not a Tinyscript value: " + value);
+		};
 	}
-	
-	public boolean isPrimitiveString() {
-		return (value != null && value instanceof String);
+
+	default String asString() {
+		return switch (this) {
+			case TSUndefined u -> "Undefined";
+			case TSNull n -> "Null";
+			case TSBoolean b -> String.valueOf(b.value());
+			case TSNumber n -> n.toString();
+			case TSString s -> s.value();
+			case TSObject o -> o.toString();
+		};
 	}
-	
-	public int asInt() {
-		return ((Number)value).intValue();
+
+	default boolean asBoolean() {
+		return switch (this) {
+			case TSUndefined u -> false;
+			case TSNull n -> false;
+			case TSBoolean b -> b.value();
+			case TSNumber n -> n.value() != 0.0 && !Double.isNaN(n.value());
+			case TSString s -> !s.value().isEmpty();
+			case TSObject o -> true;
+		};
 	}
-	
-	public boolean isMathematicalInteger() {
-		if (!isDouble())
-			return false;
-		return (Math.rint(asDouble()) == asDouble()); 
+
+	default String typeOf() {
+		return switch (this) {
+			case TSUndefined u -> "undefined";
+			case TSNull n -> "object";
+			case TSBoolean b -> "boolean";
+			case TSNumber n -> "number";
+			case TSString s -> "string";
+			case Function f -> "function";
+			case TSObject o -> "object";
+		};
 	}
-	
-	public double asDouble() {
-		return ((Number)value).doubleValue();
-	}
-	
-	public boolean isDouble() {
-		return (value != null && value instanceof Double);
-	}
-	
-	public boolean isNumber() {
-		return isDouble() && !(Double.isNaN(asDouble()));
-	}
-	
-	public boolean isInfinity() {
-		return isNumber() && Double.isInfinite(asDouble());
-	}
-	
-	public boolean asBoolean() {
-		if (value == null)
-			return false;
-		if (value instanceof Boolean b)
-			return b;
-		if (value instanceof Double d)
-			return d != 0.0 && !d.isNaN();
-		if (value instanceof String s)
-			return !s.isEmpty();
-		return true;
-	}
-	
-	public boolean isBoolean() {
-		return (value != null && value instanceof Boolean);
-	}
-	
-	public boolean isObject() {
-		return (value != null && value instanceof TSObject);
-	}
-	
-	public boolean isArray() {
-		return (value != null && value instanceof ArrayObject);
-	}
-	
-	public TSObject asObject() {
-		return (TSObject) value;
-	}
-	
-	public ArrayObject asArray() {
-		return (ArrayObject) value;
-	}
-	
-	public boolean isCallable() {
-		if (value != null && value instanceof Function) 
-			return true;
-		return false;
-	}
-	
-	public boolean isObjectCoercible() {
-		return (value!=null);
-	}
-	
-	public String typeOf() {
-		if (this == TSValue.UNDEFINED)
-			return "undefined";
-		if (this == TSValue.NULL)
-			return "object";
-		if (isBoolean())
-			return "boolean";
-		if (isDouble())
-			return "number";
-		if (isPrimitiveString())
-			return "string";
-		if (isCallable())
-			return "function";
-		return "object";
-	}
-	
+
 	/**
 	 * Tinyscript's {@code ==}: no type coercion, but {@code null == undefined},
 	 * and numbers compare like in Javascript ({@code NaN != NaN}, {@code 0 == -0}).
 	 */
-	public boolean tinyscriptEquals(TSValue other) {
-		if (value == null)
-			return other.value == null;
-		if (isDouble() && other.isDouble())
-			return asDouble() == other.asDouble();
+	default boolean tinyscriptEquals(TSValue other) {
+		if (this == UNDEFINED || this == NULL)
+			return other == UNDEFINED || other == NULL;
+		if (this instanceof TSNumber a && other instanceof TSNumber b)
+			return a.value() == b.value();
 		if (isString() && other.isString())
-			return toString().equals(other.toString());
-		return value.equals(other.value);
+			return asString().equals(other.asString());
+		return equals(other);
 	}
 
-	@Override
-	public boolean equals(Object other) {
-		if (this == other)
-			return true;
-		if (!(other instanceof TSValue otherValue) || value == null)
-			return false;
-		return value.equals(otherValue.value);
+	default boolean isString() {
+		return this instanceof TSString || this instanceof StringObject;
 	}
 
-/*	
-    @Override
-	public int compareTo(TSValue o) {
-		// TODO Auto-generated method stub
-		return 0;
+	default boolean isPrimitiveString() {
+		return this instanceof TSString;
 	}
-*/
-	
-	@Override
-    public int hashCode() {
-        return Objects.hashCode(value);
-    }
-	
-	@Override
-	public String toString() {
-		if (this == TSValue.UNDEFINED) 
-			return "Undefined";
-		if (this == TSValue.NULL) 
-			return "Null";
-		if (isString()) 
-			return "'" + value.toString() + "'";
-		else if (isMathematicalInteger())
-			return String.format("%.0f", value) ;
-		else
-			return value.toString();
+
+	default boolean isDouble() {
+		return this instanceof TSNumber;
+	}
+
+	default boolean isNumber() {
+		return this instanceof TSNumber n && !Double.isNaN(n.value());
+	}
+
+	default boolean isMathematicalInteger() {
+		return this instanceof TSNumber n && Math.rint(n.value()) == n.value();
+	}
+
+	default double asDouble() {
+		return ((TSNumber) this).value();
+	}
+
+	default int asInt() {
+		return (int) asDouble();
+	}
+
+	default boolean isBoolean() {
+		return this instanceof TSBoolean;
+	}
+
+	default boolean isObject() {
+		return this instanceof TSObject;
+	}
+
+	/**
+	 * Returns this value as an object; {@code null} for {@code undefined} and {@code null}
+	 * (callers check for that), a {@code ClassCastException} for other primitives.
+	 */
+	default TSObject asObject() {
+		if (this == UNDEFINED || this == NULL)
+			return null;
+		return (TSObject) this;
+	}
+
+	default boolean isArray() {
+		return this instanceof ArrayObject;
+	}
+
+	default ArrayObject asArray() {
+		return (ArrayObject) this;
+	}
+
+	default boolean isCallable() {
+		return this instanceof Function;
 	}
 }
-
-

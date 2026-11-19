@@ -11,7 +11,7 @@ public abstract class BuiltinConstructor extends BuiltinFunction {
 	
 	@Override
 	public TSValue apply(TSObject self, TSValue[] args) {
-		return new TSValue(self);
+		return self;
 	}
 	
 	public abstract TSObject createObject();

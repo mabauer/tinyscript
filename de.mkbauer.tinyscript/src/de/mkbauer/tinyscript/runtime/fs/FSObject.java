@@ -32,7 +32,7 @@ public class FSObject extends TSObject {
 			return TSValue.UNDEFINED;
 		}
 		engine.recordStringCreation(result);
-		return new TSValue(result);
+		return TSValue.of(result);
 	}
 
 	// Returns the number of characters written, or undefined if the file cannot be written
@@ -45,7 +45,7 @@ public class FSObject extends TSObject {
 		catch (IOException | InvalidPathException e) {
 			return TSValue.UNDEFINED;
 		}
-		return new TSValue(contents.length());
+		return TSValue.of(contents.length());
 	}
 
 }

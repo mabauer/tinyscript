@@ -81,12 +81,12 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testEqualsAndHashCode() {
-        Object one = new TSValue(1);
-        Object oneAsDouble = new TSValue(1.0);
+        Object one = TSValue.of(1);
+        Object oneAsDouble = TSValue.of(1.0);
         assertEquals(one, oneAsDouble);
         assertEquals(one.hashCode(), oneAsDouble.hashCode());
-        assertEquals(new TSValue("a"), new TSValue("a"));
-        assertNotEquals(new TSValue(1), new TSValue("1"));
+        assertEquals(TSValue.of("a"), TSValue.of("a"));
+        assertNotEquals(TSValue.of(1), TSValue.of("1"));
     }
 
     @Test

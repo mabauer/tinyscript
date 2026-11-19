@@ -16,15 +16,15 @@ public class MathObject extends TSObject {
 	}
 
 	private TSValue sqrt(TSObject self, TSValue[] args) {
-		return new TSValue(java.lang.Math.sqrt(TSObject.toNumber(engine, args[0])));
+		return TSValue.of(java.lang.Math.sqrt(TSObject.toNumber(engine, args[0])));
 	}
 
 	private TSValue round(TSObject self, TSValue[] args) {
-		return new TSValue(java.lang.Math.round(TSObject.toNumber(engine, args[0])));
+		return TSValue.of(java.lang.Math.round(TSObject.toNumber(engine, args[0])));
 	}
 
 	private TSValue random(TSObject self, TSValue[] args) {
-		return new TSValue(java.lang.Math.random());
+		return TSValue.of(java.lang.Math.random());
 	}
 
 }
