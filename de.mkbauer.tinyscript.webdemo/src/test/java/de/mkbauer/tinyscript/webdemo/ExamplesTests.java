@@ -1,11 +1,11 @@
 package de.mkbauer.tinyscript.webdemo;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.InputStream;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ExamplesTests {
 	
@@ -13,7 +13,7 @@ public class ExamplesTests {
 	
 	private TinyscriptExecutionService executionService;
 	
-	@Before
+	@BeforeEach
 	public void setUp()  {
 		executionService = new TinyscriptExecutionService();
 	}
