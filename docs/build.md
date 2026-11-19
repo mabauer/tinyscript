@@ -21,13 +21,13 @@ The root `pom.xml` is the **Tycho reactor**. It lists the OSGi modules (includin
 
 | Tool | Required version | Notes |
 |---|---|---|
-| Java | 21 | Required by Tycho 5; also needed by Spring Boot 4.1 at runtime |
+| Java | 25 | All modules compile for Java 25 (BREE `JavaSE-25`); Tycho 5 itself needs at least 21 |
 | Maven | via `./mvnw` (3.9.16) | Use the wrapper; Maven < 3.9.9 and 3.10+ are incompatible with Tycho 5.0.x |
 | Node.js | Installed automatically | `frontend-maven-plugin` downloads Node v24.22.3 into `frontend/node/` on first webdemo build |
 
 Check your environment:
 ```bash
-java -version    # must be 21
+java -version    # must be 25
 ./mvnw --version  # wrapper pins Maven 3.9.16; Maven 3.10+ breaks the Tycho build
 ```
 
@@ -197,7 +197,7 @@ docker build -t tinyscript-webdemo .
 docker run -p 8080:8080 tinyscript-webdemo
 ```
 
-The Dockerfile uses `eclipse-temurin:21-jre`. The fat JAR must be built first (`./mvnw package`).
+The Dockerfile uses `eclipse-temurin:25-jre`. The fat JAR must be built first (`./mvnw package`).
 
 ---
 

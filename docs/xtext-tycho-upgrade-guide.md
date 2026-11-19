@@ -12,15 +12,15 @@ A concise checklist for upgrading the toolchain. Each section describes what to 
 | Eclipse platform | 2026-09 |
 | Orbit bundles | 2026-09 |
 | Maven (wrapper) | 3.9.16 |
-| BREE (all bundles) | JavaSE-21 |
+| BREE (all bundles) | JavaSE-25 |
 
 ---
 
 ## Prerequisites
 
-- **Java 21** as the Maven runtime (Tycho 5+ hard requirement). Set `JAVA_HOME` if needed:
+- **Java 25** as the Maven runtime (all bundles compile for JavaSE-25; Tycho 5 itself needs at least 21). Set `JAVA_HOME` if needed:
   ```bash
-  export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+  export JAVA_HOME=$(/usr/libexec/java_home -v 25)
   java -version && ./mvnw --version
   ```
 - **Maven 3.9.9+**
@@ -41,7 +41,7 @@ A concise checklist for upgrading the toolchain. Each section describes what to 
 Also ensure these are present (required by Tycho 5):
 ```xml
 <!-- in target-platform-configuration -->
-<executionEnvironment>JavaSE-21</executionEnvironment>
+<executionEnvironment>JavaSE-25</executionEnvironment>
 
 <!-- in tycho-surefire-plugin argLine — must use defined properties only -->
 <argLine>${platformSystemProperties} ${systemProperties} ${moduleProperties} ${tycho.testArgLine}</argLine>
@@ -90,7 +90,7 @@ Update `<xtext-version>`.
 
 ### All `META-INF/MANIFEST.MF` files
 
-- `Bundle-RequiredExecutionEnvironment` — set to the minimum Java version required by the Eclipse platform release (was JavaSE-21 for Eclipse 2025-12 due to Lucene 10).
+- `Bundle-RequiredExecutionEnvironment` — set to the minimum Java version required by the Eclipse platform release (was JavaSE-21 for Eclipse 2025-12 due to Lucene 10; now JavaSE-25, the current Java LTS).
 - Check `Require-Bundle` against what the new Xtext/Orbit actually ships — bundle IDs and version ranges can change between releases (see Gotchas).
 
 ---
@@ -126,7 +126,7 @@ Expected test result: all interpreter tests pass; `JvmScriptEngineRunnerTest` sh
 
 1. Install Eclipse IDE matching the new release train (e.g. 2025-12 for RCP/RAP Developers).
 2. Install Xtext SDK into the host Eclipse (Help → Install New Software, use the Xtext release P2 URL).
-3. Add Java 21 JDK: Window → Preferences → Java → Installed JREs → Add. Then map it: Java → Installed JREs → **Execution Environments** → select **JavaSE-21** → tick the Java 21 JDK. Without this mapping Eclipse reports "release 21 is not found in the system".
+3. Add Java 25 JDK: Window → Preferences → Java → Installed JREs → Add. Then map it: Java → Installed JREs → **Execution Environments** → select **JavaSE-25** → tick the Java 25 JDK. Without this mapping Eclipse reports "release 25 is not found in the system".
 4. In Window → Preferences → Plug-in Development → Target Platform, reload `de.mkbauer.tinyscript.target`.
 5. Add the ANTLR generator JAR to the build path (needed for the MWE2 workflow; Maven fetches it automatically but Eclipse does not):
    - Download `antlr-generator-3.2.0-patch.jar` from `https://download.itemis.com/antlr-generator-3.2.0-patch.jar`
@@ -144,6 +144,13 @@ A version bump only — no changes to MANIFEST.MF files, the MWE2 workflow or Ja
 - **Xtext-Web/GWT removed in 2.44.** Only relevant if the MWE2 workflow contains `web = {…}` or `webSupport = {…}` — `GenerateTinyscript.mwe2` doesn't.
 - **LSP4J 1.0.0** since Xtext 2.42; the project does not use LSP4J directly.
 - Release notes: https://eclipse.dev/Xtext/releasenotes.html
+
+## Notes from the Java 21 → 25 switch
+
+- Tycho 5.0.4, Xtext 2.44, Xtend and MWE2 build and test fine with `JavaSE-25`; besides the version numbers (BREE in all `MANIFEST.MF` files, `<executionEnvironment>`, `java.version` / `maven.compiler.release` in the plain Maven modules, CI, Docker base image) no build changes were needed.
+- Guice 7.0.0 (used by Xtext) calls `sun.misc.Unsafe::staticFieldBase` for its bytecode generation, which prints a "terminally deprecated method" warning on Java 24+. Xtext does not use Guice AOP, so the webdemo and REPL mains set `guice_bytecode_gen_option=DISABLED`, which avoids the call entirely. (`--sun-misc-unsafe-memory-access=allow` would only hide the warning.)
+- The sandbox limits in `ResourceMonitor` (statements, call depth, memory via `com.sun.management.ThreadMXBean`) behave identically on 21 and 25.
+- Eclipse needs the **JavaSE-25** execution environment mapped to a Java 25 JDK (see below), otherwise every plug-in project fails to compile.
 
 ## Gotchas from the 2023-09 → 2025-12 migration
 
@@ -174,11 +181,11 @@ When debugging target resolution issues, run `./mvnw install -pl de.mkbauer.tiny
 ### MWE2 bundle-version is a minimum constraint
 `org.eclipse.emf.mwe2.launch;bundle-version="2.12.1"` means "at least 2.12.1". This is satisfied by MWE2 2.24.x — do not change it to 2.24.0, as that would require exactly that version or higher and may break older setups unnecessarily.
 
-### No JavaScript engine on standard OpenJDK 21
+### No JavaScript engine on standard OpenJDK
 Nashorn was removed from the JDK in Java 15. Graal.js is only available in GraalVM distributions. `JvmScriptEngineRunnerTest` uses `Assume.assumeNotNull()` to skip gracefully. This is expected and correct — the 12 skipped tests are not failures.
 
-### Eclipse IDE: JavaSE-21 execution environment must be explicitly mapped
-Adding Java 21 to Installed JREs is not enough. Eclipse also requires the **Execution Environments** mapping (Window → Preferences → Java → Installed JREs → Execution Environments → JavaSE-21 → tick the JDK) to be set, otherwise projects with `Bundle-RequiredExecutionEnvironment: JavaSE-21` fail to compile with "release 21 is not found in the system".
+### Eclipse IDE: the JavaSE-NN execution environment must be explicitly mapped
+Adding the JDK (currently Java 25) to Installed JREs is not enough. Eclipse also requires the **Execution Environments** mapping (Window → Preferences → Java → Installed JREs → Execution Environments → JavaSE-25 → tick the JDK) to be set, otherwise projects with `Bundle-RequiredExecutionEnvironment: JavaSE-25` fail to compile with "release 25 is not found in the system".
 
 ### Eclipse IDE: ANTLR generator JAR is not available as an OSGi bundle
 The `XtextGenerator` MWE2 component requires `antlr-generator-3.2.0-patch.jar` on the classpath. In Maven this is provided as a dependency of `exec-maven-plugin`. In Eclipse, it is not part of any OSGi bundle in the target platform, so it must be added manually to the Java Build Path of `de.mkbauer.tinyscript` (project Properties → Java Build Path → Add JARs). Download from `https://download.itemis.com/antlr-generator-3.2.0-patch.jar`. Without it the MWE2 workflow fails with: `It is required to use ANTLR's parser generator`.

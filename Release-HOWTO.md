@@ -86,14 +86,15 @@ to `X.Y.(Z+1).qualifier` (tycho-versions-plugin does not touch the REPL module).
 - **Use the Maven wrapper:** run `./mvnw`, not a system `mvn`. The wrapper
   pins Maven 3.9.16; Maven 3.10+ fails on the Tycho build with
   `Invalid Collect Request: null`.
-- **Java 21 required for Maven:** `tycho-versions-plugin` (Tycho 5) requires
-  Java 21. If your shell's default `java` is older, prefix every `./mvnw` command
-  with `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` (macOS) or set `JAVA_HOME`
+- **Java 25 required for Maven:** all modules compile for Java 25 (and
+  `tycho-versions-plugin` needs at least Java 21). If your shell's default `java`
+  is not 25, prefix every `./mvnw` command
+  with `export JAVA_HOME=$(/usr/libexec/java_home -v 25)` (macOS) or set `JAVA_HOME`
   appropriately before running any Maven command in this procedure.
 - **GitHub secrets required:** the Docker workflow reads `DOCKERHUB_USERNAME`
   and `DOCKERHUB_TOKEN` from repository secrets (Settings → Secrets and
   variables → Actions → Repository secrets).
 - **CI workflow** (`.github/workflows/ci.yml`) runs the full test suite on every
   push to master and on pull requests — no action needed.
-- **Docker base image:** `eclipse-temurin:21-jre` (`openjdk` images are deprecated).
+- **Docker base image:** `eclipse-temurin:25-jre` (`openjdk` images are deprecated).
 - See `docs/build.md` for a full description of the build system.

@@ -23,7 +23,7 @@ Import-Package: de.mkbauer.tinyscript,
  org.eclipse.xtext.xbase.lib,
  org.slf4j;version="1.7.30",
  org.apache.log4j
-Bundle-RequiredExecutionEnvironment: JavaSE-21
+Bundle-RequiredExecutionEnvironment: JavaSE-25
 Export-Package: de.mkbauer.tinyscript,
  de.mkbauer.tinyscript.formatting,
  de.mkbauer.tinyscript.generator,
