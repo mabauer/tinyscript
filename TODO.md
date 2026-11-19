@@ -13,13 +13,6 @@ Nothing scheduled right now; pick the next items from the sections below.
 Language
 --------
 
-- **`typeof` on arbitrary expressions.** Today `typeof` only accepts a name with optional `.property` suffixes (`TypeOfExpression` in the grammar). Plan:
-  - Drop `TypeOfExpression` and make `typeof` a unary operator: `Unary: op=('-' | OP_NOT | 'typeof') expr=Primary`. This also gives JavaScript precedence (`typeof 1 + "x"` is `"numberx"`).
-  - Interpreter: add `case "typeof"` to `caseUnary`, delete `caseTypeOfExpression`.
-  - Generator: emit `typeof (…)` in `generate(Unary)`. The generator currently has no case for `typeof` at all, so the transpiler fails on it ("Unhandled parameter types: TypeOfExpressionImpl"). Then add the differential test to `ValuesTest.testTypeOf`.
-  - Consequences: `typeof undeclared` becomes a linking error (consistent, since all names are known statically) and `typeof a.b.c` with `a.b` undefined becomes a `TypeError` (as in JavaScript).
-  - Tests: `typeof f()`, `typeof a[0]`, `typeof (1 + 2)`, `typeof o.x`, precedence, plus differential tests.
-
 - **Modules.** Keep it simple: one file is one module, an import always binds the whole module to one name; no named imports, no re-exports, no cycles.
 
   ```js

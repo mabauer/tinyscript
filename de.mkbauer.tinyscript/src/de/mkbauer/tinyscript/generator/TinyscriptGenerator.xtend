@@ -258,7 +258,7 @@ class TinyscriptGenerator   {
 		«IF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
 
 	def dispatch generate(Unary expr)
-		'''«expr.op»«expr.expr.generate»'''
+		'''«IF expr.op == "typeof"»typeof («expr.expr.generate»)«ELSE»«expr.op»«expr.expr.generate»«ENDIF»'''
 		
 	def dispatch generate(NewExpression expr)
 		'''new «expr.expr.generate»'''

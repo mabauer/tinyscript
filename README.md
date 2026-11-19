@@ -71,7 +71,7 @@ Design decisions
 *tinyscript* is not meant to be a Javascript clone. It deliberately differs from Javascript wherever I found Javascript's behavior surprising or wanted to try something different. For example, the concept of *equality* and the conversion of primitive datatypes in Javascript is a mine-field on its own.
 
 - **Statements:** the rules for ending statements with `;` are roughly the same as in Java.
-- **Scoping:** blocks create real *scopes*; `var` is block-scoped and there is no hoisting. Like Javascript in *strict mode*, all variables have to be declared before they can be used.
+- **Scoping:** blocks create real *scopes*; `var` is block-scoped and there is no hoisting. Like Javascript in *strict mode*, all variables have to be declared before they can be used. This includes `typeof`: `typeof undeclared` is a compile-time error, not `"undefined"`.
 - **Blocks are mandatory:** control structures always need blocks: `if (cond) { stmts; } else if (cond) { stmts; } else { stmts; }`
 - **Loops:** there are two types of `for` loops: a numeric one inspired by *Lua*, where the end value is inclusive and an optional step can be given (`for (var i = 1, 10) { … }`, `for (var i = 10, 1, -1) { … }`), and one that iterates over the *values* of an array (`for (var x : arr) { … }`). Additionally there is `while (cond) { … }`; `break` leaves the innermost loop.
 - **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). The one deliberate exception: `null == undefined` is `true`, so `o.x == null` checks for a missing property. Numbers compare like in Javascript (`NaN != NaN`). There is no `===` / `!==`.
@@ -89,7 +89,6 @@ Certainly, *tinyscript* is not perfect. It's just a proof-of-concept (but a usab
 
 - There is no support for *regular expressions*.
 - There is no `continue`, no `switch`, no `const` and no `delete`.
-- `typeof` only works on names, optionally followed by property accesses (`typeof o.x`).
 
 See [TODO.md](TODO.md) for what's planned.
 

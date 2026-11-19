@@ -54,7 +54,6 @@ import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsFactory;
 import de.mkbauer.tinyscript.ts.TsPackage;
-import de.mkbauer.tinyscript.ts.TypeOfExpression;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.WhileStatement;
@@ -288,8 +287,6 @@ public class TinyscriptEngine {
     		return caseBlockStatement((BlockStatement) object);
 		case TsPackage.ASSERT_STATEMENT:
     		return caseAssertStatement((AssertStatement) object);
-		case TsPackage.TYPE_OF_EXPRESSION:
-			return caseTypeOfExpression((TypeOfExpression) object);
 		case TsPackage.TINYSCRIPT:
 			return caseTinyscript((Tinyscript) object);
 		default:
@@ -604,6 +601,7 @@ public class TinyscriptEngine {
     			yield TSValue.of(-value.asDouble());
     		}
     		case "!" -> TSValue.of(!value.asBoolean());
+    		case "typeof" -> TSValue.of(value.typeOf());
     		default -> throw new TinyscriptUnsupportedOperationError("Unsupported unary expression: " + expr.getOp(), expr);
     	};
     }
@@ -745,20 +743,6 @@ public class TinyscriptEngine {
     	return arr;
     }
     
-    public TSValue caseTypeOfExpression(TypeOfExpression expr) {
-    	TSValue value = currentContext.lookup(expr.getName());
-    	if (expr.getSuffixes() != null) {
-    		for (DotPropertyAccessSuffix suffix : expr.getSuffixes()) {
-    			if (!(value instanceof TSObject object)) {
-    				value = TSValue.UNDEFINED; 
-    				break;
-    			}
-    			value = object.get(suffix.getKey().getName());
-    		}
-    		
-    	}
-    	return TSValue.of(value.typeOf());
-    }
     
     public TSValue assignValue(Expression left, TSValue value) {
     	
