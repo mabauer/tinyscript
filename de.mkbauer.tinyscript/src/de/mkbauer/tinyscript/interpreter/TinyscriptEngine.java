@@ -529,8 +529,8 @@ public class TinyscriptEngine {
     	TSValue left = execute(expr.getLeft());
     	TSValue right = execute(expr.getRight());
     	return switch (op) {
-    		case "==" -> new TSValue(left.equals(right));
-    		case "!=" -> new TSValue(!left.equals(right));
+    		case "==" -> new TSValue(left.tinyscriptEquals(right));
+    		case "!=" -> new TSValue(!left.tinyscriptEquals(right));
     		case "<", "<=", ">", ">=" -> compare(op, left, right, expr);
     		case "+" -> add(left, right, expr);
     		case "-", "*", "/", "%" -> arithmetic(op, left, right);

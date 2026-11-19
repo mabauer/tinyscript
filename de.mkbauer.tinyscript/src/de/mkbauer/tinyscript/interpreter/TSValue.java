@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.Objects;
+
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.string.StringObject;
 
@@ -84,19 +86,15 @@ public class TSValue { // implements Comparable<TSValue>
 	}
 	
 	public boolean asBoolean() {
-		if (value==null)
+		if (value == null)
 			return false;
-		if (isPrimitiveString()) {
-			if (value.equals(""))
-				return false;
-			else
-				return true;
-		}
-		if (isObject())
-			return true;
-		if (isNumber()) 
-			return (asDouble() != 0.0);  // TODO: Use delta
-		return ((Boolean)value).booleanValue();
+		if (value instanceof Boolean b)
+			return b;
+		if (value instanceof Double d)
+			return d != 0.0 && !d.isNaN();
+		if (value instanceof String s)
+			return !s.isEmpty();
+		return true;
 	}
 	
 	public boolean isBoolean() {
@@ -136,7 +134,7 @@ public class TSValue { // implements Comparable<TSValue>
 			return "object";
 		if (isBoolean())
 			return "boolean";
-		if (isNumber())
+		if (isDouble())
 			return "number";
 		if (isPrimitiveString())
 			return "string";
@@ -145,21 +143,28 @@ public class TSValue { // implements Comparable<TSValue>
 		return "object";
 	}
 	
-	public boolean equals(TSValue other) {
-		// TODO: Check with ECMAScript Specs
-		if (value == null) {
-			if (other.value == null) {
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-		if (isString() && other.isString()) {
-			return (toString().equals(other.toString()));
-		}
+	/**
+	 * Tinyscript's {@code ==}: no type coercion, but {@code null == undefined},
+	 * and numbers compare like in Javascript ({@code NaN != NaN}, {@code 0 == -0}).
+	 */
+	public boolean tinyscriptEquals(TSValue other) {
+		if (value == null)
+			return other.value == null;
+		if (isDouble() && other.isDouble())
+			return asDouble() == other.asDouble();
+		if (isString() && other.isString())
+			return toString().equals(other.toString());
 		return value.equals(other.value);
-	}	
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (this == other)
+			return true;
+		if (!(other instanceof TSValue otherValue) || value == null)
+			return false;
+		return value.equals(otherValue.value);
+	}
 
 /*	
     @Override
@@ -171,7 +176,7 @@ public class TSValue { // implements Comparable<TSValue>
 	
 	@Override
     public int hashCode() {
-        return value.hashCode();
+        return Objects.hashCode(value);
     }
 	
 	@Override
