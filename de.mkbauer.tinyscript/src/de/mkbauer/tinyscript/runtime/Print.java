@@ -6,20 +6,22 @@ import java.io.OutputStreamWriter;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
-import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
-public class Print extends BuiltinFunction {
-	
-	private final static String NAME = "print";
+/**
+ * The global print(...) function: writes its arguments, followed by a line separator,
+ * to the engine's stdout.
+ */
+public final class Print {
 
-	public Print(TinyscriptEngine engine) {
-		super(engine);
+	private Print() {
 	}
 
-	@Override
-	public TSValue apply(TSObject self, TSValue[] args) {
-		checkArgs(args);
+	public static BuiltinFunction create(TinyscriptEngine engine) {
+		return engine.defineBuiltinFunction("print", (self, args) -> print(engine, args), 0);
+	}
+
+	private static TSValue print(TinyscriptEngine engine, TSValue[] args) {
 		OutputStream os = engine.getStdOut();
 		try {
 			if (os != null) {
@@ -35,16 +37,6 @@ public class Print extends BuiltinFunction {
 			// TODO: Do something appropriate, e.g. log it
 		}
 		return TSValue.UNDEFINED;
-	}
-	
-	@Override
-	public String getName() {
-		return NAME;
-	}
-
-	@Override
-	public int getLength() {
-		return 0;
 	}
 
 }
