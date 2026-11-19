@@ -30,7 +30,7 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 
 class TinyscriptReplMain  {
 	
-	private static final String fileExtension = "ts"; 
+	private static final String fileExtension = "tys"; 
 	
 	private TinyscriptEngine engine = null;
 

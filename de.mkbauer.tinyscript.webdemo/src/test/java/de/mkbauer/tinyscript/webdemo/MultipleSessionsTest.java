@@ -58,7 +58,7 @@ public class MultipleSessionsTest {
 	
 	public static void main(String[] args) {
 		for (int i = 1; i <= THREADS; i++) {
-			Thread test = new Thread(new Session(readScriptFromFile("people.ts")));
+			Thread test = new Thread(new Session(readScriptFromFile("people.tys")));
 	        test.start();
 		}
 	}

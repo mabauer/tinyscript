@@ -9,7 +9,7 @@
             class="de.mkbauer.tinyscript.ui.TinyscriptExecutableExtensionFactory:org.eclipse.xtext.ui.editor.XtextEditor"
             contributorClass="org.eclipse.ui.editors.text.TextEditorActionContributor"
             default="true"
-            extensions="ts"
+            extensions="tys"
             id="de.mkbauer.tinyscript.Tinyscript"
             name="Tinyscript Editor">
         </editor>
@@ -213,13 +213,13 @@
 		point="org.eclipse.emf.ecore.extension_parser">
 		<parser
 			class="de.mkbauer.tinyscript.ui.TinyscriptExecutableExtensionFactory:org.eclipse.xtext.resource.IResourceFactory"
-			type="ts">
+			type="tys">
 		</parser>
 	</extension>
 	<extension point="org.eclipse.xtext.extension_resourceServiceProvider">
         <resourceServiceProvider
             class="de.mkbauer.tinyscript.ui.TinyscriptExecutableExtensionFactory:org.eclipse.xtext.ui.resource.IResourceUIServiceProvider"
-            uriExtension="ts">
+            uriExtension="tys">
         </resourceServiceProvider>
     </extension>
 
@@ -251,7 +251,7 @@
          point="org.eclipse.xtext.builder.participant">
       <participant
             class="de.mkbauer.tinyscript.ui.TinyscriptExecutableExtensionFactory:org.eclipse.xtext.builder.IXtextBuilderParticipant"
-            fileExtensions="ts"
+            fileExtensions="tys"
             >
       </participant>
    </extension>
@@ -379,19 +379,19 @@
   <extension point="org.eclipse.compare.contentViewers">
     <viewer id="de.mkbauer.tinyscript.Tinyscript.compare.contentViewers"
             class="de.mkbauer.tinyscript.ui.TinyscriptExecutableExtensionFactory:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
-            extensions="ts">
+            extensions="tys">
     </viewer>
   </extension>
   <extension point="org.eclipse.compare.contentMergeViewers">
     <viewer id="de.mkbauer.tinyscript.Tinyscript.compare.contentMergeViewers"
             class="de.mkbauer.tinyscript.ui.TinyscriptExecutableExtensionFactory:org.eclipse.xtext.ui.compare.InjectableViewerCreator"
-            extensions="ts" label="Tinyscript Compare">
+            extensions="tys" label="Tinyscript Compare">
      </viewer>
   </extension>
   <extension point="org.eclipse.ui.editors.documentProviders">
     <provider id="de.mkbauer.tinyscript.Tinyscript.editors.documentProviders"
             class="de.mkbauer.tinyscript.ui.TinyscriptExecutableExtensionFactory:org.eclipse.xtext.ui.editor.model.XtextDocumentProvider"
-            extensions="ts">
+            extensions="tys">
     </provider>
   </extension>
 

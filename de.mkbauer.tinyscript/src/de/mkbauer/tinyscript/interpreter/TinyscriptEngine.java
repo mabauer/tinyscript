@@ -75,7 +75,7 @@ import de.mkbauer.tinyscript.runtime.system.SystemObject;
  */
 public class TinyscriptEngine {
 	
-	private static final String BUILTINSFILE = "__builtins.ts";
+	private static final String BUILTINSFILE = "__builtins.tys";
 
 	private XtextResourceSet resourceSet;
 	

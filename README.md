@@ -28,19 +28,19 @@ You can play with it online in your browser [here](https://tinyscript.mkbauer.de
 
 *tinyscript* offers quite a complete set of interesting language features:
 
-* [Basic expressions](de.mkbauer.tinyscript.webdemo/frontend/public/expressions.ts)
+* [Basic expressions](de.mkbauer.tinyscript.webdemo/frontend/public/expressions.tys)
 
-* [Handling of strings](de.mkbauer.tinyscript.webdemo/frontend/public/strings.ts)
+* [Handling of strings](de.mkbauer.tinyscript.webdemo/frontend/public/strings.tys)
 
-* [Control-flow structures](de.mkbauer.tinyscript.webdemo/frontend/public/primes.ts): `for`, `while` and `if` statements, `break`
+* [Control-flow structures](de.mkbauer.tinyscript.webdemo/frontend/public/primes.tys): `for`, `while` and `if` statements, `break`
 
-* [Functions](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci.ts), including [recursion](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci_recursive.ts) and *arrow* functions
+* [Functions](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci.tys), including [recursion](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci_recursive.tys) and *arrow* functions
 
-* [Arrays](de.mkbauer.tinyscript.webdemo/frontend/public/arrays.ts)
+* [Arrays](de.mkbauer.tinyscript.webdemo/frontend/public/arrays.tys)
 
-* [Closures](de.mkbauer.tinyscript.webdemo/frontend/public/closures.ts)
+* [Closures](de.mkbauer.tinyscript.webdemo/frontend/public/closures.tys)
 
-* [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/frontend/public/oo.ts)
+* [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/frontend/public/oo.tys)
 
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 
@@ -70,6 +70,7 @@ Design decisions
 
 *tinyscript* is not meant to be a Javascript clone. It deliberately differs from Javascript wherever I found Javascript's behavior surprising or wanted to try something different. For example, the concept of *equality* and the conversion of primitive datatypes in Javascript is a mine-field on its own.
 
+- **File extension `.tys`:** tinyscript files end in `.tys` (not `.ts`, which belongs to TypeScript).
 - **Statements:** the rules for ending statements with `;` are roughly the same as in Java.
 - **Scoping:** blocks create real *scopes*; `var` is block-scoped and there is no hoisting. Like Javascript in *strict mode*, all variables have to be declared before they can be used. This includes `typeof`: `typeof undeclared` is a compile-time error, not `"undefined"`.
 - **Blocks are mandatory:** control structures always need blocks: `if (cond) { stmts; } else if (cond) { stmts; } else { stmts; }`
@@ -145,7 +146,7 @@ To run:
 
 - The interpreter:
 
-		java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar example.ts
+		java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar example.tys
 
 - The web demo as a *Spring Boot* application:
 

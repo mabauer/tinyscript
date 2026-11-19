@@ -18,37 +18,37 @@ public class ComplexFunctionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testRecursiveFibonacci() {
-		TSValue value = executeScriptFromFile("fibonacci.ts");
+		TSValue value = executeScriptFromFile("fibonacci.tys");
 	}
 	
 	@Test
 	public void testIterativeFibonacci() {
-		TSValue value = executeScriptFromFile("fibonacci_loop.ts");
+		TSValue value = executeScriptFromFile("fibonacci_loop.tys");
 	}
 	
 	@Test
 	public void testRecursiveFactorial() {
-		TSValue value = executeScriptFromFile("factorial.ts");
+		TSValue value = executeScriptFromFile("factorial.tys");
 	}
 	
 	@Test
 	public void testRecursiveggT() {
-		TSValue value = executeScriptFromFile("ggt.ts");
+		TSValue value = executeScriptFromFile("ggt.tys");
 	}
 	
 	@Test
 	public void testRecursiveLinkedList() {
-		TSValue value = executeScriptFromFile("linked_list.ts");
+		TSValue value = executeScriptFromFile("linked_list.tys");
 	}
 	
 	@Test
 	public void testCounterWithClosures() {
-		TSValue value = executeScriptFromFile("counter_with_closures.ts");
+		TSValue value = executeScriptFromFile("counter_with_closures.tys");
 	}	
 	
 	@Test
 	public void testPrimes() {
-		TSValue value = executeScriptFromFile("primes.ts");
+		TSValue value = executeScriptFromFile("primes.tys");
 	}	
 
 }

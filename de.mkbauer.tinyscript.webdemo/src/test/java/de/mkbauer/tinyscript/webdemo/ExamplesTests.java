@@ -34,49 +34,49 @@ public class ExamplesTests {
 	
 	@Test
 	public void testHelloWorld() {
-		TinyscriptExecutionResult result = executeScriptFromFile("helloworld.ts");
+		TinyscriptExecutionResult result = executeScriptFromFile("helloworld.tys");
 		assertEquals(0, result.getErrorCode());
 	}
 	
 	@Test
 	public void testExpressions() {
-		TinyscriptExecutionResult result = executeScriptFromFile("expressions.ts");
+		TinyscriptExecutionResult result = executeScriptFromFile("expressions.tys");
 		assertEquals(0, result.getErrorCode());
 	}
 	
 	@Test
 	public void testStrings() {
-		TinyscriptExecutionResult result = executeScriptFromFile("strings.ts");
+		TinyscriptExecutionResult result = executeScriptFromFile("strings.tys");
 		assertEquals(0, result.getErrorCode());
 	}
 	
 	@Test
 	public void testPrimes() {
-		TinyscriptExecutionResult result = executeScriptFromFile("primes.ts");
+		TinyscriptExecutionResult result = executeScriptFromFile("primes.tys");
 		assertEquals(0, result.getErrorCode());
 	}
 	
 	@Test
 	public void testFibonacci() {
-		TinyscriptExecutionResult result = executeScriptFromFile("fibonacci.ts");
+		TinyscriptExecutionResult result = executeScriptFromFile("fibonacci.tys");
 		assertEquals(0, result.getErrorCode());
 	}
 	
 	@Test
 	public void testFibonacciRecursive() {
-		TinyscriptExecutionResult result = executeScriptFromFile("fibonacci_recursive.ts");
+		TinyscriptExecutionResult result = executeScriptFromFile("fibonacci_recursive.tys");
 		assertEquals(0, result.getErrorCode());
 	}
 	
 	@Test
 	public void testClosures() {
-		TinyscriptExecutionResult result = executeScriptFromFile("closures.ts");
+		TinyscriptExecutionResult result = executeScriptFromFile("closures.tys");
 		assertEquals(0, result.getErrorCode());
 	}
 	
 	@Test
 	public void testOO() {
-		TinyscriptExecutionResult result = executeScriptFromFile("oo.ts");
+		TinyscriptExecutionResult result = executeScriptFromFile("oo.tys");
 		assertEquals(0, result.getErrorCode());
 	}
 

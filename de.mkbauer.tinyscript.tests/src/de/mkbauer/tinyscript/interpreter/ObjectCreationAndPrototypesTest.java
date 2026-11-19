@@ -34,17 +34,17 @@ public class ObjectCreationAndPrototypesTest extends
 	
 	@Test 
 	public void testCreationViaNew() {
-		executeScriptFromFile("objectcreation_via_new.ts");
+		executeScriptFromFile("objectcreation_via_new.tys");
 	}
 	
 	@Test 
 	public void testOO() {
-		executeScriptFromFile("oo.ts");
+		executeScriptFromFile("oo.tys");
 	}
 	
 	@Test 
 	public void testOO2() {
-		executeScriptFromFile("oo2.ts");
+		executeScriptFromFile("oo2.tys");
 	}
 	
 	@Test 
