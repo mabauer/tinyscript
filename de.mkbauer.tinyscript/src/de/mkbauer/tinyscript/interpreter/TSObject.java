@@ -28,7 +28,7 @@ public non-sealed class TSObject implements TSValue {
 			setPrototype(proto);
 	}
 	
-	// TODO Write tests and use it instead of TSValue.asString() where appropriate
+	// TODO(TODO.md: Conversions): Write tests and use it instead of TSValue.asString() where appropriate
 	public static String toString(TinyscriptEngine engine, TSValue value) {
 		if (value == TSValue.UNDEFINED)
 			return "[object Undefined]";
@@ -54,13 +54,13 @@ public non-sealed class TSObject implements TSValue {
 			return ctor.createObject(value);
 		}
 		if (value.isNumber()) {
-			// TODO Create a NumberObject object
+			// TODO(TODO.md: Primitive wrapper objects): Create a Number object
 			TSObject result = new TSObject(engine, engine.getDefaultPrototype()); 
 			result.put("value", value);
 			return result; 
 		}
 		if (value.isBoolean()) {
-			// TODO Create a BooleanObject object
+			// TODO(TODO.md: Primitive wrapper objects): Create a Boolean object
 			TSObject result = new TSObject(engine, engine.getDefaultPrototype()); 
 			result.put("value", value);
 			return result;
@@ -69,7 +69,7 @@ public non-sealed class TSObject implements TSValue {
 	}
 	
 	public static TSValue toPrimitive(TinyscriptEngine engine, TSObject object) {
-		// TODO Evaluate user defined valueOf property
+		// TODO(TODO.md: Conversions): Evaluate a user defined valueOf property
 		if (object instanceof BuiltinType) {
 			return ((BuiltinType) object).valueOf();
 		}
@@ -77,7 +77,7 @@ public non-sealed class TSObject implements TSValue {
 	}
 	
 	public static double toNumber(TinyscriptEngine engine, TSValue value) {
-		// TODO Return NAN if undefined
+		// TODO(TODO.md: Conversions): Return NaN if undefined
 		if (value instanceof TSObject object)
 			value = toPrimitive(engine, object);
 		if (value.isBoolean())
@@ -97,7 +97,7 @@ public non-sealed class TSObject implements TSValue {
 	}
 	
 	public static int toInteger(TinyscriptEngine engine, TSValue value) {
-		// TODO Return NAN if undefined
+		// TODO(TODO.md: Conversions): Return NaN if undefined
 		if (value instanceof TSObject object)
 			value = toPrimitive(engine, object);
 		if (value.isBoolean())
@@ -115,7 +115,7 @@ public non-sealed class TSObject implements TSValue {
 				return Integer.decode(str);
 			}
 			catch (NumberFormatException e) {}
-			// TODO: Should be NAN!
+			// TODO(TODO.md: Conversions): Should be NaN
 			return 0;
 		}
 		return 0;
@@ -136,7 +136,7 @@ public non-sealed class TSObject implements TSValue {
 	}
 	
 	public void setOwnPropertyDescriptor(String key, TSPropertyDescriptor desc) {
-		// TODO: if not configurable , throw a TypeException 
+		// TODO(TODO.md: defineProperty on non-configurable properties): if not configurable, throw a TypeError 
 		properties.put(key,  desc);
 	}
 	

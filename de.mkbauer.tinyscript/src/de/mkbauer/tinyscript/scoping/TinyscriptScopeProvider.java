@@ -67,7 +67,7 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 	public IScope createBlockScope(EObject elem, boolean before) {
 		Block block = TinyscriptModelUtil.containingBlock(elem);
 		if (block == null)
-			// TODO: Provide a better GlobalScopeProvider instead of the default: TypesAwareDefault....; create a replacement by overriding getScope there.
+			// TODO(TODO.md: Modules): Provide a better GlobalScopeProvider instead of the default: TypesAwareDefault....; create a replacement by overriding getScope there.
 			// Check https://www.eclipse.org/forums/index.php/t/1067727/
 			return getGlobalScope(elem.eResource(), TsPackage.Literals.REFERENCE__ID, new Predicate<IEObjectDescription>() {
 

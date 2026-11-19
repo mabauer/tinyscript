@@ -10,7 +10,7 @@ public class GlobalExecutionContext extends ExecutionContext {
 		
 		globalObject = new TSObject(engine, engine.getDefaultPrototype());
 		
-		// TODO: In strict mode, this should be TSValue.undefined
+		// TODO(TODO.md: Global this): In strict mode, this should be TSValue.UNDEFINED
 		thisRef = globalObject;
 
 	}
@@ -31,7 +31,7 @@ public class GlobalExecutionContext extends ExecutionContext {
 
 	@Override
 	public void create(String identifier) {
-		// TODO: Check if it already exists?
+		// TODO(TODO.md: Redeclared globals): Check if it already exists?
 		globalObject.put(identifier, TSValue.UNDEFINED);
 	}
 

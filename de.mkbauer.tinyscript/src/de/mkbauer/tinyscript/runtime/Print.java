@@ -38,7 +38,7 @@ public final class Print {
 			}
 		}
 		catch(IOException e) {
-			// TODO: Do something appropriate, e.g. log it
+			// TODO(TODO.md: print and I/O errors): Do something appropriate, e.g. log it
 		}
 		return TSValue.UNDEFINED;
 	}

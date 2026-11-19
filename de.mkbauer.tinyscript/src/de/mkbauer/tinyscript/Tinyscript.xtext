@@ -200,7 +200,7 @@ PropertyAccessSuffix:
 ;
 
 ComputedPropertyAccessSuffix:
-	'[' key=Addition ']'  // TODO: AssignmentExpression?
+	'[' key=Addition ']'  // TODO(TODO.md: Remaining syntax restrictions): AssignmentExpression?
 ;
 	
 DotPropertyAccessSuffix:
