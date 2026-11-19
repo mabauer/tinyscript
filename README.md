@@ -46,18 +46,18 @@ Around Christmas time 2015, I've designed *tinyscript* and implemented an interp
 
 - I believe every software engineer should at some point design and implement his own language just for the fun of it. I wanted to go a bit further than the usual toy examples taught in compiler construction classes, so I came up with *tinyscript*.
 
-- At that time in my office we were looking into embedding a scripting language into our SaaS business software offering. We were looking for a way to allow for customor / tenant specific business logic that could be run on both our backend servers (mainly written in Java) and in client apps (e.g. written in C# and Xamarin). For such a use case, some kind of sandboxing and resource monitoring is necessary to avoid that ill-behaving, tenant specific code can harm other tenants or the SaaS plattform as a whole. For that purpose we needed a test "vehicle".   
+- At that time in my office we were looking into embedding a scripting language into our SaaS business software offering. We were looking for a way to allow for customer / tenant specific business logic that could be run on both our backend servers (mainly written in Java) and in client apps (e.g. written in C# and Xamarin). For such a use case, some kind of sandboxing and resource monitoring is necessary to avoid that ill-behaving, tenant specific code can harm other tenants or the SaaS platform as a whole. For that purpose we needed a test "vehicle".   
 
 - I wanted to have a look at the [Xtext framework](https://www.eclipse.org/Xtext/) for language engineering. So I used tinyscript as an example project to get my hands dirty with that.
 
 What did I do?
 --------------
 
--  Definition of *tinyscript*'s grammar. Immplementation of the corresponding parser including an *abstract syntax tree (AST)* using *Xtext* (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript`). 
+-  Definition of *tinyscript*'s grammar. Implementation of the corresponding parser including an *abstract syntax tree (AST)* using *Xtext* (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript`). 
 
-- Design and impementation of a „high-level“ interpreter in Java (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript.interpreter`). Specifically have a look at class `TinyscriptEngine`and *tinyscript*'s runtime (package `tinyscript.runtime`).
+- Design and implementation of a „high-level“ interpreter in Java (project [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript.interpreter`). Specifically have a look at class `TinyscriptEngine` and *tinyscript*'s runtime (package `tinyscript.runtime`).
 
-- Integration of *tinyscript*'s interpreter into a demo web app ((project [`de.mkbauer.tinyscript.webdemo`](de.mkbauer.tinyscript.webdemo)) based on *SpringBoot*. That's the same [web app](https://tinyscript.mkbauer.de) I've mentioned above when introducing *tinyscript*'s language features.
+- Integration of *tinyscript*'s interpreter into a demo web app (project [`de.mkbauer.tinyscript.webdemo`](de.mkbauer.tinyscript.webdemo)) based on *SpringBoot*. That's the same [web app](https://tinyscript.mkbauer.de) I've mentioned above when introducing *tinyscript*'s language features.
 
 - With *Xtext* it's easy to provide an editor plugin for *Eclipse* (project [`de.mkbauer.tinyscript.ui`](de.mkbauer.tinyscript.ui)).
 
@@ -65,24 +65,33 @@ What did I do?
 
 
 
-Limitations of *tinyscript*
----------------------------
+Design decisions
+----------------
 
-Certainly, *tinyscript* is not perfect. It's just a proof-of-concept (but a usable one!). There are many things to improve. For example the concept of *equality* and the conversion of primitive datatypes in Javascript is a mine-field on its own.
+*tinyscript* is not meant to be a Javascript clone. It deliberately differs from Javascript wherever I found Javascript's behavior surprising or wanted to try something different. For example, the concept of *equality* and the conversion of primitive datatypes in Javascript is a mine-field on its own.
 
-*tinyscript* differs from Javascript in a couple of ways. Some are limitations, some are design decisions because I wanted *tinyscript* to be different. 
+- **Statements:** the rules for ending statements with `;` are roughly the same as in Java.
+- **Scoping:** blocks create real *scopes*; `var` is block-scoped and there is no hoisting. Like Javascript in *strict mode*, all variables have to be declared before they can be used.
+- **Blocks are mandatory:** control structures always need blocks: `if (cond) { stmts; } else { stmts; }`
+- **Loops:** there are two types of `for` loops: a numeric one inspired by *Lua*, where the end value is inclusive and an optional step can be given (`for (var i = 1, 10) { … }`, `for (var i = 10, 1, -1) { … }`), and one that iterates over the *values* of an array (`for (var x : arr) { … }`). Additionally there is `while (cond) { … }`; `break` leaves the innermost loop.
+- **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). There is no `===` / `!==`.
+- **Strict comparisons:** `<`, `<=`, `>` and `>=` compare a number with a number or a string with a string; anything else is a `TypeError`.
+- **Logical operators return booleans:** `&&` and `||` short-circuit like in Javascript, but always return `true` or `false`, never one of their operands.
+- **Arrays can be added:** the operator `+` also works on arrays: `var arr = ["hello"]; arr = arr + ["world"];` results in `["hello", "world"]`. With a string on either side, `+` concatenates strings (`"arr: " + arr`); an array plus anything else is a `TypeError`.
+- **Arrow functions** are supported. These are part of Javascript starting with Ecmascript 6 :-)
+- **Sandboxing:** in sandboxed mode every loop iteration counts against the statement limit, so even endless loops cannot exceed the resource limits (see [Sandboxing](#sandboxing)).
 
-Examples:
 
-- The rules for ending statements with `;` are roughly the same as in Java.
-- Blocks create real *scopes*, they limit the visibility and validity of local variables.
-- Control structures always need blocks: `if (cond) { stmts; } else { stmts; }`
-- The operator `+` also works on arrays: `var arr = [„hallo"]; arr = arr + [„welt“]; -> arr = [„hallo“, „welt“];`
-- There are two types of `for`-loops: a numeric `for`-loop (inspired by *Lua*) and one to iterate over arrays.
+Limitations
+-----------
+
+Certainly, *tinyscript* is not perfect. It's just a proof-of-concept (but a usable one!). Some Javascript features are simply missing, for example:
+
 - There is no support for *regular expressions*.
-- *tinyscript* supports *arrow* functions. These are part of Javascript starting with Ecmascript 6 :-)
+- There is no `else if`, no `continue`, no `switch`, no `const` and no `delete`.
+- `typeof` only works on names, optionally followed by property accesses (`typeof o.x`).
 
-Apart form that, *tinyscript* behaves like Javascript in *strict mode*, i.e. all variables have to be declared before they can be used.
+See [TODO.md](TODO.md) for what's planned.
 
 
 Performance
