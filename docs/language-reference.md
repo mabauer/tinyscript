@@ -532,21 +532,22 @@ nums.length = 2;        // truncates the array to [1, 2]
 nums.length = 4;        // grows it again: [1, 2, undefined, undefined]
 ```
 
+To index from the end, use `nums.at(-1)`.
+
 Arrays are lists: besides their items, only `length` can be set. Unlike Javascript, writing any other key is a `TypeError`, including `nums.x = 1`, `nums[-1] = 1` and `nums[1.5] = 1`; `Object.defineProperty` on an array is a `TypeError` as well. Reading such a key gives `undefined`. An invalid `length` (negative, fractional, not a number) is a `TypeError` (Javascript: `RangeError`).
 
 ### Array methods
 
 | Method | Description |
 |---|---|
+| `arr.at(i)` | Element at index `i`; a negative `i` counts from the end (`arr.at(-1)` is the last element); `undefined` if out of range |
 | `arr.push(x)` | Appends `x` to the end; returns new element count |
 | `arr.pop()` | Removes and returns the last element |
 | `arr.shift()` | Removes and returns the first element |
 | `arr.unshift(x)` | Prepends `x`; returns new element count |
 | `arr.join(sep)` | Returns a string with elements joined by `sep` |
-| `arr.concat(other)` | Returns a new array concatenating `arr` and `other` |
 | `arr.map(fn)` | Returns a new array by applying `fn(element)` to each element |
 | `arr.filter(fn)` | Returns a new array of elements where `fn(element)` is truthy |
-| `arr.indexOf(x)` | Returns the index of `x`, or `-1` if not found |
 | `arr.toString()` | Returns a string representation |
 
 ```
@@ -804,6 +805,7 @@ String primitives have methods available via auto-boxing:
 
 | Method | Description |
 |---|---|
+| `str.at(i)` | Character at index `i`; a negative `i` counts from the end; `undefined` if out of range |
 | `str.charAt(i)` | Character at index `i` |
 | `str.indexOf(sub)` | First index of `sub`, or `-1` |
 | `str.substring(start, end)` | Substring from `start` (inclusive) to `end` (exclusive) |

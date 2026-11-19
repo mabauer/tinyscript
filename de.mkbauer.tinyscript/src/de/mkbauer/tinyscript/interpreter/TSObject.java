@@ -96,6 +96,17 @@ public non-sealed class TSObject implements TSValue {
 		return Double.NaN;
 	}
 	
+	/**
+	 * Resolves the index argument of at(): a negative index counts from the end.
+	 * Returns -1 if it is out of range; unlike Javascript, a non-integer index is a TypeError.
+	 */
+	public static int toRelativeIndex(TSValue index, int length) {
+		if (!index.isMathematicalInteger())
+			throw new TinyscriptTypeError("at() needs an integer index, not " + index.asString());
+		double position = index.asDouble() < 0 ? length + index.asDouble() : index.asDouble();
+		return (position >= 0 && position < length) ? (int) position : -1;
+	}
+
 	public static int toInteger(TinyscriptEngine engine, TSValue value) {
 		// TODO(TODO.md: Conversions): Return NaN if undefined
 		if (value instanceof TSObject object)

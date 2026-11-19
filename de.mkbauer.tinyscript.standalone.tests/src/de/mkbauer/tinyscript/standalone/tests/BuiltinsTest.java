@@ -85,6 +85,23 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testArrayAt() {
+        String code = "var a = [1, 2, 3];\n"
+                + "print(a.at(0)); print(a.at(-1)); print(a.at(-3));\n"
+                + "print(a.at(3) == null); print(a.at(-4) == null); print([].at(-1) == null);";
+        assertEquals("1\n3\n1\ntrue\ntrue\ntrue\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testAtNeedsAnIntegerIndex() {
+        assertInterpreterThrows(TinyscriptTypeError.class, "[1].at(1.5);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "[1].at(\"0\");");
+        assertInterpreterThrows(TinyscriptTypeError.class, "\"a\".at(0.5);");
+        assertInterpreterThrows(TinyscriptArgumentError.class, "[1].at();");
+    }
+
+    @Test
     public void testArrayMethodOnNonArrayIsATypeError() {
         assertInterpreterThrows(TinyscriptTypeError.class,
                 "var o = {};\no.push = [].push;\no.push(1);");
@@ -105,6 +122,13 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
         assertEquals("b\ntrue\n", interpreterOutput(
                 "print(\"abc\".charAt(1));\n"
                 + "print(\"abc\".charAt(5) == \"\");"));
+    }
+
+    @Test
+    public void testStringAt() {
+        String code = "var s = \"abc\"; print(s.at(0)); print(s.at(-1)); print(s.at(3) == null); print(\"\".at(0) == null);";
+        assertEquals("a\nc\ntrue\ntrue\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     @Test

@@ -14,6 +14,7 @@ public class StringConstructor extends BuiltinConstructor {
 		super(engine);
 		TSObject stringPrototype = getPrototypeProperty().asObject();
 		stringPrototype.defineBuiltinMethod("toString", this::stringToString, 0);
+		stringPrototype.defineBuiltinMethod("at", this::at, 1);
 		stringPrototype.defineBuiltinMethod("charAt", this::charAt, 1);
 		stringPrototype.defineBuiltinMethod("substring", this::substring, 1);
 		stringPrototype.defineBuiltinMethod("indexOf", this::indexOf, 1);
@@ -61,6 +62,13 @@ public class StringConstructor extends BuiltinConstructor {
 		if (!(self instanceof StringObject))
 			throw new TinyscriptTypeError("Function String.prototype.toString only works for String objects.");
 		return TSValue.of(((StringObject) self).getValue());
+	}
+
+	// String.prototype.at(index): the character at index, a negative index counts from the end
+	private TSValue at(TSObject self, TSValue[] args) {
+		String str = TSObject.toString(engine, self);
+		int index = TSObject.toRelativeIndex(args[0], str.length());
+		return index < 0 ? TSValue.UNDEFINED : TSValue.of(str.substring(index, index + 1));
 	}
 
 	private TSValue charAt(TSObject self, TSValue[] args) {
