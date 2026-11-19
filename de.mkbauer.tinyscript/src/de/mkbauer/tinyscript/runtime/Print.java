@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
@@ -38,7 +39,7 @@ public final class Print {
 			}
 		}
 		catch(IOException e) {
-			// TODO(TODO.md: print and I/O errors): Do something appropriate, e.g. log it
+			throw new TinyscriptRuntimeException("Cannot write output: " + e.getMessage());
 		}
 		return TSValue.UNDEFINED;
 	}

@@ -47,12 +47,6 @@ Language
 Interpreter and code quality
 ----------------------------
 
-- **`print` and I/O errors.** `print` silently ignores an `IOException` of the output stream. Log it or turn it into a runtime error.
-
-- **`defineProperty` on non-configurable properties.** `Object.defineProperty` replaces a property even if it is not configurable; Javascript throws a `TypeError`.
-
-- **Redeclared globals.** `GlobalExecutionContext.create` overwrites an existing global with `undefined`. Check first whether that can happen at all (the validator rejects duplicate declarations), then either assert or drop the marker.
-
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it (decision deferred). Its error handling is minimal.
 
 
