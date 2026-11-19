@@ -132,6 +132,16 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testNewWithoutParentheses() {
+        String code = "function Foo() { this.x = 1; }\n"
+                + "var o = new Foo;\n"
+                + "print(o.x); print(o instanceof Foo);\n"
+                + "var a = new Array; print(a.length);";
+        assertEquals("1\ntrue\n0\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testIterableIsEvaluatedOnce() {
         String code = "function f() { print(\"f\"); return [1, 2]; } for (var x : f()) { print(x); }";
         assertEquals("f\n1\n2\n", interpreterOutput(code));
@@ -158,6 +168,16 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     public void testStringKeysInObjectLiterals() {
         String code = "var o = { \"a b\": 1, c: 2 }; print(o[\"a b\"]); print(o.c);";
         assertEquals("1\n2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testNewWithParenthesesAndMethodCall() {
+        String code = "function Foo(x) { this.x = x; }\n"
+                + "Foo.prototype.get = function() { return this.x; };\n"
+                + "print(new Foo(2).x); print(new Foo(3).get());\n"
+                + "var ns = { Bar: function(y) { this.y = y; } }; print(new ns.Bar(4).y);";
+        assertEquals("2\n3\n4\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 

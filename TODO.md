@@ -52,9 +52,6 @@ Interpreter and code quality
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it.
 
-- **To verify** (noticed while reading the code):
-  - `new Foo` without parentheses returns the function itself.
-
 
 Build and operations
 --------------------
