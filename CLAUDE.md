@@ -128,7 +128,7 @@ Source text
 - `interpreter/GlobalExecutionContext.java` — global scope; initializes built-in objects at startup
 - `interpreter/TSValue.java` — sealed interface for all runtime values: `TSUndefined`, `TSNull`, records `TSBoolean` / `TSNumber` / `TSString`, and `TSObject` (objects, arrays, functions); create primitives with `TSValue.of(…)`
 - `interpreter/TSObject.java` — property map + prototype reference; backing store for all objects and functions
-- `interpreter/ResourceMonitor.java` — sandboxing: enforces limits on wall time, CPU time, statement count, call depth, and memory
+- `interpreter/ResourceMonitor.java` — sandboxing: enforces limits on wall time, CPU time, statement count, call depth, memory, string length and output size
 
 **Runtime built-ins** (`runtime/` subdirectories): `array/`, `string/`, `math/`, `object/`, `function/`, `fs/`, `system/`
 

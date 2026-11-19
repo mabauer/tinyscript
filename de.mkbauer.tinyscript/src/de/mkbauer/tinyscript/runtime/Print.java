@@ -23,13 +23,17 @@ public final class Print {
 
 	private static TSValue print(TinyscriptEngine engine, TSValue[] args) {
 		OutputStream os = engine.getStdOut();
+		StringBuilder line = new StringBuilder();
+		for (TSValue arg: args) {
+			line.append(arg.asString());
+		}
+		line.append(System.lineSeparator());
+		// Check the output limit before writing, so a script cannot flood the output
+		engine.recordOutput(line.length());
 		try {
 			if (os != null) {
 				OutputStreamWriter writer = new OutputStreamWriter(os);
-				for (TSValue arg: args) {
-					writer.write(arg.asString());
-				}
-				writer.write(System.lineSeparator());
+				writer.write(line.toString());
 				writer.flush();
 			}
 		}

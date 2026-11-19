@@ -41,10 +41,10 @@ public class TinyscriptExecutionService {
 	public static final int MAX_STATEMENTS = 5000000;  
 	public static final int MAX_CALL_DEPTH = 128;
 	public static final int MAX_OBJECT_SIZE = 0; // 100000;
-	public static final int MAX_STRING_LENGTH = 0; // 1024*8;
+	public static final int MAX_STRING_LENGTH = 1024*8;
 	public static final long MAX_MEMORY = 1024*1024*16;
 	
-	public static final int MAX_OUTPUT_SIZE = 1024*8;
+	public static final int MAX_OUTPUT_SIZE = 1024*64;
 	
 	private static final Logger logger = LoggerFactory.getLogger(TinyscriptExecutionService.class);
 	
@@ -75,6 +75,7 @@ public class TinyscriptExecutionService {
 		limits.setMaxRecursionDepth(MAX_CALL_DEPTH);
 		limits.setMaxObjectSize(MAX_OBJECT_SIZE);
 		limits.setMaxStringLength(MAX_STRING_LENGTH);
+		limits.setMaxOutputSize(MAX_OUTPUT_SIZE);
 		limits.setMaxMemory(MAX_MEMORY);
 		ResourceMonitor monitor = new ResourceMonitor();
 		monitor.enableObjectTracking();

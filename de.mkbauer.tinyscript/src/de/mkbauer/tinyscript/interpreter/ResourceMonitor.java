@@ -24,6 +24,8 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	private WeakHashMapWithCallBack<Object, Integer> objects; 
 	private long totalMemory = 0;
 	
+	private long outputSize = 0;
+	
 	private ThreadMXBean tBean = null;
 	// TODO: Restricted API
 	private com.sun.management.ThreadMXBean sunBean = null; 
@@ -46,6 +48,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 			objects.setOnExpungeListener(this);
 		}
 		resourceConsumption = new ResourceConsumption();
+		outputSize = 0;
 		startTime = System.nanoTime();
 		if (useMXBeanInspection) {
 			startMxCpuTime = getThreadTime();
@@ -136,6 +139,12 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		}
 	}
 	
+	protected void recordOutput(int length) {
+		outputSize += length;
+		if (resourceLimits.maxOutputSize > 0 && outputSize > resourceLimits.maxOutputSize)
+			throw new TinyscriptResourceLimitViolation("Output limit reached");
+	}
+
 	protected void checkCallDepth(int callDepth) {
 		if (callDepth > resourceConsumption.callDepth) {
 			resourceConsumption.callDepth = callDepth;
