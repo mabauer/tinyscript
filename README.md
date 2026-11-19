@@ -159,19 +159,7 @@ I did write the code on my own, mostly in my spare time around the turn of the y
 I decided to release the code under the GPL license. In case you want to do something with the code that GPL does not allow, feel free to contact me.
 
 
-Open isues, ideas to implement
-------------------------------
+Roadmap
+-------
 
-As of 2018, if I had some time, I'd like to work on the following topics:
-
-- ~~Update the project to a newer version of Eclipse and Xtext. I fear that this would mean quite a bit of work, but it would allow for a couple of cool features~~ (such as language server support for Visual Studio Code).
-
-- Improve the documentation.
-
-- Improve the test cases.
-
-- Clean up the interpreter, excpecially when working with expressions and builtin types.
-
-- Add some more functions to the runtime library.
-
-- Add some support for *modules*.
+Open issues and ideas are tracked in [TODO.md](TODO.md).
