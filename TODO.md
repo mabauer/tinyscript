@@ -7,7 +7,7 @@ Open issues and ideas for tinyscript. Each item is meant to become its own PR, w
 Next
 ----
 
-- **Webdemo tests: JUnit 4 → JUnit 6.** They still use `SpringJUnit4ClassRunner` (deprecated in Spring 7); migrate them like the other test modules.
+Nothing scheduled right now; pick the next items from the sections below.
 
 
 Language
