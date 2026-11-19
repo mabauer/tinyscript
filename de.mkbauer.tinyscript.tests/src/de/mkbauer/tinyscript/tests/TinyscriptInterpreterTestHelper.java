@@ -81,10 +81,8 @@ public class TinyscriptInterpreterTestHelper {
 			 ast = (Tinyscript) parser.parse(line, resourceSet);	
 			 validator.assertNoErrors(ast);
 		}
-		// TODO: Check exception handling
 		catch (Exception e) {
-			fail("Error in: " + line + ": " + e.getClass());
-			e.printStackTrace();
+			fail("Error in: " + line + ": " + e, e);
 		}
 		return ast;
 	}

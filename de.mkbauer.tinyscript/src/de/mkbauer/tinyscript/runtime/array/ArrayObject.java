@@ -12,7 +12,6 @@ public class ArrayObject extends BuiltinType {
 		
 	private List<TSValue> items;
 	
-	// TODO: Check prototype property -- this should equal [].__proto
 	ArrayObject(TinyscriptEngine engine) {
 		super(engine);
 		items = new ArrayList<TSValue>();

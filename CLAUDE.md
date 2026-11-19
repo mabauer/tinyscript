@@ -144,6 +144,10 @@ Source text
 - Arrow functions use `=>` syntax
 - No `this` binding differences — follows prototypal model
 
+### TODO markers in the code
+
+`TODO.md` is the single list of open work. A `TODO` / `FIXME` comment in the code is only allowed with a reference to an entry there, e.g. `// TODO(TODO.md: Number objects): …`. Otherwise fix it right away or delete the comment.
+
 ### Dependency Injection
 
 The core module uses Google Guice (wired by Xtext). Bindings are configured in `TinyscriptRuntimeModule`. Tests use `@Inject` via `@ExtendWith(InjectionExtension.class)` + `@InjectWith(TinyscriptInjectorProvider.class)`.

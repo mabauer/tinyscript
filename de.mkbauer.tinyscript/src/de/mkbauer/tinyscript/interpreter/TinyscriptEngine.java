@@ -413,7 +413,6 @@ public class TinyscriptEngine {
     }
     
     public TSValue executeNumericForStatement(ForStatement forstmt) {
-    	// TODO: Use TSObject.toNumber/toInteger for bounds
     	NumericForExpression expr = forstmt.getNumericForExpr();
     	TSValue result = TSValue.UNDEFINED;
 		TSValue startValue = execute(expr.getStart());
@@ -433,7 +432,6 @@ public class TinyscriptEngine {
 			if (step == 0)
 				throw new TinyscriptTypeError("for needs a step other than 0", expr.getStep());
 		}
-		// TODO: If bounds are NaNs, don't loop!
 		if (Double.isInfinite(start) || Double.isInfinite(stop))
 			return result;
 		try {

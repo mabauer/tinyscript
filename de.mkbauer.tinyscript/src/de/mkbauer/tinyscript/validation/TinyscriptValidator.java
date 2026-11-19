@@ -54,14 +54,6 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 		}
 	}
 	
-	@Check 
-	void checkNoDuplicateIdentifiersInGlobalScope(Identifier identifier) {
-		Block block = TinyscriptModelUtil.containingBlock(identifier);
-		if (block.eContainer() instanceof Tinyscript) {
-			// TODO: ...
-		}
-	}
-
 	/**
 	 * Checks if an identifier conflicts with reserved names 
 	 * (such as functions needed for the code generation to Javascript)
