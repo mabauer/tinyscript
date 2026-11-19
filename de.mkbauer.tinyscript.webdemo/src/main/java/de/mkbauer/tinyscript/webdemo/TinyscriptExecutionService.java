@@ -36,7 +36,7 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 @Component
 public class TinyscriptExecutionService {
 	
-	private final static String fileExtension = "ts";
+	private final static String fileExtension = "tys";
 	
 	public static final int MAX_STATEMENTS = 5000000;  
 	public static final int MAX_CALL_DEPTH = 128;

@@ -30,7 +30,7 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 @Component
 public class TinyscriptCrossCompilingService {
 	
-	private static final String fileExtension = "ts";
+	private static final String fileExtension = "tys";
 	
 	private static final Logger logger = LoggerFactory.getLogger(TinyscriptCrossCompilingService.class);
 	

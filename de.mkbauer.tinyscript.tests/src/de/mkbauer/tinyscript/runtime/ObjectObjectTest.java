@@ -24,7 +24,7 @@ public class ObjectObjectTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test 
 	public void testLoopWithObjectKeys() {
-		executeScriptFromFile("loop_with_object_keys.ts");
+		executeScriptFromFile("loop_with_object_keys.tys");
 	}
 	
 	@Test

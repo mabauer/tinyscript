@@ -47,27 +47,27 @@ public class GrammarTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testExpressionStatements() {
-		parseScriptFromFile("expressionstatements.ts");
+		parseScriptFromFile("expressionstatements.tys");
 	}
 	
 	@Test
 	public void testFunctionExpression() {
-		parseScriptFromFile("function_expression.ts");
+		parseScriptFromFile("function_expression.tys");
 	}
 	
 	@Test
 	public void testCounterWithClosures() {
-		parseScriptFromFile("counter_with_closures.ts");
+		parseScriptFromFile("counter_with_closures.tys");
 	}
 	
 	@Test
 	public void testModulesViaClosures() {
-		parseScriptFromFile("modules_via_closures.ts");
+		parseScriptFromFile("modules_via_closures.tys");
 	}
 	
 	@Test
 	public void testTrigger_example() {
-		parseScriptFromFile("trigger_example.ts");
+		parseScriptFromFile("trigger_example.tys");
 	}
 	
 

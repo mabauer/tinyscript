@@ -15,7 +15,7 @@ describe('Toolbar.vue', () => {
     await firstItem.trigger('click')
     const emitted = wrapper.emitted('load-script')
     expect(emitted).toBeTruthy()
-    expect(emitted![0]).toEqual(['helloworld.ts'])
+    expect(emitted![0]).toEqual(['helloworld.tys'])
   })
 
   it('clicking the execute button emits execute', async () => {

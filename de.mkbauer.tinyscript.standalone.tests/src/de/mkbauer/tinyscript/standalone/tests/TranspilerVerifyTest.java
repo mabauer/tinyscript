@@ -19,11 +19,11 @@ public class TranspilerVerifyTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testFibonacciProgram() {
-        assertTranspilerCorrectFromFile("fibonacci.ts");
+        assertTranspilerCorrectFromFile("fibonacci.tys");
     }
 
     @Test
     public void testFactorialProgram() {
-        assertTranspilerCorrectFromFile("factorial.ts");
+        assertTranspilerCorrectFromFile("factorial.tys");
     }
 }

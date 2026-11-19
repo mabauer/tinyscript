@@ -52,7 +52,7 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
  */
 public abstract class TinyscriptTranspilerTestBase {
 
-    private static final String FILE_EXTENSION = "ts";
+    private static final String FILE_EXTENSION = "tys";
 
     private Injector injector;
     private TinyscriptGenerator generator;

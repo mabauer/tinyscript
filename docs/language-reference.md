@@ -634,7 +634,7 @@ child.greet();   // "Hello!" — inherited from base
 
 ### Prototype-as-class pattern
 
-Objects themselves can serve as "classes". The `oo_with_proto.ts` example demonstrates this:
+Objects themselves can serve as "classes". The `oo_with_proto.tys` example demonstrates this:
 
 ```
 var Proto = {

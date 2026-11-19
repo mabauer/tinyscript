@@ -22,7 +22,7 @@ import de.mkbauer.tinyscript.ts.TsFactory;
 public class TinyscriptGlobalScopeProvider extends
 		ResourceSetGlobalScopeProvider {
 	
-	private static final String BUILTINSFILE = "__builtins.ts";
+	private static final String BUILTINSFILE = "__builtins.tys";
 	
 	@Override
 	protected IScope getScope(Resource resource, boolean ignoreCase, EClass type,

@@ -46,7 +46,7 @@ Tests run in this order (alphabetical class order enforced by Surefire):
 
 1. `InterpreterReferenceTest` — 29 `assertEquals(expected, interpreterOutput(tsCode))` tests; one per language feature; failure shows the exact wrong value produced by the interpreter.
 2. `TranspilerTest` — differential tests; `assertSameOutput(tsCode)` runs each snippet through both the interpreter and `node`, diffs stdout; generated JS is shown on failure so it can be pasted into `node` directly.
-3. `TranspilerVerifyTest` — integration tests; `assertTranspilerCorrectFromFile(filename)` runs complete `.ts` programs through both interpreter (must not throw) and node (must exit 0).
+3. `TranspilerVerifyTest` — integration tests; `assertTranspilerCorrectFromFile(filename)` runs complete `.tys` programs through both interpreter (must not throw) and node (must exit 0).
 
 Base class `TinyscriptTranspilerTestBase` provides:
 - `interpreterOutput(String tsCode)` — runs snippet through a fresh `TinyscriptEngine`, returns captured stdout; use with JUnit's `assertEquals` for targeted interpreter tests
@@ -85,7 +85,7 @@ Tests the interpreter and language features via JUnit 6 (Jupiter) with Xtext's `
 Test helper base class `TinyscriptInterpreterTestHelper` provides:
 - `evaluateSimpleExpression(String expr)` — evaluates a single expression, returns `TSValue`
 - `executeScriptFromString(String script)` — executes inline script
-- `executeScriptFromFile(String filename)` — loads `.ts` file from `resources/`
+- `executeScriptFromFile(String filename)` — loads `.tys` file from `resources/`
 - `engine` — direct access to `TinyscriptEngine`
 
 ### Full test run
@@ -245,7 +245,7 @@ frontend/
 ├── vite.config.ts
 ├── tsconfig.json
 ├── package.json
-├── public/           ← 10 example .ts scripts (served as static files)
+├── public/           ← 10 example .tys scripts (served as static files)
 └── src/
     ├── main.ts
     ├── style.css

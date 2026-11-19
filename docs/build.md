@@ -89,7 +89,7 @@ Output: `de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar`
 Run:
 ```bash
 java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar
-java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar example.ts
+java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar example.tys
 ```
 
 ---

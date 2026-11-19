@@ -39,7 +39,7 @@ Workflow {
 		}
 		language = StandardLanguage {
 			name = "de.mkbauer.tinyscript.Tinyscript"
-			fileExtensions = "ts"
+			fileExtensions = "tys"
 
 			serializer = {
 				generateStub = false

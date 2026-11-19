@@ -5,16 +5,16 @@ interface Example {
 }
 
 const examples: Example[] = [
-  { file: 'helloworld.ts',           label: 'Hello World' },
-  { file: 'expressions.ts',          label: 'Basic Expressions' },
-  { file: 'strings.ts',              label: 'Strings' },
-  { file: 'primes.ts',               label: 'Control flow: for and if Statements' },
-  { file: 'fibonacci.ts',            label: 'Functions' },
-  { file: 'fibonacci_recursive.ts',  label: 'Functions: recursion' },
-  { file: 'arrays.ts',               label: 'Working with Arrays' },
-  { file: 'closures.ts',             label: 'Closures' },
-  { file: 'oo.ts',                   label: 'Objects and Prototypes' },
-  { file: 'people.ts',               label: 'Monitoring Runtime Resources' },
+  { file: 'helloworld.tys',           label: 'Hello World' },
+  { file: 'expressions.tys',          label: 'Basic Expressions' },
+  { file: 'strings.tys',              label: 'Strings' },
+  { file: 'primes.tys',               label: 'Control flow: for and if Statements' },
+  { file: 'fibonacci.tys',            label: 'Functions' },
+  { file: 'fibonacci_recursive.tys',  label: 'Functions: recursion' },
+  { file: 'arrays.tys',               label: 'Working with Arrays' },
+  { file: 'closures.tys',             label: 'Closures' },
+  { file: 'oo.tys',                   label: 'Objects and Prototypes' },
+  { file: 'people.tys',               label: 'Monitoring Runtime Resources' },
 ]
 
 defineProps<{ executing: boolean }>()

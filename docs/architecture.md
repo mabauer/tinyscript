@@ -41,7 +41,7 @@ The core module (`de.mkbauer.tinyscript`) is the only module that contains hand-
 ## 3. Execution Pipeline
 
 ```
-Source text (.ts file or inline string)
+Source text (.tys file or inline string)
   │
   ▼
 Xtext parser
@@ -319,7 +319,7 @@ private boolean isArrowFunction;
 
 ## 9. Built-in Runtime Library
 
-Built-ins are registered in `TinyscriptEngine.initialize()` and also declared in a synthetic `__builtins.ts` Xtext resource (so the IDE scope provider can resolve them for auto-complete).
+Built-ins are registered in `TinyscriptEngine.initialize()` and also declared in a synthetic `__builtins.tys` Xtext resource (so the IDE scope provider can resolve them for auto-complete).
 
 | Object | Class | Key methods |
 |---|---|---|
@@ -508,7 +508,7 @@ The frontend source lives in `frontend/` and is built by `frontend-maven-plugin`
 | `frontend/src/components/tinyscript-lang.ts` | CM6 `StreamLanguage` tokenizer for Tinyscript syntax |
 | `frontend/src/components/Output.vue` | Spinner, success/error alerts, formatted statistics |
 | `frontend/src/types.ts` | TypeScript interfaces: `ExecutionResult`, `Statistics` |
-| `frontend/public/*.ts` | 10 example scripts served as static files |
+| `frontend/public/*.tys` | 10 example scripts served as static files |
 
 Frontend unit tests (Vitest) cover `Output`, `Toolbar`, and the `tinyscript-lang` tokenizer. They run as part of the Maven build before the Spring Boot tests.
 
