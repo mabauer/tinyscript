@@ -22,6 +22,8 @@ public class ResourceLimits {
 	
 	protected int maxStringLength;
 	
+	protected long maxOutputSize;
+	
 	public ResourceLimits() {
 		maxStatements = 0;
 		maxCallDepth = 0;
@@ -29,6 +31,7 @@ public class ResourceLimits {
 		maxObjectCreations = 0;
 		maxObjectSize = 0;
 		maxStringLength = 0;
+		maxOutputSize = 0;
 		maxMXCpuTime = 0;
 		maxMxMAlloc = 0;
 	}
@@ -87,6 +90,17 @@ public class ResourceLimits {
 
 	public void setMaxStringLength(int maxStringSize) {
 		this.maxStringLength = maxStringSize;
+	}
+
+	public long getMaxOutputSize() {
+		return maxOutputSize;
+	}
+
+	/**
+	 * Limits the number of characters a script may print (0: no limit).
+	 */
+	public void setMaxOutputSize(long maxOutputSize) {
+		this.maxOutputSize = maxOutputSize;
 	}
 
 	public int getMaxCallDepth() {

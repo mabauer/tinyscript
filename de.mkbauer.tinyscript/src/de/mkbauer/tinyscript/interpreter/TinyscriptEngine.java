@@ -915,6 +915,11 @@ public class TinyscriptEngine {
 		if (resourceMonitor != null)
 			resourceMonitor.recordStringCreation(str);
 	}
+
+	public void recordOutput(int length) {
+		if (resourceMonitor != null)
+			resourceMonitor.recordOutput(length);
+	}
 	
 	protected void checkMXCpuTimeAndMemory() {
 		if (resourceMonitor != null)

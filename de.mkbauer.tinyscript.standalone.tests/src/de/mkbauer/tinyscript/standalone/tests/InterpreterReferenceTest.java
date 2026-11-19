@@ -557,6 +557,24 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
                 () -> interpreterOutput("var a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\nfor (var x : a) { }", limits));
     }
 
+    @Test
+    public void testOutputWithinLimitIsWritten() {
+        ResourceLimits limits = new ResourceLimits();
+        limits.setMaxOutputSize(100);
+        assertEquals("a\nb\n", interpreterOutput("print(\"a\"); print(\"b\");", limits));
+    }
+
+    @Test
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void testOutputLimitViolationReportsTheLine() {
+        ResourceLimits limits = new ResourceLimits();
+        limits.setMaxOutputSize(100);
+        TinyscriptResourceLimitViolation e = assertThrows(TinyscriptResourceLimitViolation.class,
+                () -> interpreterOutput("var i = 0;\nwhile (true) {\n  print(\"0123456789\");\n}", limits));
+        assertEquals("Output limit reached", e.getMessage());
+        assertEquals(3, e.getAffectedLine());
+    }
+
     // =========================================================================
     // Errors report the line where they happened
     // =========================================================================

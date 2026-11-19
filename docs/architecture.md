@@ -375,6 +375,7 @@ long maxMxMAlloc;        // bytes
 int  maxObjectCreations;
 int  maxObjectSize;      // max properties per single object
 int  maxStringLength;
+long maxOutputSize;      // characters written by print(...)
 ```
 
 ### Web Demo Limits
@@ -386,7 +387,10 @@ Set by `TinyscriptExecutionService`:
 | `maxStatements` | 5,000,000 |
 | `maxCallDepth` | 128 |
 | `maxMemory` | 16 MB |
-| Max output size | 8 KB |
+| `maxStringLength` | 8 K characters |
+| `maxOutputSize` | 64 K characters |
+
+Without the output and string limits, a script that prints a large string in a loop filled the heap (`OutOfMemoryError`) before any other limit applied: the output buffer is not part of the tracked memory.
 
 ### Sandboxed Flag
 
@@ -490,7 +494,7 @@ Spring Boot application. REST endpoints:
 | `/api/version` | GET | Version of the running build (shown in the UI) |
 | `/test` | GET | Runs a fixed sample script; health check for external monitoring (checkmk) — do not remove |
 
-The `TinyscriptExecutionService` creates a fresh sandboxed `TinyscriptEngine` per request (stateless). Output is captured via a custom `OutputStream` with an 8 KB limit. Sandboxing is **on**.
+The `TinyscriptExecutionService` creates a fresh sandboxed `TinyscriptEngine` per request (stateless). Output is captured in a buffer; `print` checks the `maxOutputSize` limit before writing, so the buffer stays bounded. Sandboxing is **on**.
 
 **Frontend:** Vue 3 + Vite + TypeScript, Bootstrap 5, CodeMirror 6.
 
