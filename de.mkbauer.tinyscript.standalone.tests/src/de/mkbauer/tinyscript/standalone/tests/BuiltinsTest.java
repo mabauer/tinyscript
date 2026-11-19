@@ -1,13 +1,16 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.TinyscriptArgumentError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptUnsupportedOperationError;
@@ -216,6 +219,19 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testRedefiningANonConfigurablePropertyIsATypeError() {
+        assertInterpreterThrows(TinyscriptTypeError.class,
+                "var o = {};\n"
+                + "Object.defineProperty(o, \"a\", { value: 1, configurable: false });\n"
+                + "Object.defineProperty(o, \"a\", { value: 2 });");
+        assertEquals("2\n", interpreterOutput(
+                "var o = {};\n"
+                + "Object.defineProperty(o, \"a\", { value: 1, configurable: true });\n"
+                + "Object.defineProperty(o, \"a\", { value: 2 });\n"
+                + "print(o.a);"));
+    }
+
+    @Test
     public void testObjectDefinePropertyReadOnly() {
         assertEquals("1\nfalse\n", interpreterOutput(
                 "var o = {};\n"
@@ -275,6 +291,19 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testSystemCurrentTimeMillis() {
         assertEquals("true\n", interpreterOutput("print(System.currentTimeMillis() > 0);"));
+    }
+
+    @Test
+    public void testPrintReportsOutputErrors() {
+        OutputStream failing = new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+                throw new IOException("disk full");
+            }
+        };
+        TinyscriptRuntimeException e = assertThrows(TinyscriptRuntimeException.class,
+                () -> runInterpreter("print(\"x\");", failing));
+        assertEquals("Cannot write output: disk full", e.getMessage());
     }
 
     @Test

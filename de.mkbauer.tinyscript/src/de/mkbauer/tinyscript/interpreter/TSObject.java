@@ -146,8 +146,14 @@ public non-sealed class TSObject implements TSValue {
 		return properties.get(key);
 	}
 	
+	/**
+	 * Defines or replaces an own property. A non-configurable property cannot be redefined
+	 * (simpler than Javascript, which allows a few compatible changes).
+	 */
 	public void setOwnPropertyDescriptor(String key, TSPropertyDescriptor desc) {
-		// TODO(TODO.md: defineProperty on non-configurable properties): if not configurable, throw a TypeError 
+		TSPropertyDescriptor existing = properties.get(key);
+		if (existing != null && !existing.isConfigurable())
+			throw new TinyscriptTypeError("Cannot redefine property: " + key);
 		properties.put(key,  desc);
 	}
 	

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.InputStream;
 import java.util.List;
 
@@ -159,6 +160,14 @@ public abstract class TinyscriptTranspilerTestBase {
     }
 
     /**
+     * Runs {@code tsCode} through a fresh, sandboxed interpreter that writes to
+     * {@code stdout}, e.g. to test what happens when the output fails.
+     */
+    protected void runInterpreter(String tsCode, OutputStream stdout) {
+        runInterpreter(tsCode, null, true, stdout);
+    }
+
+    /**
      * Like {@link #interpreterOutput(String)}, but with sandboxing switched off
      * (as in the REPL), e.g. to test the file system builtins.
      */
@@ -167,6 +176,12 @@ public abstract class TinyscriptTranspilerTestBase {
     }
 
     private String interpreterOutput(String tsCode, ResourceLimits limits, boolean sandboxed) {
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        runInterpreter(tsCode, limits, sandboxed, stdout);
+        return stdout.toString();
+    }
+
+    private void runInterpreter(String tsCode, ResourceLimits limits, boolean sandboxed, OutputStream stdout) {
         // Fresh injector + engine per call so tests are independent.
         Injector localInjector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
@@ -185,7 +200,6 @@ public abstract class TinyscriptTranspilerTestBase {
         }
         Tinyscript ast = (Tinyscript) resource.getContents().get(0);
 
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         TinyscriptEngine engine;
         if (limits == null) {
             engine = new TinyscriptEngine(localResourceSet);
@@ -197,7 +211,6 @@ public abstract class TinyscriptTranspilerTestBase {
         engine.setSandboxed(sandboxed);
         engine.defineStdOut(stdout);
         engine.execute(ast);
-        return stdout.toString();
     }
 
     /**
