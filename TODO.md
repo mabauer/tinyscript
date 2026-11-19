@@ -7,8 +7,6 @@ Open issues and ideas for tinyscript. Each item is meant to become its own PR, w
 Next
 ----
 
-- **Webdemo: resource limit violations report "line 0".** When a limit is hit inside a loop there is no AST node attached to the error, so the webdemo shows line 0.
-
 - **Webdemo tests: JUnit 4 → JUnit 6.** They still use `SpringJUnit4ClassRunner` (deprecated in Spring 7); migrate them like the other test modules.
 
 

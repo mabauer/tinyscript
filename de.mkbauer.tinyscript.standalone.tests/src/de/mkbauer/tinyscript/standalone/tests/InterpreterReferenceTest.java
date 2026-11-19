@@ -556,4 +556,34 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         assertThrows(TinyscriptResourceLimitViolation.class,
                 () -> interpreterOutput("var a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\nfor (var x : a) { }", limits));
     }
+
+    // =========================================================================
+    // Errors report the line where they happened
+    // =========================================================================
+
+    @Test
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void testStatementLimitViolationReportsTheLine() {
+        ResourceLimits limits = new ResourceLimits();
+        limits.setMaxStatements(100);
+        TinyscriptResourceLimitViolation e = assertThrows(TinyscriptResourceLimitViolation.class,
+                () -> interpreterOutput("var i = 0;\n\nwhile (true) { }", limits));
+        assertEquals(3, e.getAffectedLine());
+    }
+
+    @Test
+    public void testCallDepthLimitViolationReportsTheLine() {
+        ResourceLimits limits = new ResourceLimits();
+        limits.setMaxRecursionDepth(10);
+        TinyscriptResourceLimitViolation e = assertThrows(TinyscriptResourceLimitViolation.class,
+                () -> interpreterOutput("function f(n) {\n  return f(n + 1);\n}\nf(0);", limits));
+        assertEquals(2, e.getAffectedLine());
+    }
+
+    @Test
+    public void testErrorInBuiltinReportsTheLineOfTheCall() {
+        TinyscriptRuntimeException e = assertThrows(TinyscriptRuntimeException.class,
+                () -> interpreterOutput("var a = [1];\n\na.push();"));
+        assertEquals(3, e.getAffectedLine());
+    }
 }

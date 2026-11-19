@@ -24,6 +24,14 @@ public class TinyscriptRuntimeException extends RuntimeException {
 		this.node = node;
 	}
 	
+	/**
+	 * Attaches the AST node where the error happened, unless the error already knows it.
+	 */
+	public void attachNodeIfAbsent(EObject node) {
+		if (this.node == null)
+			this.node = node;
+	}
+
 	public void setTinyscriptStacktrace(TSStacktraceElement[] stacktrace) {
 		this.tsStacktrace = stacktrace; 
 	}
