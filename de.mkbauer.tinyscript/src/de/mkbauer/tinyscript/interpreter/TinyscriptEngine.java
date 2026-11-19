@@ -224,6 +224,17 @@ public class TinyscriptEngine {
 	}
     
     public TSValue execute(EObject object) {
+    	try {
+    		return dispatch(object);
+    	}
+    	catch (TinyscriptRuntimeException e) {
+    		// Errors raised without a node (e.g. resource limit violations) get the innermost node being executed
+    		e.attachNodeIfAbsent(object);
+    		throw e;
+    	}
+    }
+
+    private TSValue dispatch(EObject object) {
     	if (object == null)
     		throw new NullPointerException();
     	int id = object.eClass().getClassifierID();
