@@ -97,6 +97,19 @@ public non-sealed class TSObject implements TSValue {
 		return (position >= 0 && position < length) ? (int) position : -1;
 	}
 
+	/**
+	 * The optional start index argument of indexOf() (0 if missing). Unlike Javascript,
+	 * a non-integer start index is a TypeError.
+	 */
+	public static int toStartIndex(TSValue[] args, int position) {
+		if (args.length <= position)
+			return 0;
+		TSValue start = args[position];
+		if (!start.isMathematicalInteger())
+			throw new TinyscriptTypeError("indexOf() needs an integer start index, not " + start.asString());
+		return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, start.asDouble()));
+	}
+
 	public static int toInteger(TinyscriptEngine engine, TSValue value) {
 		// TODO(TODO.md: Conversions): Return NaN if undefined
 		if (value instanceof TSObject object)

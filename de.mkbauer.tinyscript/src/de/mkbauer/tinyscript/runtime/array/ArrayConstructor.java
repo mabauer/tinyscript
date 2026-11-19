@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.runtime.array;
 
+import java.util.List;
+
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
@@ -20,6 +22,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 		TSObject arrayPrototype = getPrototypeProperty().asObject();
 		arrayPrototype.defineBuiltinMethod("toString", this::arrayToString, 0);
 		arrayPrototype.defineBuiltinMethod("at", this::at, 1);
+		arrayPrototype.defineBuiltinMethod("indexOf", this::indexOf, 1);
 		arrayPrototype.defineBuiltinMethod("push", this::push, 1);
 		arrayPrototype.defineBuiltinMethod("pop", this::pop, 0);
 		arrayPrototype.defineBuiltinMethod("unshift", this::unshift, 1);
@@ -128,6 +131,20 @@ public class ArrayConstructor extends BuiltinConstructor {
 		ArrayObject arr = thisArray(self, "at");
 		int index = TSObject.toRelativeIndex(args[0], arr.getLength());
 		return index < 0 ? TSValue.UNDEFINED : arr.item(index);
+	}
+
+	// Array.prototype.indexOf(value[, start]): the first index of an item == value (tinyscript's ==),
+	// or -1; like Javascript, a negative start counts from the end
+	private TSValue indexOf(TSObject self, TSValue[] args) {
+		List<TSValue> items = thisArray(self, "indexOf").getItems();
+		int start = TSObject.toStartIndex(args, 1);
+		if (start < 0)
+			start = Math.max(0, items.size() + start);
+		for (int i = start; i < items.size(); i++) {
+			if (items.get(i).tinyscriptEquals(args[0]))
+				return TSValue.of(i);
+		}
+		return TSValue.of(-1);
 	}
 
 	private static ArrayObject thisArray(TSObject self, String method) {
