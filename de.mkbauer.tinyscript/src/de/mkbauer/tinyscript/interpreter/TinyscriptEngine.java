@@ -143,7 +143,7 @@ public class TinyscriptEngine {
 		addToGlobalObject("Math", new MathObject(this));
 		addToGlobalObject("fs", new FSObject(this));		
 		addToGlobalObject("System", new SystemObject(this));
-		addToGlobalObject("print", new Print(this));
+		addToGlobalObject("print", Print.create(this));
 		
 		if (resourceMonitor != null)
 			resourceMonitor.stop();
@@ -177,6 +177,16 @@ public class TinyscriptEngine {
 
 	public boolean isSandboxed() {
 		return sandboxed;
+	}
+
+	/**
+	 * Used by builtins that must not be available in sandboxed mode (e.g. file access).
+	 */
+	public void enforceSandboxing(String builtinName) {
+		if (sandboxed) {
+			throw new TinyscriptUnsupportedOperationError("Builtin function " + builtinName + " is not available when running sandboxed.",
+					currentContext.currentExpression);
+		}
 	}
 
 	public void setSandboxed(boolean sandboxed) {
