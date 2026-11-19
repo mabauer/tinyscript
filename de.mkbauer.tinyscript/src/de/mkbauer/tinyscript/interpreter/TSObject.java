@@ -42,30 +42,20 @@ public non-sealed class TSObject implements TSValue {
 		return value.asString();
 	}
 	
+	/**
+	 * The object used for a property access on {@code value}. Only strings have a
+	 * wrapper object (with length, charAt, ...); unlike Javascript, numbers and
+	 * booleans have no properties at all.
+	 */
 	public static TSObject toObject(TinyscriptEngine engine, TSValue value) throws TinyscriptTypeError {
-		if (value == TSValue.UNDEFINED)  {
-			throw new TinyscriptTypeError("Cannot convert 'undefined' to an object");
-		}
-		if (value == TSValue.NULL) {
-			throw new TinyscriptTypeError("Cannot convert 'null' to an object");
-		}
-		if (value.isPrimitiveString()) {
-			StringConstructor ctor = (StringConstructor) engine.getConstructor(StringConstructor.NAME);
-			return ctor.createObject(value);
-		}
-		if (value.isNumber()) {
-			// TODO(TODO.md: Primitive wrapper objects): Create a Number object
-			TSObject result = new TSObject(engine, engine.getDefaultPrototype()); 
-			result.put("value", value);
-			return result; 
-		}
-		if (value.isBoolean()) {
-			// TODO(TODO.md: Primitive wrapper objects): Create a Boolean object
-			TSObject result = new TSObject(engine, engine.getDefaultPrototype()); 
-			result.put("value", value);
-			return result;
-		}
-		return value.asObject();
+		return switch (value) {
+			case TSObject object -> object;
+			case TSString string -> ((StringConstructor) engine.getConstructor(StringConstructor.NAME)).createObject(string);
+			case TSUndefined u -> throw new TinyscriptTypeError("Cannot convert 'undefined' to an object");
+			case TSNull n -> throw new TinyscriptTypeError("Cannot convert 'null' to an object");
+			case TSNumber n -> throw new TinyscriptTypeError("Numbers have no properties");
+			case TSBoolean b -> throw new TinyscriptTypeError("Booleans have no properties");
+		};
 	}
 	
 	public static TSValue toPrimitive(TinyscriptEngine engine, TSObject object) {

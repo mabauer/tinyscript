@@ -77,6 +77,7 @@ Design decisions
 - **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). The one deliberate exception: `null == undefined` is `true`, so `o.x == null` checks for a missing property. Numbers compare like in Javascript (`NaN != NaN`). There is no `===` / `!==`.
 - **Strict comparisons:** `<`, `<=`, `>` and `>=` compare a number with a number or a string with a string; anything else is a `TypeError`. Comparisons cannot be chained: `a < b < c` is a syntax error (in Javascript `1 < 3 < 2` is `true`).
 - **Logical operators return booleans:** `&&` and `||` short-circuit like in Javascript, but always return `true` or `false`, never one of their operands.
+- **Only strings have methods:** a property access on a number or boolean (`(5).toString()`, `n.x`) is a `TypeError`; use `String(n)` or `"" + n` to convert. Strings keep `length`, `charAt`, `at`, ...
 - **Arrays are lists:** besides their items only `length` can be set; `a.x = 1` or `a[-1] = 1` is a `TypeError` instead of silently creating a property. To index from the end, use `a.at(-1)`.
 - **Arrays can be added:** the operator `+` also works on arrays: `var arr = ["hello"]; arr = arr + ["world"];` results in `["hello", "world"]`. With a string on either side, `+` concatenates strings (`"arr: " + arr`); an array plus anything else is a `TypeError`.
 - **Arrow functions** are supported. These are part of Javascript starting with Ecmascript 6 :-)

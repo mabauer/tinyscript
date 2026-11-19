@@ -801,7 +801,9 @@ obj.greet();                         // "hi" (inherited)
 
 ### `String`
 
-String primitives have methods available via auto-boxing:
+String primitives have methods available via auto-boxing. Numbers and booleans have no wrapper objects: a property access on them (`(5).toString()`, `n.x`) is a `TypeError`; convert with `String(n)` or `"" + n`.
+
+String methods:
 
 | Method | Description |
 |---|---|
