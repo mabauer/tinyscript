@@ -1,6 +1,6 @@
 # Eclipse IDE Setup
 
-These instructions target Xtext 2.44.0, Eclipse 2026-09, and Java 21.
+These instructions target Xtext 2.44.0, Eclipse 2026-09, and Java 25.
 
 ## 1. Install/update the host Eclipse IDE
 
@@ -14,17 +14,17 @@ The host IDE needs Xtext tooling (editor, Xtend compiler, MWE2 runner) — this 
 - Add site: `https://download.eclipse.org/modeling/tmf/xtext/updates/releases/2.44.0/`
 - Install: **Xtext SDK** (includes Xtend IDE and MWE2)
 
-## 3. Add Java 21 to Eclipse and map the execution environment
+## 3. Add Java 25 to Eclipse and map the execution environment
 
 **Add the JDK:**
 - Window → Preferences → Java → Installed JREs → **Add** → Standard VM
-- Directory: `/opt/homebrew/opt/openjdk@21` (macOS/Homebrew) or wherever your Java 21 JDK lives
+- Directory: `/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home` (macOS, `brew install --cask temurin@25`) or wherever your Java 25 JDK lives
 - Finish, then tick it as the default
 
-**Map it to the JavaSE-21 execution environment** (required — without this step Eclipse cannot compile the plugins and reports "release 21 is not found in the system"):
+**Map it to the JavaSE-25 execution environment** (required — without this step Eclipse cannot compile the plugins and reports "release 25 is not found in the system"):
 - Window → Preferences → Java → Installed JREs → **Execution Environments**
-- Select **JavaSE-21** in the left list
-- Tick the Java 21 JDK in the right list
+- Select **JavaSE-25** in the left list
+- Tick the Java 25 JDK in the right list
 - Apply and Close
 
 ## 4. Open the workspace and reload the target platform
@@ -78,4 +78,4 @@ The errors will clear. The "Force Update" checkbox is required — without it m2
 
 ## Running tests
 
-Launch the JUnit tests from the `de.mkbauer.tinyscript.tests` project as you would any Eclipse plug-in test. The 12 tests in `JvmScriptEngineRunnerTest` will appear as **skipped** (not failed) on standard OpenJDK 21, which has no built-in JavaScript engine (Nashorn was removed in Java 15; Graal.js is only available in GraalVM distributions). All other tests should pass.
+Launch the JUnit tests from the `de.mkbauer.tinyscript.tests` project as you would any Eclipse plug-in test. The 12 tests in `JvmScriptEngineRunnerTest` will appear as **skipped** (not failed) on standard OpenJDK, which has no built-in JavaScript engine (Nashorn was removed in Java 15; Graal.js is only available in GraalVM distributions). All other tests should pass.

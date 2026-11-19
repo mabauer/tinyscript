@@ -10,7 +10,7 @@ Tinyscript is a proof-of-concept JavaScript-like scripting language built on Ecl
 
 This is a Maven multi-module project using Eclipse Tycho for OSGi/Eclipse plugin builds.
 
-Always build with the Maven wrapper (`./mvnw`), which pins Maven 3.9.16. Maven 3.10+ fails on the core module with `Invalid Collect Request: null` because its resolver rejects the `system`-scoped p2 dependencies that Tycho 5.0.x injects (verified with Tycho 5.0.2; not re-tested with 5.0.4). `JAVA_HOME` must point to a JDK 21.
+Always build with the Maven wrapper (`./mvnw`), which pins Maven 3.9.16. Maven 3.10+ fails on the core module with `Invalid Collect Request: null` because its resolver rejects the `system`-scoped p2 dependencies that Tycho 5.0.x injects (verified with Tycho 5.0.2; not re-tested with 5.0.4). `JAVA_HOME` must point to a JDK 25.
 
 ```bash
 # Build everything (runs from repo root)
@@ -197,7 +197,7 @@ Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 
 ## Technology Stack
 
-- **Java 21** — required for IDE runs; build minimum is effectively 21 (Tycho 5 + Spring Boot 4.1)
+- **Java 25** — all modules compile for Java 25 (BREE `JavaSE-25`); required for builds and IDE runs. The webdemo and REPL mains set `guice_bytecode_gen_option=DISABLED` so Guice 7 does not call `sun.misc.Unsafe` (deprecation warning on Java 24+)
 - **Xtext 2.44.0** — language engineering framework
 - **Maven + Tycho 5.0.4** — build system for Eclipse plugins
 - **Spring Boot 4.1** — web demo backend (no Actuator; version info via `/api/version`)
@@ -207,7 +207,7 @@ Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 - **Vitest + @vue/test-utils** — frontend unit tests
 - **JUnit 6 (Jupiter)** — test framework for both OSGi and standalone tests
 - **Apache Commons Exec 1.4** — used by `NodeJsRunner` to invoke `node` in standalone tests
-- **eclipse-temurin:21-jre** — Docker base image
+- **eclipse-temurin:25-jre** — Docker base image
 
 ## Frontend Development (web demo)
 

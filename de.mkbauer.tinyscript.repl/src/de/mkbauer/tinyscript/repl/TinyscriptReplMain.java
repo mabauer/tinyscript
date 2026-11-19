@@ -41,7 +41,12 @@ class TinyscriptReplMain  {
 	private ConsoleReader device = null;
 		
 	public static void main(String[] args) {
-		
+
+		// Guice's bytecode generation (AOP, unused by Xtext) calls sun.misc.Unsafe,
+		// which prints a deprecation warning on Java 24+ and will be removed.
+		if (System.getProperty("guice_bytecode_gen_option") == null)
+			System.setProperty("guice_bytecode_gen_option", "DISABLED");
+
 		TinyscriptReplMain repl = new TinyscriptReplMain();
 
 		if (args.length >= 1) {

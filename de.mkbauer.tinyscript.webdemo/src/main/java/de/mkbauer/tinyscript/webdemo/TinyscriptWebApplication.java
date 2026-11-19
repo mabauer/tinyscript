@@ -29,6 +29,10 @@ import org.springframework.context.annotation.Configuration;
 public class TinyscriptWebApplication {
 
 	public static void main(String[] args) throws Exception {
+		// Guice's bytecode generation (AOP, unused by Xtext) calls sun.misc.Unsafe,
+		// which prints a deprecation warning on Java 24+ and will be removed.
+		if (System.getProperty("guice_bytecode_gen_option") == null)
+			System.setProperty("guice_bytecode_gen_option", "DISABLED");
 		SpringApplication.run(TinyscriptWebApplication.class, args);
 	}
 

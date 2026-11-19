@@ -202,7 +202,7 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 	// importing com.sun.management.ThreadMXBean
 	private void setupMXBeans() {
 	    if(useMXBeanInspection) {
-	    	threadId = Thread.currentThread().getId();
+	    	threadId = Thread.currentThread().threadId();
 	        tBean = ManagementFactory.getThreadMXBean();
 	        if(tBean instanceof com.sun.management.ThreadMXBean) { 
 	            sunBean = (com.sun.management.ThreadMXBean)tBean;
