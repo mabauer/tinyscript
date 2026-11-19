@@ -79,7 +79,11 @@ Everything else is truthy, including `[]` and `{}`.
 ```
 typeof x        // "undefined", "boolean", "number", "string", "function", or "object"
 typeof null     // "object"  (matches ECMAScript)
+typeof f()      // works on any operand: calls, property accesses, a[0], (1 + 2)
+typeof 1 + "x"  // "numberx": typeof binds tighter than binary operators
 ```
+
+`typeof` is a unary operator like `-` and `!`. Unlike Javascript, `typeof` on an undeclared name is not `"undefined"` but a compile-time error, like any other use of an undeclared name. A property access on `undefined` (`typeof o.x.y` when `o.x` is missing) is a `TypeError`, as in Javascript.
 
 ---
 

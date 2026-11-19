@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import org.junit.jupiter.api.Test;
 
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
  * Characterization tests for the semantics of values: {@code typeof}, truthiness,
@@ -27,7 +28,34 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
                 + "print(typeof s); print(typeof f); print(typeof o); print(typeof a);";
         assertEquals("undefined\nobject\nboolean\nnumber\nnumber\nstring\nfunction\nobject\nobject\n",
                 interpreterOutput(code));
-        // No differential test yet: the generator cannot translate typeof (see TODO.md)
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testTypeOfArbitraryExpressions() {
+        String code = "function f() { return 1; } var a = [\"s\"]; var o = { x: true, g: f };\n"
+                + "print(typeof f()); print(typeof a[0]); print(typeof (1 + 2)); print(typeof o.x);\n"
+                + "print(typeof o.g); print(typeof o.missing); print(typeof [1]); print(typeof {});";
+        assertEquals("number\nstring\nnumber\nboolean\nfunction\nundefined\nobject\nobject\n",
+                interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testTypeOfBindsTighterThanBinaryOperators() {
+        String code = "print(typeof 1 + \"x\"); print(typeof 1 == \"number\");";
+        assertEquals("numberx\ntrue\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testTypeOfUndeclaredNameIsRejected() {
+        assertRejected("print(typeof nothing);");
+    }
+
+    @Test
+    public void testTypeOfPropertyOfUndefinedIsATypeError() {
+        assertInterpreterThrows(TinyscriptTypeError.class, "var o = {}; print(typeof o.x.y);");
     }
 
     @Test

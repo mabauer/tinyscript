@@ -12,12 +12,6 @@ import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 public class TypeOfExpressionTest extends TinyscriptInterpreterTestHelper {
 
 	@Test
-	public void testUndeclared() {
-		TSValue value = executeScriptFromString("typeof nothing;");
-		assertEquals("undefined", value.asString());
-	}
-	
-	@Test
 	public void testUndefined() {
 		TSValue value = executeScriptFromString("var undef; typeof undef;");
 		assertEquals("undefined", value.asString());

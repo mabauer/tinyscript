@@ -97,12 +97,11 @@ Multiplication returns Expression:
 ;
 
 Unary:
-	op=('-'|OP_NOT) expr=Primary // ExpressionStatement?
+	op=('-'|OP_NOT|'typeof') expr=Primary // ExpressionStatement?
 ;
 
 Primary returns Expression:
 	((Atomic  | NewExpression | GroupingExpression ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))* )
-	| TypeOfExpression 
 	| NullObject
 ;
 
@@ -229,10 +228,6 @@ ArrayInitializer:
 
 RangeExpression:
 	start=NumberLiteral ',' end=NumberLiteral	
-;
-
-TypeOfExpression:
-	'typeof' name=ID (suffixes+=DotPropertyAccessSuffix)*
 ;
 
 NullObject returns Expression:
