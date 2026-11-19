@@ -125,6 +125,43 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testIterableForWithoutVar() {
+        String code = "var x; for (x : [1, 2]) { print(x); } print(x);";
+        assertEquals("1\n2\n2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testIterableIsEvaluatedOnce() {
+        String code = "function f() { print(\"f\"); return [1, 2]; } for (var x : f()) { print(x); }";
+        assertEquals("f\n1\n2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testNestedIterableLoops() {
+        String code = "for (var a : [1, 2]) { for (var b : [3, 4]) { print(a + \"-\" + b); } }";
+        assertEquals("1-3\n1-4\n2-3\n2-4\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testNumericForBoundsAreEvaluatedOnce() {
+        String code = "function n(x) { print(\"n\" + x); return x; }\n"
+                + "for (var i = n(1), n(2)) { print(i); }\n"
+                + "for (var j = n(6), n(2), n(-2)) { print(j); }";
+        assertEquals("n1\nn2\n1\n2\nn6\nn2\nn-2\n6\n4\n2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testStringKeysInObjectLiterals() {
+        String code = "var o = { \"a b\": 1, c: 2 }; print(o[\"a b\"]); print(o.c);";
+        assertEquals("1\n2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testWhile() {
         assertSameOutput("var i = 0; while (i < 3) { print(i); i = i + 1; }");
         assertSameOutput("var i = 0; while (true) { i = i + 1; if (i > 2) { break; } print(i); }");

@@ -40,11 +40,15 @@ import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
 import de.mkbauer.tinyscript.ts.NullObject
+import de.mkbauer.tinyscript.ts.Expression
 
 class TinyscriptGenerator   {
 	
 	@Inject
 	TinyscriptQualifiedNameProvider nameProvider;
+	
+	// Counter for unique names of temporary variables (loop bounds, iterables, indexes)
+	int tempCounter = 0;
 	
 	def generateBuiltins() '''
 
@@ -93,7 +97,12 @@ class TinyscriptGenerator   {
 		
 	'''
 	
-	def generate(Tinyscript script, boolean includeBuiltins) '''
+	def generate(Tinyscript script, boolean includeBuiltins) {
+		tempCounter = 0
+		generateScript(script, includeBuiltins)
+	}
+	
+	def private generateScript(Tinyscript script, boolean includeBuiltins) '''
 		«IF includeBuiltins»
 			«generateBuiltins»
 		«ENDIF»
@@ -194,24 +203,51 @@ class TinyscriptGenerator   {
 			loopVar = stmt.ref.generate as String
 			loopVarDefinition = loopVar;
 		}
+		// Like the interpreter, evaluate the bounds once, in the order start, stop, step
+		val preamble = new StringBuilder
+		val start = evaluateOnce(expr.start, "start", preamble)
+		val stop = evaluateOnce(expr.stop, "stop", preamble)
+		val step = if (expr.step !== null) evaluateOnce(expr.step, "step", preamble)
 		'''
-		«IF (expr.step === null)»
-			for («loopVarDefinition» = «expr.start.generate»; «loopVar» <= «expr.stop.generate»; «loopVar» = «loopVar» + 1) {
+		«preamble»
+		«IF (step === null)»
+			for («loopVarDefinition» = «start»; «loopVar» <= «stop»; «loopVar» = «loopVar» + 1) {
 				«stmt.^do.generate»
 			}
 		«ELSE»
-			for («loopVarDefinition» = «expr.start.generate»; («expr.step.generate» > 0)?(«loopVar» <= «expr.stop.generate»):(«loopVar» >= «expr.stop.generate»); «loopVar» = «loopVar» + «expr.step.generate») {
+			for («loopVarDefinition» = «start»; («step» > 0)?(«loopVar» <= «stop»):(«loopVar» >= «stop»); «loopVar» = «loopVar» + «step») {
 				«stmt.^do.generate»
 			}
 		«ENDIF»'''		
 	}
 	
+	/**
+	 * Returns the code for an expression that must be evaluated only once: literals
+	 * inline, anything else via a temporary variable declared in the preamble.
+	 */
+	def private String evaluateOnce(Expression expr, String purpose, StringBuilder preamble) {
+		if (expr instanceof NumberLiteral || (expr instanceof Unary && (expr as Unary).expr instanceof NumberLiteral))
+			return expr.generate.toString
+		val name = newTempName(purpose)
+		preamble.append("var " + name + " = " + expr.generate + ";\n")
+		return name
+	}
+	
+	def private String newTempName(String purpose) {
+		tempCounter = tempCounter + 1
+		return "__ts_" + purpose + tempCounter
+	}
+	
 	def generateIterableForStatement(ForStatement stmt) {
 		val IterableForExpression expr=stmt.iterableForExpr; 
+		val iterable = newTempName("iterable")
+		val index = newTempName("i")
+		val loopVarDefinition = if (stmt.id !== null) "var " + stmt.id.generate else stmt.ref.generate
 		'''
-		if (Array.isArray(«expr.iterable.generate»)) {
-			for (var __ts_i = 0; __ts_i < («expr.iterable.generate»).length; __ts_i++) {
-				var «stmt.id.generate» = «expr.iterable.generate»[__ts_i];
+		var «iterable» = «expr.iterable.generate»;
+		if (Array.isArray(«iterable»)) {
+			for (var «index» = 0; «index» < «iterable».length; «index»++) {
+				«loopVarDefinition» = «iterable»[«index»];
 				«stmt.^do.generate»
 			}	
 		}
@@ -246,7 +282,7 @@ class TinyscriptGenerator   {
 		'''.«suffix.key.generate»'''
 	
 	def dispatch generate(PropertyName expr) 
-		'''«IF expr.name !== null»«expr.name»«ELSE»expr.expr.generate«ENDIF»'''
+		'''«IF expr.name !== null»«expr.name»«ELSE»«expr.expr.generate»«ENDIF»'''
 	
 	def dispatch generate(Identifier id) {
 		getName(id);	
