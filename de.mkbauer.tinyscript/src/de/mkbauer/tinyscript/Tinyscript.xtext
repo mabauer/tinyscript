@@ -97,7 +97,7 @@ Multiplication returns Expression:
 ;
 
 Unary:
-	op=('-'|OP_NOT|'typeof') expr=Primary // ExpressionStatement?
+	op=('-'|OP_NOT|'typeof') expr=(Unary | Primary)
 ;
 
 Primary returns Expression:
@@ -200,7 +200,7 @@ PropertyAccessSuffix:
 ;
 
 ComputedPropertyAccessSuffix:
-	'[' key=Addition ']'  // TODO(TODO.md: Remaining syntax restrictions): AssignmentExpression?
+	'[' key=AssignmentExpression ']'
 ;
 	
 DotPropertyAccessSuffix:
@@ -223,7 +223,7 @@ PropertyName:
 
 ArrayInitializer:
 	{ArrayInitializer}
-	'[' (values+=Addition)? (',' values += Addition)* ']'  
+	'[' (values+=AssignmentExpression)? (',' values += AssignmentExpression)* ']'
 ;
 
 NullObject returns Expression:

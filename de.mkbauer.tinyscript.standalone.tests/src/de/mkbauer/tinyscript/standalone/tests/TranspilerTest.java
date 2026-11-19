@@ -210,6 +210,32 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testArbitraryExpressionsInArrayLiterals() {
+        String code = "var x = 1; var y = 2;\n"
+                + "var a = [x > y, !x, x == 1, f => f * 2];\n"
+                + "print(a[0]); print(a[1]); print(a[2]); print(a[3](4));";
+        assertEquals("false\nfalse\ntrue\n8\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testArbitraryExpressionsAsIndex() {
+        String code = "var o = {}; var a = [10, 20]; var i;\n"
+                + "o[1 < 2] = \"lt\"; print(o[\"true\"]);\n"
+                + "print(a[i = 1]); print(i);";
+        assertEquals("lt\n20\n1\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testNestedUnaryOperators() {
+        String code = "var x = 3; var s = \"\";\n"
+                + "print(!!x); print(!!s); print(- -x); print(-(-x)); print(!-x); print(typeof -x); print(typeof !x);";
+        assertEquals("true\nfalse\n3\n3\nfalse\nnumber\nboolean\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testWhile() {
         assertSameOutput("var i = 0; while (i < 3) { print(i); i = i + 1; }");
         assertSameOutput("var i = 0; while (true) { i = i + 1; if (i > 2) { break; } print(i); }");
