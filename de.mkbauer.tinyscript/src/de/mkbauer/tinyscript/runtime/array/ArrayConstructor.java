@@ -48,7 +48,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 
 	// Array.isArray(value)
 	private TSValue isArray(TSObject self, TSValue[] args) {
-		return TSValue.of(args[0].isObject() && args[0].asObject() instanceof ArrayObject);
+		return TSValue.of(args[0] instanceof ArrayObject);
 	}
 
 	// Array.prototype methods
@@ -132,9 +132,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 	 * map and filter only call functions that take at least one parameter.
 	 */
 	private static Function callbackWithParameters(TSValue value) {
-		if (value.isCallable() && ((Function) value.asObject()).getLength() > 0)
-			return (Function) value.asObject();
-		return null;
+		return value instanceof Function function && function.getLength() > 0 ? function : null;
 	}
 
 }

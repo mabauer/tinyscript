@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.string.StringObject;
 
 /**
@@ -97,10 +96,6 @@ public sealed interface TSValue permits TSUndefined, TSNull, TSBoolean, TSNumber
 		return this instanceof TSString;
 	}
 
-	default boolean isDouble() {
-		return this instanceof TSNumber;
-	}
-
 	default boolean isNumber() {
 		return this instanceof TSNumber n && !Double.isNaN(n.value());
 	}
@@ -125,25 +120,7 @@ public sealed interface TSValue permits TSUndefined, TSNull, TSBoolean, TSNumber
 		return this instanceof TSObject;
 	}
 
-	/**
-	 * Returns this value as an object; {@code null} for {@code undefined} and {@code null}
-	 * (callers check for that), a {@code ClassCastException} for other primitives.
-	 */
 	default TSObject asObject() {
-		if (this == UNDEFINED || this == NULL)
-			return null;
 		return (TSObject) this;
-	}
-
-	default boolean isArray() {
-		return this instanceof ArrayObject;
-	}
-
-	default ArrayObject asArray() {
-		return (ArrayObject) this;
-	}
-
-	default boolean isCallable() {
-		return this instanceof Function;
 	}
 }

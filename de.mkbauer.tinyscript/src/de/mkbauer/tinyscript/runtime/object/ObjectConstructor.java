@@ -89,39 +89,37 @@ public class ObjectConstructor extends BuiltinConstructor {
 	private TSValue create(TSObject self, TSValue[] args) {
 		if (args[0].equals(TSValue.NULL))
 			return new TSObject(engine, null);
-		if (args[0].isObject())
-			return new TSObject(engine, args[0].asObject());
+		if (args[0] instanceof TSObject proto)
+			return new TSObject(engine, proto);
 		throw new TinyscriptTypeError("Object.create(proto): proto must be an object!");
 	}
 
 	private TSValue getPrototypeOf(TSObject self, TSValue[] args) {
-		if (args[0].isObject() && args[0].asObject().getPrototype() != null)
-			return args[0].asObject().getPrototype();
+		if (args[0] instanceof TSObject object && object.getPrototype() != null)
+			return object.getPrototype();
 		return TSValue.NULL;
 	}
 
 	private TSValue defineProperty(TSObject self, TSValue[] args) {
-		if (!args[0].isObject())
+		if (!(args[0] instanceof TSObject object))
 			throw new TinyscriptTypeError("Object.defineProperty called on non-object");
-		TSObject object = args[0].asObject();
-		if (args[2].isObject())
-			object.setOwnPropertyDescriptor(args[1].asString(), TSPropertyDescriptor.fromObject(args[2].asObject()));
+		if (args[2] instanceof TSObject descriptor)
+			object.setOwnPropertyDescriptor(args[1].asString(), TSPropertyDescriptor.fromObject(descriptor));
 		return object;
 	}
 
 	private TSValue getOwnPropertyNames(TSObject self, TSValue[] args) {
-		return stringArray(args[0].isObject() ? args[0].asObject().getOwnPropertyNames() : List.of());
+		return stringArray(args[0] instanceof TSObject object ? object.getOwnPropertyNames() : List.of());
 	}
 
 	private TSValue getOwnPropertyDescriptor(TSObject self, TSValue[] args) {
-		TSObject result = null;
-		if (args[0].isObject())
-			result = args[0].asObject().getOwnPropertyDescriptor(args[1].asString()).toObject(engine);
-		return result;
+		if (args[0] instanceof TSObject object && object.getOwnPropertyDescriptor(args[1].asString()) instanceof TSPropertyDescriptor desc)
+			return desc.toObject(engine);
+		return TSValue.UNDEFINED;
 	}
 
 	private TSValue keys(TSObject self, TSValue[] args) {
-		return stringArray(args[0].isObject() ? args[0].asObject().getKeys() : List.of());
+		return stringArray(args[0] instanceof TSObject object ? object.getKeys() : List.of());
 	}
 
 	private TSValue stringArray(List<String> strings) {
@@ -137,9 +135,8 @@ public class ObjectConstructor extends BuiltinConstructor {
 
 	private TSValue objectToString(TSObject self, TSValue[] args) {
 		String name = "Object";
-		TSValue ctorValue = self.get("constructor");
-		if (ctorValue.isObject() && ctorValue.asObject() instanceof Function)
-			name = ((Function) ctorValue.asObject()).getName();
+		if (self.get("constructor") instanceof Function ctor)
+			name = ctor.getName();
 		return TSValue.of("[object " + name + "]");
 	}
 
@@ -165,7 +162,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 	private TSValue functionApply(TSObject self, TSValue[] args) {
 		if (!(self instanceof Function))
 			return TSValue.UNDEFINED;
-		TSValue[] arguments = (args.length > 1 && args[1].isArray()) ? args[1].asArray().asJavaArray() : new TSValue[0];
+		TSValue[] arguments = (args.length > 1 && args[1] instanceof ArrayObject array) ? array.asJavaArray() : new TSValue[0];
 		return ((Function) self).apply(thisObject(args[0]), arguments);
 	}
 
@@ -173,7 +170,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 	 * call and apply use the global object as this, if no object is given.
 	 */
 	private TSObject thisObject(TSValue value) {
-		return value.isObject() ? value.asObject() : engine.getGlobalContext().getGlobalObject();
+		return value instanceof TSObject object ? object : engine.getGlobalContext().getGlobalObject();
 	}
 
 }

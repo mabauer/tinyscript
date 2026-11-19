@@ -159,6 +159,22 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testObjectGetOwnPropertyDescriptorOfMissingPropertyIsUndefined() {
+        assertEquals("true\ntrue\n", interpreterOutput(
+                "print(Object.getOwnPropertyDescriptor({ a: 1 }, \"x\") == null);\n"
+                + "print(Object.getOwnPropertyDescriptor(5, \"a\") == null);"));
+    }
+
+    @Test
+    public void testNewWithNonObjectPrototypeUsesObjectPrototype() {
+        assertEquals("true\n", interpreterOutput(
+                "function F() { }\n"
+                + "F.prototype = 5;\n"
+                + "var o = new F();\n"
+                + "print(o.toString != null);"));
+    }
+
+    @Test
     public void testObjectDefinePropertyReadOnly() {
         assertEquals("1\nfalse\n", interpreterOutput(
                 "var o = {};\n"
