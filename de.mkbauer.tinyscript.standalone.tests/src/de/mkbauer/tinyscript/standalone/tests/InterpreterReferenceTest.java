@@ -358,6 +358,66 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     }
 
     // =========================================================================
+    // while
+    // =========================================================================
+
+    @Test
+    public void testWhileLoop() {
+        assertEquals("0\n1\n2\n", interpreterOutput(
+                "var i = 0;\n"
+                + "while (i < 3) { print(i); i = i + 1; }"));
+    }
+
+    @Test
+    public void testWhileWithFalseConditionDoesNotRunBody() {
+        assertEquals("done\n", interpreterOutput(
+                "while (false) { print(\"never\"); }\n"
+                + "print(\"done\");"));
+    }
+
+    @Test
+    public void testWhileBodyHasItsOwnBlockScope() {
+        assertEquals("0\n10\n", interpreterOutput(
+                "var i = 0;\n"
+                + "while (i < 2) { var x = i * 10; print(x); i = i + 1; }"));
+    }
+
+    @Test
+    public void testBreakInWhile() {
+        assertEquals("1\n2\n", interpreterOutput(
+                "var i = 0;\n"
+                + "while (true) { i = i + 1; if (i > 2) { break; } print(i); }"));
+    }
+
+    @Test
+    public void testBreakInWhileLeavesOnlyInnermostLoop() {
+        assertEquals("1-0\n2-0\n", interpreterOutput(
+                "for (var i = 1, 2) { var j = 0; while (true) { if (j == 1) { break; } print(i + \"-\" + j); j = j + 1; } }"));
+    }
+
+    @Test
+    public void testReturnFromWhileRestoresCallerContext() {
+        assertEquals("15\n", interpreterOutput(
+                "function firstAbove(limit) { var n = 0; while (true) { var next = n + 1; if (next > limit) { return next; } n = next; } }\n"
+                + "function g() { var local = 10; var r = firstAbove(4); return local + r; }\n"
+                + "print(g());"));
+    }
+
+    @Test
+    public void testBreakCannotLeaveFunctionBodyInWhile() {
+        assertRejected("while (true) { var f = function() { break; }; f(); }");
+    }
+
+    @Test
+    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void testEmptyEndlessWhileHitsStatementLimit() {
+        ResourceLimits limits = new ResourceLimits();
+        limits.setMaxStatements(10000);
+        assertThrows(TinyscriptResourceLimitViolation.class,
+                () -> interpreterOutput("while (true) { }", limits));
+    }
+
+    // =========================================================================
     // Operators: no === / !==, comparisons
     // =========================================================================
 

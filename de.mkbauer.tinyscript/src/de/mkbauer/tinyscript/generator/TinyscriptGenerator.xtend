@@ -8,6 +8,7 @@ import de.mkbauer.tinyscript.ts.Identifier
 import de.mkbauer.tinyscript.ts.Reference
 import de.mkbauer.tinyscript.ts.AssertStatement
 import de.mkbauer.tinyscript.ts.BreakStatement
+import de.mkbauer.tinyscript.ts.WhileStatement
 import de.mkbauer.tinyscript.ts.StringLiteral
 import de.mkbauer.tinyscript.ts.BlockStatement
 import de.mkbauer.tinyscript.ts.Block
@@ -140,6 +141,12 @@ class TinyscriptGenerator   {
 		return«IF stmt.expr !== null» «stmt.expr.generate»«ENDIF»;
 	'''
 	
+	def dispatch generate(WhileStatement stmt) '''
+		while («stmt.cond.generate») {
+			«stmt.^do.generate»
+		}
+	'''
+
 	def dispatch generate(BreakStatement stmt) '''
 		break;
 	'''

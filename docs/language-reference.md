@@ -307,9 +307,23 @@ for (var key : Object.keys(person)) {
 }
 ```
 
+### `while`
+
+Runs the block as long as the condition is truthy. Braces are required:
+
+```
+var i = 0;
+while (i < 3) {
+    print(i);
+    i = i + 1;
+}
+```
+
+In sandboxed mode every iteration counts against the statement limit, so even `while (true) { }` terminates with a resource limit violation.
+
 ### `break`
 
-Exits the innermost enclosing `for` loop. `break` is only allowed inside a loop of the same function (a function defined inside a loop cannot break out of it):
+Exits the innermost enclosing `for` or `while` loop. `break` is only allowed inside a loop of the same function (a function defined inside a loop cannot break out of it):
 
 ```
 for (var i = 0, 100) {
@@ -849,7 +863,6 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 | **Array `+`** | String concatenation | Array append / concatenation |
 | **`==` vs `===`** | Different (type coercion vs. strict) | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`) |
 | **Relational operators** | Coerce operands (`1 < "2"`) | Only number with number or string with string; otherwise a `TypeError` |
-| **`while` loop** | Available | Not available; loops are written with `for` |
 | **`let` keyword** | Block-scoped variable | Synonym for `var` |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
@@ -887,7 +900,7 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 ### Keywords
 
 ```
-var  let  function  return  if  else  for  break
+var  let  function  return  if  else  for  while  break
 new  this  null  true  false  typeof  instanceof  assert
 ```
 
