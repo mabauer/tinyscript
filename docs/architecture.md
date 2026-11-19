@@ -80,9 +80,9 @@ The Xtext grammar file is the single source of truth for the language syntax. Fr
 | Family | Grammar rules |
 |---|---|
 | Top-level | `Tinyscript`, `Statement` |
-| Statements | `VariableStatement`, `FunctionDeclaration`, `ReturnStatement`, `IfStatement`, `ForStatement`, `WhileStatement`, `Block` |
-| Expression precedence chain | `AssignmentExpression` → `ConditionalExpression` → `OrExpression` → `AndExpression` → `EqualityExpression` → `RelationalExpression` → `AdditiveExpression` → `MultiplicativeExpression` → `UnaryExpression` → `PostfixExpression` → `CallOrPropertyAccess` → `PrimaryExpression` |
-| Literals / initializers | `NumericLiteral`, `StringLiteral`, `BooleanLiteral`, `NullLiteral`, `ObjectInitializer`, `ArrayInitializer`, `FunctionExpression` |
+| Statements | `VariableStatement`, `FunctionDeclaration`, `ReturnStatement`, `IfStatement`, `ForStatement`, `BreakStatement`, `AssertStatement`, `BlockStatement` |
+| Expression precedence chain | `AssignmentExpression` → `OrExpression` → `AndExpression` → `EqualityExpression` → `CompareExpression` → `Addition` → `Multiplication` → `Unary` / `Primary` (incl. `CallOrPropertyAccess`) |
+| Literals / initializers | `NumberLiteral`, `StringLiteral`, `BooleanLiteral`, `NullObject`, `ObjectInitializer`, `ArrayInitializer`, `FunctionExpression` |
 | Property/call chain | `CallOrPropertyAccess` with `arguments` or `property` suffixes |
 
 **Generated output location:** `de.mkbauer.tinyscript/src-gen/`

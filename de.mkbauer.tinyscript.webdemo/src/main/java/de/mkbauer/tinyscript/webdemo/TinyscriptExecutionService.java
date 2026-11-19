@@ -130,6 +130,13 @@ public class TinyscriptExecutionService {
 				logExecution(script, e, statistics);
 			return new TinyscriptExecutionResult(resultAsString, output, statistics, errorMessage, errorLine);
 		}
+		catch (RuntimeException e) {
+			// Safety net: an interpreter bug must not surface as HTTP 500
+			logger.error("Internal error while executing script", e);
+			errorMessage = "InternalError: " + e.getMessage();
+			return new TinyscriptExecutionResult(resultAsString, stdoutToString(stdout),
+					monitor.getTotalResourceConsumption(), errorMessage, 0);
+		}
 	}
 	
 	private String stdoutToString(ByteArrayOutputStream out) {

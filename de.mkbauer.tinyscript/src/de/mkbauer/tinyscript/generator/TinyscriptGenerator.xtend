@@ -7,6 +7,7 @@ import de.mkbauer.tinyscript.ts.BinaryExpression
 import de.mkbauer.tinyscript.ts.Identifier
 import de.mkbauer.tinyscript.ts.Reference
 import de.mkbauer.tinyscript.ts.AssertStatement
+import de.mkbauer.tinyscript.ts.BreakStatement
 import de.mkbauer.tinyscript.ts.StringLiteral
 import de.mkbauer.tinyscript.ts.BlockStatement
 import de.mkbauer.tinyscript.ts.Block
@@ -139,6 +140,10 @@ class TinyscriptGenerator   {
 		return«IF stmt.expr !== null» «stmt.expr.generate»«ENDIF»;
 	'''
 	
+	def dispatch generate(BreakStatement stmt) '''
+		break;
+	'''
+
 	def dispatch generate(AssertStatement stmt) '''
 		assert «stmt.cond.generate»;
 	'''

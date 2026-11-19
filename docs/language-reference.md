@@ -145,13 +145,15 @@ arr = arr + ["d", "e"];      // ["a", "b", "c", "d", "e"]
 
 | Operator | Meaning |
 |---|---|
-| `==` / `===` | Equality (both behave the same — no type coercion distinction) |
-| `!=` / `!==` | Inequality |
+| `==` | Equality (no type coercion: `1 == "1"` is `false`) |
+| `!=` | Inequality |
 | `<` | Less than |
 | `<=` | Less than or equal |
 | `>` | Greater than |
 | `>=` | Greater than or equal |
 | `instanceof` | Prototype chain check |
+
+`<`, `<=`, `>`, `>=` compare two numbers or two strings (lexicographically). Comparing values of different or other types is a `TypeError`.
 
 ### Logical
 
@@ -175,7 +177,7 @@ Assignment is an expression — it returns the assigned value — so it can appe
 2. `*`, `/`, `%`
 3. `+`, `-`
 4. `<`, `<=`, `>`, `>=`, `instanceof`
-5. `==`, `===`, `!=`, `!==`
+5. `==`, `!=`
 6. `&&`
 7. `||`
 8. `=` (right-associative)
@@ -305,17 +307,9 @@ for (var key : Object.keys(person)) {
 }
 ```
 
-### `while`
-
-```
-while (condition) {
-    // body
-}
-```
-
 ### `break`
 
-Exits the immediately enclosing `for` or `while` loop:
+Exits the innermost enclosing `for` loop. `break` is only allowed inside a loop of the same function (a function defined inside a loop cannot break out of it):
 
 ```
 for (var i = 0, 100) {
@@ -668,7 +662,7 @@ print(d instanceof Object);   // true (all objects ultimately trace back)
 The prototype of any object is accessible as `__proto__`:
 
 ```
-print(child.__proto__ === base);   // true
+print(child.__proto__ == base);   // true
 ```
 
 ---
@@ -778,7 +772,7 @@ var obj = Object.create(proto);
 obj.name = "Alice";
 
 print(Object.keys(obj));             // ["name"]
-print(Object.getPrototypeOf(obj) === proto);  // true
+print(Object.getPrototypeOf(obj) == proto);  // true
 obj.greet();                         // "hi" (inherited)
 ```
 
@@ -853,7 +847,9 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 | **Iterable `for` loop** | `for (const x of array)` | `for (var x : array)` |
 | **`for...in`** | Iterates over keys | Not supported (use `for...of` style with `:`) |
 | **Array `+`** | String concatenation | Array append / concatenation |
-| **`==` vs `===`** | Different (type coercion vs. strict) | Both behave the same (no coercion distinction) |
+| **`==` vs `===`** | Different (type coercion vs. strict) | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`) |
+| **Relational operators** | Coerce operands (`1 < "2"`) | Only number with number or string with string; otherwise a `TypeError` |
+| **`while` loop** | Available | Not available; loops are written with `for` |
 | **`let` keyword** | Block-scoped variable | Synonym for `var` |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
@@ -891,7 +887,7 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 ### Keywords
 
 ```
-var  let  function  return  if  else  for  while  break
+var  let  function  return  if  else  for  break
 new  this  null  true  false  typeof  instanceof  assert
 ```
 

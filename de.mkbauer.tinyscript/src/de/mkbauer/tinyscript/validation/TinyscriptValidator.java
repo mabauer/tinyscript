@@ -2,6 +2,8 @@ package de.mkbauer.tinyscript.validation;
 
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.Block;
+import de.mkbauer.tinyscript.ts.BreakStatement;
+import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
@@ -77,5 +79,20 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 			error("Return only allowed in functions", null);
 		}
 	}
-	
+
+	/**
+	 * Checks that a break statement is inside a loop of the same function
+	 * (a break cannot leave a function body).
+	 */
+	@Check
+	public void checkBreakOnlyInsideLoop(BreakStatement breakStmt) {
+		for (EObject container = breakStmt.eContainer(); container != null; container = container.eContainer()) {
+			if (container instanceof ForStatement)
+				return;
+			if (container instanceof FunctionDefinition)
+				break;
+		}
+		error("Break only allowed inside a loop", null);
+	}
+
 }

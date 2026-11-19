@@ -15,6 +15,8 @@ import org.eclipse.xtext.util.StringInputStream;
 import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.IResourceValidator;
 import org.eclipse.xtext.validation.Issue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.google.inject.Injector;
@@ -29,6 +31,8 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 public class TinyscriptCrossCompilingService {
 	
 	private static final String fileExtension = "ts";
+	
+	private static final Logger logger = LoggerFactory.getLogger(TinyscriptCrossCompilingService.class);
 	
 	public TinyscriptCrossCompilingService() {
 		
@@ -64,10 +68,14 @@ public class TinyscriptCrossCompilingService {
 			return new TinyscriptCrossCompilingResult(jsscript);
 		}
 		catch (TinyscriptRuntimeException e) {
-			// TODO: Error handling
 			String errorMessage = e.getClass().getSimpleName() + ": " + e.getMessage();
 			int errorLine = e.getAffectedLine();
 			return new TinyscriptCrossCompilingResult(errorMessage, errorLine);
+		}
+		catch (RuntimeException e) {
+			// Safety net: a generator bug must not surface as HTTP 500
+			logger.error("Internal error while cross-compiling script", e);
+			return new TinyscriptCrossCompilingResult("InternalError: " + e.getMessage(), 0);
 		}
 		
 	}

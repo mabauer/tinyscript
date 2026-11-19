@@ -91,4 +91,34 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
         assertSameOutput("var add = (a, b) => a + b; print(add(3, 4));");
     }
 
+    @Test
+    public void testClosuresOverFunctionDeclarations() {
+        assertSameOutput(
+                "function makeGetter(v) { function get() { return v; } return get; }\n"
+                + "var a = makeGetter(1);\n"
+                + "var b = makeGetter(2);\n"
+                + "print(a());\n"
+                + "print(b());");
+    }
+
+    @Test
+    public void testReturnFromNestedBlocks() {
+        assertSameOutput(
+                "function f(x) { if (x > 0) { var y = x; return y; } return 0; }\n"
+                + "function g() { var local = 42; var r = f(5); return local + r; }\n"
+                + "print(g());");
+    }
+
+    @Test
+    public void testBreak() {
+        assertSameOutput("for (var i = 1, 10) { if (i == 3) { break; } print(i); }");
+        assertSameOutput("for (var i = 1, 2) { for (var j = 1, 3) { if (j == 2) { break; } print(i + \"-\" + j); } }");
+        assertSameOutput("for (var s : [\"a\", \"b\", \"stop\", \"c\"]) { if (s == \"stop\") { break; } print(s); }");
+    }
+
+    @Test
+    public void testStringComparison() {
+        assertSameOutput("print(\"a\" < \"b\"); print(\"b\" <= \"a\"); print(\"B\" < \"a\"); print(\"ab\" > \"a\");");
+    }
+
 }
