@@ -155,8 +155,9 @@ The core module uses Google Guice (wired by Xtext). Bindings are configured in `
 ## Running the Applications
 
 ```bash
-# REPL (after building fat JAR)
-java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar
+# REPL (after building fat JAR): interactive, or run files; see --help
+de.mkbauer.tinyscript.repl/tinyscript [file.tys ...]
+java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar [file.tys ...]
 
 # Web demo (after building fat JAR)
 java -jar de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo-*.jar

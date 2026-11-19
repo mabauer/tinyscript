@@ -144,9 +144,12 @@ The web demo build also runs the Vue 3 frontend through Vite (npm install → te
 
 To run:
 
-- The interpreter:
+- The interpreter: `de.mkbauer.tinyscript.repl/tinyscript example.tys` runs a file, without arguments it starts an interactive session (`--help` shows the options). The script finds Java 25 via `JAVA_HOME` or the `PATH` and can be linked into a directory on your `PATH`:
 
-		java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl-*.jar example.tys
+		ln -s "$PWD/de.mkbauer.tinyscript.repl/tinyscript" ~/bin/tinyscript
+		tinyscript example.tys
+
+  Or directly: `java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar example.tys`
 
 - The web demo as a *Spring Boot* application:
 
