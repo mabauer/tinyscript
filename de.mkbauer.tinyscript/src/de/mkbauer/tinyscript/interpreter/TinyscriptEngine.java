@@ -58,6 +58,7 @@ import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.TypeOfExpression;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
+import de.mkbauer.tinyscript.ts.WhileStatement;
 import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
@@ -242,6 +243,8 @@ public class TinyscriptEngine {
     		return caseElseStatement((ElseStatement) object);
 		case TsPackage.FOR_STATEMENT:
     		return caseForStatement((ForStatement) object);
+		case TsPackage.WHILE_STATEMENT:
+    		return caseWhileStatement((WhileStatement) object);
 		case TsPackage.BREAK_STATEMENT:
     		return caseBreakStatement((BreakStatement) object);
 		case TsPackage.FUNCTION_DEFINITION:
@@ -467,13 +470,36 @@ public class TinyscriptEngine {
 		return result;
     }
 
+    public TSValue caseWhileStatement(WhileStatement whilestmt) {
+    	TSValue result = TSValue.UNDEFINED;
+    	try {
+    		while (true) {
+    			countLoopIteration();
+    			if (!execute(whilestmt.getCond()).asBoolean())
+    				break;
+    			result = executeInBlockContext("while", whilestmt.getDo());
+    		}
+    	}
+    	catch (TSBreak b) {
+    		// leave the loop
+    	}
+    	return result;
+    }
+
     /**
-     * Executes the loop body once with the given loop value. Each iteration counts
-     * as a statement, so that even a loop with an empty body is bound by the resource limits.
+     * Each loop iteration counts as a statement, so that even a loop with an empty
+     * body (or an endless one) is bound by the resource limits.
      */
-    private TSValue executeLoopIteration(ForStatement forstmt, TSValue loopValue) {
+    private void countLoopIteration() {
     	recordStatement();
 		checkMXCpuTimeAndMemory();
+    }
+
+    /**
+     * Executes the body of a for loop once with the given loop value.
+     */
+    private TSValue executeLoopIteration(ForStatement forstmt, TSValue loopValue) {
+    	countLoopIteration();
 		if (forstmt.getId() != null) {
 			return executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
 		}

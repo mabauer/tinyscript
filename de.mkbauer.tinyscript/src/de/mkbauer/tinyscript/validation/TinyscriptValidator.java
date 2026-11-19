@@ -12,6 +12,7 @@ import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.VariableStatement;
+import de.mkbauer.tinyscript.ts.WhileStatement;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
@@ -87,7 +88,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	@Check
 	public void checkBreakOnlyInsideLoop(BreakStatement breakStmt) {
 		for (EObject container = breakStmt.eContainer(); container != null; container = container.eContainer()) {
-			if (container instanceof ForStatement)
+			if (container instanceof ForStatement || container instanceof WhileStatement)
 				return;
 			if (container instanceof FunctionDefinition)
 				break;

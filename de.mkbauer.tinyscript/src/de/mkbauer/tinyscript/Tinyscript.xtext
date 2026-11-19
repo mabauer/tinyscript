@@ -26,6 +26,7 @@ Statement:
 	ReturnStatement | 
 	IfStatement |
 	ForStatement |
+	WhileStatement |
 	BreakStatement |
 	AssertStatement |
 	EmptyStatement
@@ -158,6 +159,10 @@ NumericForExpression:
 
 IterableForExpression:
 	':' iterable=Addition 
+;
+
+WhileStatement:
+	'while' '(' cond=AssignmentExpression ')' do=Block
 ;
 
 BreakStatement:

@@ -80,7 +80,7 @@ The Xtext grammar file is the single source of truth for the language syntax. Fr
 | Family | Grammar rules |
 |---|---|
 | Top-level | `Tinyscript`, `Statement` |
-| Statements | `VariableStatement`, `FunctionDeclaration`, `ReturnStatement`, `IfStatement`, `ForStatement`, `BreakStatement`, `AssertStatement`, `BlockStatement` |
+| Statements | `VariableStatement`, `FunctionDeclaration`, `ReturnStatement`, `IfStatement`, `ForStatement`, `WhileStatement`, `BreakStatement`, `AssertStatement`, `BlockStatement` |
 | Expression precedence chain | `AssignmentExpression` → `OrExpression` → `AndExpression` → `EqualityExpression` → `CompareExpression` → `Addition` → `Multiplication` → `Unary` / `Primary` (incl. `CallOrPropertyAccess`) |
 | Literals / initializers | `NumberLiteral`, `StringLiteral`, `BooleanLiteral`, `NullObject`, `ObjectInitializer`, `ArrayInitializer`, `FunctionExpression` |
 | Property/call chain | `CallOrPropertyAccess` with `arguments` or `property` suffixes |

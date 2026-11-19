@@ -32,7 +32,7 @@ You can play with it online in your browser [here](https://tinyscript.mkbauer.de
 
 * [Handling of strings](de.mkbauer.tinyscript.webdemo/frontend/public/strings.ts)
 
-* [Control-flow structures](de.mkbauer.tinyscript.webdemo/frontend/public/primes.ts): `for`- and `if`-statements
+* [Control-flow structures](de.mkbauer.tinyscript.webdemo/frontend/public/primes.ts): `for`, `while` and `if` statements, `break`
 
 * [Functions](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci.ts), including [recursion](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci_recursive.ts) and *arrow* functions
 

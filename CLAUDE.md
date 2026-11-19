@@ -138,7 +138,7 @@ Source text
 
 - Semicolons are required after statements; `if`/`else` bodies must be `{ … }` blocks
 - Variables are block-scoped (no `var` hoisting)
-- Loops are `for` only: numeric `for (var i = 0, n[, step])` and iterable `for (var x : array)` (values, not keys); `break` leaves the innermost loop. There is no `while`. In sandboxed mode every loop iteration counts against the statement limit.
+- Loops: numeric `for (var i = 0, n[, step])`, iterable `for (var x : array)` (values, not keys) and `while (cond) { … }`; `break` leaves the innermost loop. In sandboxed mode every loop iteration counts against the statement limit.
 - Only `==` / `!=` (no type coercion; there is no `===` / `!==`); `<`, `<=`, `>`, `>=` compare number with number or string with string, anything else is a `TypeError`
 - Arrow functions use `=>` syntax
 - No `this` binding differences — follows prototypal model
