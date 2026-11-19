@@ -7,10 +7,6 @@ Open issues and ideas for tinyscript. Each item is meant to become its own PR, w
 Next
 ----
 
-- **README: "Design decisions" section.** Document the intentional deviations from JavaScript: `&&` / `||` return booleans, `for (var i = 0, n)` and `for (var x : array)`, block-scoped `var`, no `===` / `!==`, braces required for `if` / `else`. Fix typos along the way (Immplementation, impementation, customor, plattform).
-
-- **`else if`.** Allow `else if (…) { … }` in the grammar instead of requiring `else { if … }`. Touches interpreter, validator, JS generator and docs.
-
 - **Webdemo: resource limit violations report "line 0".** When a limit is hit inside a loop there is no AST node attached to the error, so the webdemo shows line 0.
 
 - **Webdemo tests: JUnit 4 → JUnit 6.** They still use `SpringJUnit4ClassRunner` (deprecated in Spring 7); migrate them like the other test modules.

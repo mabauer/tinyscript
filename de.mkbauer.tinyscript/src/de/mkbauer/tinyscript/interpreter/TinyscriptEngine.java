@@ -394,6 +394,8 @@ public class TinyscriptEngine {
     }
     
     public TSValue caseElseStatement(ElseStatement object) {
+    	if (object.getElseIf() != null)
+    		return caseIfStatement(object.getElseIf());
     	return executeInBlockContext("else", object.getElse());
     }
     

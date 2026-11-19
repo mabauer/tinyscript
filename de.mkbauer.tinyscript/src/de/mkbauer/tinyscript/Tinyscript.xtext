@@ -146,7 +146,7 @@ IfStatement:
 	;
 	
 ElseStatement:
-	'else' else=Block
+	'else' (else=Block | elseIf=IfStatement)
 ;
 
 ForStatement:

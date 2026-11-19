@@ -117,6 +117,14 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testElseIf() {
+        assertSameOutput("function sign(n) { if (n < 0) { return \"negative\"; } else if (n == 0) { return \"zero\"; } else { return \"positive\"; } }"
+                + " print(sign(-1)); print(sign(0)); print(sign(1));");
+        assertSameOutput("for (var x = 1, 4) { if (x == 1) { print(\"a\"); } else if (x == 2) { print(\"b\"); } else if (x == 3) { print(\"c\"); } }");
+        assertSameOutput("for (var i = 1, 5) { if (i == 2) { print(\"two\"); } else if (i == 3) { break; } else { print(i); } }");
+    }
+
+    @Test
     public void testWhile() {
         assertSameOutput("var i = 0; while (i < 3) { print(i); i = i + 1; }");
         assertSameOutput("var i = 0; while (true) { i = i + 1; if (i > 2) { break; } print(i); }");
