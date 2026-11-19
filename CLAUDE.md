@@ -162,6 +162,8 @@ docker build -t tinyscript-webdemo .
 docker run -p 8080:8080 tinyscript-webdemo
 ```
 
+The deployed webdemo is monitored by checkmk via `GET /test` (runs a fixed sample script). Keep this endpoint; `TinyscriptWebApplicationTests.testHealthCheckEndpoint` guards it.
+
 ## Releasing
 
 See `Release-HOWTO.md` for the full procedure. Key commands:

@@ -51,6 +51,16 @@ public class TinyscriptWebController {
 		return Collections.singletonMap("version", v);
 	}
 
+	/**
+	 * Runs a fixed sample script. Used as health check by external monitoring
+	 * (checkmk): it exercises parser, validator and interpreter, not just the web layer.
+	 */
+	@RequestMapping("/test")
+	@ResponseBody
+	public TinyscriptExecutionResult executeSampleProgram() {
+		return this.tinyscriptExecutionService.executeScriptFromString("var hello; hello=\"Hello, Tinyscript\";", false);
+	}
+
 	@RequestMapping(value="/execute", method=RequestMethod.POST)
 	@ResponseBody
 	public TinyscriptExecutionResult executeProgram(@RequestBody String script) {
