@@ -24,6 +24,7 @@ import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BlockStatement;
 import de.mkbauer.tinyscript.ts.BooleanLiteral;
+import de.mkbauer.tinyscript.ts.BreakStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
@@ -241,6 +242,8 @@ public class TinyscriptEngine {
     		return caseElseStatement((ElseStatement) object);
 		case TsPackage.FOR_STATEMENT:
     		return caseForStatement((ForStatement) object);
+		case TsPackage.BREAK_STATEMENT:
+    		return caseBreakStatement((BreakStatement) object);
 		case TsPackage.FUNCTION_DEFINITION:
 			return caseFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.ARROW_FUNCTION:
@@ -279,7 +282,7 @@ public class TinyscriptEngine {
 	
 	// @Override
 	public TSValue defaultCase(EObject object) {
-		throw new UnsupportedOperationException("Unsupported script node: " + object.eClass().getName());
+		throw new TinyscriptUnsupportedOperationError("Unsupported script node: " + object.eClass().getName(), object);
 	}
   	
     // @Override
@@ -292,16 +295,7 @@ public class TinyscriptEngine {
 			resourceMonitor.start();
 		checkMXCpuTimeAndMemory();
 			
-		// Hoist function declarations:
-    	// Create function objects (or get them form a cache)
-    	LexicalEnvironment env = getLexcialEnvironment(object.getGlobal());
-		for (TSValue function : env.getFunctions()) {	
-			// Create a variable in the current context pointing to each function object
-			String functionName = ((Function) function.asObject()).getName();
-			if (!currentContext.contains(functionName))
-				currentContext.create(functionName);
-			currentContext.store(functionName, function);
-		}
+		hoistFunctionDeclarations(getLexcialEnvironment(object.getGlobal()));
 		try {
 			TSValue result = execute(object.getGlobal());
 
@@ -435,45 +429,61 @@ public class TinyscriptEngine {
 		double step = 1;
 		if (expr.getStep() != null) {
 			TSValue stepValue =  execute(expr.getStep());
-			if (!stopValue.isMathematicalInteger()) 
+			if (!stepValue.isMathematicalInteger())
 				throw new TinyscriptTypeError("for needs an integer value as step expression", expr.getStep());
 			step = stepValue.asDouble();
+			if (step == 0)
+				throw new TinyscriptTypeError("for needs a step other than 0", expr.getStep());
 		}
 		// TODO: If bounds are NaNs, don't loop!
 		if (Double.isInfinite(start) || Double.isInfinite(stop))
 			return result;
-		for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
-			checkMXCpuTimeAndMemory();
-			if (forstmt.getId() != null) {
-				result = executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), new TSValue(loopValue));
+		try {
+			for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
+				result = executeLoopIteration(forstmt, new TSValue(loopValue));
 			}
-			else {
-				currentContext.store(forstmt.getRef().getId().getName(), new TSValue(loopValue));
-				result = executeInBlockContext("for", forstmt.getDo());
-			}
+		}
+		catch (TSBreak b) {
+			// leave the loop
 		}
     	return result;
     }
-    
+
     public TSValue executeIterableForStatement(ForStatement forstmt) {
     	IterableForExpression expr = forstmt.getIterableForExpr();
     	TSValue result = TSValue.UNDEFINED;
 		TSValue iterable = execute(expr.getIterable());
 		if (iterable.isArray()) {
 			ArrayObject arr = (ArrayObject) iterable.asObject();
-			for (int i = 0; i < arr.getLength(); i++) {
-				checkMXCpuTimeAndMemory();
-				TSValue loopValue = arr.item(i);
-				if (forstmt.getId() != null) {
-					result = executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
+			try {
+				for (int i = 0; i < arr.getLength(); i++) {
+					result = executeLoopIteration(forstmt, arr.item(i));
 				}
-				else {
-					currentContext.store(forstmt.getRef().getId().getName(), loopValue);
-					result = executeInBlockContext("for", forstmt.getDo());
-				} 
+			}
+			catch (TSBreak b) {
+				// leave the loop
 			}
 		}
 		return result;
+    }
+
+    /**
+     * Executes the loop body once with the given loop value. Each iteration counts
+     * as a statement, so that even a loop with an empty body is bound by the resource limits.
+     */
+    private TSValue executeLoopIteration(ForStatement forstmt, TSValue loopValue) {
+    	recordStatement();
+		checkMXCpuTimeAndMemory();
+		if (forstmt.getId() != null) {
+			return executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
+		}
+		currentContext.store(forstmt.getRef().getId().getName(), loopValue);
+		return executeInBlockContext("for", forstmt.getDo());
+    }
+
+    public TSValue caseBreakStatement(BreakStatement object) {
+    	recordStatement();
+    	throw TSBreak.INSTANCE;
     }
     
     // @Override
@@ -501,31 +511,14 @@ public class TinyscriptEngine {
     	if (op.equalsIgnoreCase("!=")) {
     		return new TSValue(!left.equals(right));
     	}
-    	// TODO: Make comparisons work for other types. Strategy: Implement TSValue as Comparable
-    	// TODO: Respect the evaluation order. In ECMAScript: left to right
-    	if (op.equalsIgnoreCase(">")) {
-    		if (left.isNumber() && right.isNumber())
-    			return new TSValue(left.asDouble() > right.asDouble());
-    		else
-    			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
-    	}
-    	if (op.equalsIgnoreCase("<")) {
-    		if (left.isNumber() && right.isNumber())
-    			return new TSValue(left.asDouble() < right.asDouble());
-    		else
-    			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
-    	}
-    	if (op.equalsIgnoreCase(">=")) {
-    		if (left.isNumber() && right.isNumber())
-    			return new TSValue(left.asDouble() >= right.asDouble());
-    		else
-    			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
-    	}
-    	if (op.equalsIgnoreCase("<=")) {
-    		if (left.isNumber() && right.isNumber())
-    			return new TSValue(left.asDouble() <= right.asDouble());
-    		else
-    			throw new UnsupportedOperationException("Unsupported binary expression: " + op);
+    	if (op.equals("<") || op.equals("<=") || op.equals(">") || op.equals(">=")) {
+    		int comparison = compare(left, right, expr);
+    		return new TSValue(switch (op) {
+    			case "<" -> comparison < 0;
+    			case "<=" -> comparison <= 0;
+    			case ">" -> comparison > 0;
+    			default -> comparison >= 0;
+    		});
     	}
     	if (op.equals("+")) {
     		if (left.isNumber() && right.isNumber()) {
@@ -576,8 +569,20 @@ public class TinyscriptEngine {
     		}
     				
     	}
-    	// Error handling
-		throw new UnsupportedOperationException("Unsupported binary expression: " + op);
+		throw new TinyscriptUnsupportedOperationError("Unsupported binary expression: " + op, expr);
+    }
+
+    /**
+     * Compares two numbers or two strings (lexicographically). Comparing values
+     * of other or mixed types is a type error: there is no implicit conversion.
+     */
+    private int compare(TSValue left, TSValue right, BinaryExpression expr) {
+    	if (left.isNumber() && right.isNumber())
+    		return Double.compare(left.asDouble(), right.asDouble());
+    	if (left.isString() && right.isString())
+    		return left.asString().compareTo(right.asString());
+    	throw new TinyscriptTypeError("'" + expr.getOp() + "' compares two numbers or two strings, not "
+    			+ left.typeOf() + " and " + right.typeOf(), expr);
     }
     
     // @Override
@@ -847,39 +852,37 @@ public class TinyscriptEngine {
 	}
 	
 	private TSValue executeInBlockContext(String name, Block block, Identifier variable, TSValue value) {
-		// checkMXCpuTimeAndMemory();
-		TSValue result = null;
-    	boolean needsNewContext = true;
     	LexicalEnvironment env = getLexcialEnvironment(block);
-    	if ((variable==null) && (env.getFunctions().isEmpty()) && (env.getVariables().isEmpty()))
-    		needsNewContext = false;
-    	if (needsNewContext) {
-			enterNewExecutionContext(name);
-			// Insert variable into context
+    	if ((variable == null) && env.getFunctionDeclarations().isEmpty() && env.getVariables().isEmpty())
+    		return caseBlock(block);
+
+		enterNewExecutionContext(name);
+		// Leave the context however the block ends: normally, with an error,
+		// or with a return/break that unwinds through it
+		try {
 			if (variable != null) {
 				currentContext.create(variable.getName());
 				currentContext.store(variable.getName(), value);
 			}
-			// Hoist function declarations
-			for (TSValue function : env.getFunctions()) {	
-				// Create a variable in the current context pointing to each function object
-				String functionName = ((Function) function.asObject()).getName();
-				if (!currentContext.contains(functionName))
-					currentContext.create(functionName);
-				currentContext.store(functionName, function);
-			}
+			hoistFunctionDeclarations(env);
+			return caseBlock(block);
 		}
-		try {
-			result = caseBlock(block);
-		}
-		catch (TinyscriptRuntimeException e) {
-			if (needsNewContext)
-				leaveExecutionContext();
-			throw e;
-		}
-		if (needsNewContext)
+		finally {
 			leaveExecutionContext();
-		return result;
+		}
+	}
+
+	/**
+	 * Creates a variable for each function declared in the block, pointing to a new
+	 * function object that closes over the current execution context.
+	 */
+	protected void hoistFunctionDeclarations(LexicalEnvironment env) {
+		for (FunctionDefinition declaration : env.getFunctionDeclarations()) {
+			String functionName = declaration.getId().getName();
+			if (!currentContext.contains(functionName))
+				currentContext.create(functionName);
+			currentContext.store(functionName, caseFunctionDefinition(declaration));
+		}
 	}
 	
 	protected ExecutionContext enterNewExecutionContext(String name) {
@@ -907,13 +910,8 @@ public class TinyscriptEngine {
 		LexicalEnvironment result = lexicalEnvironments.get(block);
 		if (result != null)
 			return result;
-		List <TSValue> functions = new ArrayList<TSValue>();
-		for (FunctionDefinition funcdecl : TinyscriptModelUtil.functionDeclarationsInBlock(block)) {
-			TSValue functionObject = caseFunctionDefinition(funcdecl);
-			functions.add(functionObject);
-		}
-		List <Identifier> variables = TinyscriptModelUtil.declaredVariablesInBlock(block);
-		result =  new LexicalEnvironment(functions, variables);
+		result = new LexicalEnvironment(TinyscriptModelUtil.functionDeclarationsInBlock(block),
+				TinyscriptModelUtil.declaredVariablesInBlock(block));
 		lexicalEnvironments.put(block, result);
 		return result;
 	}

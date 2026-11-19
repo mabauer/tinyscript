@@ -15,7 +15,7 @@ var cond2;
 var cond3;
 
 cond1 == cond2;
-cond1 === cond2;
+cond1 != cond2;
 cond1 && cond2;
 cond1 || cond2;
 (cond1 && cond2) || cond3;

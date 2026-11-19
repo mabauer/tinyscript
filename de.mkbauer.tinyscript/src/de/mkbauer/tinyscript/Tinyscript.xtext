@@ -248,7 +248,7 @@ NumberLiteral:
 ;
 
 terminal OP_EQUALS:
-	'==' | '===' | '!=' | '!=='
+	'==' | '!='
 ;
 
 terminal OP_COMP:

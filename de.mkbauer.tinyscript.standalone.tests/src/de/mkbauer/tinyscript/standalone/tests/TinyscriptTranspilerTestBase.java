@@ -25,6 +25,8 @@ import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
+import de.mkbauer.tinyscript.interpreter.ResourceLimits;
+import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
@@ -144,6 +146,15 @@ public abstract class TinyscriptTranspilerTestBase {
      * <p>Fails the test if the interpreter throws any exception.
      */
     public String interpreterOutput(String tsCode) {
+        return interpreterOutput(tsCode, null);
+    }
+
+    /**
+     * Like {@link #interpreterOutput(String)}, but runs the engine with a
+     * {@link ResourceMonitor} enforcing {@code limits} (as the web demo does).
+     * {@code limits == null} runs without resource monitoring.
+     */
+    public String interpreterOutput(String tsCode, ResourceLimits limits) {
         // Fresh injector + engine per call so tests are independent.
         Injector localInjector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
@@ -163,10 +174,36 @@ public abstract class TinyscriptTranspilerTestBase {
         Tinyscript ast = (Tinyscript) resource.getContents().get(0);
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        TinyscriptEngine engine = new TinyscriptEngine(localResourceSet);
+        TinyscriptEngine engine;
+        if (limits == null) {
+            engine = new TinyscriptEngine(localResourceSet);
+        } else {
+            ResourceMonitor monitor = new ResourceMonitor();
+            monitor.configureLimits(limits);
+            engine = new TinyscriptEngine(localResourceSet, monitor);
+        }
         engine.defineStdOut(stdout);
         engine.execute(ast);
         return stdout.toString();
+    }
+
+    /**
+     * Asserts that {@code tsCode} is rejected before execution, i.e. the parser
+     * or the validator reports at least one error.
+     */
+    protected void assertRejected(String tsCode) {
+        URI uri = freshUri();
+        Resource resource = resourceSet.createResource(uri);
+        try {
+            resource.load(new StringInputStream(tsCode), null);
+        } catch (IOException e) {
+            throw new WrappedException(e);
+        }
+        List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        if (issues.isEmpty()) {
+            fail("Expected a parse or validation error, but none was reported"
+                    + "\n--- source ---\n" + tsCode);
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -281,15 +318,16 @@ public abstract class TinyscriptTranspilerTestBase {
     protected void assertInterpreterThrows(Class<? extends Throwable> expectedType, String tsCode) {
         try {
             interpreterOutput(tsCode);
-            fail("Expected " + expectedType.getSimpleName() + " but no exception was thrown"
-                    + "\n--- source ---\n" + tsCode);
         } catch (Throwable t) {
             if (!expectedType.isInstance(t)) {
                 fail("Expected " + expectedType.getSimpleName()
                         + " but got " + t.getClass().getSimpleName() + ": " + t.getMessage()
                         + "\n--- source ---\n" + tsCode);
             }
+            return;
         }
+        fail("Expected " + expectedType.getSimpleName() + " but no exception was thrown"
+                + "\n--- source ---\n" + tsCode);
     }
 
     // -------------------------------------------------------------------------

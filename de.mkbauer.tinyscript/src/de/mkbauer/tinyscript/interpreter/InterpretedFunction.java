@@ -49,84 +49,64 @@ public class InterpretedFunction extends Function {
 		if (block == null) 
 			return TSValue.UNDEFINED;
 			
-		TSValue result = null;
-		
 		// Create a new execution context
 		ExecutionContext currentContext = engine.enterNewExecutionContext(getName(), outerContext);
-		
-		// Update and check call depth
 		engine.callDepth++;
-		
-		if (monitor != null)
-			monitor.checkCallDepth(engine.callDepth);
-		
-		// Set this-Reference
-		currentContext.setThisRef(self);
-		
-		// With an arrow function, `this` is lexically bound. 
-		// It means that it uses `this` from the code that contains the arrow function.
-		if (isArrowFunction()) {
-			currentContext.setThisRef(getOuterContext().getThisRef());
-		}
-		currentContext.setFunctionContext(true);
-		
-		// Put the arguments into the context		
-		if (args != null) {
-			int i = 0;
-			for (Identifier param : ast.getParams()) {
-				currentContext.create(param.getName());
-				if (i < args.length) {
-					currentContext.store(param.getName(), args[i]);
-				}
-				i++;
-			}
-		}
-		
-		// Special case ...rest parameter
-		if (ast.getRest() != null) {
-			currentContext.create(ast.getRest().getName());
-			ArrayObject restArray = (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();
-			for (int i = ast.getParams().size(); i < args.length; i++) {
-				restArray.push(args[i]);
-			}
-			currentContext.store(ast.getRest().getName(), new TSValue(restArray));
-		}
-		
-		// Hoist function declarations
-		LexicalEnvironment env = engine.getLexcialEnvironment(block);
-		for (TSValue function : env.getFunctions()) {	
-			// Create a variable in the current context pointing to each function object
-			String functionName = ((Function) function.asObject()).getName();
-			if (!currentContext.contains(functionName))
-				currentContext.create(functionName);
-			currentContext.store(functionName, function);
-		}
-		
+
+		// Leave the context and restore the call depth however the call ends
 		try {
-			
-			result = engine.caseBlock(block);
-			// The result (= value of last statement) of the body in a regular function 
-			// is NOT used as return value, if there is no return statement, the function's result is undefined
-			if (!isArrowFunction()) {
-				result = TSValue.UNDEFINED;
+			if (monitor != null)
+				monitor.checkCallDepth(engine.callDepth);
+
+			// Set this-Reference
+			currentContext.setThisRef(self);
+
+			// With an arrow function, `this` is lexically bound.
+			// It means that it uses `this` from the code that contains the arrow function.
+			if (isArrowFunction()) {
+				currentContext.setThisRef(getOuterContext().getThisRef());
 			}
-			engine.leaveExecutionContext();
-			engine.callDepth--;
-			
-			return result;
+			currentContext.setFunctionContext(true);
+
+			// Put the arguments into the context
+			if (args != null) {
+				int i = 0;
+				for (Identifier param : ast.getParams()) {
+					currentContext.create(param.getName());
+					if (i < args.length) {
+						currentContext.store(param.getName(), args[i]);
+					}
+					i++;
+				}
+			}
+
+			// Special case ...rest parameter
+			if (ast.getRest() != null) {
+				currentContext.create(ast.getRest().getName());
+				ArrayObject restArray = (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();
+				for (int i = ast.getParams().size(); i < args.length; i++) {
+					restArray.push(args[i]);
+				}
+				currentContext.store(ast.getRest().getName(), new TSValue(restArray));
+			}
+
+			engine.hoistFunctionDeclarations(engine.getLexcialEnvironment(block));
+
+			TSValue result = engine.caseBlock(block);
+			// The result (= value of last statement) of the body in a regular function
+			// is NOT used as return value, if there is no return statement, the function's result is undefined
+			return isArrowFunction() ? result : TSValue.UNDEFINED;
 		}
 		catch (TSReturnValue rv) {
-			// Restore execution context
-			result = rv.getReturnValue();
-			engine.leaveExecutionContext();
-			engine.callDepth--;
-			return result;				
+			return rv.getReturnValue();
 		}
 		catch (TinyscriptRuntimeException e) {
 			engine.attachStackTrace(e);
+			throw e;
+		}
+		finally {
 			engine.leaveExecutionContext();
 			engine.callDepth--;
-			throw e;
 		}
 	}
 	
