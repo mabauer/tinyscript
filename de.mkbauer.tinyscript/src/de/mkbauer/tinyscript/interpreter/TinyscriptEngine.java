@@ -197,13 +197,8 @@ public class TinyscriptEngine {
 	}
 	
 	public BuiltinConstructor getConstructor(String name) {
-		TSValue value = globalContext.get(name);
-		if (value != TSValue.UNDEFINED) {
-			TSObject ctor = value.asObject();
-			if (ctor instanceof BuiltinConstructor) {
-				return (BuiltinConstructor) ctor;
-			}
-		}
+		if (globalContext.get(name) instanceof BuiltinConstructor ctor)
+			return ctor;
 		throw new TinyscriptRuntimeException("Could not find constructor " + name);
 	}
 	
@@ -459,8 +454,7 @@ public class TinyscriptEngine {
     	IterableForExpression expr = forstmt.getIterableForExpr();
     	TSValue result = TSValue.UNDEFINED;
 		TSValue iterable = execute(expr.getIterable());
-		if (iterable.isArray()) {
-			ArrayObject arr = (ArrayObject) iterable.asObject();
+		if (iterable instanceof ArrayObject arr) {
 			try {
 				for (int i = 0; i < arr.getLength(); i++) {
 					result = executeLoopIteration(forstmt, arr.item(i));
@@ -569,16 +563,16 @@ public class TinyscriptEngine {
     		recordStringCreation(result);
     		return TSValue.of(result);
     	}
-    	if (left.isArray() || right.isArray()) {
-    		if (!(left.isArray() && right.isArray()))
-    			throw new TinyscriptTypeError("'+' can only add an array to another array or to a string", expr);
+    	if (left instanceof ArrayObject leftArray && right instanceof ArrayObject rightArray) {
     		ArrayObject result = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject();
-    		left.asArray().getItems().forEach(result::push);
-    		right.asArray().getItems().forEach(result::push);
+    		leftArray.getItems().forEach(result::push);
+    		rightArray.getItems().forEach(result::push);
     		return result;
     	}
-    	if (left.isNumber() && right.isNumber())
-    		return TSValue.of(left.asDouble() + right.asDouble());
+    	if (left instanceof ArrayObject || right instanceof ArrayObject)
+    		throw new TinyscriptTypeError("'+' can only add an array to another array or to a string", expr);
+    	if (left instanceof TSNumber l && right instanceof TSNumber r)
+    		return TSValue.of(l.value() + r.value());
     	return TSValue.NAN;
     }
 
@@ -596,7 +590,7 @@ public class TinyscriptEngine {
     }
 
     private TSValue instanceOf(TSValue left, TSValue right) {
-    	if (!(right.isObject() && right.asObject() instanceof Function constructor))
+    	if (!(right instanceof Function constructor))
     		throw new TinyscriptTypeError("'instanceof' requires a function object as right-hand operand");
     	return TSValue.of(constructor.hasInstance(left));
     }
@@ -642,7 +636,7 @@ public class TinyscriptEngine {
     }
 
     private TSValue callFunction(CallOrPropertyAccess expr, TSValue function, TSObject thisRef, CallSuffix call) {
-    	if (!(function.isObject() && function.asObject() instanceof Function functionObject))
+    	if (!(function instanceof Function functionObject))
     		throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
     	return processFunctionCall(expr, functionObject, thisRef, call.getArguments());
     }
@@ -651,8 +645,8 @@ public class TinyscriptEngine {
      * Property access on a primitive value (e.g. a string) uses its wrapper object.
      */
     private TSObject toObjectForPropertyAccess(TSValue base, CallOrPropertyAccess expr) {
-    	if (base.isObject())
-    		return base.asObject();
+    	if (base instanceof TSObject object)
+    		return object;
     	if (base == TSValue.NULL || base == TSValue.UNDEFINED)
     		throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
     	return TSObject.toObject(this, base);
@@ -737,13 +731,11 @@ public class TinyscriptEngine {
     	TSValue value = currentContext.lookup(expr.getName());
     	if (expr.getSuffixes() != null) {
     		for (DotPropertyAccessSuffix suffix : expr.getSuffixes()) {
-    			if (!value.isObject()) {
+    			if (!(value instanceof TSObject object)) {
     				value = TSValue.UNDEFINED; 
     				break;
     			}
-    			else {
-    				value = value.asObject().get(suffix.getKey().getName());
-    			}
+    			value = object.get(suffix.getKey().getName());
     		}
     		
     	}
@@ -797,7 +789,9 @@ public class TinyscriptEngine {
 				self = ((BuiltinConstructor) functionObject).createObject();
 			} 
 			else {
-				self = new TSObject(this, functionObject.get("prototype").asObject());
+				// Like Javascript: if the prototype property is not an object, use Object.prototype
+				TSObject proto = functionObject.get("prototype") instanceof TSObject p ? p : getDefaultPrototype();
+				self = new TSObject(this, proto);
 			}
 		}
 		TSValue[] args = new TSValue[argExprs.size()];

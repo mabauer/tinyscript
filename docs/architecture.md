@@ -179,9 +179,9 @@ Before executing a `Block`, `TinyscriptEngine` pre-scans it for `FunctionDeclara
 
 Values are created with `TSValue.of(double | boolean | String)`; objects are values themselves, so there is no wrapper. Because the interface is sealed, a `switch` over a `TSValue` is checked for exhaustiveness by the compiler (see `asString()`, `asBoolean()`, `typeOf()`).
 
-**Type query methods:** `isString()` (primitive or `String` object), `isPrimitiveString()`, `isDouble()`, `isNumber()` (not `NaN`), `isBoolean()`, `isObject()`, `isArray()`, `isCallable()`
+**Type checks:** prefer pattern matching (`value instanceof ArrayObject array`, `value instanceof Function f`, `switch (value) { case TSNumber n -> … }`). The remaining helpers cover cases with extra semantics: `isString()` (primitive or `String` object), `isPrimitiveString()`, `isNumber()` (a number, but not `NaN`), `isMathematicalInteger()`, `isBoolean()`, `isObject()`
 
-**Conversion methods:** `asString()`, `asDouble()`, `asInt()`, `asBoolean()`, `asObject()` (Java `null` for `undefined` / `null`), `typeOf()`
+**Conversion methods:** `asString()`, `asDouble()`, `asInt()`, `asBoolean()`, `asObject()` (a cast; check with `instanceof TSObject` first), `typeOf()`
 
 **Equality:** `tinyscriptEquals()` implements the language's `==` (no type coercion, `null == undefined`, `NaN != NaN`); `equals()` / `hashCode()` are the Java value contract of the records.
 

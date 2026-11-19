@@ -34,19 +34,10 @@ public non-sealed class TSObject implements TSValue {
 			return "[object Undefined]";
 		if (value == TSValue.NULL)
 			return "[object Null]";
-		if (value.isObject()) {
-			TSObject object = value.asObject();
-			TSValue toStringValue = object.get("toString");
-			// if (toStringValue.isString()) 
-			// 		return toStringValue.asString();
-			if (toStringValue.isObject()) {
-				TSObject toString = toStringValue.asObject();
-				if (toString instanceof Function) {
-					TSValue result = ((Function) toString).apply(object, new TSValue[0]);
-					if (result.isString())
-						return result.asString();
-				}
-			}
+		if (value instanceof TSObject object && object.get("toString") instanceof Function toString) {
+			TSValue result = toString.apply(object, new TSValue[0]);
+			if (result.isString())
+				return result.asString();
 		}
 		return value.asString();
 	}
@@ -87,9 +78,8 @@ public non-sealed class TSObject implements TSValue {
 	
 	public static double toNumber(TinyscriptEngine engine, TSValue value) {
 		// TODO Return NAN if undefined
-		if (value.isObject()) {
-			value = toPrimitive(engine, value.asObject());
-		}
+		if (value instanceof TSObject object)
+			value = toPrimitive(engine, object);
 		if (value.isBoolean())
 			return (value.asBoolean() ? 1 :0);
 		if (value.isNumber())
@@ -108,9 +98,8 @@ public non-sealed class TSObject implements TSValue {
 	
 	public static int toInteger(TinyscriptEngine engine, TSValue value) {
 		// TODO Return NAN if undefined
-		if (value.isObject()) {
-			value = toPrimitive(engine, value.asObject());
-		}
+		if (value instanceof TSObject object)
+			value = toPrimitive(engine, object);
 		if (value.isBoolean())
 			return (value.asBoolean() ? 1 :0);
 		if (value.isNumber())

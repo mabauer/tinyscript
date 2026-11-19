@@ -9,14 +9,11 @@ public abstract class Function extends TSObject {
 	public Function(TinyscriptEngine engine) {
 		super(engine);
 		
-		TSObject proto = null;
 		// Object is a function as well, so we can get it's prototype and use it.
-		Function objectobject = (Function) engine.getGlobalContext().get("Object").asObject();
-		if (objectobject != null) {
-			proto = objectobject.getPrototype();
-			setPrototype(proto);
-		}
-		
+		// (While the builtins are set up, Object may not exist yet.)
+		if (engine.getGlobalContext().get("Object") instanceof Function objectConstructor)
+			setPrototype(objectConstructor.getPrototype());
+
 	}
 	
 	public void setPrototypeProperty(Object prototype) {
@@ -28,14 +25,11 @@ public abstract class Function extends TSObject {
 	}
 	
 	public boolean hasInstance(TSValue value) {
-		if (!value.isObject())
+		if (!(value instanceof TSObject start))
 			return false;
-		TSObject object = null;
-		TSValue prototypePropertyAsValue = getPrototypeProperty();
-		if (!prototypePropertyAsValue.isObject())
+		if (!(getPrototypeProperty() instanceof TSObject prototypeProperty))
 			throw new TinyscriptTypeError("Constructor " + getName() + " does not have a prototype property");
-		TSObject prototypeProperty = prototypePropertyAsValue.asObject();
-		for (object = value.asObject() ; object != null; object = object.getPrototype()) {
+		for (TSObject object = start; object != null; object = object.getPrototype()) {
 			if (object == prototypeProperty) 
 				return true;
 		}
