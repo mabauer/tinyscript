@@ -182,6 +182,21 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testArrayGapsAreFilledWithUndefined() {
+        String code = "var a = [1]; a[3] = 4; print(a.length); print(a[2] == null); print(a[3]);";
+        assertEquals("4\ntrue\n4\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testNegativeArrayIndexIsAProperty() {
+        String code = "var a = [1]; a[-1] = 5; a[1.5] = 7; print(a[-1]); print(a[1.5]); print(a.length); print(a[0]);\n"
+                + "var b = []; print(b[-1] == null);";
+        assertEquals("5\n7\n1\n1\ntrue\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testWhile() {
         assertSameOutput("var i = 0; while (i < 3) { print(i); i = i + 1; }");
         assertSameOutput("var i = 0; while (true) { i = i + 1; if (i > 2) { break; } print(i); }");

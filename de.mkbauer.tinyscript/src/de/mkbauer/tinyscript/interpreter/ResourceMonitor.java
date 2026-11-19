@@ -119,9 +119,13 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		recordObjectSizeChange(object);		
 	}
 	
-	protected void recordObjectSizeChange(TSObject object) {
-		if (resourceLimits.maxObjectSize > 0 && object.getObjectSize() > resourceLimits.maxObjectSize) 
+	protected void checkObjectSize(int size) {
+		if (resourceLimits.maxObjectSize > 0 && size > resourceLimits.maxObjectSize)
 			throw new TinyscriptResourceLimitViolation("Object size limit reached");
+	}
+
+	protected void recordObjectSizeChange(TSObject object) {
+		checkObjectSize(object.getObjectSize());
 		if (useObjectTracking) {
 			trackObject(object);
 			checkObjectsAndMemoryConsumption();

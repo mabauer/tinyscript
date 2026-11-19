@@ -26,53 +26,52 @@ public class ArrayObject extends BuiltinType {
 	}
 
 	public void setItem(int index, TSValue value) {
-		if (index < getLength()) 
+		if (index < getLength()) {
 			items.set(index, value);
-		else {
-			int len = getLength();
-			for (int i = len; i < index; i++) 
-				items.add(TSValue.UNDEFINED);
-			items.add(value);
-			update();
-		}	
+			return;
+		}
+		// Check the size limit before filling the gap with undefined, not after
+		engine.checkObjectSize(index + 1 + properties.size());
+		while (items.size() < index)
+			items.add(TSValue.UNDEFINED);
+		items.add(value);
+		update();
+	}
+
+	/**
+	 * Returns the array index a property key stands for, or -1 if the key is a
+	 * named property (like in Javascript, "-1" or "01" are not array indexes).
+	 */
+	private static int arrayIndex(String key) {
+		try {
+			int index = Integer.parseInt(key);
+			return (index >= 0 && String.valueOf(index).equals(key)) ? index : -1;
+		}
+		catch (NumberFormatException e) {
+			return -1;
+		}
 	}
 
 	@Override
 	public TSValue get(String key) {
 		if (key.equals("length"))
 			return TSValue.of(getLength());
-		try {
-			int index = Integer.parseInt(key);
-			if (index < getLength()) 
-				return items.get(index);
-			else
-				return TSValue.UNDEFINED;
-		}
-		catch (NumberFormatException e) {
+		int index = arrayIndex(key);
+		if (index < 0)
 			return super.get(key);
-		}
+		return item(index);
 	}
 
 	@Override
 	public void put(String key, TSValue value) {
-		try {
-			// TODO(TODO.md: Arrays: length and named properties): Special case "length" => resize array and fill with TSValue.UNDEFINED
-			if (key.equals("length"))
-				return;
-			int index = Integer.parseInt(key);
-			if (index < getLength()) 
-				items.set(index, value);
-			else {
-				int len = getLength();
-				for (int i = len; i < index; i++) 
-					items.add(TSValue.UNDEFINED);
-				items.add(value);
-				update();
-			}
-		}
-		catch (NumberFormatException e) {
+		// TODO(TODO.md: Arrays: length and named properties): Special case "length" => resize array and fill with TSValue.UNDEFINED
+		if (key.equals("length"))
+			return;
+		int index = arrayIndex(key);
+		if (index < 0)
 			super.put(key, value);
-		}
+		else
+			setItem(index, value);
 	}
 	
 	public void push(TSValue value) {
