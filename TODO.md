@@ -41,7 +41,7 @@ Language
 Interpreter and code quality
 ----------------------------
 
-- **Triage the TODO comments in the code** (about 40). Also: the grammar rule `RangeExpression` is unused; there is an empty validator check.
+- **Remaining TODO comments in the code.** Obsolete markers, the unused `RangeExpression` rule, the empty validator check and `TinyscriptEngineDemo` are gone. Left: real bugs (`Print` swallows `IOException`; `defineProperty` ignores non-configurable properties; `GlobalExecutionContext.create` does not check for existing names; `arr.length = n` does not resize; named properties on arrays) and language decisions (Number/Boolean wrapper objects, `toNumber(undefined)` should be `NaN`, user-defined `valueOf`, global `this` in strict mode, own `GlobalScopeProvider` with modules). Next: turn the decisions into entries here and let the code markers point to them (see CLAUDE.md).
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it.
 

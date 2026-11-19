@@ -24,7 +24,7 @@ public class FunctionConstructor extends BuiltinConstructor {
 	}
 	
 	public int getLength() {
-		// TODO: Find out why?
+		// ECMAScript specifies Function.length as 1: the body is the one counted parameter
 		return 1;
 	}
 

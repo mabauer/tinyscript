@@ -226,10 +226,6 @@ ArrayInitializer:
 	'[' (values+=Addition)? (',' values += Addition)* ']'  
 ;
 
-RangeExpression:
-	start=NumberLiteral ',' end=NumberLiteral	
-;
-
 NullObject returns Expression:
 	{NullObject}
 	'null'

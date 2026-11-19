@@ -67,7 +67,7 @@ public class TinyscriptExecutionService {
 		String resultAsString = "";
 		String errorMessage = "";
 		int errorLine = 0;
-		// TODO: Should be replaced by an OutputStream with a limited capacity
+		// Bounded by the maxOutputSize limit, which print() checks before writing
 		ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 		
 		ResourceLimits limits = new ResourceLimits();

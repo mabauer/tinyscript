@@ -483,6 +483,13 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testDuplicateGlobalDeclarationsAreRejected() {
+        assertRejected("var x = 1; var x = 2;");
+        assertRejected("function f() { } function f() { }");
+        assertRejected("var f = 1; function f() { }");
+    }
+
+    @Test
     public void testBreakCannotLeaveFunctionBodyInWhile() {
         assertRejected("while (true) { var f = function() { break; }; f(); }");
     }

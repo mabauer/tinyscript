@@ -48,8 +48,7 @@ public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 
 	
 	@Test
-	public void testFunctionCausingException() {
-		// TODO: Move to an extra test, checking stacktrace generation
+	public void testFunctionCausingExceptionHasTinyscriptStacktrace() {
 		try {
 			executeScriptFromString("function f(x) {assert(x!=2); return x*x;}; assert (f(2)==4);");
 			fail();

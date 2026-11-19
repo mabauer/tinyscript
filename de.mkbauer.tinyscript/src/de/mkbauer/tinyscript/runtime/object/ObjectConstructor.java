@@ -47,8 +47,6 @@ public class ObjectConstructor extends BuiltinConstructor {
 		proto.defineBuiltinMethod("call", this::functionCall, 1);
 		proto.defineBuiltinMethod("apply", this::functionApply, 1);
 		proto.defineDefaultProperty("length", TSValue.of(getLength()));
-		// TODO: Remove, just for testing
-		proto.defineDefaultProperty("isCallable", TSValue.of(true));
 
 		// Object.create(proto), Object.keys(obj)...
 		defineBuiltinMethod("create", this::create, 1);
@@ -73,7 +71,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 
 	@Override
 	public int getLength() {
-		// TODO Find out why?
+		// ECMAScript specifies Object.length as 1 (a historical value from ES1)
 		return 1;
 	}
 
