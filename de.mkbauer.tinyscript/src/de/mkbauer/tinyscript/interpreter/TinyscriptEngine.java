@@ -613,7 +613,25 @@ public class TinyscriptEngine {
     }
 
     public TSValue caseNewExpression(NewExpression expr) {
-    	return execute(expr.getExpr());
+    	TSValue constructor = execute(expr.getExpr());
+    	// new Foo(...): the call that follows constructs the object (see processFunctionCall)
+    	if (expr.eContainer() instanceof CallOrPropertyAccess call && isConstructorCall(call))
+    		return constructor;
+    	// new Foo: like Javascript, construct without arguments
+    	if (!(constructor instanceof Function function))
+    		throw new TinyscriptTypeError("'new' requires a function", expr);
+    	return construct(function, new TSValue[0]);
+    }
+
+    /**
+     * new Foo(...) or new ns.Foo(...): a call right after "new"; like Javascript,
+     * the called function (Foo or ns.Foo) is the constructor.
+     */
+    private static boolean isConstructorCall(CallOrPropertyAccess expr) {
+    	if (!(expr.getExpr() instanceof NewExpression))
+    		return false;
+    	return expr.getSuffix() instanceof CallSuffix
+    			|| (expr.getSuffix() instanceof CallOrPropertyAccessSuffix suffix && suffix.getCall() != null);
     }
     
 
@@ -778,32 +796,33 @@ public class TinyscriptEngine {
 	
     public TSValue processFunctionCall(CallOrPropertyAccess expr, Function functionObject, TSObject self, List<Expression> argExprs) {
     	currentContext.currentExpression = expr;
-
-		// If called with the new-Operator, the function serves as a constructor
-		// It's this-reference will then point to a newly created Object 
-		// (derived from the prototype-Property of the constructor)
-    	// Exception: for built-in constructors, we use their special createObject-methods instead
-    	boolean asConstructor = (expr.getExpr() instanceof NewExpression);
-		if (asConstructor) {
-			if ((functionObject instanceof BuiltinConstructor)) {
-				self = ((BuiltinConstructor) functionObject).createObject();
-			} 
-			else {
-				// Like Javascript: if the prototype property is not an object, use Object.prototype
-				TSObject proto = functionObject.get("prototype") instanceof TSObject p ? p : getDefaultPrototype();
-				self = new TSObject(this, proto);
-			}
-		}
 		TSValue[] args = new TSValue[argExprs.size()];
 		for (int i = 0; i < argExprs.size(); i++) {
 			args[i] = execute(argExprs.get(i));
-		}		
-		TSValue result = functionObject.apply(self, args);
-		if (asConstructor) {
-			result = self;
 		}
-		return result;
+		if (isConstructorCall(expr))
+			return construct(functionObject, args);
+		return functionObject.apply(self, args);
     }
+
+	/**
+	 * Calls a function as a constructor: its this-reference points to a newly created
+	 * object derived from the constructor's prototype property. Built-in constructors
+	 * create their objects with their own createObject() instead.
+	 */
+	private TSObject construct(Function constructor, TSValue[] args) {
+		TSObject self;
+		if (constructor instanceof BuiltinConstructor builtin) {
+			self = builtin.createObject();
+		}
+		else {
+			// Like Javascript: if the prototype property is not an object, use Object.prototype
+			TSObject proto = constructor.get("prototype") instanceof TSObject p ? p : getDefaultPrototype();
+			self = new TSObject(this, proto);
+		}
+		constructor.apply(self, args);
+		return self;
+	}
 	
 	private TSValue executeInBlockContext(String name, Block block) {
 		return executeInBlockContext(name, block, null, null);
