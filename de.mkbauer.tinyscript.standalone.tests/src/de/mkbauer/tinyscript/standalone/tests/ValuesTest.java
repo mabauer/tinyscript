@@ -63,9 +63,19 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testEqualityWithoutTypeCoercion() {
-        // Deliberately different from Javascript's ==, so no differential test
-        assertEquals("false\nfalse\nfalse\nfalse\n", interpreterOutput(
-                "print(1 == \"1\"); print(true == 1); print(0 == false); print(\"\" == false);"));
+        // Unlike Javascript's ==; the generator emits __ts_eq to match
+        String code = "print(1 == \"1\"); print(true == 1); print(0 == false); print(\"\" == false);\n"
+                + "print(1 != \"1\"); print(null == 0); print(null != false);";
+        assertEquals("false\nfalse\nfalse\nfalse\ntrue\nfalse\ntrue\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testStringObjectsEqualTheirStrings() {
+        String code = "var s = new String(\"a\");\n"
+                + "print(s == \"a\"); print(\"a\" == s); print(s == new String(\"a\")); print(s != \"b\");";
+        assertEquals("true\ntrue\ntrue\ntrue\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     @Test

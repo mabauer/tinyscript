@@ -35,7 +35,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		assertEquals('''
 			var hello;
 			hello = "Hello World!";
-			assert (hello == "Hello World!");
+			assert (__ts_eq(hello, "Hello World!"));
 		'''.toString, result)
 		
 	}
@@ -62,7 +62,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		result = generateScriptFromString("(3+4)*5;")
 		assertEquals("(__ts_add(3, 4)) * 5;", result.trim())
 		result = generateScriptFromString("3 == 4;")
-		assertEquals("3 == 4;", result.trim())
+		assertEquals("__ts_eq(3, 4);", result.trim())
 		result = generateScriptFromString("\"Hello\" + \" World\";")
 		assertEquals("__ts_add(\"Hello\", \" World\");", result.trim())
 	}
@@ -84,7 +84,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			var x = (3 == 4);
 			var true_ = !x;''')
 		assertEquals('''
-			var x = (3 == 4);
+			var x = (__ts_eq(3, 4));
 			var true_ = !x;'''.toString, 
 			result.trim())
 	}
