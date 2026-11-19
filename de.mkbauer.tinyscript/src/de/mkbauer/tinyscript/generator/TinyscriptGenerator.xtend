@@ -67,21 +67,14 @@ class TinyscriptGenerator   {
 		} 
 		
 		function __ts_add(obj1, obj2) {
-			var result;
-			if (Array.isArray(obj1)) {
-				if (Array.isArray(obj2)) {
-					return obj1.concat(obj2);
-				} 
-				else {
-					result = obj1.slice(0);
-					result.push(obj2);
-					return result;
-				}
+			if (typeof obj1 === "string" || typeof obj2 === "string") {
+				return obj1 + obj2;
 			}
-			if (Array.isArray(obj2)) {
-				result = obj2.slice();
-				result.unshift(obj1);
-				return result;
+			if (Array.isArray(obj1) || Array.isArray(obj2)) {
+				if (!(Array.isArray(obj1) && Array.isArray(obj2))) {
+					throw new TypeError("'+' can only add an array to another array or to a string");
+				}
+				return obj1.concat(obj2);
 			}
 			return obj1 + obj2;
 		}

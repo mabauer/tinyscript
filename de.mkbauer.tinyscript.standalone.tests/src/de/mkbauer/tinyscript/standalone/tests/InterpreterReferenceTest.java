@@ -272,6 +272,39 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
                 + "print(arr.length);"));
     }
 
+    @Test
+    public void testArrayAdditionConcatenates() {
+        assertEquals("1,2,3\n3\n1\n", interpreterOutput(
+                "var a = [1];\n"
+                + "var b = a + [2, 3];\n"
+                + "print(b.join(\",\"));\n"
+                + "print(b.length);\n"
+                + "print(a.length);"));
+    }
+
+    @Test
+    public void testArrayAdditionResultIsAnArray() {
+        assertEquals("true\ntrue\n", interpreterOutput(
+                "var a = [1] + [2];\n"
+                + "print(Array.isArray(a));\n"
+                + "print(Object.getPrototypeOf(a) == Object.getPrototypeOf([]));"));
+    }
+
+    @Test
+    public void testAddingStringAndArrayConcatenatesStrings() {
+        assertEquals("a: [1, 2]\n[1]x\n", interpreterOutput(
+                "print(\"a: \" + [1, 2]);\n"
+                + "print([1] + \"x\");"));
+    }
+
+    @Test
+    public void testAddingArrayAndOtherNonArrayIsATypeError() {
+        assertInterpreterThrows(TinyscriptTypeError.class, "print([1] + 2);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "print(0 + [1]);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "print([1] + {});");
+        assertInterpreterThrows(TinyscriptTypeError.class, "print(null + [1]);");
+    }
+
     // =========================================================================
     // Error / exception cases
     // =========================================================================

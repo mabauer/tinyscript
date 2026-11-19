@@ -128,4 +128,10 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
         assertSameOutput("print(\"a\" < \"b\"); print(\"b\" <= \"a\"); print(\"B\" < \"a\"); print(\"ab\" > \"a\");");
     }
 
+    @Test
+    public void testArrayAddition() {
+        assertSameOutput("var a = [1]; var b = a + [2, 3]; print(b.join(\",\")); print(b.length); print(a.length);");
+        assertSameOutput("var b = [1] + [2]; print(b.map(x => x * 10).join(\",\"));");
+    }
+
 }
