@@ -46,14 +46,14 @@ public class TinyscriptWebApplicationTests {
 	private int port;
 
 	@Test
-	public void testHello() throws Exception {
+	public void testVersion() throws Exception {
 		@SuppressWarnings("rawtypes")
 		ResponseEntity<Map> entity = new TestRestTemplate().getForEntity(
-				"http://localhost:" + port + "/hello", Map.class);
+				"http://localhost:" + port + "/api/version", Map.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
 		@SuppressWarnings("unchecked")
 		Map<String, Object> body = entity.getBody();
-		assertEquals("Hello World", body.get("message"));
+		assertFalse(body.get("version").toString().isEmpty());
 	}
 	
 	@Test

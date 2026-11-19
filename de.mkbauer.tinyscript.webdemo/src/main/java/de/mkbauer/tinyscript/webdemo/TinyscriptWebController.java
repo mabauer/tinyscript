@@ -34,9 +34,6 @@ public class TinyscriptWebController {
 	private BuildProperties buildProperties;
 
 	@Autowired
-	private HelloWorldService helloWorldService;
-	
-	@Autowired
 	private TinyscriptExecutionService tinyscriptExecutionService;
 	
 	@Autowired
@@ -54,19 +51,6 @@ public class TinyscriptWebController {
 		return Collections.singletonMap("version", v);
 	}
 
-	@RequestMapping("/hello")
-	@ResponseBody
-	public Map<String, String> helloWorld() {
-		return Collections.singletonMap("message",
-				this.helloWorldService.getHelloMessage());
-	}
-	
-	@RequestMapping("/test")
-	@ResponseBody
-	public TinyscriptExecutionResult executeSampleProgram() {
-		return this.tinyscriptExecutionService.executeScriptFromString("var hello; hello=\"Hello, Tinyscript\";", false);
-	}
-	
 	@RequestMapping(value="/execute", method=RequestMethod.POST)
 	@ResponseBody
 	public TinyscriptExecutionResult executeProgram(@RequestBody String script) {

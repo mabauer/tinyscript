@@ -489,7 +489,7 @@ Spring Boot application. REST endpoints:
 |---|---|---|
 | `/execute` | POST | Run Tinyscript; returns JSON (`ExecutionResult`) with output + stats |
 | `/xcompile` | POST | Transpile to JavaScript; returns JS source |
-| `/test` | GET | Run a hardcoded sample program |
+| `/api/version` | GET | Version of the running build (shown in the UI) |
 
 The `TinyscriptExecutionService` creates a fresh sandboxed `TinyscriptEngine` per request (stateless). Output is captured via a custom `OutputStream` with an 8 KB limit. Sandboxing is **on**.
 
