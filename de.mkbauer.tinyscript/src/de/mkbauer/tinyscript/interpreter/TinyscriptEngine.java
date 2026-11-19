@@ -17,7 +17,6 @@ import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
-import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.ts.ArrayInitializer;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
@@ -283,12 +282,10 @@ public class TinyscriptEngine {
     }
 
 	
-	// @Override
 	public TSValue defaultCase(EObject object) {
 		throw new TinyscriptUnsupportedOperationError("Unsupported script node: " + object.eClass().getName(), object);
 	}
   	
-    // @Override
 	public TSValue caseTinyscript(Tinyscript object) {
 		// Start from scratch!
 		currentContext = globalContext;
@@ -298,7 +295,7 @@ public class TinyscriptEngine {
 			resourceMonitor.start();
 		checkMXCpuTimeAndMemory();
 			
-		hoistFunctionDeclarations(getLexcialEnvironment(object.getGlobal()));
+		hoistFunctionDeclarations(getLexicalEnvironment(object.getGlobal()));
 		try {
 			TSValue result = execute(object.getGlobal());
 
@@ -315,7 +312,6 @@ public class TinyscriptEngine {
 		}
 	}
 
-    // @Override
 	public TSValue caseBlock(Block object) {
     	TSValue result = TSValue.UNDEFINED;  	
         for (Statement s : object.getStatements()) {
@@ -325,7 +321,6 @@ public class TinyscriptEngine {
         return result;
     }
     
-    // @Override 
     public TSValue caseBlockStatement(BlockStatement object) {
     	return executeInBlockContext("block", object.getBlock());
     }
@@ -335,25 +330,26 @@ public class TinyscriptEngine {
     	return execute(object.getExpr());
     }    
     
-    // @Override 
     public TSValue caseFunctionDefinition(FunctionDefinition object) {
-    	InterpretedFunction function = new InterpretedFunction(this);
-    	function.setOuterContext(currentContext);
-    	function.setAst(object);
-    	return new TSValue(function);
+    	return createFunction(object, false);
     }
-    
-    // @Override 
+
     public TSValue caseArrowFunction(FunctionDefinition object) {
+    	return createFunction(object, true);
+    }
+
+    /**
+     * Creates a function object that closes over the current execution context.
+     */
+    private TSValue createFunction(FunctionDefinition definition, boolean isArrowFunction) {
     	InterpretedFunction function = new InterpretedFunction(this);
-    	function.setArrowFunction(true);
+    	function.setArrowFunction(isArrowFunction);
     	function.setOuterContext(currentContext);
-    	function.setAst(object);
+    	function.setAst(definition);
     	return new TSValue(function);
     }
+
     
-    
-    // @Override
     public TSValue caseVariableStatement(VariableStatement object) {
     	recordStatement();
     	for (Expression expr : object.getVardecls()) {
@@ -362,20 +358,13 @@ public class TinyscriptEngine {
     	return TSValue.UNDEFINED;
     }
     
-    // @Override
+    // The validator ensures that return only occurs inside functions
     public TSValue caseReturnStatement(ReturnStatement object) {
     	recordStatement();
-    	if (callDepth == 0) {
-    		throw new TinyscriptSyntaxError("Return statement is only valid inside functions", 
-    				TinyscriptModelUtil.getFilenameOfASTNode(object), TinyscriptModelUtil.getLineOfASTNode(object));
-    	}
-    	TSValue returnValue = TSValue.UNDEFINED;
-    	if (object.getExpr() != null)
-    		returnValue =execute(object.getExpr());
+    	TSValue returnValue = (object.getExpr() != null) ? execute(object.getExpr()) : TSValue.UNDEFINED;
     	throw new TSReturnValue(returnValue);
     }
     
-    // @Override
     public TSValue caseAssertStatement(AssertStatement object) {
     	recordStatement();
     	TSValue cond = execute(object.getCond());
@@ -385,28 +374,19 @@ public class TinyscriptEngine {
     	return cond;
     }
   
-    // @Override
     public TSValue caseIfStatement(IfStatement object) {
     	recordStatement();
-    	TSValue cond = execute(object.getCond());
-    	TSValue result = TSValue.UNDEFINED;
-    	if (cond.asBoolean()) {
-    		result = executeInBlockContext("if", object.getThen());
-    		// result = caseBlock(object.getThen());
-    	} else {
-    		if (object.getElse() != null) {
-    			result= caseElseStatement(object.getElse());
-    		}
-    	}
-    	return result;
+    	if (execute(object.getCond()).asBoolean())
+    		return executeInBlockContext("if", object.getThen());
+    	if (object.getElse() != null)
+    		return caseElseStatement(object.getElse());
+    	return TSValue.UNDEFINED;
     }
     
-    // @Override
     public TSValue caseElseStatement(ElseStatement object) {
     	return executeInBlockContext("else", object.getElse());
     }
     
-    // @Override
     public TSValue caseForStatement(ForStatement forstmt) {
     	recordStatement();
     	if (forstmt.getNumericForExpr() != null) {
@@ -512,227 +492,185 @@ public class TinyscriptEngine {
     	throw TSBreak.INSTANCE;
     }
     
-    // @Override
     public TSValue caseBinaryExpression(BinaryExpression expr) {
-    	String op = expr.getOp();			
-    	if (op.equals("=")) {
-    	   	TSValue right = execute(expr.getRight());
-    		return assignValue(expr.getLeft(), right);
-    	}   	
+    	String op = expr.getOp();
+    	// Operators that evaluate their right operand only when needed
+    	switch (op) {
+    		case "=":
+    			return assignValue(expr.getLeft(), execute(expr.getRight()));
+    		case "&&":
+    			return new TSValue(execute(expr.getLeft()).asBoolean() && execute(expr.getRight()).asBoolean());
+    		case "||":
+    			return new TSValue(execute(expr.getLeft()).asBoolean() || execute(expr.getRight()).asBoolean());
+    	}
     	TSValue left = execute(expr.getLeft());
-       	if (op.equalsIgnoreCase("&&")) {
-       		if (left.asBoolean())
-       			return new TSValue(execute(expr.getRight()).asBoolean());
-       		return new TSValue(false);
-    	}
-    	if (op.equalsIgnoreCase("||")) {
-    		if (left.asBoolean())
-    			return new TSValue(true);
-    		return new TSValue(execute(expr.getRight()).asBoolean());
-    	}
     	TSValue right = execute(expr.getRight());
-    	if (op.equalsIgnoreCase("==")) {
-    		return new TSValue(left.equals(right));
-    	}
-    	if (op.equalsIgnoreCase("!=")) {
-    		return new TSValue(!left.equals(right));
-    	}
-    	if (op.equals("<") || op.equals("<=") || op.equals(">") || op.equals(">=")) {
-    		int comparison = compare(left, right, expr);
-    		return new TSValue(switch (op) {
-    			case "<" -> comparison < 0;
-    			case "<=" -> comparison <= 0;
-    			case ">" -> comparison > 0;
-    			default -> comparison >= 0;
-    		});
-    	}
-    	if (op.equals("+")) {
-    		if (left.isNumber() && right.isNumber()) {
-    			return new TSValue(left.asDouble() + right.asDouble());
-    		}
-    		if (left.isString() || right.isString()) {
-    			String result = left.asString() + right.asString();
-    			recordStringCreation(result);
-    			return new TSValue(result);
-    		}
-    		if (left.isArray() && right.isArray()) {
-    			return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
-    		}
-
-    		return TSValue.NAN;
-    	}
-    	if (op.equals("-")) {
-    		if (left.isNumber() && right.isNumber()) {
-    			return new TSValue(left.asDouble() - right.asDouble());
-    		}
-    		return TSValue.NAN;
-    	}
-    	if (op.equals("*")) {
-       		if (left.isNumber() && right.isNumber()) {
-    			return new TSValue(left.asDouble() * right.asDouble());
-    		}
-       		return TSValue.NAN;
-    	}
-    	if (op.equals("/")) {
-       		if (left.isNumber() && right.isNumber()) {
-       			// TODO: Catch division by 0
-    			return new TSValue(left.asDouble() / right.asDouble());
-    		}
-       		return TSValue.NAN;
-    	}
-    	if (op.equals("%")) {
-       		if (left.isNumber() && right.isNumber()) {
-    			return new TSValue(left.asDouble() % right.asDouble());
-    		}
-       		return TSValue.NAN;
-    	}
-    	if (op.equals("instanceof")) {
-    		if (!(right.isObject() && right.asObject() instanceof Function))
-    			throw new TinyscriptTypeError("'instanceof' requires a function object as right-hand operand");
-    		else {
-    			Function constructor = (Function) right.asObject();
-    			return new TSValue(constructor.hasInstance(left));
-    		}
-    				
-    	}
-		throw new TinyscriptUnsupportedOperationError("Unsupported binary expression: " + op, expr);
+    	return switch (op) {
+    		case "==" -> new TSValue(left.equals(right));
+    		case "!=" -> new TSValue(!left.equals(right));
+    		case "<", "<=", ">", ">=" -> compare(op, left, right, expr);
+    		case "+" -> add(left, right);
+    		case "-", "*", "/", "%" -> arithmetic(op, left, right);
+    		case "instanceof" -> instanceOf(left, right);
+    		default -> throw new TinyscriptUnsupportedOperationError("Unsupported binary expression: " + op, expr);
+    	};
     }
 
     /**
      * Compares two numbers or two strings (lexicographically). Comparing values
      * of other or mixed types is a type error: there is no implicit conversion.
      */
-    private int compare(TSValue left, TSValue right, BinaryExpression expr) {
+    private TSValue compare(String op, TSValue left, TSValue right, BinaryExpression expr) {
+    	int comparison;
     	if (left.isNumber() && right.isNumber())
-    		return Double.compare(left.asDouble(), right.asDouble());
-    	if (left.isString() && right.isString())
-    		return left.asString().compareTo(right.asString());
-    	throw new TinyscriptTypeError("'" + expr.getOp() + "' compares two numbers or two strings, not "
-    			+ left.typeOf() + " and " + right.typeOf(), expr);
+    		comparison = Double.compare(left.asDouble(), right.asDouble());
+    	else if (left.isString() && right.isString())
+    		comparison = left.asString().compareTo(right.asString());
+    	else
+    		throw new TinyscriptTypeError("'" + op + "' compares two numbers or two strings, not "
+    				+ left.typeOf() + " and " + right.typeOf(), expr);
+    	return new TSValue(switch (op) {
+    		case "<" -> comparison < 0;
+    		case "<=" -> comparison <= 0;
+    		case ">" -> comparison > 0;
+    		default -> comparison >= 0;
+    	});
     }
-    
-    // @Override
+
+    /**
+     * + adds numbers, concatenates strings (if either operand is a string) and arrays.
+     */
+    private TSValue add(TSValue left, TSValue right) {
+    	if (left.isNumber() && right.isNumber())
+    		return new TSValue(left.asDouble() + right.asDouble());
+    	if (left.isString() || right.isString()) {
+    		String result = left.asString() + right.asString();
+    		recordStringCreation(result);
+    		return new TSValue(result);
+    	}
+    	if (left.isArray() && right.isArray())
+    		return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
+    	return TSValue.NAN;
+    }
+
+    private TSValue arithmetic(String op, TSValue left, TSValue right) {
+    	if (!(left.isNumber() && right.isNumber()))
+    		return TSValue.NAN;
+    	double l = left.asDouble();
+    	double r = right.asDouble();
+    	return new TSValue(switch (op) {
+    		case "-" -> l - r;
+    		case "*" -> l * r;
+    		case "/" -> l / r;
+    		default -> l % r;
+    	});
+    }
+
+    private TSValue instanceOf(TSValue left, TSValue right) {
+    	if (!(right.isObject() && right.asObject() instanceof Function constructor))
+    		throw new TinyscriptTypeError("'instanceof' requires a function object as right-hand operand");
+    	return new TSValue(constructor.hasInstance(left));
+    }
+
     public TSValue caseUnary(Unary expr) {
     	TSValue value = execute(expr.getExpr());
-    	if (expr.getOp().equals("-")) {
-    		if (value.isNumber()) {
-    			value = new TSValue(-value.asDouble());
-    			return value;
+    	return switch (expr.getOp()) {
+    		case "-" -> {
+    			if (!value.isNumber())
+    				throw new TinyscriptTypeError("Unsupported unary expression operand: " + expr.getExpr());
+    			yield new TSValue(-value.asDouble());
     		}
-    		else {
-    			throw new TinyscriptTypeError("Unsupported unary expression operand: " + expr.getExpr());
-    		}
-    	}
-    	if (expr.getOp().equals("!")) {
-    		return new TSValue(!value.asBoolean());
-    	}
-    	// TODO: Error handling
-    	return value;
-    }   
-    
+    		case "!" -> new TSValue(!value.asBoolean());
+    		default -> throw new TinyscriptUnsupportedOperationError("Unsupported unary expression: " + expr.getOp(), expr);
+    	};
+    }
+
     public TSValue caseGroupingExpression(GroupingExpression expr) {
-    	TSValue result = execute(expr.getExpr());
-    	return result;
+    	return execute(expr.getExpr());
     }
-    
+
     public TSValue caseNewExpression(NewExpression expr) {
-    	TSValue result = execute(expr.getExpr());
-    	return result;
+    	return execute(expr.getExpr());
     }
     
 
-    // @Override
-    // TODO: Merge with assignValue
     public TSValue caseCallOrPropertyAccess(CallOrPropertyAccess expr) {
-    	TSValue base = execute(expr.getExpr()); 
-    	TSValue result = TSValue.UNDEFINED;
+    	TSValue base = execute(expr.getExpr());
     	EObject suffix = expr.getSuffix();
-		if (suffix instanceof CallOrPropertyAccessSuffix) {
-			CallOrPropertyAccessSuffix callOrProp = (CallOrPropertyAccessSuffix) suffix;
-			TSValue keyValue = evaluatePropertyKey(callOrProp.getProperty());
-			TSObject baseasObject;
-			if (!base.isObject()) {
-				if (base == TSValue.NULL || base == TSValue.UNDEFINED) {
-					throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
-				}	
-				baseasObject = TSObject.toObject(this, base);
-			}
-			else {
-				baseasObject = base.asObject();
-			}
-			if (baseasObject instanceof ArrayObject && keyValue.isNumber())
-				result = ((ArrayObject) baseasObject).item(keyValue.asInt());
-			else
-				result = baseasObject.get(keyValue.asString());
-			CallSuffix callSuffix = callOrProp.getCall();
-			if (callSuffix != null) {
-				if (result.isObject() && (result.asObject() instanceof Function)) {
-					TSObject thisRef = baseasObject;
-					result = processFunctionCall(expr, (Function) result.asObject(), thisRef, callSuffix.getArguments());
-				}
-				else {
-					// TODO: Check for Null or Undefined!
-					throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
-				}	
-			}		
+		if (suffix instanceof CallOrPropertyAccessSuffix callOrProp) {
+			// object.property or object.method(...)
+			TSObject object = toObjectForPropertyAccess(base, expr);
+			TSValue property = getProperty(object, evaluatePropertyKey(callOrProp.getProperty()));
+			if (callOrProp.getCall() == null)
+				return property;
+			return callFunction(expr, property, object, callOrProp.getCall());
 		}
-    	if 	(suffix instanceof CallSuffix) {
-    		CallSuffix callSuffix = (CallSuffix) suffix;
-        	if (base.isObject() && (base.asObject() instanceof Function)) {
-        		TSObject thisRef = null;
-        		result = processFunctionCall(expr, (Function) base.asObject(), thisRef, callSuffix.getArguments());
-    		}
-        	else {
-        		// TODO: Check for Null or Undefined!
-    			throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
-    		}	
-    		
+    	if (suffix instanceof CallSuffix call) {
+    		// function(...)
+    		return callFunction(expr, base, null, call);
     	}
-    	return result;
+    	return TSValue.UNDEFINED;
     }
 
-    // @Override
+    private TSValue callFunction(CallOrPropertyAccess expr, TSValue function, TSObject thisRef, CallSuffix call) {
+    	if (!(function.isObject() && function.asObject() instanceof Function functionObject))
+    		throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
+    	return processFunctionCall(expr, functionObject, thisRef, call.getArguments());
+    }
+
+    /**
+     * Property access on a primitive value (e.g. a string) uses its wrapper object.
+     */
+    private TSObject toObjectForPropertyAccess(TSValue base, CallOrPropertyAccess expr) {
+    	if (base.isObject())
+    		return base.asObject();
+    	if (base == TSValue.NULL || base == TSValue.UNDEFINED)
+    		throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
+    	return TSObject.toObject(this, base);
+    }
+
+    // Arrays store numeric keys as items
+    private TSValue getProperty(TSObject object, TSValue key) {
+    	if (object instanceof ArrayObject arr && key.isNumber())
+    		return arr.item(key.asInt());
+    	return object.get(key.asString());
+    }
+
+    private void putProperty(TSObject object, TSValue key, TSValue value) {
+    	if (object instanceof ArrayObject arr && key.isNumber())
+    		arr.setItem(key.asInt(), value);
+    	else
+    		object.put(key.asString(), value);
+    }
+
     public TSValue casePropertyName(PropertyName expr) {
     	if (expr.getName() != null)
     		return new TSValue(expr.getName());
     	return execute(expr.getExpr());
     }
     
-    // @Override
     public TSValue caseIdentifier(Identifier expr) {
    		currentContext.create(expr.getName());
    		return TSValue.UNDEFINED;
     }
     
-    // @Override
     public TSValue caseReference(Reference expr) {
-    	try {
-    		if (expr.isThis()) {
-    			TSObject thisRef = currentContext.getThisRef();
-    			// 'this" behaves as specified in Javascript strict mode.
-    			if (thisRef != null)
-    				return new TSValue(thisRef);
-    			else
-    				return TSValue.UNDEFINED;
-    		}
-    		return currentContext.lookup(expr.getId().getName());
-    	}
-    	catch (IllegalArgumentException e) {
-    		throw new TinyscriptReferenceError("Unknown Identifier", expr);
-    	}
+		if (expr.isThis()) {
+			// 'this' behaves as specified in Javascript strict mode.
+			TSObject thisRef = currentContext.getThisRef();
+			return (thisRef != null) ? new TSValue(thisRef) : TSValue.UNDEFINED;
+		}
+		return currentContext.lookup(expr.getId().getName());
     }
     
-    // @Override
     public TSValue caseBooleanLiteral(BooleanLiteral expr) {
     	return new TSValue(expr.isValue()); 
     }
     
-    // @Override
     public TSValue caseNumberLiteral(NumberLiteral expr) {
     	return new TSValue(expr.getValue()); 
     }
     
-    // @Override
     public TSValue caseStringLiteral(StringLiteral expr) {
     	String result = expr.getValue();
     	recordStringCreation(result);
@@ -743,7 +681,6 @@ public class TinyscriptEngine {
     	return TSValue.NULL;
     }
     
-    // @Override
     public TSValue caseObjectInitializer(ObjectInitializer expr) {
     	TSObject obj = new TSObject(this, getDefaultPrototype()); 
     	for (PropertyAssignment assignment : expr.getPropertyassignments()) {
@@ -757,7 +694,6 @@ public class TinyscriptEngine {
     	return new TSValue(obj);
     }
     
-    // @Override
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
     	ArrayObject arr = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject(); 
     	int i = 0;
@@ -787,63 +723,36 @@ public class TinyscriptEngine {
     
     public TSValue assignValue(Expression left, TSValue value) {
     	
-    	if (left instanceof Reference) {
-    	    Reference reference = (Reference) left;
+    	if (left instanceof Reference reference) {
     	    if (reference.isThis())
-    	    	throw new TinyscriptReferenceError("Cannot assign avalue to 'this'", left);
-    		Identifier identifier = reference.getId();
-    		currentContext.store(identifier.getName(), value);
+    	    	throw new TinyscriptReferenceError("Cannot assign a value to 'this'", left);
+    		currentContext.store(reference.getId().getName(), value);
     		return value;
     	}
-    	if (left instanceof Identifier) {
-    		Identifier identifier = (Identifier) left;
+    	if (left instanceof Identifier identifier) {
+    		// var x = value
     		currentContext.create(identifier.getName());
     		currentContext.store(identifier.getName(), value);
     		return value;
     	}
-    	if (left instanceof CallOrPropertyAccess) {
-    		CallOrPropertyAccess expr = (CallOrPropertyAccess) left;
-        	EObject suffix = expr.getSuffix();
-        	TSValue base = execute(expr.getExpr());
-    		if (suffix instanceof CallOrPropertyAccessSuffix) {
-    			PropertyAccessSuffix propSuffix = ((CallOrPropertyAccessSuffix) suffix).getProperty();
-    			TSValue keyValue = evaluatePropertyKey(propSuffix);
-    			TSObject baseasObject;
-    			if (!base.isObject()) {
-    				if (base == TSValue.NULL || base == TSValue.UNDEFINED) {
-    					throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
-    				}	
-    				baseasObject = TSObject.toObject(this, base);
-    			}
-    			else {
-    				baseasObject = base.asObject();
-    			}
-    			if (baseasObject instanceof ArrayObject && keyValue.isNumber())
-    				((ArrayObject) baseasObject).setItem(keyValue.asInt(), value);
-    			else
-    				baseasObject.put(keyValue.asString(), value);
-    			if ( ((CallOrPropertyAccessSuffix) suffix).getCall() != null)
-    				throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
-    			return value;
-    		}
-    		if (suffix instanceof CallSuffix) {
+    	if (left instanceof CallOrPropertyAccess expr) {
+    		// Only object.property = value is a valid assignment target, not a call
+    		if (!(expr.getSuffix() instanceof CallOrPropertyAccessSuffix callOrProp) || callOrProp.getCall() != null)
     			throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
-    		}
+        	TSValue base = execute(expr.getExpr());
+			TSValue key = evaluatePropertyKey(callOrProp.getProperty());
+			putProperty(toObjectForPropertyAccess(base, expr), key, value);
+			return value;
     	}
     	return TSValue.UNDEFINED;
     }
-    
+
 	private TSValue evaluatePropertyKey(PropertyAccessSuffix suffix) {
-		TSValue keyExpr = null;
-		if (suffix instanceof DotPropertyAccessSuffix) {
-			DotPropertyAccessSuffix accessor = (DotPropertyAccessSuffix) suffix;
-			keyExpr = execute(accessor.getKey());
-		}
-		if (suffix instanceof ComputedPropertyAccessSuffix) {
-			ComputedPropertyAccessSuffix accessor = (ComputedPropertyAccessSuffix) suffix;
-			keyExpr = execute(accessor.getKey());
-		}
-		return keyExpr;
+		return switch (suffix) {
+			case DotPropertyAccessSuffix dot -> execute(dot.getKey());
+			case ComputedPropertyAccessSuffix computed -> execute(computed.getKey());
+			default -> throw new TinyscriptUnsupportedOperationError("Unsupported property access", suffix);
+		};
 	}
 	
     public TSValue processFunctionCall(CallOrPropertyAccess expr, Function functionObject, TSObject self, List<Expression> argExprs) {
@@ -878,7 +787,7 @@ public class TinyscriptEngine {
 	}
 	
 	private TSValue executeInBlockContext(String name, Block block, Identifier variable, TSValue value) {
-    	LexicalEnvironment env = getLexcialEnvironment(block);
+    	LexicalEnvironment env = getLexicalEnvironment(block);
     	if ((variable == null) && env.getFunctionDeclarations().isEmpty() && env.getVariables().isEmpty())
     		return caseBlock(block);
 
@@ -932,7 +841,7 @@ public class TinyscriptEngine {
 		currentContext = contextStack.pop();
 	}
 	
-	protected LexicalEnvironment getLexcialEnvironment(Block block) {
+	protected LexicalEnvironment getLexicalEnvironment(Block block) {
 		LexicalEnvironment result = lexicalEnvironments.get(block);
 		if (result != null)
 			return result;
