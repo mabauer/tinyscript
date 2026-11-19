@@ -55,7 +55,11 @@ Build and operations
 
 - **Re-test Maven 3.10+ with Tycho 5.0.4.** The wrapper pins Maven 3.9.16 because 3.10 failed with Tycho 5.0.2.
 
-- **Language server support for Visual Studio Code** (idea from the original roadmap; the Xtext update that makes it possible is done).
+- **Visual Studio Code support** (idea from the original roadmap; the Xtext update that makes it possible is done).
+  - First decide the file extension: tinyscript uses `.ts` (`fileExtensions = "ts"` in `GenerateTinyscript.mwe2`), which VS Code assigns to TypeScript. Either a dedicated extension such as `.tiny` (clean, but a rename across grammar, Eclipse plugin, REPL, webdemo examples and test resources) or keep `.ts` and map it per workspace with `files.associations`.
+  - Stage 1, syntax highlighting only (about half a day): an extension with `package.json`, a TextMate grammar (keywords as in the webdemo's `tinyscript-lang.ts`) and `language-configuration.json` (comments, brackets); optionally a "Run tinyscript" task that calls the REPL jar.
+  - Stage 2, language server (about 1–2 days): validation while typing, completion, go to definition, references, rename, outline come from Xtext. Build a fat jar from core + `de.mkbauer.tinyscript.ide` with `org.eclipse.xtext.ide.server.ServerLauncher` as main class (a plain Maven module like the REPL; needs `xtext.ide` and `lsp4j`). A small TypeScript extension starts it via `vscode-languageclient` (`java -jar tinyscript-ls.jar`, Java 25 required, path configurable). Package with `vsce` as `.vsix`; later optionally Marketplace / Open VSX.
+  - CI: build the server jar and the `.vsix`; a smoke test that starts the server and validates a file with an error.
 
 
 Not planned for now
