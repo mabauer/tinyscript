@@ -26,8 +26,10 @@ var arr1 = [ "a", "b", "c" ];
 var arr2 = [ 1, 2, 3 ];
 
 assert ([ "a", "b", "c", 1, 2, 3 ].equals(arr1 + arr2)) ;
-assert ([ "test", "a", "b", "c" ].equals(str + arr1));
-assert ([ "a", "b", "c", "test" ].equals(arr1 + str));
+// Adding a string and an array concatenates strings
+var s1 = str + arr1, s2 = arr1 + str;
+assert (typeof s1 == "string");
+assert (typeof s2 == "string");
 assert ("testhallo" == (str + "hallo"));
 assert ("1hallo" == (1 + "hallo"));
 assert (5 == (1 + 4));

@@ -106,22 +106,6 @@ public class ArrayObject extends BuiltinType {
 		}
 	}
 	
-	public ArrayObject clone() {
-		ArrayObject result = new ArrayObject(engine);
-		result.items.addAll(items);
-		result.update();
-		return result;
-	}
-	
-	public static ArrayObject concat(ArrayObject arr1, ArrayObject arr2) {
-		ArrayObject result = new ArrayObject(arr1.engine);
-		result.items.addAll(arr1.items);
-		result.items.addAll(arr2.items);
-		// TODO: Handle named properties
-		result.update();
-		return result;
-	}
-
 	@Override
 	public String toString() {
 		// TODO: Handle named properties

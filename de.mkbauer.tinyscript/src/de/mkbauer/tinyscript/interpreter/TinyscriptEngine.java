@@ -519,7 +519,7 @@ public class TinyscriptEngine {
     		case "==" -> new TSValue(left.equals(right));
     		case "!=" -> new TSValue(!left.equals(right));
     		case "<", "<=", ">", ">=" -> compare(op, left, right, expr);
-    		case "+" -> add(left, right);
+    		case "+" -> add(left, right, expr);
     		case "-", "*", "/", "%" -> arithmetic(op, left, right);
     		case "instanceof" -> instanceOf(left, right);
     		default -> throw new TinyscriptUnsupportedOperationError("Unsupported binary expression: " + op, expr);
@@ -550,16 +550,22 @@ public class TinyscriptEngine {
     /**
      * + adds numbers, concatenates strings (if either operand is a string) and arrays.
      */
-    private TSValue add(TSValue left, TSValue right) {
-    	if (left.isNumber() && right.isNumber())
-    		return new TSValue(left.asDouble() + right.asDouble());
+    private TSValue add(TSValue left, TSValue right, BinaryExpression expr) {
     	if (left.isString() || right.isString()) {
     		String result = left.asString() + right.asString();
     		recordStringCreation(result);
     		return new TSValue(result);
     	}
-    	if (left.isArray() && right.isArray())
-    		return new TSValue(ArrayObject.concat(left.asArray(), right.asArray()));
+    	if (left.isArray() || right.isArray()) {
+    		if (!(left.isArray() && right.isArray()))
+    			throw new TinyscriptTypeError("'+' can only add an array to another array or to a string", expr);
+    		ArrayObject result = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject();
+    		left.asArray().getItems().forEach(result::push);
+    		right.asArray().getItems().forEach(result::push);
+    		return new TSValue(result);
+    	}
+    	if (left.isNumber() && right.isNumber())
+    		return new TSValue(left.asDouble() + right.asDouble());
     	return TSValue.NAN;
     }
 
