@@ -90,7 +90,7 @@ public class InterpretedFunction extends Function {
 				currentContext.store(ast.getRest().getName(), new TSValue(restArray));
 			}
 
-			engine.hoistFunctionDeclarations(engine.getLexcialEnvironment(block));
+			engine.hoistFunctionDeclarations(engine.getLexicalEnvironment(block));
 
 			TSValue result = engine.caseBlock(block);
 			// The result (= value of last statement) of the body in a regular function
