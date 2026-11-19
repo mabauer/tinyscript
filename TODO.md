@@ -33,8 +33,6 @@ Language
   - Generator: bundle into one JS script, each module as `var geo = (function () { …; return { area: area, unit: unit }; })();`, so the differential tests keep using a single `node` run.
   - Suggested PRs: grammar + interpreter, then generator, then optionally a standard library with `fs` as a module (`import fs from "std:fs";`), which the sandbox simply does not provide.
 
-- **Primitive wrapper objects.** Property access on a number or boolean (`(5).toString()`, `true.toString()`) creates a plain object with a `value` property, so it has none of the expected methods. Decide: real `Number` / `Boolean` objects (like `String`), or a `TypeError`.
-
 - **Conversions.** Builtins convert their arguments with `TSObject.toNumber` / `toInteger` / `toString`. Today `undefined` and non-numeric strings become `0` (Javascript: `NaN`), a user-defined `valueOf` is ignored, and some code uses `TSValue.asString()` where `TSObject.toString(engine, value)` (which calls a user-defined `toString`) would be right. Decide how much of Javascript's conversion rules tinyscript wants, then write tests.
 
 - **Global `this`.** At top level `this` is the global object. In Javascript's strict mode (which tinyscript otherwise follows) it is `undefined`.

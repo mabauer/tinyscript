@@ -113,6 +113,23 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
         assertSameOutput(code);
     }
 
+    @Test
+    public void testNumbersAndBooleansHaveNoProperties() {
+        assertInterpreterThrows(TinyscriptTypeError.class, "print((5).toString());");
+        assertInterpreterThrows(TinyscriptTypeError.class, "print(true.toString());");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var n = 5; print(n.x);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var n = 5; n.x = 1;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var nan = 0 / 0; print(nan.x);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var b = false; print(b.hasOwnProperty(\"value\"));");
+    }
+
+    @Test
+    public void testStringsKeepTheirMethods() {
+        String code = "var n = 5; print(String(n) + String(true)); print(\"abc\".length); print(\"abc\".charAt(1));";
+        assertEquals("5true\n3\nb\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
     // =========================================================================
     // Java contract of TSValue: equals and hashCode must be consistent
     // =========================================================================
