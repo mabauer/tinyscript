@@ -541,6 +541,7 @@ Arrays are lists: besides their items, only `length` can be set. Unlike Javascri
 | Method | Description |
 |---|---|
 | `arr.at(i)` | Element at index `i`; a negative `i` counts from the end (`arr.at(-1)` is the last element); `undefined` if out of range |
+| `arr.indexOf(x[, start])` | Index of the first element `== x` (tinyscript's `==`), or `-1`; searching from `start` (negative: counts from the end) |
 | `arr.push(x)` | Appends `x` to the end; returns new element count |
 | `arr.pop()` | Removes and returns the last element |
 | `arr.shift()` | Removes and returns the first element |
@@ -809,7 +810,7 @@ String methods:
 |---|---|
 | `str.at(i)` | Character at index `i`; a negative `i` counts from the end; `undefined` if out of range |
 | `str.charAt(i)` | Character at index `i` |
-| `str.indexOf(sub)` | First index of `sub`, or `-1` |
+| `str.indexOf(sub[, pos])` | First index of `sub` at or after `pos` (negative: 0), or `-1` |
 | `str.substring(start, end)` | Substring from `start` (inclusive) to `end` (exclusive) |
 | `str.toString()` | The string itself |
 

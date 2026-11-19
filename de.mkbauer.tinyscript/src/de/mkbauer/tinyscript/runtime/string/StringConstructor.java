@@ -98,9 +98,12 @@ public class StringConstructor extends BuiltinConstructor {
 		return TSValue.of(result);
 	}
 
+	// String.prototype.indexOf(search[, position]): like Javascript, a negative position counts as 0
 	private TSValue indexOf(TSObject self, TSValue[] args) {
-		if (self instanceof StringObject) {
-			return TSValue.of(((StringObject) self).getValue().indexOf(args[0].asString()));
+		if (self instanceof StringObject string) {
+			String value = string.getValue();
+			int position = Math.max(0, Math.min(TSObject.toStartIndex(args, 1), value.length()));
+			return TSValue.of(value.indexOf(args[0].asString(), position));
 		}
 		return TSValue.of(-1);
 	}

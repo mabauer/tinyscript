@@ -37,7 +37,7 @@ Language
 
 - **Global `this`.** At top level `this` is the global object. In Javascript's strict mode (which tinyscript otherwise follows) it is `undefined`.
 
-- **More functions in the runtime library.** For example `Array.prototype.indexOf` and `concat` (the language reference listed them, but they never existed).
+- **More functions in the runtime library.** (`concat` is not needed: `+` concatenates arrays.)
 
 
 Interpreter and code quality

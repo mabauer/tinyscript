@@ -97,6 +97,37 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testArrayIndexOf() {
+        String code = "var o = {}; var a = [1, \"two\", o, 1, null];\n"
+                + "print(a.indexOf(1)); print(a.indexOf(\"two\")); print(a.indexOf(o)); print(a.indexOf(null));\n"
+                + "print(a.indexOf(\"1\")); print(a.indexOf({})); print([].indexOf(1));";
+        assertEquals("0\n1\n2\n4\n-1\n-1\n-1\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testArrayIndexOfWithStartIndex() {
+        // Like Javascript: a negative start index counts from the end
+        String code = "var a = [1, 2, 1, 2];\n"
+                + "print(a.indexOf(1, 1)); print(a.indexOf(2, -1)); print(a.indexOf(2, -10)); print(a.indexOf(1, 4)); print(a.indexOf(1, 0));";
+        assertEquals("2\n3\n1\n-1\n0\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testIndexOfNeedsAnIntegerStartIndex() {
+        assertInterpreterThrows(TinyscriptTypeError.class, "[1].indexOf(1, 0.5);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "\"a\".indexOf(\"a\", \"1\");");
+    }
+
+    @Test
+    public void testArrayIndexOfUsesTinyscriptEquality() {
+        // Unlike Javascript's ===: null == undefined, and NaN is never found
+        assertEquals("0\n-1\n", interpreterOutput(
+                "var u; print([u].indexOf(null)); print([0 / 0].indexOf(0 / 0));"));
+    }
+
+    @Test
     public void testAtNeedsAnIntegerIndex() {
         assertInterpreterThrows(TinyscriptTypeError.class, "[1].at(1.5);");
         assertInterpreterThrows(TinyscriptTypeError.class, "[1].at(\"0\");");
@@ -148,6 +179,15 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
         assertEquals("2\n-1\n", interpreterOutput(
                 "print(\"hello\".indexOf(\"l\"));\n"
                 + "print(\"hello\".indexOf(\"x\"));"));
+    }
+
+    @Test
+    public void testStringIndexOfWithStartIndex() {
+        // Like Javascript: a negative position counts as 0
+        String code = "var s = \"abcabc\";\n"
+                + "print(s.indexOf(\"b\", 2)); print(s.indexOf(\"b\", -5)); print(s.indexOf(\"c\", 10)); print(s.indexOf(\"\", 10));";
+        assertEquals("4\n1\n-1\n6\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     @Test
