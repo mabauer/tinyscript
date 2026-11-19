@@ -508,6 +508,13 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     // =========================================================================
 
     @Test
+    public void testComparisonsCannotBeChained() {
+        // In Javascript 1 < 3 < 2 is true; here chaining is a syntax error
+        assertRejected("print(1 < 3 < 2);");
+        assertRejected("print(1 == 1 == true);");
+    }
+
+    @Test
     public void testStrictEqualityOperatorsAreNotPartOfTheLanguage() {
         assertRejected("print(1 === 1);");
         assertRejected("print(1 !== 2);");

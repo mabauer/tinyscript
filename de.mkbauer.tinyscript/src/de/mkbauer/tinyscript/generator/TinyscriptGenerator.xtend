@@ -257,8 +257,9 @@ class TinyscriptGenerator   {
 	def dispatch generate(BinaryExpression expr) '''
 		«IF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
 
+	// Nested unary operators get parentheses: "- -x" must not become the decrement "--x"
 	def dispatch generate(Unary expr)
-		'''«IF expr.op == "typeof"»typeof («expr.expr.generate»)«ELSE»«expr.op»«expr.expr.generate»«ENDIF»'''
+		'''«IF expr.op == "typeof" || expr.expr instanceof Unary»«expr.op»(«expr.expr.generate»)«ELSE»«expr.op»«expr.expr.generate»«ENDIF»'''
 		
 	def dispatch generate(NewExpression expr)
 		'''new «expr.expr.generate»'''
