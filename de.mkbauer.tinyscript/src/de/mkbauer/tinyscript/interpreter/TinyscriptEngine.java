@@ -12,17 +12,12 @@ import java.util.Map;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.resource.XtextResourceSet;
-import org.eclipse.xtext.util.CancelIndicator;
-import org.eclipse.xtext.validation.CheckMode;
-import org.eclipse.xtext.validation.Issue;
 
 import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
-import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.ts.ArrayInitializer;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
@@ -385,20 +380,12 @@ public class TinyscriptEngine {
 	}
 
 	private ModuleExports importModule(ImportStatement importStatement) {
-		if (moduleLoader == null)
-			throw new TinyscriptUnsupportedOperationError("Modules are not available here", importStatement);
-		URI importer = importStatement.eResource().getURI();
-		URI module = moduleLoader.resolve(importStatement.getPath(), importer);
+		URI module = Modules.resolve(moduleLoader, importStatement);
 		ModuleExports exports = loadedModules.get(module);
 		if (exports != null)
 			return exports;
-		if (modulesBeingLoaded.contains(module)) {
-			// The import chain from the main script to the module that closes the cycle
-			List<String> chain = new ArrayList<>();
-			modulesBeingLoaded.descendingIterator().forEachRemaining(uri -> chain.add(uri.lastSegment()));
-			chain.add(module.lastSegment());
-			throw new TinyscriptReferenceError("Cyclic import: " + String.join(" → ", chain));
-		}
+		if (modulesBeingLoaded.contains(module))
+			throw Modules.cyclicImport(modulesBeingLoaded, module);
 		exports = executeModule(module);
 		loadedModules.put(module, exports);
 		return exports;
@@ -409,15 +396,7 @@ public class TinyscriptEngine {
 	 * and returns its exports.
 	 */
 	private ModuleExports executeModule(URI module) {
-		Resource resource = resourceSet.getResource(module, true);
-		List<Issue> issues = ((XtextResource) resource).getResourceServiceProvider().getResourceValidator()
-				.validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
-		if (!issues.isEmpty()) {
-			Issue issue = issues.get(0);
-			throw new TinyscriptSyntaxError(issue.getMessage() + " in " + module.toFileString() + ":" + issue.getLineNumber(),
-					module.toFileString(), issue.getLineNumber());
-		}
-		Tinyscript script = (Tinyscript) resource.getContents().get(0);
+		Tinyscript script = Modules.load(resourceSet, module);
 		modulesBeingLoaded.push(module);
 		enterNewExecutionContext("module " + module.lastSegment(), globalContext);
 		try {
@@ -427,7 +406,7 @@ public class TinyscriptEngine {
 			Map<String, TSValue> exports = new LinkedHashMap<>();
 			for (Identifier name : TinyscriptModelUtil.exportedIdentifiers(script))
 				exports.put(name.getName(), currentContext.lookup(name.getName()));
-			return new ModuleExports(this, "\"" + module.lastSegment() + "\"", exports);
+			return new ModuleExports(this, Modules.displayName(module), exports);
 		}
 		finally {
 			leaveExecutionContext();

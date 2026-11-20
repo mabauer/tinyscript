@@ -40,7 +40,15 @@ import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
 import de.mkbauer.tinyscript.ts.NullObject
-import de.mkbauer.tinyscript.interpreter.TinyscriptUnsupportedOperationError
+import de.mkbauer.tinyscript.interpreter.ModuleLoader
+import de.mkbauer.tinyscript.interpreter.Modules
+import de.mkbauer.tinyscript.interpreter.TinyscriptReferenceError
+import de.mkbauer.tinyscript.TinyscriptRuntimeException
+import de.mkbauer.tinyscript.ts.ImportStatement
+import java.util.ArrayDeque
+import java.util.HashMap
+import java.util.LinkedHashMap
+import org.eclipse.emf.common.util.URI
 import de.mkbauer.tinyscript.ts.Expression
 
 class TinyscriptGenerator   {
@@ -99,17 +107,84 @@ class TinyscriptGenerator   {
 	'''
 	
 	def generate(Tinyscript script, boolean includeBuiltins) {
-		if (!script.imports.empty)
-			throw new TinyscriptUnsupportedOperationError("The Javascript generator does not support modules yet", script.imports.head)
+		generate(script, includeBuiltins, null)
+	}
+	
+	/**
+	 * Generates one Javascript program from {@code script} and the modules it imports
+	 * (resolved with {@code loader}; without a loader, imports are an error). Each module
+	 * becomes an immediately invoked function in dependency order, so it runs once and
+	 * its private names stay private; it returns its frozen exports.
+	 */
+	def generate(Tinyscript script, boolean includeBuiltins, ModuleLoader loader) {
 		tempCounter = 0
+		modules = new LinkedHashMap
+		moduleVariables = new HashMap
+		importedModules = new HashMap
+		val loading = new ArrayDeque<URI>
+		loading.push(script.eResource.URI)
+		collectModules(script, loader, loading)
 		generateScript(script, includeBuiltins)
+	}
+	
+	// The modules in dependency order, their variable names, and the module of each import
+	LinkedHashMap<URI, Tinyscript> modules
+	HashMap<URI, String> moduleVariables
+	HashMap<ImportStatement, URI> importedModules
+	
+	def private void collectModules(Tinyscript script, ModuleLoader loader, ArrayDeque<URI> loading) {
+		for (importStatement : script.imports) {
+			try {
+				val uri = Modules.resolve(loader, importStatement)
+				if (loading.contains(uri))
+					throw Modules.cyclicImport(loading, uri)
+				if (!modules.containsKey(uri)) {
+					val module = Modules.load(script.eResource.resourceSet, uri)
+					loading.push(uri)
+					collectModules(module, loader, loading)
+					loading.pop
+					modules.put(uri, module)
+					moduleVariables.put(uri, "__ts_mod" + modules.size)
+				}
+				val exported = TinyscriptModelUtil.exportedIdentifiers(modules.get(uri)).map[name].toSet
+				for (name : importStatement.names) {
+					if (!exported.contains(name.name))
+						throw new TinyscriptReferenceError(Modules.displayName(uri) + " does not export \"" + name.name + "\"")
+				}
+				importedModules.put(importStatement, uri)
+			}
+			catch (TinyscriptRuntimeException e) {
+				e.attachNodeIfAbsent(importStatement)
+				throw e
+			}
+		}
 	}
 	
 	def private generateScript(Tinyscript script, boolean includeBuiltins) '''
 		«IF includeBuiltins»
 			«generateBuiltins»
 		«ENDIF»
+		«FOR entry : modules.entrySet»
+			var «moduleVariables.get(entry.key)» = (function () {
+				«generateImports(entry.value)»
+				«entry.value.generate»
+				return Object.freeze({«FOR id : TinyscriptModelUtil.exportedIdentifiers(entry.value) SEPARATOR ', '»«id.name»: «id.generate»«ENDFOR»});
+			})();
+		«ENDFOR»
+		«generateImports(script)»
 		«script.generate»
+	'''
+	
+	def private generateImports(Tinyscript script) '''
+		«FOR importStatement : script.imports»
+			«val module = moduleVariables.get(importedModules.get(importStatement))»
+			«IF importStatement.namespace !== null»
+				var «importStatement.namespace.generate» = «module»;
+			«ENDIF»
+			«FOR name : importStatement.names»
+				var «name.generate» = «module».«name.name»;
+			«ENDFOR»
+		«ENDFOR»
 	'''
 			
 	def dispatch generate(Tinyscript script) '''
