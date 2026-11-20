@@ -244,6 +244,40 @@ public abstract class TinyscriptTranspilerTestBase {
     }
 
     /**
+     * Transpiles the file {@code main} with its modules into one Javascript program.
+     */
+    protected String transpileModule(Path main, Path... modulePath) {
+        Injector localInjector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
+        XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
+        Resource resource = localResourceSet.getResource(URI.createFileURI(main.toAbsolutePath().toString()), true);
+        return generator.generate((Tinyscript) resource.getContents().get(0), true,
+                new FileSystemModuleLoader(List.of(modulePath))).toString();
+    }
+
+    /**
+     * Differential test for a program with modules: the interpreter ({@link #runModule})
+     * and node, running the bundled Javascript, must print the same.
+     */
+    protected void assertSameOutputModule(Path main, Path... modulePath) {
+        assumeNodeAvailable();
+        String interpreterOut = runModule(main, modulePath);
+        String jsCode = transpileModule(main, modulePath);
+        String nodeOut;
+        try {
+            nodeOut = NodeJsRunner.run(jsCode);
+        } catch (AssertionError e) {
+            fail("node.js failed for " + main + "\n--- Generated JS ---\n" + jsCode + "\n--- node error ---\n" + e.getMessage());
+            return;
+        }
+        if (!interpreterOut.equals(nodeOut)) {
+            fail("Interpreter and node.js produced different output for " + main
+                    + "\n--- Generated JS ---\n" + jsCode
+                    + "\n--- Interpreter stdout ---\n" + interpreterOut
+                    + "\n--- node stdout ---\n" + nodeOut);
+        }
+    }
+
+    /**
      * Asserts that {@code tsCode} is rejected before execution, i.e. the parser
      * or the validator reports at least one error.
      */

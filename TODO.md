@@ -42,8 +42,8 @@ Language
   - **Execution.** A module runs in its own context that only sees the builtins; one engine, so resource limits apply across all modules. Loading via a `ModuleLoader` interface passed to the engine (file system loader with module path; classpath loader for `std:`); without a loader, `import` is an error.
   - **PRs.**
     1. ~~Restrict the global scope to the builtins~~ (done: `TinyscriptGlobalScopeProvider` only sees resources marked with `SharedGlobals`, i.e. the builtins and the lines of an interactive REPL session; files are isolated, the REPL runs each file with a fresh engine).
-    2. ~~Core~~ (done: grammar, validator, interpreter with `ModuleLoader` / `FileSystemModuleLoader` and `ModuleExports`, REPL `--module-path` / `TINYSCRIPT_PATH`; `ModulesTest`). Until PR 3, the generator rejects scripts with imports.
-    3. Generator: bundle into one JS script, each module as an immediately invoked function in dependency order; named imports become `var area = __ts_mod1.area;`. Differential tests against node.
+    2. ~~Core~~ (done: grammar, validator, interpreter with `ModuleLoader` / `FileSystemModuleLoader` and `ModuleExports`, REPL `--module-path` / `TINYSCRIPT_PATH`; `ModulesTest`).
+    3. ~~Generator~~ (done: bundles a program and its modules into one script; differential tests in `ModulesTest`).
     4. Standard library and webdemo: `std:` modules from the classpath; the webdemo allows only those. Optionally `fs` becomes `std:fs`, which the sandbox simply does not provide.
     5. Optional, IDE: the validator checks while typing that the imported file exists and exports the names (fits the VS Code language server).
 
@@ -56,6 +56,8 @@ Language
 
 Interpreter and code quality
 ----------------------------
+
+- **Generator: `print` with several arguments.** The generated `print` shim prints only its first argument (`print(1, "a")` gives `1` in node, `1a` in the interpreter).
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it (decision deferred). Its error handling is minimal.
 

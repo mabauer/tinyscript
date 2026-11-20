@@ -179,6 +179,66 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     }
 
     // =========================================================================
+    // Javascript generator: bundles the modules into one program
+    // =========================================================================
+
+    @Test
+    public void testTranspiledNamedAndNamespaceImports() throws IOException {
+        Path main = write("main.tys", "import area, unit from \"./geometry\";\nimport * as geo from \"./geometry.tys\";\n"
+                + "var helper = \"main\";\nprint(area(2) + unit); print(geo.area(1)); print(geo.helper == null); print(helper);");
+        assertEquals("12cm\n3\ntrue\nmain\n", runModule(main));
+        assertSameOutputModule(main);
+    }
+
+    @Test
+    public void testTranspiledModuleRunsOnceInADiamond() throws IOException {
+        write("m1.tys", "print(\"m1 runs\");\nexport var id1 = {};");
+        write("m2.tys", "import id1 from \"./m1\";\nexport function same(x) { return x == id1; }");
+        Path main = write("main.tys", "import id1 from \"./m1\";\nimport same from \"./m2\";\nprint(same(id1));");
+        assertSameOutputModule(main);
+    }
+
+    @Test
+    public void testTranspiledModuleStateViaClosures() throws IOException {
+        write("counter.tys", "var count = 0;\nexport function next() { count = count + 1; return count; }");
+        Path main = write("main.tys", "import next from \"./counter\";\nnext();\nprint(next());");
+        assertSameOutputModule(main);
+    }
+
+    @Test
+    public void testTranspiledRelativeAndBarePaths() throws IOException {
+        write("util.tys", "export function twice(x) { return 2 * x; }");
+        write("lib/vector.tys", "import twice from \"../util\";\nexport function scale(x) { return twice(x); }");
+        write("mods/half.tys", "export function half(x) { return x / 2; }");
+        Path main = write("app/main.tys", "import scale from \"../lib/vector\";\nimport half from \"half\";\nprint(half(scale(21)));");
+        assertSameOutputModule(main, dir.resolve("mods"));
+    }
+
+    @Test
+    public void testTranspilingACycleIsAnError() throws IOException {
+        write("a.tys", "import fb from \"./b\";\nexport function fa() { return 1; }");
+        write("b.tys", "import fa from \"./a\";\nexport function fb() { return 2; }");
+        Path main = write("main.tys", "import fa from \"./a\";\nprint(fa());");
+        TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class, () -> transpileModule(main));
+        assertTrue(e.getMessage().contains("Cyclic import: main.tys → a.tys → b.tys → a.tys"), e.getMessage());
+    }
+
+    @Test
+    public void testTranspilingAMissingExportIsAnError() throws IOException {
+        Path main = write("main.tys", "import helper from \"./geometry\";\nprint(helper);");
+        TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class, () -> transpileModule(main));
+        assertTrue(e.getMessage().contains("\"geometry.tys\" does not export \"helper\""), e.getMessage());
+    }
+
+    @Test
+    public void testTranspilingImportsWithoutModuleLoaderIsAnError() {
+        // e.g. the webdemo's cross compiler
+        TinyscriptRuntimeException e = assertThrows(TinyscriptUnsupportedOperationError.class,
+                () -> transpile(parse("import x from \"./m\";\nprint(x);")));
+        assertTrue(e.getMessage().contains("Modules are not available here"), e.getMessage());
+    }
+
+    // =========================================================================
     // Validation
     // =========================================================================
 

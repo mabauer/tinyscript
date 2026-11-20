@@ -931,7 +931,7 @@ print(area(2), unit, geo.area(1));
 - **Imported names are read-only:** `area = 1;` is a compile-time error, and the exports object cannot be changed (`geo.unit = "m";` is a `TypeError`). Objects you import stay mutable, and a module can keep state in closures.
 - Importing the same name twice, or a name that is also declared in the file, is a "Duplicate identifier"; importing a name a module does not export is an error (`"geometry.tys" does not export "helper"`).
 - Files do not see each other's top-level names; sharing works only through `import` / `export`.
-- Modules are not available in the sandboxed web demo, and the Javascript generator does not support them yet.
+- Modules are not available in the sandboxed web demo. The Javascript generator bundles a program and its modules into one script: each module becomes an immediately invoked function (so it runs once and its private names stay private) that returns its frozen exports.
 
 ## Quick Reference
 
