@@ -1,0 +1,178 @@
+package de.mkbauer.tinyscript.validation;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.Token;
+import org.antlr.runtime.TokenStream;
+import org.eclipse.xtext.nodemodel.SyntaxErrorMessage;
+import org.eclipse.xtext.parser.antlr.SyntaxErrorMessageProvider;
+
+import de.mkbauer.tinyscript.ts.FunctionDefinition;
+
+/**
+ * Syntax errors in plain words. Constructs that are common in Javascript, but not part of
+ * tinyscript or written differently there (a C-style for loop, ===, try / catch ...), get a
+ * hint what to write instead; the other errors of the ANTLR parser are put in plain words.
+ */
+public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProvider {
+
+	/** The start of the message for a script that ends too early (the REPL then reads on). */
+	public static final String UNEXPECTED_END = "Unexpected end of input";
+
+	private static final Map<String, String> UNSUPPORTED = Map.of(
+			"try", "try / catch is not supported in tinyscript: errors cannot be caught (throw ends the script)",
+			"catch", "try / catch is not supported in tinyscript: errors cannot be caught (throw ends the script)",
+			"finally", "try / catch is not supported in tinyscript: errors cannot be caught (throw ends the script)",
+			"switch", "switch is not supported in tinyscript: use if / else if",
+			"case", "switch is not supported in tinyscript: use if / else if",
+			"class", "class is not supported in tinyscript: use a constructor function and its prototype");
+
+	// Where an expression starts, a "/" can only be meant as a regular expression
+	private static final Set<String> BEFORE_EXPRESSION = Set.of("=", "(", ",", "[", ":", "return", "?", "&&", "||", "!");
+
+	// After these, an expression has to follow
+	private static final Set<String> OPERATORS = Set.of("+", "-", "*", "/", "%", "=", "+=", "-=", "*=", "/=", "%=",
+			"==", "!=", "<", "<=", ">", ">=", "&&", "||", "??", "!", "?", ":", "(", "[", ",", "return");
+
+	private static final Map<String, String> TOKEN_NAMES = Map.of(
+			"RULE_ID", "a name",
+			"RULE_DOUBLE", "a number",
+			"RULE_STRING", "a string",
+			"RULE_OP_ASSIGN", "'='",
+			"RULE_OP_EQUALS", "'==' or '!='",
+			"RULE_OP_COMP", "a comparison",
+			"RULE_OP_NOT", "'!'",
+			"RULE_OP_COMPOUND_ASSIGN", "an assignment",
+			"RULE_OP_INCREMENT", "'++' or '--'",
+			"EOF", "the end of input");
+
+	@Override
+	public SyntaxErrorMessage getSyntaxErrorMessage(IParserErrorContext context) {
+		SyntaxErrorMessage original = super.getSyntaxErrorMessage(context);
+		String message = null;
+		RecognitionException e = context.getRecognitionException();
+		if (e != null && e.token != null && e.input instanceof TokenStream tokens)
+			message = hint(context, tokens, e.token, e.index);
+		if (message == null)
+			message = inPlainWords(context.getDefaultMessage());
+		return new SyntaxErrorMessage(message, original.getIssueCode(), original.getIssueData());
+	}
+
+	/**
+	 * A hint for a construct from Javascript at the offending token, or null.
+	 */
+	private String hint(IParserErrorContext context, TokenStream tokens, Token offending, int index) {
+		String text = offending.getText();
+		if (text == null || offending.getType() == Token.EOF)
+			return null;
+		Token previous = previous(tokens, index);
+		String before = previous != null ? previous.getText() : "";
+		if (UNSUPPORTED.containsKey(text))
+			return UNSUPPORTED.get(text);
+		if (UNSUPPORTED.containsKey(before))
+			return UNSUPPORTED.get(before);
+		if (text.equals("=") && (before.equals("==") || before.equals("!=")) && previous.getTokenIndex() == offending.getTokenIndex() - 1)
+			return "tinyscript has no === and !==: use == and !=, which never convert types";
+		if (text.equals(";") && isInForHeader(tokens, index))
+			return "tinyscript's numeric for loop has no ';': for (let i = 0, n - 1) { … } counts from 0 to n - 1, including the end";
+		if ((text.equals("of") || text.equals("in")) && isInForHeader(tokens, index))
+			return "A loop over the elements of an array, string, Map or Set is written for (const x : items) in tinyscript";
+		if (text.equals("`"))
+			return "Template strings (`…`) are not supported: build strings with +, e.g. \"Hello \" + name";
+		if (text.equals("=") && context.getCurrentContext() instanceof FunctionDefinition && isInParentheses(tokens, index)) {
+			Token next = next(tokens, index);
+			return "Parameters cannot have default values: write " + before + " ?? " + (next != null ? next.getText() : "…") + " in the function";
+		}
+		if (text.equals("++") || text.equals("--"))
+			return "++ and -- are statements, not expressions: write i" + text + "; on its own";
+		if (text.equals("..."))
+			return "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)";
+		if (text.equals("/") && (previous == null || BEFORE_EXPRESSION.contains(before)))
+			return "Regular expressions are not supported (std:string has words, integers and isDigit)";
+		// The ';' is missing at the end of the previous line (the error is reported at the next token)
+		if (context.getDefaultMessage().startsWith("missing ';'") && previous != null && previous.getLine() < offending.getLine())
+			return "Missing ';' at the end of line " + previous.getLine();
+		if (context.getDefaultMessage().startsWith("missing '{'"))
+			return "if, else, for and while need a block: if (…) { … }";
+		if (context.getDefaultMessage().startsWith("no viable alternative") && OPERATORS.contains(before))
+			return "Unexpected '" + text + "', expected an expression";
+		return null;
+	}
+
+	// Whether the token at index is inside the parentheses of for ( ... )
+	private static boolean isInForHeader(TokenStream tokens, int index) {
+		int open = openingParenthesis(tokens, index);
+		Token before = open >= 0 ? previous(tokens, open) : null;
+		return before != null && before.getText().equals("for");
+	}
+
+	private static boolean isInParentheses(TokenStream tokens, int index) {
+		return openingParenthesis(tokens, index) >= 0;
+	}
+
+	// The index of the "(" that encloses the token at index, -1 if there is none in the statement
+	private static int openingParenthesis(TokenStream tokens, int index) {
+		int depth = 0;
+		for (int i = index - 1; i >= 0; i--) {
+			String text = tokens.get(i).getText();
+			if (text == null || tokens.get(i).getChannel() != Token.DEFAULT_CHANNEL)
+				continue;
+			if (text.equals(")"))
+				depth++;
+			else if (text.equals("(")) {
+				if (depth == 0)
+					return i;
+				depth--;
+			}
+			else if (depth == 0 && (text.equals("{") || text.equals("}")))
+				return -1;
+		}
+		return -1;
+	}
+
+	private static Token previous(TokenStream tokens, int index) {
+		for (int i = index - 1; i >= 0; i--) {
+			if (tokens.get(i).getChannel() == Token.DEFAULT_CHANNEL)
+				return tokens.get(i);
+		}
+		return null;
+	}
+
+	private static Token next(TokenStream tokens, int index) {
+		for (int i = index + 1; i < tokens.size(); i++) {
+			if (tokens.get(i).getChannel() == Token.DEFAULT_CHANNEL)
+				return tokens.get(i);
+		}
+		return null;
+	}
+
+	private static final Pattern MISSING = Pattern.compile("missing (.+) at (.+)");
+	private static final Pattern MISMATCHED = Pattern.compile("(?:mismatched|extraneous) input (.+) expecting (.+)");
+	private static final Pattern NO_VIABLE_ALTERNATIVE = Pattern.compile("no viable alternative at input (.+)");
+
+	/**
+	 * The ANTLR messages in plain words: "missing ';' at 'print'" becomes "Missing ';' before 'print'".
+	 */
+	static String inPlainWords(String message) {
+		Matcher m = MISSING.matcher(message);
+		if (m.matches())
+			return m.group(2).equals("'<EOF>'") ? "Missing " + name(m.group(1)) + " at the end of the input"
+					: "Missing " + name(m.group(1)) + " before " + m.group(2);
+		m = MISMATCHED.matcher(message);
+		if (m.matches())
+			return (m.group(1).equals("'<EOF>'") ? UNEXPECTED_END : "Unexpected " + m.group(1)) + ", expected " + name(m.group(2));
+		m = NO_VIABLE_ALTERNATIVE.matcher(message);
+		if (m.matches())
+			return m.group(1).equals("'<EOF>'") ? UNEXPECTED_END : "Unexpected " + m.group(1);
+		return message;
+	}
+
+	private static String name(String token) {
+		return TOKEN_NAMES.getOrDefault(token, token);
+	}
+
+}
