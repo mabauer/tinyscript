@@ -1,6 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -46,15 +47,14 @@ public class StatementsTest extends TinyscriptInterpreterTestHelper {
 	}
 	
 	@Test
-	public void testIfthenElseStatementWithBooleanConversion() {
-		TSValue value = executeScriptFromString("var i=1; if (2) {i=2;} else {i=3;} assert(i==2);");
+	public void testIfConditionMustBeABooleanNullOrAnObject() {
+		// Numbers are no conditions; this also catches the typo "=" for "=="
+		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("var i=1; if (2) {i=2;} else {i=3;}"));
+		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("var i=1; if (i=0) {i=2;} else {i=3;}"));
+		TSValue value = executeScriptFromString("var i=1; var o={}; if (o) {i=2;} else {i=3;} assert(i==2);");
 		assertTrue(value.asBoolean());
-		value = executeScriptFromString("var i=1; if (i=2) {i=2;} else {i=3;} assert(i==2);");
+		value = executeScriptFromString("var i=1; if (null) {i=2;} else {i=3;} assert(i==3);");
 		assertTrue(value.asBoolean());
-		value = executeScriptFromString("var i=1; if (0) {i=2;} else {i=3;} assert(i==3);");
-		assertTrue(value.asBoolean());
-		value = executeScriptFromString("var i=1; if (i=0) {i=2;} else {i=3;} assert(i==3);");
-		assertTrue(value.asBoolean());		
 	}
 
 	@Test

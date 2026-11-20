@@ -59,18 +59,20 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    public void testTruthiness() {
+    public void testConditions() {
+        // Booleans, null / undefined (false) and objects (true); numbers and strings are a
+        // TypeError (see StrictnessTest)
         String code = "function t(x) { if (x) { return \"t\"; } else { return \"f\"; } }\n"
                 + VALUES
-                + "print(t(u) + t(n) + t(b) + t(false) + t(i) + t(0) + t(nan) + t(s) + t(\"\") + t(f) + t(o) + t(a));";
-        assertEquals("fftftfftfttt\n", interpreterOutput(code));
+                + "print(t(u) + t(n) + t(b) + t(false) + t(f) + t(o) + t(a));";
+        assertEquals("fftfttt\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
-    public void testNotAndLogicalOperatorsOnNaN() {
-        String code = "var nan = 0 / 0; print(!nan); print(nan || false); print(nan && true);";
-        assertEquals("true\nfalse\nfalse\n", interpreterOutput(code));
+    public void testNaNIsNoCondition() {
+        assertInterpreterThrows(TinyscriptTypeError.class, "var nan = 0 / 0; print(!nan);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "var nan = 0 / 0; print(nan || false);");
     }
 
     @Test

@@ -42,8 +42,8 @@ public sealed interface TSValue permits TSUndefined, TSNull, TSBoolean, TSNumber
 
 	default String asString() {
 		return switch (this) {
-			case TSUndefined u -> "Undefined";
-			case TSNull n -> "Null";
+			case TSUndefined u -> "undefined";
+			case TSNull n -> "null";
 			case TSBoolean b -> String.valueOf(b.value());
 			case TSNumber n -> n.toString();
 			case TSString s -> s.value();
@@ -59,6 +59,22 @@ public sealed interface TSValue permits TSUndefined, TSNull, TSBoolean, TSNumber
 			case TSNumber n -> n.value() != 0.0 && !Double.isNaN(n.value());
 			case TSString s -> !s.value().isEmpty();
 			case TSObject o -> true;
+		};
+	}
+
+	/**
+	 * The value of a condition (if, while, !, &&, ||, assert, filter callbacks): a boolean,
+	 * null / undefined (false) or an object (true). Numbers and strings are no conditions,
+	 * because 0, "" and NaN would be false although they are valid values.
+	 */
+	default boolean asCondition() {
+		return switch (this) {
+			case TSBoolean b -> b.value();
+			case TSUndefined u -> false;
+			case TSNull n -> false;
+			case TSObject o -> true;
+			case TSNumber n -> throw new TinyscriptTypeError("Condition must be a boolean, not number");
+			case TSString s -> throw new TinyscriptTypeError("Condition must be a boolean, not string");
 		};
 	}
 

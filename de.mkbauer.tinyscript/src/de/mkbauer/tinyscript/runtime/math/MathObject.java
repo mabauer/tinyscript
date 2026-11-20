@@ -2,7 +2,9 @@ package de.mkbauer.tinyscript.runtime.math;
 
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
+import de.mkbauer.tinyscript.interpreter.TSNumber;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 public class MathObject extends TSObject {
 
@@ -20,12 +22,19 @@ public class MathObject extends TSObject {
 		defineBuiltinMethod("ceil", this::ceil, 1);
 	}
 
+	// Like all builtins, Math does not convert its arguments: they must be numbers
+	private static double number(TSValue value) {
+		if (!(value instanceof TSNumber number))
+			throw new TinyscriptTypeError("Math functions need numbers, not " + value.typeOf());
+		return number.value();
+	}
+
 	private TSValue sqrt(TSObject self, TSValue[] args) {
-		return TSValue.of(java.lang.Math.sqrt(TSObject.toNumber(engine, args[0])));
+		return TSValue.of(java.lang.Math.sqrt(number(args[0])));
 	}
 
 	private TSValue round(TSObject self, TSValue[] args) {
-		return TSValue.of(java.lang.Math.round(TSObject.toNumber(engine, args[0])));
+		return TSValue.of(java.lang.Math.round(number(args[0])));
 	}
 
 	private TSValue random(TSObject self, TSValue[] args) {
@@ -36,27 +45,27 @@ public class MathObject extends TSObject {
 	private TSValue min(TSObject self, TSValue[] args) {
 		double result = Double.POSITIVE_INFINITY;
 		for (TSValue arg : args)
-			result = java.lang.Math.min(result, TSObject.toNumber(engine, arg));
+			result = java.lang.Math.min(result, number(arg));
 		return TSValue.of(result);
 	}
 
 	private TSValue max(TSObject self, TSValue[] args) {
 		double result = Double.NEGATIVE_INFINITY;
 		for (TSValue arg : args)
-			result = java.lang.Math.max(result, TSObject.toNumber(engine, arg));
+			result = java.lang.Math.max(result, number(arg));
 		return TSValue.of(result);
 	}
 
 	private TSValue abs(TSObject self, TSValue[] args) {
-		return TSValue.of(java.lang.Math.abs(TSObject.toNumber(engine, args[0])));
+		return TSValue.of(java.lang.Math.abs(number(args[0])));
 	}
 
 	private TSValue floor(TSObject self, TSValue[] args) {
-		return TSValue.of(java.lang.Math.floor(TSObject.toNumber(engine, args[0])));
+		return TSValue.of(java.lang.Math.floor(number(args[0])));
 	}
 
 	private TSValue ceil(TSObject self, TSValue[] args) {
-		return TSValue.of(java.lang.Math.ceil(TSObject.toNumber(engine, args[0])));
+		return TSValue.of(java.lang.Math.ceil(number(args[0])));
 	}
 
 }

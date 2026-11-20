@@ -8,6 +8,6 @@ public enum TSNull implements TSValue {
 
 	@Override
 	public String toString() {
-		return "Null";
+		return "null";
 	}
 }

@@ -8,6 +8,6 @@ public enum TSUndefined implements TSValue {
 
 	@Override
 	public String toString() {
-		return "Undefined";
+		return "undefined";
 	}
 }
