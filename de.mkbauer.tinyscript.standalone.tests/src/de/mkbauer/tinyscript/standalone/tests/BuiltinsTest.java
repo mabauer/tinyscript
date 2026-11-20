@@ -44,12 +44,13 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrayShiftUnshift() {
-        assertEquals("3\n1,0,2\n1\n0,2\n", interpreterOutput(
-                "var a = [2];\n"
+        String code = "var a = [2];\n"
                 + "print(a.unshift(0, 1));\n"
                 + "print(a.join(\",\"));\n"
                 + "print(a.shift());\n"
-                + "print(a.join(\",\"));"));
+                + "print(a.join(\",\"));";
+        assertEquals("3\n0,1,2\n0\n1,2\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     @Test

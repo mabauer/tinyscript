@@ -20,6 +20,7 @@ public class SetConstructor extends BuiltinConstructor {
 
 	public SetConstructor(TinyscriptEngine engine) {
 		super(engine);
+		setMaxArgs(1);
 		TSObject setPrototype = getPrototypeProperty().asObject();
 		setPrototype.defineBuiltinMethod("add", this::add, 1);
 		setPrototype.defineBuiltinMethod("has", this::has, 1);

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
+import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.EmptyFunction;
 import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.InterpretedFunction;
@@ -44,8 +45,8 @@ public class ObjectConstructor extends BuiltinConstructor {
 
 		// Add all the basic stuff to our prototype, the prototype of all functions
 		proto.defineBuiltinMethod("toString", this::functionToString, 0);
-		proto.defineBuiltinMethod("call", this::functionCall, 1);
-		proto.defineBuiltinMethod("apply", this::functionApply, 1);
+		proto.defineBuiltinMethod("call", this::functionCall, 1, BuiltinFunction.VARIADIC);
+		proto.defineBuiltinMethod("apply", this::functionApply, 1, 2);
 		proto.defineDefaultProperty("length", TSValue.of(getLength()));
 
 		// Object.create(proto), Object.keys(obj)...

@@ -226,10 +226,22 @@ public class TinyscriptEngine {
 		throw new TinyscriptRuntimeException("Could not find constructor " + name);
 	}
 	
+	/**
+	 * A builtin function that takes exactly {@code length} arguments.
+	 */
 	public BuiltinFunction defineBuiltinFunction(String name, BuiltinFunctionImplementation implementation, int length) {
+		return defineBuiltinFunction(name, implementation, length, length);
+	}
+
+	/**
+	 * A builtin function that takes {@code minArgs} to {@code maxArgs} arguments
+	 * ({@link BuiltinFunction#VARIADIC}: any number).
+	 */
+	public BuiltinFunction defineBuiltinFunction(String name, BuiltinFunctionImplementation implementation, int minArgs, int maxArgs) {
 		BuiltinFunction function = new BuiltinFunction(this);
 		function.setName(name);
-		function.setLength(length);
+		function.setLength(minArgs);
+		function.setMaxArgs(maxArgs);
 		function.defineImplementation(implementation);
 		return function;
 	}
@@ -1015,6 +1027,8 @@ public class TinyscriptEngine {
 		for (int i = 0; i < argExprs.size(); i++) {
 			args[i] = execute(argExprs.get(i));
 		}
+		if (functionObject instanceof BuiltinFunction builtin)
+			builtin.checkMaxArgs(args.length, expr);
 		if (isConstructorCall(expr))
 			return construct(functionObject, args);
 		return functionObject.apply(self, args);

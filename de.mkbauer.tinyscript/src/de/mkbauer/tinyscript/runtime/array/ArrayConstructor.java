@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
+import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.Function;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
@@ -24,24 +25,24 @@ public class ArrayConstructor extends BuiltinConstructor {
 		TSObject arrayPrototype = getPrototypeProperty().asObject();
 		arrayPrototype.defineBuiltinMethod("toString", this::arrayToString, 0);
 		arrayPrototype.defineBuiltinMethod("at", this::at, 1);
-		arrayPrototype.defineBuiltinMethod("indexOf", this::indexOf, 1);
-		arrayPrototype.defineBuiltinMethod("push", this::push, 1);
+		arrayPrototype.defineBuiltinMethod("indexOf", this::indexOf, 1, 2);
+		arrayPrototype.defineBuiltinMethod("push", this::push, 1, BuiltinFunction.VARIADIC);
 		arrayPrototype.defineBuiltinMethod("pop", this::pop, 0);
-		arrayPrototype.defineBuiltinMethod("unshift", this::unshift, 1);
+		arrayPrototype.defineBuiltinMethod("unshift", this::unshift, 1, BuiltinFunction.VARIADIC);
 		arrayPrototype.defineBuiltinMethod("shift", this::shift, 0);
 		arrayPrototype.defineBuiltinMethod("map", this::map, 1);
 		arrayPrototype.defineBuiltinMethod("filter", this::filter, 1);
-		arrayPrototype.defineBuiltinMethod("join", this::join, 0);
+		arrayPrototype.defineBuiltinMethod("join", this::join, 0, 1);
 		arrayPrototype.defineBuiltinMethod("forEach", this::forEach, 1);
-		arrayPrototype.defineBuiltinMethod("reduce", this::reduce, 1);
+		arrayPrototype.defineBuiltinMethod("reduce", this::reduce, 1, 2);
 		arrayPrototype.defineBuiltinMethod("some", this::some, 1);
 		arrayPrototype.defineBuiltinMethod("every", this::every, 1);
 		arrayPrototype.defineBuiltinMethod("find", this::find, 1);
 		arrayPrototype.defineBuiltinMethod("findIndex", this::findIndex, 1);
-		arrayPrototype.defineBuiltinMethod("includes", this::includes, 1);
-		arrayPrototype.defineBuiltinMethod("slice", this::slice, 0);
-		arrayPrototype.defineBuiltinMethod("fill", this::fill, 1);
-		arrayPrototype.defineBuiltinMethod("sort", this::sort, 0);
+		arrayPrototype.defineBuiltinMethod("includes", this::includes, 1, 2);
+		arrayPrototype.defineBuiltinMethod("slice", this::slice, 0, 2);
+		arrayPrototype.defineBuiltinMethod("fill", this::fill, 1, 3);
+		arrayPrototype.defineBuiltinMethod("sort", this::sort, 0, 1);
 	}
 
 	// new Array(length) or new Array(item, ...); like Javascript, Array(...) without new works the same
@@ -102,8 +103,9 @@ public class ArrayConstructor extends BuiltinConstructor {
 
 	private TSValue unshift(TSObject self, TSValue[] args) {
 		ArrayObject arr = thisArray(self, "unshift");
-		for (TSValue arg : args)
-			arr.unshift(arg);
+		// Like Javascript, unshift(a, b) puts a before b
+		for (int i = args.length - 1; i >= 0; i--)
+			arr.unshift(args[i]);
 		return TSValue.of(arr.getLength());
 	}
 
@@ -194,9 +196,10 @@ public class ArrayConstructor extends BuiltinConstructor {
 		return accumulator;
 	}
 
-	// Array.prototype.includes(value): whether an item == value (tinyscript's ==)
+	// Array.prototype.includes(value[, start]): whether an item from start on == value
+	// (tinyscript's ==); like indexOf, a negative start counts from the end
 	private TSValue includes(TSObject self, TSValue[] args) {
-		return TSValue.of(thisArray(self, "includes").getItems().stream().anyMatch(item -> item.tinyscriptEquals(args[0])));
+		return TSValue.of(indexOf(thisArray(self, "includes").getItems(), args) >= 0);
 	}
 
 	// Array.prototype.slice([start[, end]]): a copy of the items from start to end;
@@ -290,15 +293,18 @@ public class ArrayConstructor extends BuiltinConstructor {
 	// Array.prototype.indexOf(value[, start]): the first index of an item == value (tinyscript's ==),
 	// or -1; like Javascript, a negative start counts from the end
 	private TSValue indexOf(TSObject self, TSValue[] args) {
-		List<TSValue> items = thisArray(self, "indexOf").getItems();
+		return TSValue.of(indexOf(thisArray(self, "indexOf").getItems(), args));
+	}
+
+	private static int indexOf(List<TSValue> items, TSValue[] args) {
 		int start = TSObject.toStartIndex(args, 1);
 		if (start < 0)
 			start = Math.max(0, items.size() + start);
 		for (int i = start; i < items.size(); i++) {
 			if (items.get(i).tinyscriptEquals(args[0]))
-				return TSValue.of(i);
+				return i;
 		}
-		return TSValue.of(-1);
+		return -1;
 	}
 
 	private static ArrayObject thisArray(TSObject self, String method) {
