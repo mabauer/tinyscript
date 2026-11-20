@@ -60,6 +60,7 @@ public class ObjectConstructor extends BuiltinConstructor {
 		TSObject defaultPrototype = engine.getDefaultPrototype();
 		defaultPrototype.defineBuiltinMethod("toString", this::objectToString, 0);
 		defaultPrototype.defineBuiltinMethod("hasOwnProperty", this::hasOwnProperty, 1);
+		defaultPrototype.defineDefaultProperty("constructor", this);
 
 		setPrototypeProperty(engine.getDefaultPrototype());
 	}
@@ -133,11 +134,9 @@ public class ObjectConstructor extends BuiltinConstructor {
 
 	// Object.prototype methods (the prototype of all objects)
 
+	// Like Javascript, also for objects of a constructor function: new Car().toString() is "[object Object]"
 	private TSValue objectToString(TSObject self, TSValue[] args) {
-		String name = "Object";
-		if (self.get("constructor") instanceof Function ctor)
-			name = ctor.getName();
-		return TSValue.of("[object " + name + "]");
+		return TSValue.of("[object Object]");
 	}
 
 	private TSValue hasOwnProperty(TSObject self, TSValue[] args) {

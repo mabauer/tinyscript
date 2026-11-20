@@ -19,8 +19,11 @@ public class InterpretedFunction extends Function {
 	public InterpretedFunction(TinyscriptEngine engine) {
 		super(engine);
 		this.ast = null;
-		// Each user defined functions gets a new prototype property since it could be used as a constructor
-		setPrototypeProperty(new TSObject(engine, engine.getDefaultPrototype()));
+		// Each user defined functions gets a new prototype property since it could be used as a constructor;
+		// like Javascript, its (non-enumerable) constructor property points back to the function
+		TSObject prototype = new TSObject(engine, engine.getDefaultPrototype());
+		prototype.defineDefaultProperty("constructor", this);
+		setPrototypeProperty(prototype);
 	}
 	
 	public void setAst(FunctionDefinition ast) {
@@ -104,6 +107,11 @@ public class InterpretedFunction extends Function {
 		catch (TinyscriptRuntimeException e) {
 			engine.attachStackTrace(e);
 			throw e;
+		}
+		catch (StackOverflowError e) {
+			// Caught near the end of the stack: if creating the error overflows again,
+			// a caller with more room left catches that one
+			throw new TinyscriptStackOverflowError(engine.callDepth);
 		}
 		finally {
 			engine.leaveExecutionContext();

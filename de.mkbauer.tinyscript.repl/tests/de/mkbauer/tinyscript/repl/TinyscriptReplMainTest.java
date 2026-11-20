@@ -181,4 +181,41 @@ public class TinyscriptReplMainTest {
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(first.toString(), failing.toString(), third.toString()));
         assertEquals("first\n", out.toString());
     }
+
+    @Test
+    public void testDeepRecursion() throws IOException {
+        // Far deeper than the default Java stack allows
+        Path file = script("deep.tys", "function depth(n) { if (n == 0) { return 0; } return 1 + depth(n - 1); }\nprint(depth(100000));");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run(file.toString()), err.toString());
+        assertEquals("100000\n", out.toString());
+    }
+
+    @Test
+    public void testEndlessRecursionIsAnError() throws IOException {
+        Path file = script("endless.tys", "function f(n) { return f(n + 1); }\nf(0);");
+        assertEquals(TinyscriptReplMain.EXIT_ERROR, run(file.toString()));
+        assertTrue(err.toString().startsWith("TinyscriptStackOverflowError: Stack overflow"), err.toString());
+        assertTrue(err.toString().lines().count() < 30, err.toString());
+    }
+
+    @Test
+    public void testEndlessRecursionDoesNotEndTheInteractiveSession() {
+        assertEquals(TinyscriptReplMain.EXIT_OK, runWithInput("function f(n) { return f(n + 1); }\nf(0);\nprint(\"alive\");\n"));
+        assertTrue(out.toString().contains("TinyscriptStackOverflowError"), out.toString());
+        assertTrue(out.toString().contains("alive"), out.toString());
+    }
+
+    @Test
+    public void testScriptArgumentsAfterDoubleDash() throws IOException {
+        Path file = script("args.tys", "print(System.args.length, \" \", System.args.join(\"|\"));");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run(file.toString(), "--", "input.txt", "-v", "x.tys"));
+        assertEquals("3 input.txt|-v|x.tys\n", out.toString());
+    }
+
+    @Test
+    public void testNoScriptArguments() throws IOException {
+        Path file = script("args.tys", "print(System.args.length);");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run(file.toString()));
+        assertEquals("0\n", out.toString());
+    }
 }

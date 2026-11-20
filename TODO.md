@@ -26,7 +26,7 @@ Next
 3. ~~**Syntax:**~~ (done) `continue`, `cond ? a : b`, `+=` / `-=` / `*=` / `/=` / `%=`; `++` / `--` only as statements (`i++;`, not inside expressions).
 4. ~~**`Map` and `Set`**~~ (done) as in Javascript (keys of any type, `has` returns a boolean); no `delete` operator.
 4a. ~~**Arrow functions (bug, found with Map/Set):**~~ (fixed) the generator emits every arrow body as `return <body>`, so in a `{ … }` body only the first statement runs in node; the interpreter returns the value of the last statement of a `{ … }` body (Javascript: `undefined` without `return`). The AST must distinguish `x => expr` from `x => { … }`; also the generator drops rest parameters (`...args`).
-5. **Robustness:** deep recursion must not crash the REPL with a Java `StackOverflowError` (run the interpreter in a thread with a large stack, report an overflow as a tinyscript error); a call of a missing method says so ("String has no method 'split'" instead of "Calls are only allowed for function objects"); script arguments after `--` in `System.args` (`tinyscript day1.tys -- input.txt`).
+5. ~~**Robustness:**~~ (done) deep recursion must not crash the REPL with a Java `StackOverflowError` (run the interpreter in a thread with a large stack, report an overflow as a tinyscript error); a call of a missing method says so ("String has no method 'split'" instead of "Calls are only allowed for function objects"); script arguments after `--` in `System.args` (`tinyscript day1.tys -- input.txt`).
 6. **Practice:** solve two or three real Advent of Code days with the example inputs from the puzzle texts as integration tests; find what is still missing and whether the interpreter is fast enough.
 
 
