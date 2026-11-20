@@ -67,6 +67,10 @@ import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.number.NumberFunctions;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.runtime.collection.MapConstructor;
+import de.mkbauer.tinyscript.runtime.collection.MapObject;
+import de.mkbauer.tinyscript.runtime.collection.SetConstructor;
+import de.mkbauer.tinyscript.runtime.collection.SetObject;
 import de.mkbauer.tinyscript.runtime.string.StringObject;
 import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
@@ -149,6 +153,8 @@ public class TinyscriptEngine {
 		addToGlobalObject("Function", new FunctionConstructor(this));
 		addToGlobalObject("String", new StringConstructor(this));
 		addToGlobalObject("Array", new ArrayConstructor(this));
+		addToGlobalObject("Map", new MapConstructor(this));
+		addToGlobalObject("Set", new SetConstructor(this));
 
 		addToGlobalObject("Number", NumberFunctions.createNumber(this));
 		addToGlobalObject("parseInt", NumberFunctions.createParseInt(this));
@@ -550,17 +556,55 @@ public class TinyscriptEngine {
     	IterableForExpression expr = forstmt.getIterableForExpr();
     	TSValue result = TSValue.UNDEFINED;
 		TSValue iterable = execute(expr.getIterable());
-		if (iterable instanceof ArrayObject arr) {
-			try {
+		try {
+			if (iterable instanceof ArrayObject arr) {
+				// Like Javascript: sees the items that the loop body adds
 				for (int i = 0; i < arr.getLength(); i++) {
 					result = executeLoopIteration(forstmt, arr.item(i));
 				}
+				return result;
 			}
-			catch (TSBreak b) {
-				// leave the loop
+			List<TSValue> items = iterableItems(iterable);
+			if (items == null)
+				throw new TinyscriptTypeError("for needs an array, a string, a Map or a Set, not " + iterable.typeOf(), expr.getIterable());
+			for (TSValue item : items) {
+				result = executeLoopIteration(forstmt, item);
 			}
 		}
+		catch (TSBreak b) {
+			// leave the loop
+		}
 		return result;
+    }
+
+    /**
+     * The items of an iterable: those of an array, the characters of a string, the values
+     * of a Set or the entries [key, value] of a Map (a copy, so that a loop may change the
+     * Set or Map); null if {@code value} is not iterable.
+     */
+    public List<TSValue> iterableItems(TSValue value) {
+    	return switch (value) {
+    		case ArrayObject arr -> new ArrayList<>(arr.getItems());
+    		case TSString s -> characters(s.value());
+    		case StringObject s -> characters(s.getValue());
+    		case SetObject set -> new ArrayList<>(set.getValues());
+    		case MapObject map -> map.getEntries().entrySet().stream()
+    				.map(entry -> {
+    					ArrayObject pair = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject();
+    					pair.push(entry.getKey());
+    					pair.push(entry.getValue());
+    					return (TSValue) pair;
+    				})
+    				.toList();
+    		default -> null;
+    	};
+    }
+
+    private static List<TSValue> characters(String str) {
+    	List<TSValue> result = new ArrayList<>(str.length());
+    	for (int i = 0; i < str.length(); i++)
+    		result.add(TSValue.of(str.substring(i, i + 1)));
+    	return result;
     }
 
     public TSValue caseWhileStatement(WhileStatement whilestmt) {

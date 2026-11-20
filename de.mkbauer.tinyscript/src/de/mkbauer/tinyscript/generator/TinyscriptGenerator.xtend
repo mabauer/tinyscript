@@ -100,6 +100,20 @@ class TinyscriptGenerator   {
 			return obj1 + obj2;
 		}
 		
+		// Like the interpreter: keys(), values() and entries() of Maps and Sets return arrays
+		var Map = (function (JsMap) {
+			return class Map extends JsMap {
+				keys() { return Array.from(super.keys()); }
+				values() { return Array.from(super.values()); }
+				entries() { return Array.from(super.entries()); }
+			};
+		})(globalThis.Map);
+		var Set = (function (JsSet) {
+			return class Set extends JsSet {
+				values() { return Array.from(super.values()); }
+			};
+		})(globalThis.Set);
+
 		// Tinyscript's ==: no type coercion, but null == undefined; String objects equal their strings
 		function __ts_eq(obj1, obj2) {
 			if (obj1 == null || obj2 == null) {
@@ -367,11 +381,18 @@ class TinyscriptGenerator   {
 		val loopVarDefinition = if (stmt.id !== null) "var " + stmt.id.generate else stmt.ref.generate
 		'''
 		var «iterable» = «expr.iterable.generate»;
-		if (Array.isArray(«iterable»)) {
-			for (var «index» = 0; «index» < «iterable».length; «index»++) {
-				«loopVarDefinition» = «iterable»[«index»];
-				«stmt.^do.generate»
-			}	
+		if (typeof «iterable» === "string" || «iterable» instanceof String) {
+			«iterable» = String(«iterable»).split("");
+		}
+		else if («iterable» instanceof globalThis.Map || «iterable» instanceof globalThis.Set) {
+			«iterable» = Array.from(«iterable»);
+		}
+		else if (!Array.isArray(«iterable»)) {
+			throw new TypeError("for needs an array, a string, a Map or a Set");
+		}
+		for (var «index» = 0; «index» < «iterable».length; «index»++) {
+			«loopVarDefinition» = «iterable»[«index»];
+			«stmt.^do.generate»
 		}
 		'''
 	}
