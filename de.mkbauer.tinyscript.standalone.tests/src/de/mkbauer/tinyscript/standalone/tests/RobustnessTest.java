@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.TinyscriptStackOverflowError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
@@ -30,6 +31,52 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
         // The stack trace is shortened, not thousands of lines
         long lines = e.getTinyscriptStacktraceAsString().lines().count();
         assertTrue(lines > 0 && lines < 30, e.getTinyscriptStacktraceAsString());
+    }
+
+    // "at f(4) at g(3) at global(5)": each call with its function and line
+    private static String frames(TinyscriptRuntimeException e) {
+        StringBuilder result = new StringBuilder();
+        for (TSStacktraceElement frame : e.getTinyscriptStacktrace())
+            result.append(result.isEmpty() ? "at " : " at ").append(frame.getFunctionName() + "(" + frame.getLine() + ")");
+        return result.toString();
+    }
+
+    @Test
+    public void testStackFramesAreNamedAfterTheFunctionsAlsoInBlocks() {
+        // The calls are in blocks with variables of their own (which run in contexts of their own)
+        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput(
+                "function g(x) {\n"
+                + "    if (x > 0) {\n"
+                + "        const y = x * 2;\n"
+                + "        return h(y);\n"
+                + "    }\n"
+                + "}\n"
+                + "function h(x) {\n"
+                + "    for (const i : range(1)) {\n"
+                + "        return x * \"a\";\n"
+                + "    }\n"
+                + "}\n"
+                + "if (true) {\n"
+                + "    const z = 1;\n"
+                + "    g(z);\n"
+                + "}\n"));
+        assertEquals("at h(9) at g(4) at global(14)", frames(e));
+    }
+
+    @Test
+    @Timeout(value = 30, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    public void testStackOverflowInABlockIsNamedAfterTheFunction() {
+        TinyscriptRuntimeException e = assertThrows(TinyscriptStackOverflowError.class, () -> interpreterOutput(
+                "function valueOf(n) {\n"
+                + "    if (n >= 0) {\n"
+                + "        const next = n + 1;\n"
+                + "        return valueOf(next);\n"
+                + "    }\n"
+                + "}\n"
+                + "valueOf(0);\n"));
+        assertTrue(frames(e).startsWith("at valueOf("), frames(e));
+        assertTrue(frames(e).contains(" at valueOf(4) "), frames(e));
+        assertTrue(frames(e).endsWith(" at global(7)"), frames(e));
     }
 
     @Test
