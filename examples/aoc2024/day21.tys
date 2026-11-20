@@ -10,7 +10,7 @@ const numericKeypad = ["789", "456", "123", " 0A"];
 const directionalKeypad = [" ^A", "<v>"];
 
 function positionOf(keypad, key) {
-    for (let row = 0, keypad.length - 1) {
+    for (const row : range(keypad.length)) {
         const col = keypad[row].indexOf(key);
         if (col >= 0) {
             return { row, col };

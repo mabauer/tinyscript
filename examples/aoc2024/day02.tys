@@ -12,7 +12,7 @@ function isSafe(levels) {
         return true;
     }
     const direction = levels[1] > levels[0] ? 1 : -1;
-    for (let i = 1, levels.length - 1) {
+    for (const i : range(1, levels.length)) {
         const step = (levels[i] - levels[i - 1]) * direction;
         if (step < 1 || step > 3) {
             return false;

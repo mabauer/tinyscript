@@ -46,7 +46,7 @@ function multiplicationAt(text, pos) {
 function sumOfMultiplications(memory, withConditionals) {
     let sum = 0;
     let enabled = true;
-    for (let pos = 0, memory.length - 1) {
+    for (const pos : range(memory.length)) {
         if (withConditionals && startsAt(memory, pos, "do()")) {
             enabled = true;
         }

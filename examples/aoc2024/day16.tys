@@ -13,7 +13,7 @@ const width = maze[0].length;
 const directions = [{ row: 0, col: 1 }, { row: 1, col: 0 }, { row: 0, col: -1 }, { row: -1, col: 0 }];
 
 function find(tile) {
-    for (let row = 0, height - 1) {
+    for (const row : range(height)) {
         const col = maze[row].indexOf(tile);
         if (col >= 0) {
             return { row, col };

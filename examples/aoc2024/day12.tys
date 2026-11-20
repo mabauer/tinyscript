@@ -58,7 +58,7 @@ function sides(region) {
     const same = (row, col) => plantAt(row, col) == plant;
     let corners = 0;
     for (const { row, col } : region) {
-        for (let i = 0, 3) {
+        for (const i : range(4)) {
             const a = directions[i];
             const b = directions[(i + 1) % 4];
             const sideA = same(row + a.row, col + a.col);
@@ -76,8 +76,8 @@ function sides(region) {
 const seen = new Set();
 let price = 0;
 let discountedPrice = 0;
-for (let row = 0, height - 1) {
-    for (let col = 0, width - 1) {
+for (const row : range(height)) {
+    for (const col : range(width)) {
         if (!seen.has(row * width + col)) {
             const region = regionAt(row, col, seen);
             price += region.length * perimeter(region);

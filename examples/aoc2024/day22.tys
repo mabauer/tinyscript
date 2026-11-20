@@ -25,11 +25,11 @@ const SEQUENCES = 19 * 19 * 19 * 19;
 const bananas = new Array(SEQUENCES).fill(0);
 const lastBuyer = new Array(SEQUENCES).fill(-1);   // the last buyer that has seen each sequence
 let sum = 0;
-for (let buyer = 0, buyers.length - 1) {
+for (const buyer : range(buyers.length)) {
     let secret = buyers[buyer];
     let price = secret % 10;
     let sequence = 0;
-    for (let step = 1, 2000) {
+    for (const step : range(1, 2001)) {
         secret = nextSecret(secret);
         const change = secret % 10 - price;
         price = secret % 10;
