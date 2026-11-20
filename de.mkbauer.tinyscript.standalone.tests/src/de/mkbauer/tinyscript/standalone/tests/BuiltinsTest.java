@@ -326,6 +326,15 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testMathMinMaxAbsFloorCeil() {
+        String code = "print(Math.min(3, 4)); print(Math.min(5, -1, 2)); print(Math.max(3, 4)); print(Math.max(7));\n"
+                + "print(Math.abs(-2.5)); print(Math.abs(3)); print(Math.floor(2.7)); print(Math.floor(-2.5));\n"
+                + "print(Math.ceil(2.1)); print(Math.ceil(-2.5));";
+        assertEquals("3\n-1\n4\n7\n2.5\n3\n2\n-3\n3\n-2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testSystemCurrentTimeMillis() {
         assertEquals("true\n", interpreterOutput("print(System.currentTimeMillis() > 0);"));
     }

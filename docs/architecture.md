@@ -325,7 +325,7 @@ Built-ins are registered in `TinyscriptEngine.initialize()` and also declared in
 |---|---|---|
 | `Array` | `ArrayConstructor`, `ArrayObject` | `push`, `pop`, `shift`, `unshift`, `map`, `filter`, `join`, `concat`, `toString`, `Array.isArray()` |
 | `String` | `StringConstructor`, `StringObject` | `charAt`, `indexOf`, `substring`, `toString` |
-| `Math` | `MathObject` | `PI`, `sqrt`, `round`, `random` |
+| `Math` | `MathObject` | `PI`, `sqrt`, `round`, `random`, `min`, `max`, `abs`, `floor`, `ceil` |
 | `Object` | `ObjectConstructor` | `create`, `keys`, `getPrototypeOf`, `defineProperty`, `getOwnPropertyDescriptor`, `getOwnPropertyNames`, `hasOwnProperty` |
 | `Function` | `FunctionConstructor` | `call`, `apply`, `toString` |
 | `System` | `SystemObject` | `currentTimeMillis` |
