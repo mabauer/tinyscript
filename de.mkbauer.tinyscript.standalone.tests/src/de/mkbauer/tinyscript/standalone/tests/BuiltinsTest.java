@@ -61,7 +61,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrayJoinAndToString() {
-        assertEquals("12\n1-2\n1, a\n", interpreterOutput(
+        assertEquals("1,2\n1-2\n1, a\n", interpreterOutput(
                 "print([1, 2].join());\n"
                 + "print([1, 2].join(\"-\"));\n"
                 + "print([1, \"a\"].toString());"));
