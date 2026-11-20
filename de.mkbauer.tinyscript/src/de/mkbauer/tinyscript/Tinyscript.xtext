@@ -77,12 +77,14 @@ ArrowFunctionDefinition returns FunctionDefinition:
 	)  '=>' block=ArrowFunctionBlock 
 ;
 
+// x => expr returns expr; x => { ... } is a function body (without return, the result is undefined).
+// Like Javascript, a { after => always starts a block: x => ({ ... }) returns an object.
 ArrowFunctionBlock returns Block:
-	statements += ExpressionStatementWithoutSemicolon | => '{' (statements += Statement)* '}'
+	=> Block | {ArrowExpressionBody} statements += ExpressionStatementWithoutSemicolon
 ;
 
 ExpressionStatementWithoutSemicolon returns ExpressionStatement:
-	expr=ConditionalExpression
+	expr=(ConditionalExpression | ArrowFunctionDefinition)
 ;
 
 OrExpression returns Expression:

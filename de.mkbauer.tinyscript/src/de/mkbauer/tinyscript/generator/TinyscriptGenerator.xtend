@@ -41,6 +41,7 @@ import com.google.inject.Inject
 import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
+import de.mkbauer.tinyscript.ts.ArrowExpressionBody
 import de.mkbauer.tinyscript.ts.NullObject
 import de.mkbauer.tinyscript.interpreter.ModuleLoader
 import de.mkbauer.tinyscript.interpreter.Modules
@@ -269,17 +270,28 @@ class TinyscriptGenerator   {
 	'''
 	
 	def dispatch generate(FunctionDeclaration func) '''
-		function «IF (func.id !== null)»«func.id.generate»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {
+		function «IF (func.id !== null)»«func.id.generate»«ENDIF»(«func.generateParams») {
 			«func.block.generate»
 		}
 		
 	''' 
 	
-	def dispatch generate(ArrowFunction func) 
-		'''function («FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») { return «func.block.generate» ;}'''
+	// A Javascript arrow function, so that this is the one of the surrounding function
+	def dispatch generate(ArrowFunction func) {
+		val body = func.block
+		if (body instanceof ArrowExpressionBody)
+			'''(«func.generateParams») => («(body.statements.head as ExpressionStatement).expr.generate»)'''
+		else '''
+			(«func.generateParams») => {
+				«body.generate»
+			}'''
+	}
+
+	def generateParams(FunctionDefinition func)
+		'''«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR»«IF func.rest !== null»«IF !func.params.empty», «ENDIF»...«func.rest.generate»«ENDIF»'''
 	
 	def dispatch generate(FunctionDefinition func) '''
-		function «IF (func.id !== null)»«func.id.name»«ENDIF»(«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR») {
+		function «IF (func.id !== null)»«func.id.name»«ENDIF»(«func.generateParams») {
 			«func.block.generate»
 		}'''	
 		

@@ -435,7 +435,7 @@ var double = x => x * 2;
 var add = (a, b) => a + b;
 ```
 
-**Block body** (explicit `return` required):
+**Block body** (explicit `return` required; without it, the result is `undefined`):
 
 ```
 var greet = name => {
@@ -443,6 +443,8 @@ var greet = name => {
     return msg;
 };
 ```
+
+As in Javascript, a `{` after `=>` always starts a block body; to return an object, put it in parentheses: `x => ({ value: x })`. The body can be another arrow function: `var add = x => y => x + y;`.
 
 Parentheses around parameters are optional for a single parameter, required for zero or multiple:
 
