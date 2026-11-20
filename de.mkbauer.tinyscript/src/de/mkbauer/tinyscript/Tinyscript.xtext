@@ -99,7 +99,20 @@ OrExpression returns Expression:
 ;
 
 AndExpression returns Expression:
-	EqualityExpression  ({BinaryExpression.left=current} op=('&&') right=EqualityExpression)*
+	BitOrExpression ({BinaryExpression.left=current} op=('&&') right=BitOrExpression)*
+;
+
+// Bitwise operators on integers up to 53 bits, with the precedence of Javascript: & before ^ before |
+BitOrExpression returns Expression:
+	BitXorExpression ({BinaryExpression.left=current} op='|' right=BitXorExpression)*
+;
+
+BitXorExpression returns Expression:
+	BitAndExpression ({BinaryExpression.left=current} op='^' right=BitAndExpression)*
+;
+
+BitAndExpression returns Expression:
+	EqualityExpression ({BinaryExpression.left=current} op='&' right=EqualityExpression)*
 ;
 
 EqualityExpression returns Expression:
@@ -107,7 +120,11 @@ EqualityExpression returns Expression:
 ;
 
 CompareExpression returns Expression:
-	Addition ({BinaryExpression.left=current} op=OP_COMP right=Addition)?
+	ShiftExpression ({BinaryExpression.left=current} op=OP_COMP right=ShiftExpression)?
+;
+
+ShiftExpression returns Expression:
+	Addition ({BinaryExpression.left=current} op=('<<' | '>>') right=Addition)*
 ;
 
 Addition returns Expression:
@@ -119,7 +136,7 @@ Multiplication returns Expression:
 ;
 
 Unary:
-	op=('-'|OP_NOT|'typeof') expr=(Unary | Primary)
+	op=('-'|OP_NOT|'~'|'typeof') expr=(Unary | Primary)
 ;
 
 Primary returns Expression:
@@ -309,7 +326,7 @@ terminal OP_ASSIGN:
 ;
 
 terminal OP_COMPOUND_ASSIGN:
-	'+=' | '-=' | '*=' | '/=' | '%='
+	'+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>='
 ;
 
 terminal OP_INCREMENT:
