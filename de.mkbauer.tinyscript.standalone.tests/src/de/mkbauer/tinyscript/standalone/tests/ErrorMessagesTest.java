@@ -37,7 +37,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     public void testAllErrorsWithoutSyntaxErrors() {
         // Without syntax errors, each error stands on its own: all of them, in the order of the source
         List<String> errors = reportedErrors("print(b);\nprint(a);");
-        assertEquals(List.of("1:7: Couldn't resolve reference to Identifier 'b'.", "2:7: Couldn't resolve reference to Identifier 'a'."), errors);
+        assertEquals(List.of("1:7: Unknown name 'b'", "2:7: Unknown name 'a'"), errors);
     }
 
     // =========================================================================
@@ -134,6 +134,27 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         assertEquals("Missing ';' before 'print'", firstError("let x = 1 print(x);"));
         assertEquals("Unexpected end of input, expected '}'", firstError("function f(a) {\n    return a;\n"));
         assertEquals("Unexpected ')', expected an expression", firstError("print(1 + );"));
+    }
+
+    // =========================================================================
+    // Unknown names, with a suggestion
+    // =========================================================================
+
+    @Test
+    public void testUnknownNameWithASuggestion() {
+        assertEquals("Unknown name 'valeus' (did you mean 'values'?)", firstError("const values = [1, 2];\nprint(valeus.length);"));
+        assertEquals("Unknown name 'Print' (did you mean 'print'?)", firstError("Print(1);"));
+        assertEquals("Unknown name 'Mtah' (did you mean 'Math'?)", firstError("print(Mtah.sqrt(4));"));
+        // Local names of functions are visible inside them
+        assertEquals("Unknown name 'totl' (did you mean 'total'?)", firstError("function sum(numbers) { let total = 0; for (const n : numbers) { totl += n; } return total; }"));
+    }
+
+    @Test
+    public void testUnknownNameWithoutASuggestion() {
+        assertEquals("Unknown name 'xyz'", firstError("const values = [1];\nprint(xyz);"));
+        // Names declared later or in another function are not visible, so they are no suggestion
+        assertEquals("Unknown name 'countr'", firstError("print(countr);\nconst counter = 1;"));
+        assertEquals("Unknown name 'inner'", firstError("function f() { const inner = 1; }\nprint(inner);"));
     }
 
     // =========================================================================
