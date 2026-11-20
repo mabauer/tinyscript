@@ -310,11 +310,14 @@ for (var i = 10, 1, -2) {
 
 ### `for` — iterable loop
 
-Iterates over the elements of an array (values, not indices):
+Iterates over the elements of an array (values, not indices), the characters of a string, the values of a `Set` or the entries `[key, value]` of a `Map`; anything else is a `TypeError`:
 
 ```
 for (var element : array) { ... }
+for (var c : "abc") { ... }
 ```
+
+A loop over an array sees elements that its body appends; a loop over a string, `Set` or `Map` goes through the elements it had when the loop started.
 
 ```
 var fruits = ["apple", "banana", "cherry"];
@@ -919,6 +922,47 @@ See [Arrays](#8-arrays) for method details. Additional static:
 |---|---|
 | `Array.isArray(value)` | Returns `true` if `value` is an array |
 
+### `Map` and `Set`
+
+As in Javascript, keys of a `Map` and values of a `Set` can be of any type: numbers, strings and booleans are compared by value, objects by identity (`NaN` equals `NaN`). Both keep the insertion order.
+
+| `Map` | Description |
+|---|---|
+| `new Map()` / `new Map([[k1, v1], [k2, v2]])` | An empty map / a map with these entries |
+| `m.get(key)` | The value for `key`, or `undefined` |
+| `m.set(key, value)` | Sets the value for `key`; returns `m`, so calls can be chained |
+| `m.has(key)` | Whether `m` has an entry for `key` |
+| `m.delete(key)` | Removes the entry for `key`; returns whether there was one |
+| `m.clear()` | Removes all entries |
+| `m.size` | The number of entries |
+| `m.keys()` / `m.values()` / `m.entries()` | Arrays of the keys / values / `[key, value]` pairs |
+| `m.forEach(fn)` | Calls `fn(value, key, map)` for each entry |
+
+| `Set` | Description |
+|---|---|
+| `new Set()` / `new Set(values)` | An empty set / a set of the elements of an array, string, `Set` or `Map` |
+| `s.add(value)` | Adds `value`; returns `s` |
+| `s.has(value)` | Whether `s` contains `value` |
+| `s.delete(value)` | Removes `value`; returns whether it was there |
+| `s.clear()` | Removes all values |
+| `s.size` | The number of values |
+| `s.values()` | An array of the values |
+| `s.forEach(fn)` | Calls `fn(value, value, set)` for each value |
+
+Differences from Javascript: `keys()`, `values()` and `entries()` return arrays, not iterators, so `m.keys().length`, `m.keys().sort()` etc. work. A `Map` or `Set` has no other properties: `m[key] = value` (instead of `m.set(key, value)`) is a `TypeError`.
+
+```
+var counts = new Map();
+for (var word : "a b a".split(" ")) {
+    counts.set(word, (counts.has(word) ? counts.get(word) : 0) + 1);
+}
+print(counts.get("a"));      // 2
+
+var visited = new Set();
+visited.add(1 + "," + 2);
+print(visited.has("1,2"));   // true
+```
+
 ### `Function.prototype`
 
 | Method | Description |
@@ -986,7 +1030,7 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 - **`delete`** operator
 - **`switch` statement**
 - **Getter / setter properties** (`get`/`set` in object literals)
-- **`Symbol`, `Map`, `Set`, `Promise`**, and other ES6+ built-ins
+- **`Symbol`, `WeakMap`, `Promise`**, and other ES6+ built-ins
 - **`Date`** object (use `System.currentTimeMillis()` instead)
 - **`console`** (use `print()` instead)
 
