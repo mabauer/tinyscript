@@ -1,0 +1,75 @@
+// Advent of Code 2024, day 6: Guard Gallivant
+// https://adventofcode.com/2024/day/6
+//
+// Usage: tinyscript day06.tys -- input.txt
+
+import inputLines from "./aoc";
+
+var grid = inputLines();
+var height = grid.length;
+var width = grid[0].length;
+
+// The guard faces up, right, down or left; turning right goes to the next direction
+var directions = [{ row: -1, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 0 }, { row: 0, col: -1 }];
+
+function findGuard() {
+    for (var row = 0, height - 1) {
+        var col = grid[row].indexOf("^");
+        if (col >= 0) {
+            return { row: row, col: col };
+        }
+    }
+    return null;
+}
+
+function isInside(row, col) {
+    return row >= 0 && row < height && col >= 0 && col < width;
+}
+
+// Positions as numbers, so that they are cheap to keep in a Set
+function position(row, col) {
+    return row * width + col;
+}
+
+// The guard walks straight ahead and turns right in front of an obstacle ("#" or the
+// position extraObstacle), until she leaves the grid or walks in a loop. Returns the
+// positions she visited, and whether she walked in a loop.
+function patrol(start, extraObstacle) {
+    var visited = new Set();
+    var states = new Set();   // position and direction: seeing one twice means a loop
+    var row = start.row;
+    var col = start.col;
+    var direction = 0;
+    while (true) {
+        visited.add(position(row, col));
+        var state = position(row, col) * 4 + direction;
+        if (states.has(state)) {
+            return { visited: visited, loops: true };
+        }
+        states.add(state);
+        var nextRow = row + directions[direction].row;
+        var nextCol = col + directions[direction].col;
+        if (!isInside(nextRow, nextCol)) {
+            return { visited: visited, loops: false };
+        }
+        if (grid[nextRow][nextCol] == "#" || position(nextRow, nextCol) == extraObstacle) {
+            direction = (direction + 1) % 4;
+        }
+        else {
+            row = nextRow;
+            col = nextCol;
+        }
+    }
+}
+
+var guard = findGuard();
+var route = patrol(guard, null).visited;
+
+// Part 1: the positions the guard visits before she leaves the grid
+print("Part 1: " + route.size);
+
+// Part 2: the positions where a new obstacle makes the guard walk in a loop. Only
+// positions on her route can change it, and not her start position.
+var loopPositions = route.values().filter(candidate =>
+    candidate != position(guard.row, guard.col) && patrol(guard, candidate).loops);
+print("Part 2: " + loopPositions.length);

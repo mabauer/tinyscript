@@ -8,11 +8,15 @@ Solutions of the first days of [Advent of Code 2024](https://adventofcode.com/20
 | [2](day02.tys) | Red-Nosed Reports | `filter` and `some` with the index, `cond ? a : b` |
 | [3](day03.tys) | Mull It Over | a small scanner instead of regular expressions, `slice`, `while` |
 | [4](day04.tys) | Ceres Search | a grid of letters, objects as directions, nested loops |
+| [5](day05.tys) | Print Queue | a `Set` of rules, `sort` with a comparison function built from them |
+| [6](day06.tys) | Guard Gallivant | a simulation, `Set`s of numbers for visited positions and states, loop detection |
 
 [aoc.tys](aoc.tys) is a module with the helpers for reading the puzzle input (via `std:fs`).
 
 Run a day with your puzzle input (by default `input.txt` in the working directory):
 
     tinyscript day01.tys -- input.txt
+
+Days 1–5 take under a second. Part 2 of day 6 simulates the guard once for each position on her route, about 20–30 million steps for a real input; that takes about a minute (tinyscript is a tree-walking interpreter, roughly ten times slower than CPython).
 
 The `*.example*.txt` files are the examples from the puzzle texts; the tests in `de.mkbauer.tinyscript.standalone.tests` (`AdventOfCode2024Test`) run each day with them, in the interpreter and, transpiled to Javascript, in node. Your own puzzle inputs are not part of the repository ([as asked by Advent of Code](https://adventofcode.com/2024/about)).
