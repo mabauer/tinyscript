@@ -42,6 +42,8 @@ You can play with it online in your browser [here](https://tinyscript.mkbauer.de
 
 * [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/frontend/public/oo.tys)
 
+* [Modules](docs/language-reference.md#13-modules): `import area, unit from "./geometry";` (not in the web demo)
+
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 
 - I believe every software engineer should at some point design and implement his own language just for the fun of it. I wanted to go a bit further than the usual toy examples taught in compiler construction classes, so I came up with *tinyscript*.

@@ -67,8 +67,8 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 	public IScope createBlockScope(EObject elem, boolean before) {
 		Block block = TinyscriptModelUtil.containingBlock(elem);
 		if (block == null)
-			// TODO(TODO.md: Modules): Provide a better GlobalScopeProvider instead of the default: TypesAwareDefault....; create a replacement by overriding getScope there.
-			// Check https://www.eclipse.org/forums/index.php/t/1067727/
+			// Outside of all blocks: the global scope, i.e. the builtins and shared resources
+			// (see TinyscriptGlobalScopeProvider); never the names of other files
 			return getGlobalScope(elem.eResource(), TsPackage.Literals.REFERENCE__ID, new Predicate<IEObjectDescription>() {
 
 				@Override
@@ -110,6 +110,10 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 			if (varId != null) {
 				ids.add(varId);
 			}
+		}
+		// The top level also sees the imported names
+		if (container instanceof Tinyscript) {
+			ids.addAll(TinyscriptModelUtil.importedIdentifiers((Tinyscript) container));
 		}
 		EObject parent = container; 
 		return Scopes.scopeFor(ids, createBlockScope(parent, true));

@@ -16,6 +16,7 @@ import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.VariableStatement;
@@ -68,6 +69,38 @@ public class TinyscriptModelUtil {
 	 * @param block
 	 * @return
 	 */
+	/**
+	 * The names a module exports: its top-level functions and variables marked with export.
+	 */
+	public static List<Identifier> exportedIdentifiers(Tinyscript script) {
+		List<Identifier> result = new ArrayList<Identifier>();
+		for (Statement stmt : script.getGlobal().getStatements()) {
+			if (stmt instanceof FunctionDeclaration function && function.isExported())
+				result.add(function.getId());
+			if (stmt instanceof VariableStatement variables && variables.isExported()) {
+				for (Expression declaration : variables.getVardecls()) {
+					Expression id = declaration instanceof BinaryExpression assignment ? assignment.getLeft() : declaration;
+					if (id instanceof Identifier identifier)
+						result.add(identifier);
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * The names a script imports (named imports and namespaces).
+	 */
+	public static List<Identifier> importedIdentifiers(Tinyscript script) {
+		List<Identifier> result = new ArrayList<Identifier>();
+		for (ImportStatement importStatement : script.getImports()) {
+			if (importStatement.getNamespace() != null)
+				result.add(importStatement.getNamespace());
+			result.addAll(importStatement.getNames());
+		}
+		return result;
+	}
+
 	public static List<Identifier> declaredVariablesInBlock(Block block) {
 		List<Identifier> result = new ArrayList<Identifier>();
 		List<Statement> stmts= block.getStatements();

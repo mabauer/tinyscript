@@ -5,18 +5,24 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.resource.XtextResource;
 import org.eclipse.xtext.resource.XtextResourceSet;
+import org.eclipse.xtext.util.CancelIndicator;
+import org.eclipse.xtext.validation.CheckMode;
+import org.eclipse.xtext.validation.Issue;
 
 import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
+import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.ts.ArrayInitializer;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
@@ -35,6 +41,7 @@ import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.GroupingExpression;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.IterableForExpression;
 import de.mkbauer.tinyscript.ts.NewExpression;
@@ -92,6 +99,11 @@ public class TinyscriptEngine {
 	private OutputStream stdOut; 
 	
 	private boolean sandboxed = true; 
+
+	// Modules: how imports are resolved (null: no imports), and the modules loaded so far
+	private ModuleLoader moduleLoader;
+	private final Map<URI, ModuleExports> loadedModules = new HashMap<>();
+	private final Deque<URI> modulesBeingLoaded = new ArrayDeque<>();
 	
 	protected int callDepth;
 	private ResourceMonitor resourceMonitor;
@@ -191,6 +203,13 @@ public class TinyscriptEngine {
 
 	public void setSandboxed(boolean sandboxed) {
 		this.sandboxed = sandboxed;
+	}
+
+	/**
+	 * Enables imports: {@code loader} resolves the paths of imports to modules.
+	 */
+	public void setModuleLoader(ModuleLoader loader) {
+		this.moduleLoader = loader;
 	}
 
 	public TSObject getDefaultPrototype() {
@@ -310,8 +329,12 @@ public class TinyscriptEngine {
 			resourceMonitor.start();
 		checkMXCpuTimeAndMemory();
 			
-		hoistFunctionDeclarations(getLexicalEnvironment(object.getGlobal()));
+		// The main script is the root of the import chain (to detect cycles back to it)
+		modulesBeingLoaded.clear();
+		modulesBeingLoaded.push(object.eResource().getURI());
 		try {
+			bindImports(object);
+			hoistFunctionDeclarations(getLexicalEnvironment(object.getGlobal()));
 			TSValue result = execute(object.getGlobal());
 
 			if (resourceMonitor != null)
@@ -324,6 +347,91 @@ public class TinyscriptEngine {
 			if (e.getTinyscriptStacktrace() == null || (e.getTinyscriptStacktrace().length == 0))
 				attachStackTrace(e);
 			throw e;
+		}
+	}
+
+	// =========================================================================
+	// Modules
+	// =========================================================================
+
+	/**
+	 * Binds the names imported by {@code script} in the current context: the named
+	 * exports, or the whole exports object for {@code import * as m}.
+	 */
+	private void bindImports(Tinyscript script) {
+		for (ImportStatement importStatement : script.getImports()) {
+			try {
+				ModuleExports exports = importModule(importStatement);
+				if (importStatement.getNamespace() != null) {
+					bindImport(importStatement.getNamespace().getName(), exports);
+				}
+				for (Identifier name : importStatement.getNames()) {
+					if (!exports.hasOwnProperty(name.getName()))
+						throw new TinyscriptReferenceError(exports.getModuleName() + " does not export \"" + name.getName() + "\"");
+					bindImport(name.getName(), exports.get(name.getName()));
+				}
+			}
+			catch (TinyscriptRuntimeException e) {
+				e.attachNodeIfAbsent(importStatement);
+				throw e;
+			}
+		}
+	}
+
+	private void bindImport(String name, TSValue value) {
+		if (!currentContext.contains(name))
+			currentContext.create(name);
+		currentContext.store(name, value);
+	}
+
+	private ModuleExports importModule(ImportStatement importStatement) {
+		if (moduleLoader == null)
+			throw new TinyscriptUnsupportedOperationError("Modules are not available here", importStatement);
+		URI importer = importStatement.eResource().getURI();
+		URI module = moduleLoader.resolve(importStatement.getPath(), importer);
+		ModuleExports exports = loadedModules.get(module);
+		if (exports != null)
+			return exports;
+		if (modulesBeingLoaded.contains(module)) {
+			// The import chain from the main script to the module that closes the cycle
+			List<String> chain = new ArrayList<>();
+			modulesBeingLoaded.descendingIterator().forEachRemaining(uri -> chain.add(uri.lastSegment()));
+			chain.add(module.lastSegment());
+			throw new TinyscriptReferenceError("Cyclic import: " + String.join(" → ", chain));
+		}
+		exports = executeModule(module);
+		loadedModules.put(module, exports);
+		return exports;
+	}
+
+	/**
+	 * Loads, validates and runs a module in its own context (which only sees the builtins),
+	 * and returns its exports.
+	 */
+	private ModuleExports executeModule(URI module) {
+		Resource resource = resourceSet.getResource(module, true);
+		List<Issue> issues = ((XtextResource) resource).getResourceServiceProvider().getResourceValidator()
+				.validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+		if (!issues.isEmpty()) {
+			Issue issue = issues.get(0);
+			throw new TinyscriptSyntaxError(issue.getMessage() + " in " + module.toFileString() + ":" + issue.getLineNumber(),
+					module.toFileString(), issue.getLineNumber());
+		}
+		Tinyscript script = (Tinyscript) resource.getContents().get(0);
+		modulesBeingLoaded.push(module);
+		enterNewExecutionContext("module " + module.lastSegment(), globalContext);
+		try {
+			bindImports(script);
+			hoistFunctionDeclarations(getLexicalEnvironment(script.getGlobal()));
+			execute(script.getGlobal());
+			Map<String, TSValue> exports = new LinkedHashMap<>();
+			for (Identifier name : TinyscriptModelUtil.exportedIdentifiers(script))
+				exports.put(name.getName(), currentContext.lookup(name.getName()));
+			return new ModuleExports(this, "\"" + module.lastSegment() + "\"", exports);
+		}
+		finally {
+			leaveExecutionContext();
+			modulesBeingLoaded.pop();
 		}
 	}
 

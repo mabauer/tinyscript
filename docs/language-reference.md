@@ -18,6 +18,7 @@ Tinyscript is a small JavaScript-like scripting language. It is intentionally mi
 10. [Closures](#10-closures)
 11. [Built-in objects and functions](#11-built-in-objects-and-functions)
 12. [Differences from JavaScript](#12-differences-from-javascript)
+13. [Modules](#13-modules)
 
 ---
 
@@ -907,6 +908,30 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 - **Modules** (`import`/`export`) — use the IIFE/closure pattern instead
 
 ---
+
+## 13. Modules
+
+A file is a module. Top-level functions and variables marked with `export` can be imported by other files:
+
+```
+// geometry.tys
+export function area(r) { return Math.PI * r * r; }
+export var unit = "cm";
+var helper = 2;                          // not exported: private to the module
+
+// main.tys
+import area, unit from "./geometry";     // named imports
+import * as geo from "./geometry.tys";   // the whole module as a (read-only) object
+print(area(2), unit, geo.area(1));
+```
+
+- Imports come first in a file; `export` is only allowed for top-level functions and variables.
+- **Paths:** relative paths (`"./x"`, `"../lib/y"`) resolve against the importing file; bare paths (`"x"`, `"math/vector"`) are searched in the module path (REPL: `--module-path dir1:dir2` or `TINYSCRIPT_PATH`, by default the directory of the file). The extension `.tys` may be omitted.
+- **Each module runs once**, on its first import, in its own scope that only sees the builtins. Every importer gets the same exports, so the same values and objects; importing a module from several places is fine, cyclic imports are an error.
+- **Imported names are read-only:** `area = 1;` is a compile-time error, and the exports object cannot be changed (`geo.unit = "m";` is a `TypeError`). Objects you import stay mutable, and a module can keep state in closures.
+- Importing the same name twice, or a name that is also declared in the file, is a "Duplicate identifier"; importing a name a module does not export is an error (`"geometry.tys" does not export "helper"`).
+- Files do not see each other's top-level names; sharing works only through `import` / `export`.
+- Modules are not available in the sandboxed web demo, and the Javascript generator does not support them yet.
 
 ## Quick Reference
 

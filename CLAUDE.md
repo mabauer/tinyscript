@@ -144,6 +144,7 @@ Source text
 - Only `==` / `!=` (no type coercion, except `null == undefined`; `NaN != NaN`; there is no `===` / `!==`); `<`, `<=`, `>`, `>=` compare number with number or string with string, anything else is a `TypeError`
 - `+` concatenates two arrays; with a string on either side it concatenates strings; an array plus anything else is a `TypeError`
 - Arrow functions use `=>` syntax
+- Modules: `export` top-level functions / variables; `import a, b from "./m";` or `import * as m from "./m";`. Each module runs once; imported names are read-only; files share names only via imports (see `docs/language-reference.md`, section 13)
 - No `this` binding differences — follows prototypal model
 
 ### TODO markers in the code
