@@ -132,6 +132,8 @@ Source text
 
 **Runtime built-ins** (`runtime/` subdirectories): `array/`, `string/`, `math/`, `object/`, `function/`, `fs/`, `system/`
 
+**Scoping:** a script sees its own declarations and the global scope (`TinyscriptGlobalScopeProvider`), which contains only resources marked with `SharedGlobals`: the builtins and the lines of an interactive REPL session. Files never see each other's top-level names.
+
 **Grammar:** `Tinyscript.xtext` — Xtext grammar defining the full language syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 
 ### Language Differences from JavaScript

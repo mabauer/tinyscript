@@ -70,6 +70,13 @@ public abstract class TinyscriptTranspilerTestBase {
     }
 
     /**
+     * The resource set that {@link #parse(String)} and {@link #assertRejected(String)} use.
+     */
+    protected XtextResourceSet resourceSet() {
+        return resourceSet;
+    }
+
+    /**
      * Skips any test that requires node.js if {@code node} is not on the PATH.
      * Subclasses that want auto-skip behaviour should call this from a
      * {@code @BeforeEach} method.

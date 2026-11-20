@@ -58,6 +58,7 @@ import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.WhileStatement;
 import de.mkbauer.tinyscript.runtime.Print;
+import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.fs.FSObject;
@@ -155,6 +156,7 @@ public class TinyscriptEngine {
 		Resource builtinsResource = resourceSet.getResource(builtinsUri, false);
 		if (builtinsResource == null) {
 			builtinsResource = resourceSet.createResource(builtinsUri);
+			SharedGlobals.share(builtinsResource);
 		}
 		builtinsResource.getContents().add(id);
 	}
