@@ -42,9 +42,16 @@ Next
      - ~~Missing: `Infinity`~~ (done, with `NaN`; `Number.MAX_SAFE_INTEGER` etc. still missing); "no limit" had to be written `1 / 0`.
      - ~~Reading numbers out of text~~ (done: `integers(text)` in `std:string`) without regular expressions needs a helper (`integers(line)` in `examples/aoc2024/aoc.tys`, used by days 13 and 14); a candidate for `std:string`.
      - Speed: all days within seconds (day 14 worst case 6.6 s, day 11 3.2 s).
-   - The inclusive numeric `for` makes `for (var i = 0, a.length - 1)` the common case; consider a `for (var i : range(n))` helper or similar.
+   - The inclusive numeric `for` makes `for (let i = 0, a.length - 1)` the common case — see item 8.
    - Days 5 and 6 added. **Speed** is the next limit: part 2 of day 6 (a simulation, 20–30 million steps for a real input) takes about a minute; on a test grid with 8 million steps, tinyscript needs 19 s, CPython 1.9 s. A profile (JFR) shows the costs of the tree walk: `dispatch` / `execute` with `eClass()` per node, `HashMap` lookups of variables in the execution contexts, string comparisons of operators. Ideas: resolve variables to slots once, dispatch on cached node kinds or precompiled closures, operators as enums.
 
+7. **Error reporting** (plan, decided 2026-11-21; a catalog of 15 typical mistakes, mostly Javascript habits, showed cascades of follow-up errors and raw ANTLR messages). Messages stay in English.
+   1. ~~**Only the errors that matter:**~~ (done) after a syntax error only the first syntax error (no follow-up syntax, linking and validation errors); without syntax errors all errors in source order. One place for REPL, web demo, module loading and tests (`TinyscriptDiagnostics`); `file:line:column` and, in the REPL, the source line with a `^` marker. Still open: the web demo editor could mark the column.
+   2. **Understandable syntax errors:** an own `ISyntaxErrorMessageProvider`: translate the ANTLR patterns ("missing ';' at 'print'" → "Missing ';' at the end of the statement before 'print'"), and recognize known Javascript constructs with a concrete hint: C-style `for (let i = 0; i < n; i++)`, `===`, `if (x) stmt;` without a block, template strings, default parameters, `i++` inside an expression, `...` in calls, regular expressions. Reserve `try`, `catch`, `switch`, `case`, `class` as keywords to report them as "not supported in tinyscript".
+   3. **Unknown names:** "Unknown name 'valeus' (did you mean 'values'?)" — an own linking diagnostic message provider with suggestions from the visible names (edit distance).
+   4. **Runtime errors with context:** `o.lst is undefined, cannot read 'length'` instead of "Cannot access property of undefined or null"; review the other runtime messages; column and source excerpt as for syntax errors.
+   - Each step extends `ErrorMessagesTest` (the catalog: mistake → expected message). The Eclipse editor gets 2 and 3 for free.
+8. **The numeric `for` loop** annoys in practice: with the inclusive end, `for (let i = 0, a.length - 1)` is the common case, and Javascript habits (`for (let i = 0; i < n; i++)`) fail. Options to discuss: an exclusive form or a `range(n)` that the iterable loop can use (`for (const i : range(n))`, already in `std:array`), supporting the C-style loop, or at least a precise error message (see 7.2).
 
 Language
 --------

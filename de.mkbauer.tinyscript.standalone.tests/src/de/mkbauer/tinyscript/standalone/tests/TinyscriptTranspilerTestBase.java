@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.TinyscriptDiagnostics;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
 import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
@@ -237,8 +238,9 @@ public abstract class TinyscriptTranspilerTestBase {
         XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
         Resource resource = localResourceSet.getResource(URI.createFileURI(main.toAbsolutePath().toString()), true);
         List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
-        if (!issues.isEmpty())
-            throw new TinyscriptSyntaxError(issues.get(0).getMessage(), main.toString(), issues.get(0).getLineNumber());
+        TinyscriptSyntaxError error = TinyscriptDiagnostics.firstError(issues, main.toString());
+        if (error != null)
+            throw error;
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         TinyscriptEngine engine = new TinyscriptEngine(localResourceSet);
         engine.setSandboxed(sandboxed);
@@ -300,6 +302,24 @@ public abstract class TinyscriptTranspilerTestBase {
                     + "\n--- Interpreter stdout ---\n" + interpreterOut
                     + "\n--- node stdout ---\n" + nodeOut);
         }
+    }
+
+    /**
+     * The errors reported for {@code tsCode} (see {@link TinyscriptDiagnostics#relevantErrors}),
+     * as "line:column: message".
+     */
+    protected List<String> reportedErrors(String tsCode) {
+        URI uri = freshUri();
+        Resource resource = resourceSet.createResource(uri);
+        try {
+            resource.load(new StringInputStream(tsCode), null);
+        } catch (IOException e) {
+            throw new WrappedException(e);
+        }
+        List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        return TinyscriptDiagnostics.relevantErrors(issues).stream()
+                .map(issue -> issue.getLineNumber() + ":" + issue.getColumn() + ": " + issue.getMessage())
+                .toList();
     }
 
     /**

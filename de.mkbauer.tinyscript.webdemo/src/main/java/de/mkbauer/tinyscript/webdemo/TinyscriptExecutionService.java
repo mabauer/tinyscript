@@ -25,6 +25,7 @@ import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.TinyscriptDiagnostics;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.interpreter.StandardLibraryModuleLoader;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
@@ -104,8 +105,9 @@ public class TinyscriptExecutionService {
 				throw new WrappedException(e);
 			}	
 			List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
-			if (issues.size()!=0)
-				throw new TinyscriptSyntaxError(issues.get(0).getMessage(), currentResource.getURI().toString(), issues.get(0).getLineNumber());
+			TinyscriptSyntaxError error = TinyscriptDiagnostics.firstError(issues, currentResource.getURI().toString());
+			if (error != null)
+				throw error;
 
 			engine.defineStdOut(stdout);
 			// executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
