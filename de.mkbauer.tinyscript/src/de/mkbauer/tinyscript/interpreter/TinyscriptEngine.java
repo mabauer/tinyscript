@@ -523,16 +523,15 @@ public class TinyscriptEngine {
     
     public TSValue caseAssertStatement(AssertStatement object) {
     	recordStatement();
-    	TSValue cond = execute(object.getCond());
-    	if (!cond.asCondition()) {
+    	if (!condition(object.getCond())) {
     		throw new TinyscriptAssertationError("assert: condition is false", object);
     	}
-    	return cond;
+    	return TSValue.of(true);
     }
   
     public TSValue caseIfStatement(IfStatement object) {
     	recordStatement();
-    	if (execute(object.getCond()).asCondition())
+    	if (condition(object.getCond()))
     		return executeInBlockContext("if", object.getThen());
     	if (object.getElse() != null)
     		return caseElseStatement(object.getElse());
@@ -648,7 +647,7 @@ public class TinyscriptEngine {
     	try {
     		while (true) {
     			countLoopIteration();
-    			if (!execute(whilestmt.getCond()).asCondition())
+    			if (!condition(whilestmt.getCond()))
     				break;
     			try {
     				result = executeInBlockContext("while", whilestmt.getDo());
@@ -713,7 +712,7 @@ public class TinyscriptEngine {
 
     // cond ? a : b evaluates only one of a and b
     public TSValue caseConditionalExpression(ConditionalExpression expr) {
-    	return execute(expr.getCond()).asCondition() ? execute(expr.getThen()) : execute(expr.getElse());
+    	return condition(expr.getCond()) ? execute(expr.getThen()) : execute(expr.getElse());
     }
     
     public TSValue caseBinaryExpression(BinaryExpression expr) {
@@ -726,9 +725,9 @@ public class TinyscriptEngine {
     			// x op= y is x = x op y, but x (e.g. a[f()]) is evaluated only once
     			return updateValue(expr.getLeft(), current -> applyOperator(op.substring(0, 1), current, execute(expr.getRight()), expr));
     		case "&&":
-    			return TSValue.of(execute(expr.getLeft()).asCondition() && execute(expr.getRight()).asCondition());
+    			return TSValue.of(condition(expr.getLeft()) && condition(expr.getRight()));
     		case "||":
-    			return TSValue.of(execute(expr.getLeft()).asCondition() || execute(expr.getRight()).asCondition());
+    			return TSValue.of(condition(expr.getLeft()) || condition(expr.getRight()));
     		case "??": {
     			TSValue left = execute(expr.getLeft());
     			return left == TSValue.UNDEFINED || left == TSValue.NULL ? execute(expr.getRight()) : left;
@@ -760,8 +759,8 @@ public class TinyscriptEngine {
     	else if (left.isString() && right.isString())
     		comparison = left.asString().compareTo(right.asString());
     	else
-    		throw new TinyscriptTypeError("'" + op + "' compares two numbers or two strings, not "
-    				+ left.typeOf() + " and " + right.typeOf(), expr);
+    		throw new TinyscriptTypeError("'" + op + "' compares two numbers or two strings, but "
+    				+ operand(expr.getLeft(), left) + " and " + operand(expr.getRight(), right), expr);
     	return TSValue.of(switch (op) {
     		case "<" -> comparison < 0;
     		case "<=" -> comparison <= 0;
@@ -786,16 +785,22 @@ public class TinyscriptEngine {
     		return result;
     	}
     	if (left instanceof ArrayObject || right instanceof ArrayObject)
-    		throw new TinyscriptTypeError("'+' can only add an array to another array or to a string", expr);
+    		throw new TinyscriptTypeError("'" + expr.getOp() + "' can only add an array to another array or to a string, but "
+    				+ (left instanceof ArrayObject ? operand(expr.getRight(), right) : operand(expr.getLeft(), left)), expr);
     	if (left instanceof TSNumber l && right instanceof TSNumber r)
     		return TSValue.of(l.value() + r.value());
-    	throw new TinyscriptTypeError("'+' adds two numbers, two arrays, or a string and a value, not "
-    			+ left.typeOf() + " and " + right.typeOf(), expr);
+    	throw new TinyscriptTypeError("'" + expr.getOp() + "' adds two numbers, two arrays, or a string and a value, but "
+    			+ operand(expr.getLeft(), left) + " and " + operand(expr.getRight(), right), expr);
     }
 
     private TSValue arithmetic(String op, TSValue left, TSValue right, BinaryExpression expr) {
-    	if (!(left instanceof TSNumber leftNumber && right instanceof TSNumber rightNumber))
-    		throw new TinyscriptTypeError("'" + op + "' needs two numbers, not " + left.typeOf() + " and " + right.typeOf(), expr);
+    	if (!(left instanceof TSNumber leftNumber && right instanceof TSNumber rightNumber)) {
+    		// Name the operands that are no numbers
+    		String wrong = left instanceof TSNumber ? operand(expr.getRight(), right)
+    				: right instanceof TSNumber ? operand(expr.getLeft(), left)
+    				: operand(expr.getLeft(), left) + " and " + operand(expr.getRight(), right);
+    		throw new TinyscriptTypeError("'" + expr.getOp() + "' needs two numbers, but " + wrong, expr);
+    	}
     	double l = leftNumber.value();
     	double r = rightNumber.value();
     	return TSValue.of(switch (op) {
@@ -813,14 +818,15 @@ public class TinyscriptEngine {
     }
 
     public TSValue caseUnary(Unary expr) {
+    	if (expr.getOp().equals("!"))
+    		return TSValue.of(!condition(expr.getExpr()));
     	TSValue value = execute(expr.getExpr());
     	return switch (expr.getOp()) {
     		case "-" -> {
     			if (!(value instanceof TSNumber number))
-    				throw new TinyscriptTypeError("'-' needs a number, not " + value.typeOf(), expr);
+    				throw new TinyscriptTypeError("'-' needs a number, but " + operand(expr.getExpr(), value), expr);
     			yield TSValue.of(-number.value());
     		}
-    		case "!" -> TSValue.of(!value.asCondition());
     		case "typeof" -> TSValue.of(value.typeOf());
     		default -> throw new TinyscriptUnsupportedOperationError("Unsupported unary expression: " + expr.getOp(), expr);
     	};
@@ -872,8 +878,9 @@ public class TinyscriptEngine {
 			// object.property or object.method(...)
 			if (isOptional(callOrProp.getProperty()) && (base == TSValue.UNDEFINED || base == TSValue.NULL))
 				throw TSOptionalChainEnd.INSTANCE;
-			TSObject object = toObjectForPropertyAccess(base, expr);
+			// Like Javascript, the key is evaluated before the access fails
 			TSValue key = evaluatePropertyKey(callOrProp.getProperty());
+			TSObject object = toObjectForPropertyAccess(base, "read", callOrProp.getProperty(), key, expr);
 			TSValue property = getProperty(object, key);
 			if (callOrProp.getCall() == null)
 				return property;
@@ -927,12 +934,55 @@ public class TinyscriptEngine {
     /**
      * Property access on a primitive value (e.g. a string) uses its wrapper object.
      */
-    private TSObject toObjectForPropertyAccess(TSValue base, CallOrPropertyAccess expr) {
+    private TSObject toObjectForPropertyAccess(TSValue base, String action, PropertyAccessSuffix property, TSValue key, CallOrPropertyAccess expr) {
     	if (base instanceof TSObject object)
     		return object;
-    	if (base == TSValue.NULL || base == TSValue.UNDEFINED)
-    		throw new TinyscriptTypeError("Cannot access property of undefined or null", expr);
-    	return TSObject.toObject(this, base);
+    	if (base instanceof TSString)
+    		return TSObject.toObject(this, base);
+    	// e.g. "Cannot read 'length' of o.lst: it is undefined"
+    	String access = "Cannot " + action + " " + keyText(property, key) + " of " + TinyscriptModelUtil.sourceText(expr.getExpr()) + ": ";
+    	throw new TinyscriptTypeError(access + switch (base) {
+    		case TSNumber n -> "numbers have no properties";
+    		case TSBoolean b -> "booleans have no properties";
+    		default -> "it is " + base.asString();
+    	}, expr);
+    }
+
+    // 'name' for o.name, [0] for a[0], ['key'] for o["key"]
+    private static String keyText(PropertyAccessSuffix property, TSValue key) {
+    	if (property instanceof DotPropertyAccessSuffix)
+    		return "'" + key.asString() + "'";
+    	return key instanceof TSString ? "['" + key.asString() + "']" : "[" + key.asString() + "]";
+    }
+
+    // "undefined", "null", "a number", "an array", ... for error messages
+    private static String describe(TSValue value) {
+    	return switch (value) {
+    		case TSUndefined u -> "undefined";
+    		case TSNull n -> "null";
+    		case ArrayObject a -> "an array";
+    		case Function f -> "a function";
+    		default -> article(value);
+    	};
+    }
+
+    // "count is a string": an operand and its type, for error messages
+    private static String operand(Expression expression, TSValue value) {
+    	return TinyscriptModelUtil.sourceText(expression) + " is " + describe(value);
+    }
+
+    /**
+     * The value of a condition (if, while, ?:, !, &&, ||, assert): a boolean, null / undefined
+     * (false) or an object (true); a number or string is a TypeError that names the expression.
+     */
+    private boolean condition(Expression expr) {
+    	TSValue value = execute(expr);
+    	if (value instanceof TSNumber || value instanceof TSString) {
+    		String text = TinyscriptModelUtil.sourceText(expr);
+    		String example = value instanceof TSNumber ? text + " > 0" : text + " != \"\"";
+    		throw new TinyscriptTypeError("The condition " + text + " is " + article(value) + ", not a boolean: compare it, e.g. " + example, expr);
+    	}
+    	return value.asCondition();
     }
 
     // Arrays store numeric keys as items
@@ -1050,7 +1100,7 @@ public class TinyscriptEngine {
     			throw new TinyscriptTypeError("Invalid left-hand side expression", expr);
         	TSValue base = execute(expr.getExpr());
 			TSValue key = evaluatePropertyKey(callOrProp.getProperty());
-			putProperty(toObjectForPropertyAccess(base, expr), key, value);
+			putProperty(toObjectForPropertyAccess(base, "set", callOrProp.getProperty(), key, expr), key, value);
 			return value;
     	}
     	return TSValue.UNDEFINED;
@@ -1068,8 +1118,9 @@ public class TinyscriptEngine {
     	}
     	if (target instanceof CallOrPropertyAccess expr && expr.getSuffix() instanceof CallOrPropertyAccessSuffix callOrProp
     			&& callOrProp.getCall() == null) {
-    		TSObject object = toObjectForPropertyAccess(execute(expr.getExpr()), expr);
+    		TSValue base = execute(expr.getExpr());
     		TSValue key = evaluatePropertyKey(callOrProp.getProperty());
+    		TSObject object = toObjectForPropertyAccess(base, "read", callOrProp.getProperty(), key, expr);
     		TSValue value = update.apply(getProperty(object, key));
     		putProperty(object, key, value);
     		return value;

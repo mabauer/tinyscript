@@ -7,6 +7,7 @@ import java.util.List;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 
 import de.mkbauer.tinyscript.ts.BinaryExpression;
@@ -169,6 +170,28 @@ public class TinyscriptModelUtil {
 	
 	public static int getLineOfASTNode(EObject elem) {
 		return NodeModelUtils.getNode(elem).getStartLine();
+	}
+
+	/**
+	 * The column (1-based) where an element starts in its source.
+	 */
+	public static int getColumnOfASTNode(EObject elem) {
+		INode node = NodeModelUtils.getNode(elem);
+		String text = node.getRootNode().getText();
+		int offset = node.getOffset();
+		return offset - (text.lastIndexOf('\n', offset - 1) + 1) + 1;
+	}
+
+	/**
+	 * The source text of an element for error messages, e.g. "o.lst": whitespace between tokens
+	 * reduced to single spaces, shortened to 50 characters.
+	 */
+	public static String sourceText(EObject elem) {
+		INode node = NodeModelUtils.findActualNodeFor(elem);
+		if (node == null)
+			return "?";
+		String text = NodeModelUtils.getTokenText(node);
+		return text.length() <= 50 ? text : text.substring(0, 48) + "…";
 	}
 	
 	public static String getFilenameOfASTNode(EObject elem) {

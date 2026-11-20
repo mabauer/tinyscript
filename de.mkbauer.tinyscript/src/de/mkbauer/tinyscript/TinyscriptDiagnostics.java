@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.eclipse.xtext.diagnostics.Diagnostic;
 import org.eclipse.xtext.diagnostics.Severity;
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 import org.eclipse.xtext.validation.Issue;
 
 /**
@@ -47,6 +48,17 @@ public final class TinyscriptDiagnostics {
 
 	public static int column(Issue issue) {
 		return issue.getColumn() != null ? issue.getColumn() : 0;
+	}
+
+	/**
+	 * The source line where a runtime error happened, with a marker (see below); empty if the
+	 * place is unknown.
+	 */
+	public static String excerpt(TinyscriptRuntimeException e) {
+		if (e.getNode() == null || NodeModelUtils.getNode(e.getNode()) == null)
+			return "";
+		String source = NodeModelUtils.getNode(e.getNode()).getRootNode().getText();
+		return excerpt(source, e.getAffectedLine(), e.getAffectedColumn());
 	}
 
 	/**

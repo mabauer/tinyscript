@@ -80,6 +80,13 @@ public class TinyscriptRuntimeException extends RuntimeException {
 		return result.toString();
 	}
 	
+	/**
+	 * The column (1-based) where the error happened, 0 if unknown.
+	 */
+	public int getAffectedColumn() {
+		return node != null ? TinyscriptModelUtil.getColumnOfASTNode(node) : 0;
+	}
+
 	public String getAffectedFilename() {
 		if (node != null) {
 			return TinyscriptModelUtil.getFilenameOfASTNode(node);

@@ -1,10 +1,13 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 
 import de.mkbauer.tinyscript.TinyscriptDiagnostics;
 
@@ -155,6 +158,62 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         // Names declared later or in another function are not visible, so they are no suggestion
         assertEquals("Unknown name 'countr'", firstError("print(countr);\nconst counter = 1;"));
         assertEquals("Unknown name 'inner'", firstError("function f() { const inner = 1; }\nprint(inner);"));
+    }
+
+    // =========================================================================
+    // Runtime errors name the expression
+    // =========================================================================
+
+    private void assertRuntimeError(String expectedMessage, String code) {
+        TinyscriptRuntimeException e = assertThrows(TinyscriptRuntimeException.class, () -> interpreterOutput(code));
+        assertEquals(expectedMessage, e.getMessage());
+    }
+
+    @Test
+    public void testPropertyOfUndefinedOrNull() {
+        assertRuntimeError("Cannot read 'length' of o.lst: it is undefined", "const o = { list: [1, 2] };\nconst total = o.lst.length;");
+        assertRuntimeError("Cannot read [0] of grid[5]: it is undefined", "const grid = [[1, 2], [3, 4]];\nprint(grid[5][0]);");
+        assertRuntimeError("Cannot read 'c' of o.a.b: it is undefined", "function f(o) { return o.a.b.c; }\nprint(f({ a: {} }));");
+        assertRuntimeError("Cannot read 'push' of list: it is null", "const list = null;\nlist.push(1);");
+        assertRuntimeError("Cannot read ['key'] of m: it is undefined", "let m;\nprint(m[\"key\"]);");
+        assertRuntimeError("Cannot set 'debug' of o.config: it is undefined", "const o = {};\no.config.debug = true;");
+    }
+
+    @Test
+    public void testPropertyOfANumberOrBoolean() {
+        assertRuntimeError("Cannot read 'toFixed' of n: numbers have no properties", "const n = 5;\nprint(n.toFixed(2));");
+        assertRuntimeError("Cannot read 'x' of flag: booleans have no properties", "const flag = true;\nprint(flag.x);");
+    }
+
+    @Test
+    public void testOperatorsNameTheWrongOperand() {
+        assertRuntimeError("'*' needs two numbers, but shape.height is undefined",
+                "function area(shape) { return shape.width * shape.height; }\nprint(area({ width: 2 }));");
+        assertRuntimeError("'*' needs two numbers, but count is a string", "const count = \"3\";\nprint(count * 2);");
+        assertRuntimeError("'-' needs two numbers, but a is a string and b is an array", "const a = \"x\"; const b = [];\nprint(a - b);");
+        assertRuntimeError("'+' adds two numbers, two arrays, or a string and a value, but x is a number and true is a boolean",
+                "const x = 1;\nprint(x + true);");
+        assertRuntimeError("'+' can only add an array to another array or to a string, but 1 is a number", "print([1] + 1);");
+        assertRuntimeError("'<' compares two numbers or two strings, but 1 is a number and \"2\" is a string", "print(1 < \"2\");");
+        assertRuntimeError("'-' needs a number, but s is a string", "const s = \"a\";\nprint(-s);");
+        assertRuntimeError("'+=' adds two numbers, two arrays, or a string and a value, but total is undefined and 1 is a number", "let total;\ntotal += 1;");
+    }
+
+    @Test
+    public void testConditionsNameTheExpression() {
+        assertRuntimeError("The condition items.length is a number, not a boolean: compare it, e.g. items.length > 0",
+                "const items = [];\nif (items.length) { print(\"some\"); }");
+        assertRuntimeError("The condition name is a string, not a boolean: compare it, e.g. name != \"\"",
+                "const name = \"x\";\nwhile (name) { break; }");
+        assertRuntimeError("The condition count is a number, not a boolean: compare it, e.g. count > 0",
+                "const count = 1;\nprint(!count);");
+    }
+
+    @Test
+    public void testLongExpressionsAreShortened() {
+        assertRuntimeError("Cannot read 'x' of compute(someLongArgumentName, anotherLongArgumen…: it is null",
+                "function compute(a, b) { return null; } const someLongArgumentName = 1; const anotherLongArgumentName = 2;\n"
+                + "print(compute(someLongArgumentName, anotherLongArgumentName).x);");
     }
 
     // =========================================================================

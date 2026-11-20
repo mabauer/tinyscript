@@ -95,8 +95,19 @@ public class TinyscriptReplMainTest {
     public void testRuntimeErrorExitsWithOne() throws IOException {
         Path file = script("error.tys", "var n = 1;\nprint(n.x);");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(file.toString()));
-        assertTrue(err.toString().contains("TinyscriptTypeError: Numbers have no properties"), err.toString());
+        assertTrue(err.toString().contains("TinyscriptTypeError: Cannot read 'x' of n: numbers have no properties"), err.toString());
         assertTrue(err.toString().contains("error.tys:2"), err.toString());
+    }
+
+    @Test
+    public void testRuntimeErrorShowsTheSourceLine() throws IOException {
+        Path file = script("area.tys", "function area(shape) {\n    return shape.width * shape.height;\n}\nprint(area({ width: 2 }));\n");
+        assertEquals(TinyscriptReplMain.EXIT_ERROR, run(file.toString()));
+        assertEquals("TinyscriptTypeError: '*' needs two numbers, but shape.height is undefined\n"
+                + "        return shape.width * shape.height;\n"
+                + "               ^\n"
+                + "    at area(" + file + ":2)\n"
+                + "    at global(" + file + ":4)\n", err.toString());
     }
 
     @Test
