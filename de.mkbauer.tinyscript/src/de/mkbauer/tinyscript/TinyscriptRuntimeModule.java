@@ -3,6 +3,7 @@
  */
 package de.mkbauer.tinyscript;
 
+import org.eclipse.xtext.linking.ILinkingDiagnosticMessageProvider;
 import org.eclipse.xtext.naming.IQualifiedNameProvider;
 import org.eclipse.xtext.parser.antlr.ISyntaxErrorMessageProvider;
 
@@ -12,6 +13,7 @@ import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
 import de.mkbauer.tinyscript.jvmscriptengine.JvmScriptEngineRunner;
 import de.mkbauer.tinyscript.scoping.TinyscriptGlobalScopeProvider;
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
+import de.mkbauer.tinyscript.validation.TinyscriptLinkingDiagnosticMessageProvider;
 import de.mkbauer.tinyscript.validation.TinyscriptSyntaxErrorMessageProvider;
 
 /**
@@ -33,6 +35,11 @@ public class TinyscriptRuntimeModule extends AbstractTinyscriptRuntimeModule {
 	// Syntax errors in plain words, with hints for constructs from Javascript
 	public Class<? extends ISyntaxErrorMessageProvider> bindISyntaxErrorMessageProvider() {
 		return TinyscriptSyntaxErrorMessageProvider.class;
+	}
+
+	// "Unknown name 'valeus' (did you mean 'values'?)"
+	public Class<? extends ILinkingDiagnosticMessageProvider> bindILinkingDiagnosticMessageProvider() {
+		return TinyscriptLinkingDiagnosticMessageProvider.class;
 	}
 
 	@Provides

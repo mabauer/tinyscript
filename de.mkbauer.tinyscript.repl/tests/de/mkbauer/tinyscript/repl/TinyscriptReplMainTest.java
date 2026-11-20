@@ -114,7 +114,7 @@ public class TinyscriptReplMainTest {
         Path first = script("first.tys", "var shared = 5;");
         Path second = script("second.tys", "print(shared);");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(first.toString(), second.toString()));
-        assertTrue(err.toString().contains("Couldn't resolve reference to Identifier 'shared'"), err.toString());
+        assertTrue(err.toString().contains("Unknown name 'shared'"), err.toString());
     }
 
     @Test
