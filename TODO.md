@@ -107,6 +107,8 @@ Language
        - no delete / mkdir (dangerous, no need so far)
     6. Optional, IDE: the validator checks while typing that the imported file exists and exports the names (fits the VS Code language server).
 
+- **`undefined` as a name.** `x * undefined` or `return undefined;` fail with "Unknown name 'undefined'" (found 2026-11-20); in Javascript it is a global (read-only). Options: a literal like `null` (then a reserved word) or a read-only global like `Infinity` / `NaN`; the generator emits it unchanged.
+
 - **Global `this`.** At top level `this` is the global object. In Javascript's strict mode (which tinyscript otherwise follows) it is `undefined`.
 
 - **More functions in the runtime library.** (`concat` is not needed: `+` concatenates arrays.)
