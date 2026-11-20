@@ -63,8 +63,6 @@ Language
 Interpreter and code quality
 ----------------------------
 
-- **Generator: `print` with several arguments.** The generated `print` shim prints only its first argument (`print(1, "a")` gives `1` in node, `1a` in the interpreter).
-
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it (decision deferred). Its error handling is minimal.
 
 
