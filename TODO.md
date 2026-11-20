@@ -113,7 +113,22 @@ Language
 
 - **Global `this`.** At top level `this` is the global object. In Javascript's strict mode (which tinyscript otherwise follows) it is `undefined`.
 
-- **More functions in the runtime library.** (`concat` is not needed: `+` concatenates arrays.)
+- **More functions in the runtime library.** (`concat` is not needed: `+` concatenates arrays.) See the review below for the concrete list.
+
+- **Language review** (2026-11-20; grammar, language reference and about 70 probe scripts against the REPL of 0.21.1-SNAPSHOT). The goal stays a small language that is practical for experiments. The bugs it found are under "Interpreter and code quality".
+  - **Gaps**, by weight:
+    1. **No error handling.** Without `try` / `catch`, `throw` only ends the script: `fs.readFile` on a missing file cannot be handled, and libraries cannot report errors in a useful way. The biggest gap for practical use; a minimal `try { … } catch (e) { … }` (no `finally`, `e` is the `Error` or the thrown value) would do. Revisits the decision of 2026-11-21.
+    2. **`undefined` as a name** (see above).
+    3. **No input.** Only files and `System.args`; nothing reads standard input, so interactive scripts are not possible. Candidate: `readLine()` in a `std:` module (not sandboxed).
+    4. **Arrays and objects cannot shrink.** Arrays: no `splice` (insert / remove in the middle), no `reverse` method (only `std:array`). Objects: no `delete`, no `Object.values` / `Object.entries`.
+    5. **Numbers.** `Math` has nine members: powers (`**` or `Math.pow`), `trunc`, `sign`, `log`, the trigonometric functions are missing; so is formatting to n decimal places (Javascript: `toFixed`, but numbers have no methods here).
+    6. **Objects with methods are verbose.** No method shorthand `{ greet() { … } }`; the shorthand is cheap, `class` is not needed.
+    7. Smaller: spread in calls (`Math.max(...values)`), renaming in imports (`import a as x from …`), assignment with a pattern (`[a, b] = [b, a];`).
+    - Deliberately not gaps: `switch`, template strings, labels, `do … while`, regular expressions, `Date`. The messages for them are good, and the language stays small.
+  - **Design questions:**
+    - **Counting loops.** Three ways side by side: the Lua-style loop (inclusive end), `range` (exclusive end) and `while`; plus `var` as a synonym of `let`. Favoured (2026-11-20): a lazy `reverse()` on ranges, so that counting backwards over indexes reads `for (const i : range(a.length).reverse())` instead of `range(a.length - 1, -1, -1)`. Once it exists, decide whether the Lua-style loop (today the readable way to count down: `for (let i = a.length - 1, 0, -1)`) and `var` are phased out.
+    - **Half truthiness.** In conditions `null` / `undefined` are false and objects are true (`if (node)`, `while (node)`), but `&&` and `||` always give a boolean. So the Javascript habit `const cfg = options || {};` silently yields `true`; numbers and strings are caught by a `TypeError`, objects are not. Options: (1) keep it and name the trap in the language reference (`??` is the way: `options ?? {}`), or (3) conditions accept only booleans, which is the most uniform but costs `while (node)` and `if (o.child)` (write `node != null`). Open, tendency (2026-11-20): 1 or 3. Not pursued: (2) a `TypeError` for an object as operand of `&&` / `||`.
+  - **Suggested order:** the bugs; `undefined` and the separator of `print`; minimal `try` / `catch`; a library batch (`splice`, `reverse`, `Object.values` / `entries`, powers, `Math.trunc`) with `range(…).reverse()`; method shorthand, a more comfortable REPL, standard input.
 
 
 
@@ -121,6 +136,15 @@ Interpreter and code quality
 ----------------------------
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always skipped. Either add the GraalJS dependency or remove it (decision deferred). Its error handling is minimal.
+
+- **Bugs found by the language review** (2026-11-20):
+  - **Numbers print in Java's format:** `print(12345678.5)` gives `1.23456785E7`, `print(0.0001)` gives `1.0E-4`, `print(1.5e300)` a number of 301 digits (Javascript: `12345678.5`, `0.0001`, `1.5e+300`), so the interpreter and node differ, also for everyday numbers (any fraction from 10^7 on). Cause: `TSNumber.toString` writes integers with `%.0f` and leaves the rest to `Double.toString`. Decided 2026-11-20: **Javascript's rule** — the shortest digits that identify the number, written out between 10^-7 and 10^21, otherwise with an exponent (`1e+21`, `1e-7`); `-0` prints as `0`, as `String(-0)` does in Javascript. `Double.toString` already gives the right digits, they only need to be arranged (about 20 lines in `TSNumber`); differential tests against node. Not chosen: always written out without an exponent (`1e-300` would be 300 zeros, and node would differ for good).
+  - **Printing a cyclic object crashes the REPL:** `const o = {}; o.self = o; print(o);` ends with a raw Java `StackOverflowError`.
+  - **`print` does not separate its arguments:** `print(1, 2, "a")` gives `12a` (Javascript's `console.log`: `1 2 a`). Decide: a space, as in Javascript and Python.
+  - **`print` ignores a user-defined `toString`:** `print(p)` shows `{x: 1, y: 2}`, `"" + p` shows `(1,2)`; the language reference says `print` converts to a string.
+  - **`contains` of `std:array` fails on a `Set`** ("Set has no method 'indexOf'"), although the module is documented for anything the `for` loop goes through; `reverse` there is quadratic (`unshift` in a loop).
+  - **Language reference is outdated:** section 5 says there is no `else if` (there is).
+  - **Interactive REPL:** an expression needs its `;` (`x * 2` waits for a continuation line), `let x = 5;` answers `undefined`, and syntax errors show up as "TinyscriptRuntimeException: line 2:1: …" instead of the messages a file gets.
 
 
 Build and operations
