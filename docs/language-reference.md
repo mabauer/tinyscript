@@ -782,6 +782,24 @@ print(Math.round(2.7)); // 3
 print(Math.PI);         // 3.141592653589793
 ```
 
+### `Number`, `parseInt`, `isNaN`
+
+Conversions to numbers are explicit (no operator or builtin converts silently):
+
+| Function | Description |
+|---|---|
+| `Number(x)` | A string read as a whole number literal (surrounding whitespace is ignored; decimal, `1e3`, `Infinity`, `0x1f`, `0o17`, `0b101`), otherwise `NaN`; unlike Javascript, `""` and blank strings are `NaN`, not `0`. A number stays as it is, `true` / `false` are `1` / `0`; anything else is a `TypeError` |
+| `parseInt(str[, radix])` | The integer at the start of `str`, ignoring the rest (`"42abc"` → `42`), or `NaN`; leading whitespace and a sign are allowed, `0x` means radix 16. `radix` must be an integer from 2 to 36 |
+| `isNaN(x)` | `true` if the number `x` is `NaN`; `x` must be a number |
+| `Number.isInteger(x)` | `true` if `x` is a finite number without fraction; `false` for anything else |
+
+```
+print(Number(" 3.5 ") + 1);   // 4.5
+print(isNaN(Number("12px"))); // true
+print(parseInt("12px"));      // 12
+print(parseInt("ff", 16));    // 255
+```
+
 ### `Object`
 
 | Method | Description |
@@ -814,15 +832,31 @@ String methods:
 |---|---|
 | `str.at(i)` | Character at index `i`; a negative `i` counts from the end; `undefined` if out of range |
 | `str.charAt(i)` | Character at index `i` |
+| `str.charCodeAt(i)` | UTF-16 code of the character at index `i`, or `NaN` |
 | `str.indexOf(sub[, pos])` | First index of `sub` at or after `pos` (negative: 0), or `-1` |
+| `str.lastIndexOf(sub[, pos])` | Last index of `sub` at or before `pos`, or `-1` |
+| `str.includes(sub)` / `str.startsWith(sub)` / `str.endsWith(sub)` | Whether `str` contains / starts with / ends with `sub` |
 | `str.substring(start, end)` | Substring from `start` (inclusive) to `end` (exclusive) |
+| `str.slice(start[, end])` | Like `substring`, but negative indices count from the end, and `start > end` gives `""` |
+| `str.split(sep)` | Array of the parts between occurrences of `sep`; `""` splits into characters |
+| `str.trim()` | Without leading and trailing whitespace |
+| `str.replace(search, repl)` / `str.replaceAll(search, repl)` | Replaces the first / every occurrence of `search`; `repl` may contain `$&` (the match), `` $` `` / `$'` (the text before / after it) and `$$` |
+| `str.repeat(n)` | `str` repeated `n` times |
+| `str.padStart(len[, pad])` / `str.padEnd(len[, pad])` | Padded at the start / end with spaces or `pad` up to length `len` |
+| `str.toUpperCase()` / `str.toLowerCase()` | Upper / lower case |
 | `str.toString()` | The string itself |
+
+String arguments must be strings and indices integers, otherwise the method throws a `TypeError`. `search` and `sep` are plain strings; there are no regular expressions.
+
+`String.fromCharCode(c1, c2, ...)` builds a string from UTF-16 codes.
 
 ```
 var s = "Hello World";
 print(s.substring(0, 5));   // "Hello"
 print(s.indexOf("World"));  // 6
 print(s.charAt(0));         // "H"
+print("a,b,c".split(",").length); // 3
+print("7".padStart(3, "0")); // "007"
 ```
 
 ### `Array`

@@ -132,10 +132,14 @@ public class ResourceMonitor implements WeakHashMapWithCallBack.OnExpungeListene
 		}
 	}
 	
+	protected void checkStringLength(long length) {
+		if (resourceLimits.maxStringLength > 0 && length > resourceLimits.maxStringLength)
+			throw new TinyscriptResourceLimitViolation("String length limit reached");
+	}
+
 	protected void recordStringCreation(String string) {
 		resourceConsumption.objectCreations++;
-		if (resourceLimits.maxStringLength > 0 && string.length() > resourceLimits.maxStringLength) 
-			throw new TinyscriptResourceLimitViolation("String length limit reached");
+		checkStringLength(string.length());
 		if (useObjectTracking) {
 			trackString(string);
 			checkObjectsAndMemoryConsumption();	
