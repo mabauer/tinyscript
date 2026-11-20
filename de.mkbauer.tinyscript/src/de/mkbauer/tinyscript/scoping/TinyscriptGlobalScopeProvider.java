@@ -67,7 +67,7 @@ public class TinyscriptGlobalScopeProvider extends
 	}
 	
 	private List<Identifier> createBuiltInIds() {
-		List<String> builtins = new ArrayList<String>(List.of("Object", "Function", "Array", "String", "Math", "System", "print")); 
+		List<String> builtins = new ArrayList<String>(List.of("Object", "Function", "Array", "String", "Number", "parseInt", "isNaN", "Math", "System", "print")); 
 		List<Identifier> builtinIds = new ArrayList<Identifier>();
 		builtinIds = builtins.stream()
 				.map(s -> TinyscriptGlobalScopeProvider.createId(s))

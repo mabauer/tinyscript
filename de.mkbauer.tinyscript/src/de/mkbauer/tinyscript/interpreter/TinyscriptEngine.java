@@ -62,6 +62,7 @@ import de.mkbauer.tinyscript.ts.WhileStatement;
 import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
+import de.mkbauer.tinyscript.runtime.number.NumberFunctions;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.string.StringObject;
 import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
@@ -146,6 +147,9 @@ public class TinyscriptEngine {
 		addToGlobalObject("String", new StringConstructor(this));
 		addToGlobalObject("Array", new ArrayConstructor(this));
 
+		addToGlobalObject("Number", NumberFunctions.createNumber(this));
+		addToGlobalObject("parseInt", NumberFunctions.createParseInt(this));
+		addToGlobalObject("isNaN", NumberFunctions.createIsNaN(this));
 		addToGlobalObject("Math", new MathObject(this));
 		addToGlobalObject("System", new SystemObject(this));
 		addToGlobalObject("print", Print.create(this));
@@ -1009,6 +1013,14 @@ public class TinyscriptEngine {
 	public void checkObjectSize(int size) {
 		if (resourceMonitor != null)
 			resourceMonitor.checkObjectSize(size);
+	}
+
+	/**
+	 * Checks the string length limit before a string of {@code length} characters is built.
+	 */
+	public void checkStringLength(long length) {
+		if (resourceMonitor != null)
+			resourceMonitor.checkStringLength(length);
 	}
 
 	public void recordOutput(int length) {
