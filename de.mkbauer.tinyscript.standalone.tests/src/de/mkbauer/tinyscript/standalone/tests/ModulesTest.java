@@ -186,11 +186,9 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testStandardLibrary() throws IOException {
         Path main = write("main.tys", "import range, sum, contains, reverse from \"std:array\";\n"
-                + "import * as math from \"std:math\";\n"
                 + "print(range(5).join(\",\")); print(range(0).length); print(sum(range(5)));\n"
-                + "print(contains([1, 2], 2)); print(contains([1, 2], 3)); print(reverse([1, 2, 3]).join(\",\"));\n"
-                + "print(math.min(3, 4)); print(math.max(3, 4)); print(math.abs(-2)); print(math.clamp(15, 0, 10));");
-        assertEquals("0,1,2,3,4\n0\n10\ntrue\nfalse\n3,2,1\n3\n4\n2\n10\n", runModule(main));
+                + "print(contains([1, 2], 2)); print(contains([1, 2], 3)); print(reverse([1, 2, 3]).join(\",\"));");
+        assertEquals("0,1,2,3,4\n0\n10\ntrue\nfalse\n3,2,1\n", runModule(main));
         assertSameOutputModule(main);
     }
 
@@ -205,6 +203,9 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
         Path main = write("main.tys", "import x from \"std:nope\";\nprint(x);");
         TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class, () -> runModule(main));
         assertTrue(e.getMessage().contains("Standard library module \"std:nope\" not found"), e.getMessage());
+        // Math is a global (as in Javascript), not a module
+        Path main2 = write("main2.tys", "import * as math from \"std:math\";\nprint(math);");
+        assertThrows(TinyscriptReferenceError.class, () -> runModule(main2));
     }
 
     @Test

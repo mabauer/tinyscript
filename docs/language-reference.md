@@ -772,6 +772,9 @@ print([1, 2, 3]);   // [1, 2, 3]
 | `Math.sqrt(x)` | Square root of `x` |
 | `Math.round(x)` | Round to nearest integer |
 | `Math.random()` | Random number in [0, 1) |
+| `Math.min(a, b, ...)` / `Math.max(a, b, ...)` | Smallest / largest of the arguments |
+| `Math.abs(x)` | Absolute value |
+| `Math.floor(x)` / `Math.ceil(x)` | Round down / up |
 
 ```
 print(Math.sqrt(2));    // 1.4142135623730951
@@ -928,12 +931,10 @@ print(area(2), unit, geo.area(1));
 - Files do not see each other's top-level names; sharing works only through `import` / `export`.
 - **Standard library:** `std:` modules come with tinyscript (written in tinyscript, in the core bundle under `/std`):
   - `std:array`: `range(n)` (`[0, …, n - 1]`), `sum(arr)`, `contains(arr, x)`, `reverse(arr)`
-  - `std:math`: `min(a, b)`, `max(a, b)`, `abs(x)`, `clamp(x, lo, hi)`
 
   ```
   import range, sum from "std:array";
-  import * as math from "std:math";
-  print(sum(range(10)), " ", math.clamp(15, 0, 10));   // 45 10
+  print(sum(range(10)));   // 45
   ```
   - `std:fs` (native, not available sandboxed): file access, UTF-8, relative paths against the working directory. Strict: errors end the script (tinyscript has no `try` / `catch`), so check with `exists` first.
 

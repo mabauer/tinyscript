@@ -44,7 +44,7 @@ Language
     1. ~~Restrict the global scope to the builtins~~ (done: `TinyscriptGlobalScopeProvider` only sees resources marked with `SharedGlobals`, i.e. the builtins and the lines of an interactive REPL session; files are isolated, the REPL runs each file with a fresh engine).
     2. ~~Core~~ (done: grammar, validator, interpreter with `ModuleLoader` / `FileSystemModuleLoader` and `ModuleExports`, REPL `--module-path` / `TINYSCRIPT_PATH`; `ModulesTest`).
     3. ~~Generator~~ (done: bundles a program and its modules into one script; differential tests in `ModulesTest`).
-    4. ~~Standard library and webdemo~~ (done: `std:array`, `std:math` written in tinyscript, `StandardLibraryModuleLoader`; the webdemo imports only `std:` modules and has a "Modules" example).
+    4. ~~Standard library and webdemo~~ (done: `std:array` written in tinyscript (`std:math` was dropped again: `Math` stays a global, as in Javascript), `StandardLibraryModuleLoader`; the webdemo imports only `std:` modules and has a "Modules" example).
     5. `fs` as a module (target, decided 2026-11-20): ~~`std:fs` as a native module~~ (done: `FileSystemModule`, generator wrapper for node; the sandbox does not provide it), ~~then remove the global `fs`~~ (done; breaking: scripts must `import * as fs from "std:fs";`). The new API (strict: errors end the script, since tinyscript has no try/catch; UTF-8; relative paths against the working directory):
        - `exists(path)` → boolean, never fails
        - `readFile(path)` → string; `readLines(path)` → array of lines (split at `\n` / `\r\n`, a final line break adds no empty line)

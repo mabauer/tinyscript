@@ -80,6 +80,7 @@ Design decisions
 - **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). The one deliberate exception: `null == undefined` is `true`, so `o.x == null` checks for a missing property. Numbers compare like in Javascript (`NaN != NaN`). There is no `===` / `!==`.
 - **Strict comparisons:** `<`, `<=`, `>` and `>=` compare a number with a number or a string with a string; anything else is a `TypeError`. Comparisons cannot be chained: `a < b < c` is a syntax error (in Javascript `1 < 3 < 2` is `true`).
 - **Logical operators return booleans:** `&&` and `||` short-circuit like in Javascript, but always return `true` or `false`, never one of their operands.
+- **Globals vs. modules:** what is a standard global in Javascript and needs no privileges stays global (`Math`, `Object`, `print`, …); modules are for additions Javascript does not have (`std:array`) and for privileged things (`std:fs`).
 - **File access is a module:** there is no global `fs`; use `import * as fs from "std:fs";` (not available in the sandboxed web demo).
 - **Only strings have methods:** a property access on a number or boolean (`(5).toString()`, `n.x`) is a `TypeError`; use `String(n)` or `"" + n` to convert. Strings keep `length`, `charAt`, `at`, ...
 - **Arrays are lists:** besides their items only `length` can be set; `a.x = 1` or `a[-1] = 1` is a `TypeError` instead of silently creating a property. To index from the end, use `a.at(-1)`.
