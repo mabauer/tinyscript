@@ -12,6 +12,8 @@ import org.eclipse.xtext.util.CancelIndicator;
 import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.Issue;
 
+import de.mkbauer.tinyscript.TinyscriptDiagnostics;
+
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.runtime.fs.FileSystemModule;
 import de.mkbauer.tinyscript.ts.ImportStatement;
@@ -80,10 +82,12 @@ public final class Modules {
 		Resource resource = resourceSet.getResource(uri, true);
 		List<Issue> issues = ((XtextResource) resource).getResourceServiceProvider().getResourceValidator()
 				.validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
-		if (!issues.isEmpty()) {
-			Issue issue = issues.get(0);
-			throw new TinyscriptSyntaxError(issue.getMessage() + " in " + uri.toFileString() + ":" + issue.getLineNumber(),
-					uri.toFileString(), issue.getLineNumber());
+		List<Issue> errors = TinyscriptDiagnostics.relevantErrors(issues);
+		if (!errors.isEmpty()) {
+			Issue error = errors.get(0);
+			int column = TinyscriptDiagnostics.column(error);
+			throw new TinyscriptSyntaxError(error.getMessage() + " in " + uri.toFileString() + ":" + error.getLineNumber() + ":" + column,
+					uri.toFileString(), error.getLineNumber(), column);
 		}
 		return (Tinyscript) resource.getContents().get(0);
 	}

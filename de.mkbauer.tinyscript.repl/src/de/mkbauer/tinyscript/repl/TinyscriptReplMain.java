@@ -28,6 +28,7 @@ import org.eclipse.xtext.validation.Issue;
 
 import com.google.inject.Injector;
 
+import de.mkbauer.tinyscript.TinyscriptDiagnostics;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
@@ -240,9 +241,14 @@ class TinyscriptReplMain  {
 			return EXIT_USAGE;
 		}
 		List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
-		if (!issues.isEmpty()) {
-			for (Issue issue : issues)
-				err.println("TinyscriptSyntaxError: " + issue.getMessage() + " in " + file + ":" + issue.getLineNumber());
+		List<Issue> errors = TinyscriptDiagnostics.relevantErrors(issues);
+		if (!errors.isEmpty()) {
+			String source = readSource(file);
+			for (Issue error : errors) {
+				int column = TinyscriptDiagnostics.column(error);
+				err.println("TinyscriptSyntaxError: " + error.getMessage() + " in " + file + ":" + error.getLineNumber() + ":" + column);
+				err.print(TinyscriptDiagnostics.excerpt(source, error.getLineNumber(), column));
+			}
 			return EXIT_ERROR;
 		}
 		try {
@@ -254,6 +260,15 @@ class TinyscriptReplMain  {
 			return EXIT_ERROR;
 		}
 		return EXIT_OK;
+	}
+
+	private static String readSource(Path file) {
+		try {
+			return Files.readString(file);
+		}
+		catch (IOException e) {
+			return "";
+		}
 	}
 
 	private int interactive() {
@@ -339,17 +354,16 @@ class TinyscriptReplMain  {
 			throw new WrappedException(e);
 		}
 		List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
-		if (!issues.isEmpty()) {
-			Issue issue = issues.get(0);
-			if (issue.getMessage().contains("mismatched input '<EOF>'")) {
-				if (issues.size() == 1)
-					return null;
-				issue = issues.get(1);
-			}
+		List<Issue> errors = TinyscriptDiagnostics.relevantErrors(issues);
+		if (!errors.isEmpty()) {
+			Issue issue = errors.get(0);
+			// The statement is not complete yet: continue on the next line
+			if (issue.getMessage().contains("mismatched input '<EOF>'"))
+				return null;
 			// A rejected line must not leave its declarations behind for later lines
 			sessionResourceSet.getResources().remove(currentResource);
 			currentResource = null;
-			throw new TinyscriptRuntimeException("line " + issue.getLineNumber() + ": " + issue.getMessage());
+			throw new TinyscriptRuntimeException("line " + issue.getLineNumber() + ":" + TinyscriptDiagnostics.column(issue) + ": " + issue.getMessage());
 		}
 		return currentResource.getContents().isEmpty() ? null : (Tinyscript) currentResource.getContents().get(0);
 	}

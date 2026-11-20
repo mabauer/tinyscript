@@ -23,6 +23,7 @@ import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.TinyscriptDiagnostics;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
 import de.mkbauer.tinyscript.interpreter.StandardLibraryModuleLoader;
@@ -62,8 +63,9 @@ public class TinyscriptCrossCompilingService {
 				throw new WrappedException(e);
 			}	
 			List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
-			if (issues.size()!=0)
-				throw new TinyscriptSyntaxError(issues.get(0).getMessage(), currentResource.getURI().toString(), issues.get(0).getLineNumber());
+			TinyscriptSyntaxError error = TinyscriptDiagnostics.firstError(issues, currentResource.getURI().toString());
+			if (error != null)
+				throw error;
 
 			// Bundles imported standard library modules; files cannot be imported
 			jsscript = generator.generate(ast, true, new StandardLibraryModuleLoader()).toString();
