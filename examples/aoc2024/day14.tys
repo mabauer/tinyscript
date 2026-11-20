@@ -4,7 +4,8 @@
 // Usage: tinyscript day14.tys -- input.txt [width height]
 // (the room is 101 x 103 tiles; the example in the puzzle uses 11 x 7)
 
-import inputLines, integers from "./aoc";
+import inputLines from "./aoc";
+import integers from "std:string";
 
 const width = System.args.length > 2 ? Number(System.args[1]) : 101;
 const height = System.args.length > 2 ? Number(System.args[2]) : 103;
@@ -22,10 +23,7 @@ function wrap(value, size) {
 
 // The positions of the robots after some seconds; they wrap around at the edges
 function positionsAfter(seconds) {
-    return robots.map(robot => ({
-        x: wrap(robot.x + robot.vx * seconds, width),
-        y: wrap(robot.y + robot.vy * seconds, height)
-    }));
+    return robots.map(({ x, y, vx, vy }) => ({ x: wrap(x + vx * seconds, width), y: wrap(y + vy * seconds, height) }));
 }
 
 // Part 1: after 100 seconds, the number of robots in each quadrant, multiplied
@@ -48,7 +46,7 @@ print("Part 1: " + safetyFactor(positionsAfter(100)));
 // picture appears the first time no two robots share a position (the positions repeat after
 // width * height seconds).
 function hasNoOverlaps(positions) {
-    const taken = new Set(positions.map(position => position.y * width + position.x));
+    const taken = new Set(positions.map(({ x, y }) => y * width + x));
     return taken.size == positions.length;
 }
 

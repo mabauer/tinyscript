@@ -29,3 +29,22 @@ export function words(text) {
 	}
 	return result;
 }
+
+// All integers in a text, also negative ones: "p=0,4 v=3,-3" gives [0, 4, 3, -3],
+// "Button A: X+94, Y+34" gives [94, 34]
+export function integers(text) {
+	const result = [];
+	let number = "";
+	// One step beyond the end, so that a number at the end is completed as well
+	for (let i = 0, text.length) {
+		const c = text[i];
+		if (isDigit(c) || c == "-" && number == "" && isDigit(text[i + 1])) {
+			number += c;
+		}
+		else if (number != "") {
+			result.push(Number(number));
+			number = "";
+		}
+	}
+	return result;
+}

@@ -42,6 +42,14 @@ public abstract class Function extends TSObject {
 	
 	public abstract int getLength();
 
+	// Like Javascript, f.length is the number of parameters (it came from Function.prototype)
+	@Override
+	public TSValue get(String key) {
+		if (key.equals("length") && !hasOwnProperty("length"))
+			return TSValue.of(getLength());
+		return super.get(key);
+	}
+
 	public String toString() {
 		String result = "";
 		if (hasEnumerableProperties())

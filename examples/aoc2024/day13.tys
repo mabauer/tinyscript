@@ -3,7 +3,8 @@
 //
 // Usage: tinyscript day13.tys -- input.txt
 
-import inputLines, integers from "./aoc";
+import inputLines from "./aoc";
+import integers from "std:string";
 
 // Each machine has three lines: button A, button B and the prize, e.g.
 // "Button A: X+94, Y+34", "Button B: X+22, Y+67", "Prize: X=8400, Y=5400"

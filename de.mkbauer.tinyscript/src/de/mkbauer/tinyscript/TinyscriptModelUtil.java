@@ -206,7 +206,7 @@ public class TinyscriptModelUtil {
 			return true;
 		if (block.eContainer() instanceof FunctionDefinition) {
 			FunctionDefinition function = (FunctionDefinition) block.eContainer();
-			countDuplicates = function.getParams().stream()
+			countDuplicates = parameterIdentifiers(function).stream()
 				.filter(p->p.getName().equals(name))
 				.count();
 		}
@@ -217,6 +217,21 @@ public class TinyscriptModelUtil {
 				return true;
 		}
 		return false;
+	}
+
+	/**
+	 * The names a function's parameters declare: function f(a, [b, c], { d }) declares a, b, c
+	 * and d (without the rest parameter).
+	 */
+	public static List<Identifier> parameterIdentifiers(FunctionDefinition function) {
+		List<Identifier> result = new ArrayList<Identifier>();
+		for (Expression param : function.getParams()) {
+			if (param instanceof Identifier identifier)
+				result.add(identifier);
+			if (param instanceof Pattern pattern)
+				result.addAll(pattern.getNames());
+		}
+		return result;
 	}
 
 	/**
@@ -247,7 +262,7 @@ public class TinyscriptModelUtil {
 			return true;
 		if (block.eContainer() instanceof FunctionDefinition) {
 			FunctionDefinition function = (FunctionDefinition) block.eContainer();
-			countDuplicates = function.getParams().stream()
+			countDuplicates = parameterIdentifiers(function).stream()
 				.filter(p->p.getName().equals(name))
 				.count();
 		}
