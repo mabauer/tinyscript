@@ -13,25 +13,39 @@ Nothing scheduled right now; pick the next items from the sections below.
 Language
 --------
 
-- **Modules.** Keep it simple: one file is one module, an import always binds the whole module to one name; no named imports, no re-exports, no cycles.
+- **Modules** (detailed plan, decided 2026-11-20). One file is one module; `export` before top-level `function` / `var`; no re-exports, no cycles.
 
   ```js
   // geometry.tys
   export function area(r) { return Math.PI * r * r; }
   export var unit = "cm";
-  var helper = 2;              // not exported, private
+  var helper = 2;                          // not exported, private
 
-  // main.ts
-  import geo from "geometry.tys";
-  print(geo.area(2), geo.unit);
+  // main.tys
+  import area, unit from "./geometry";     // named imports
+  import * as geo from "./geometry.tys";   // the whole module as an object
+  print(area(2), unit, geo.area(1));
   ```
 
-  - Semantics: a module runs once on first import, in its own context that only sees the builtins. The result is a frozen object of its exports, cached per file. Cyclic imports are an error.
-  - No cross-file linking in Xtext needed: `geo` is a local name, `geo.area` a normal property access at runtime. But the global scope (`TinyscriptGlobalScopeProvider`) must be restricted to the builtins; today every file sees the top-level names of all other files in the resource set.
-  - Loading via a `ModuleLoader` interface passed to the engine: file system loader for the REPL (relative to the importing file, no escaping via `..`), standard library from the classpath only for the webdemo. Resource limits apply across all modules.
-  - Grammar: `ImportStatement: 'import' id=Identifier 'from' path=STRING ';'` and an optional `export` before `function` / `var`. Validator: imports only at the top, exports only at top level, no duplicate export names.
-  - Generator: bundle into one JS script, each module as `var geo = (function () { …; return { area: area, unit: unit }; })();`, so the differential tests keep using a single `node` run.
-  - Suggested PRs: grammar + interpreter, then generator, then optionally a standard library with `fs` as a module (`import fs from "std:fs";`), which the sandbox simply does not provide.
+  - **Syntax.** `import a, b from "path";` binds the named exports; `import * as m from "path";` binds the frozen exports object. No braces as in Javascript; renaming (`import a as x from …`) is left for later (can be added without breaking anything).
+  - **Resolving "path".**
+    - Relative (`"./x"`, `"../lib/y"`): relative to the *importing file*, not the working directory.
+    - Bare (`"x"`, `"math/vector"`): searched in the *module path*, a list of directories (like a class path). REPL: `--module-path dir1:dir2` or the environment variable `TINYSCRIPT_PATH`; default is the directory of the main file (interactive: the working directory).
+    - `"std:…"`: standard library from the classpath (later, see PR 4).
+    - The extension `.tys` may be omitted; it is appended if the path has none.
+    - A module's identity is its canonical absolute path (`toRealPath`), so different relative paths or a symlink to the same file are one module.
+    - Errors name the import line and what was searched: `Module "geometry" not found (searched: …)`.
+    - Webdemo (sandbox): no file access, only `std:` modules; any other import is an error.
+  - **Repeated imports in the import graph.** Each module is executed exactly once (cache by identity); every importer gets the same exports object, so the same values and object instances (diamonds are fine). Each module has its own scope: two modules importing the same name do not conflict. Within one module, importing a name twice (also from different modules) or a clash with a local declaration is a "Duplicate identifier" (validator), like duplicate `var`.
+  - **Bindings are read-only snapshots.** The exports object is frozen after the module has run; assigning to an imported name is a compile-time error. Imported objects stay mutable, and module-internal state via closures works. Simpler than Javascript's live bindings.
+  - **Errors.** Cyclic imports name the chain (`Cyclic import: main.tys → m1.tys → m2.tys → m1.tys`); importing a name that is not exported: `"m1.tys" does not export "id2"`.
+  - **Execution.** A module runs in its own context that only sees the builtins; one engine, so resource limits apply across all modules. Loading via a `ModuleLoader` interface passed to the engine (file system loader with module path; classpath loader for `std:`); without a loader, `import` is an error.
+  - **PRs.**
+    1. Restrict the global scope (`TinyscriptGlobalScopeProvider`) to the builtins: today every file sees the top-level names of all other files in the resource set. Small, with a test, no new syntax.
+    2. Core: grammar (both import forms, `export`), validator (imports only at the top, exports only at top level, no duplicate names, no assignment to imports), interpreter (module context, cache, cycle detection, frozen exports), `ModuleLoader` with the file system loader, REPL `--module-path` / `TINYSCRIPT_PATH`. Tests with several files in a temp directory (diamond, cycle, missing export, symlink, omitted extension).
+    3. Generator: bundle into one JS script, each module as an immediately invoked function in dependency order; named imports become `var area = __ts_mod1.area;`. Differential tests against node.
+    4. Standard library and webdemo: `std:` modules from the classpath; the webdemo allows only those. Optionally `fs` becomes `std:fs`, which the sandbox simply does not provide.
+    5. Optional, IDE: the validator checks while typing that the imported file exists and exports the names (fits the VS Code language server).
 
 - **Conversions.** Builtins convert their arguments with `TSObject.toNumber` / `toInteger` / `toString`. Today `undefined` and non-numeric strings become `0` (Javascript: `NaN`), a user-defined `valueOf` is ignored, and some code uses `TSValue.asString()` where `TSObject.toString(engine, value)` (which calls a user-defined `toString`) would be right. Decide how much of Javascript's conversion rules tinyscript wants, then write tests.
 
