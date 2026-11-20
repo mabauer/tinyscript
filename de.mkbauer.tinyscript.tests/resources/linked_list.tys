@@ -8,7 +8,7 @@ function insert(element, list) {
 }
 
 function isempty(list) {
-	return (!list.value && !list.next);
+	return (list.value == null && list.next == null);
 }
 
 function islast(list) {

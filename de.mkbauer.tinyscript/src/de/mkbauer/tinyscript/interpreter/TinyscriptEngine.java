@@ -63,6 +63,7 @@ import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.runtime.string.StringObject;
 import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
 import de.mkbauer.tinyscript.runtime.object.ObjectConstructor;
@@ -458,7 +459,7 @@ public class TinyscriptEngine {
     public TSValue caseAssertStatement(AssertStatement object) {
     	recordStatement();
     	TSValue cond = execute(object.getCond());
-    	if (!cond.asBoolean()) {
+    	if (!cond.asCondition()) {
     		throw new TinyscriptAssertationError("assert: condition is false", object);
     	}
     	return cond;
@@ -466,7 +467,7 @@ public class TinyscriptEngine {
   
     public TSValue caseIfStatement(IfStatement object) {
     	recordStatement();
-    	if (execute(object.getCond()).asBoolean())
+    	if (execute(object.getCond()).asCondition())
     		return executeInBlockContext("if", object.getThen());
     	if (object.getElse() != null)
     		return caseElseStatement(object.getElse());
@@ -544,7 +545,7 @@ public class TinyscriptEngine {
     	try {
     		while (true) {
     			countLoopIteration();
-    			if (!execute(whilestmt.getCond()).asBoolean())
+    			if (!execute(whilestmt.getCond()).asCondition())
     				break;
     			result = executeInBlockContext("while", whilestmt.getDo());
     		}
@@ -588,9 +589,9 @@ public class TinyscriptEngine {
     		case "=":
     			return assignValue(expr.getLeft(), execute(expr.getRight()));
     		case "&&":
-    			return TSValue.of(execute(expr.getLeft()).asBoolean() && execute(expr.getRight()).asBoolean());
+    			return TSValue.of(execute(expr.getLeft()).asCondition() && execute(expr.getRight()).asCondition());
     		case "||":
-    			return TSValue.of(execute(expr.getLeft()).asBoolean() || execute(expr.getRight()).asBoolean());
+    			return TSValue.of(execute(expr.getLeft()).asCondition() || execute(expr.getRight()).asCondition());
     	}
     	TSValue left = execute(expr.getLeft());
     	TSValue right = execute(expr.getRight());
@@ -599,7 +600,7 @@ public class TinyscriptEngine {
     		case "!=" -> TSValue.of(!left.tinyscriptEquals(right));
     		case "<", "<=", ">", ">=" -> compare(op, left, right, expr);
     		case "+" -> add(left, right, expr);
-    		case "-", "*", "/", "%" -> arithmetic(op, left, right);
+    		case "-", "*", "/", "%" -> arithmetic(op, left, right, expr);
     		case "instanceof" -> instanceOf(left, right);
     		default -> throw new TinyscriptUnsupportedOperationError("Unsupported binary expression: " + op, expr);
     	};
@@ -631,7 +632,7 @@ public class TinyscriptEngine {
      */
     private TSValue add(TSValue left, TSValue right, BinaryExpression expr) {
     	if (left.isString() || right.isString()) {
-    		String result = left.asString() + right.asString();
+    		String result = TSObject.stringify(left) + TSObject.stringify(right);
     		recordStringCreation(result);
     		return TSValue.of(result);
     	}
@@ -645,14 +646,15 @@ public class TinyscriptEngine {
     		throw new TinyscriptTypeError("'+' can only add an array to another array or to a string", expr);
     	if (left instanceof TSNumber l && right instanceof TSNumber r)
     		return TSValue.of(l.value() + r.value());
-    	return TSValue.NAN;
+    	throw new TinyscriptTypeError("'+' adds two numbers, two arrays, or a string and a value, not "
+    			+ left.typeOf() + " and " + right.typeOf(), expr);
     }
 
-    private TSValue arithmetic(String op, TSValue left, TSValue right) {
-    	if (!(left.isNumber() && right.isNumber()))
-    		return TSValue.NAN;
-    	double l = left.asDouble();
-    	double r = right.asDouble();
+    private TSValue arithmetic(String op, TSValue left, TSValue right, BinaryExpression expr) {
+    	if (!(left instanceof TSNumber leftNumber && right instanceof TSNumber rightNumber))
+    		throw new TinyscriptTypeError("'" + op + "' needs two numbers, not " + left.typeOf() + " and " + right.typeOf(), expr);
+    	double l = leftNumber.value();
+    	double r = rightNumber.value();
     	return TSValue.of(switch (op) {
     		case "-" -> l - r;
     		case "*" -> l * r;
@@ -671,11 +673,11 @@ public class TinyscriptEngine {
     	TSValue value = execute(expr.getExpr());
     	return switch (expr.getOp()) {
     		case "-" -> {
-    			if (!value.isNumber())
-    				throw new TinyscriptTypeError("Unsupported unary expression operand: " + expr.getExpr());
-    			yield TSValue.of(-value.asDouble());
+    			if (!(value instanceof TSNumber number))
+    				throw new TinyscriptTypeError("'-' needs a number, not " + value.typeOf(), expr);
+    			yield TSValue.of(-number.value());
     		}
-    		case "!" -> TSValue.of(!value.asBoolean());
+    		case "!" -> TSValue.of(!value.asCondition());
     		case "typeof" -> TSValue.of(value.typeOf());
     		default -> throw new TinyscriptUnsupportedOperationError("Unsupported unary expression: " + expr.getOp(), expr);
     	};
@@ -747,6 +749,11 @@ public class TinyscriptEngine {
     private TSValue getProperty(TSObject object, TSValue key) {
     	if (object instanceof ArrayObject arr && isArrayIndex(key))
     		return arr.item(key.asInt());
+    	// Like Javascript, "abc"[1] is "b"
+    	if (object instanceof StringObject string && isArrayIndex(key)) {
+    		int index = key.asInt();
+    		return index < string.getLength() ? TSValue.of(string.getValue().substring(index, index + 1)) : TSValue.UNDEFINED;
+    	}
     	return object.get(key.asString());
     }
 

@@ -3,6 +3,7 @@ package de.mkbauer.tinyscript.runtime.string;
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 public class StringObject extends BuiltinType {
 	
@@ -43,6 +44,14 @@ public class StringObject extends BuiltinType {
 		return value;
 	}
 	
+
+	/**
+	 * Strings cannot be changed: neither characters nor other properties can be set.
+	 */
+	@Override
+	public void put(String key, TSValue value) {
+		throw new TinyscriptTypeError("Strings cannot be changed (setting '" + key + "')");
+	}
 
 	@Override
 	public TSValue valueOf() {

@@ -28,7 +28,19 @@ public non-sealed class TSObject implements TSValue {
 			setPrototype(proto);
 	}
 	
-	// TODO(TODO.md: Conversions): Write tests and use it instead of TSValue.asString() where appropriate
+	/**
+	 * String conversion for string concatenation and String(x): calls a user-defined
+	 * toString (a function written in tinyscript); otherwise the value's own string form.
+	 */
+	public static String stringify(TSValue value) {
+		if (value instanceof TSObject object && object.get("toString") instanceof InterpretedFunction toString) {
+			TSValue result = toString.apply(object, new TSValue[0]);
+			if (result.isString())
+				return result.asString();
+		}
+		return value.asString();
+	}
+
 	public static String toString(TinyscriptEngine engine, TSValue value) {
 		if (value == TSValue.UNDEFINED)
 			return "[object Undefined]";
@@ -58,34 +70,6 @@ public non-sealed class TSObject implements TSValue {
 		};
 	}
 	
-	public static TSValue toPrimitive(TinyscriptEngine engine, TSObject object) {
-		// TODO(TODO.md: Conversions): Evaluate a user defined valueOf property
-		if (object instanceof BuiltinType) {
-			return ((BuiltinType) object).valueOf();
-		}
-		return TSValue.UNDEFINED;		
-	}
-	
-	public static double toNumber(TinyscriptEngine engine, TSValue value) {
-		// TODO(TODO.md: Conversions): Return NaN if undefined
-		if (value instanceof TSObject object)
-			value = toPrimitive(engine, object);
-		if (value.isBoolean())
-			return (value.asBoolean() ? 1 :0);
-		if (value.isNumber())
-			return (value.asDouble());
-		if (value.isString()) {
-			String str = value.asString();
-			try {
-				double d = Double.parseDouble(str);
-				return d;
-			}
-			catch (NumberFormatException e) {}
-			return Double.NaN;
-		}
-		return Double.NaN;
-	}
-	
 	/**
 	 * Resolves the index argument of at(): a negative index counts from the end.
 	 * Returns -1 if it is out of range; unlike Javascript, a non-integer index is a TypeError.
@@ -110,31 +94,6 @@ public non-sealed class TSObject implements TSValue {
 		return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, start.asDouble()));
 	}
 
-	public static int toInteger(TinyscriptEngine engine, TSValue value) {
-		// TODO(TODO.md: Conversions): Return NaN if undefined
-		if (value instanceof TSObject object)
-			value = toPrimitive(engine, object);
-		if (value.isBoolean())
-			return (value.asBoolean() ? 1 :0);
-		if (value.isNumber())
-			return (value.asInt());
-		if (value.isString()) {
-			String str = value.asString();
-			try {
-				double d = Double.parseDouble(str);
-				return ((Number)d).intValue();
-			}
-			catch (NumberFormatException e) {}
-			try {
-				return Integer.decode(str);
-			}
-			catch (NumberFormatException e) {}
-			// TODO(TODO.md: Conversions): Should be NaN
-			return 0;
-		}
-		return 0;
-	}
-	
 	public void defineDefaultProperty(String key, Object value) {
 		TSPropertyDescriptor desc = new TSPropertyDescriptor();
 		desc.setValue(TSValue.fromJava(value));

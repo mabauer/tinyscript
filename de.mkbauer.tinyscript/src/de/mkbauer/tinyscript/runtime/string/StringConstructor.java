@@ -23,7 +23,7 @@ public class StringConstructor extends BuiltinConstructor {
 	@Override
 	public TSValue apply(TSObject self, TSValue[] args) {
 		if (args.length > 0) {
-			String str = args[0].asString();
+			String str = TSObject.stringify(args[0]);
 			if (self instanceof StringObject) {
 				((StringObject) self).setValue(str);
 			}
@@ -71,11 +71,18 @@ public class StringConstructor extends BuiltinConstructor {
 		return index < 0 ? TSValue.UNDEFINED : TSValue.of(str.substring(index, index + 1));
 	}
 
+	// Positions must be integers; like all builtins, no silent conversion
+	private static int integer(TSValue value, String function) {
+		if (!value.isMathematicalInteger())
+			throw new TinyscriptTypeError(function + "() needs an integer, not " + value.asString());
+		return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, value.asDouble()));
+	}
+
 	private TSValue charAt(TSObject self, TSValue[] args) {
 		String result = "";
 		if (self instanceof StringObject) {
 			String str = TSObject.toString(engine, self);
-			int pos = TSObject.toInteger(engine, args[0]);
+			int pos = integer(args[0], "charAt");
 			if (pos >= 0 && pos < str.length()) {
 				result = str.substring(pos, pos + 1);
 			}
@@ -87,8 +94,8 @@ public class StringConstructor extends BuiltinConstructor {
 		String result = "";
 		if (self instanceof StringObject) {
 			String str = TSObject.toString(engine, self);
-			int start = TSObject.toInteger(engine, args[0]);
-			int end = (args.length > 1) ? TSObject.toInteger(engine, args[1]) : str.length();
+			int start = integer(args[0], "substring");
+			int end = (args.length > 1) ? integer(args[1], "substring") : str.length();
 			// Clamp both indices to the string and swap them if necessary (like JavaScript)
 			start = Math.clamp(start, 0, str.length());
 			end = Math.clamp(end, 0, str.length());

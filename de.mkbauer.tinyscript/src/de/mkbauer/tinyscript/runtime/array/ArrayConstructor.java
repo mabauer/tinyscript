@@ -106,7 +106,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 		if (function != null) {
 			for (int i = 0; i < arr.getLength(); i++) {
 				TSValue item = arr.get(String.valueOf(i));
-				if (function.apply(null, new TSValue[] { item }).asBoolean())
+				if (function.apply(null, new TSValue[] { item }).asCondition())
 					result.push(item);
 			}
 		}

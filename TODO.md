@@ -9,7 +9,7 @@ Next
 
 **Goal: tinyscript is good enough to solve an Advent of Code** (decided 2026-11-20). A probe of typical building blocks showed what is missing. tinyscript stays deliberately stricter than Javascript; every addition is Javascript-compatible where it exists there, so the generator passes it through and differential tests run against node.
 
-0. **Conversions & strictness.** One consistent rule before adding builtins:
+0. ~~**Conversions & strictness.**~~ (done) One consistent rule before adding builtins:
    - Arithmetic `-`, `*`, `/`, `%` only with numbers (today `1 - "a"`, `"a" * 2` are silently `NaN`) → `TypeError`.
    - `+` only number + number, string + value, array + array (today `1 + true`, `1 + null`, `1 + undefined` are silently `NaN`) → `TypeError`.
    - Unary `-`: `-NaN` is `NaN` (today a `TypeError` whose message shows a Java object); other non-numbers → `TypeError` with a readable message.

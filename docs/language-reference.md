@@ -64,16 +64,14 @@ Tinyscript has six types:
 | `undefined` | (unassigned variables) | Default value of uninitialized variables |
 | `object` | `{ }`, `[ ]`, functions | All objects and arrays; functions are objects |
 
-### Truthiness
+### Conditions
 
-The following values are falsy (coerce to `false` in a condition):
-- `false`
-- `0` and `NaN`
-- `""` (empty string)
-- `null`
-- `undefined`
+A condition (`if`, `while`, `assert`, `!`, `&&`, `||`, the callback of `filter`) must be:
+- a boolean,
+- `null` or `undefined`, which count as `false`, or
+- an object (including arrays and functions), which counts as `true`.
 
-Everything else is truthy, including `[]` and `{}`.
+Numbers and strings are a `TypeError` ("Condition must be a boolean, not number"): in Javascript `0`, `""` and `NaN` are false although they are valid values, a common source of bugs. So `while (node)` and `if (o.child)` work, `if (count)` must be written `if (count > 0)`, `if (name)` as `if (name != "")`, and `if (i = 0)` (a typo for `==`) is an error.
 
 ### `typeof`
 
@@ -131,19 +129,21 @@ Each function call creates a new scope. Variables declared inside a function are
 
 | Operator | Operation |
 |---|---|
-| `+` | Addition (numbers), concatenation (strings), array append (see below) |
+| `+` | Addition (numbers), concatenation (a string and any value), concatenation of two arrays |
 | `-` | Subtraction |
 | `*` | Multiplication |
 | `/` | Division |
 | `%` | Remainder |
 | `-x` | Unary negation |
 
-The `+` operator has extended semantics for arrays: `array + element` appends the element; `array + array` concatenates both arrays into a new array.
+Operators do not convert their operands: `-`, `*`, `/`, `%` and unary `-` need numbers, and `+` adds two numbers, two arrays, or a string and a value; anything else (`1 + true`, `1 - "a"`, `undefined + 1`) is a `TypeError` instead of a silent `NaN`. `NaN` is a number, so `NaN - 1` is `NaN`.
+
+With a string, `+` converts the other value to a string: `undefined` and `null` as `"undefined"` / `"null"`, an object with a `toString` method written in tinyscript by calling it, other values in their usual form. tinyscript does not support `valueOf` (it would convert objects implicitly in operators).
 
 ```
 var arr = ["a", "b"];
-arr = arr + "c";             // ["a", "b", "c"]
-arr = arr + ["d", "e"];      // ["a", "b", "c", "d", "e"]
+arr = arr + ["c", "d"];      // ["a", "b", "c", "d"]
+print("n = " + 42);          // n = 42
 ```
 
 ### Comparison
@@ -193,7 +193,7 @@ Assignment is an expression — it returns the assigned value — so it can appe
 assert condition;
 ```
 
-Throws an error if `condition` is falsy. Useful for quick sanity checks during development:
+Throws an error if `condition` is `false` (or `null` / `undefined`; numbers and strings are a `TypeError`, see Conditions). Useful for quick sanity checks during development:
 
 ```
 assert fibonacci(7) == 21;
@@ -314,7 +314,7 @@ for (var key : Object.keys(person)) {
 
 ### `while`
 
-Runs the block as long as the condition is truthy. Braces are required:
+Runs the block as long as the condition is `true` (see Conditions). Braces are required:
 
 ```
 var i = 0;

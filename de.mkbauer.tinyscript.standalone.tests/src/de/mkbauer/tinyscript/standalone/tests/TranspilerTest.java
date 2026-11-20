@@ -212,9 +212,9 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArbitraryExpressionsInArrayLiterals() {
         String code = "var x = 1; var y = 2;\n"
-                + "var a = [x > y, !x, x == 1, f => f * 2];\n"
+                + "var a = [x > y, !(x > y), x == 1, f => f * 2];\n"
                 + "print(a[0]); print(a[1]); print(a[2]); print(a[3](4));";
-        assertEquals("false\nfalse\ntrue\n8\n", interpreterOutput(code));
+        assertEquals("false\ntrue\ntrue\n8\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
@@ -229,9 +229,9 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNestedUnaryOperators() {
-        String code = "var x = 3; var s = \"\";\n"
-                + "print(!!x); print(!!s); print(- -x); print(-(-x)); print(!-x); print(typeof -x); print(typeof !x);";
-        assertEquals("true\nfalse\n3\n3\nfalse\nnumber\nboolean\n", interpreterOutput(code));
+        String code = "var x = 3; var b = true; var o = {};\n"
+                + "print(!!b); print(!!o); print(!!null); print(- -x); print(-(-x)); print(typeof -x); print(typeof !b);";
+        assertEquals("true\ntrue\nfalse\n3\n3\nnumber\nboolean\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
