@@ -37,8 +37,8 @@ function hike(row, col, peaks) {
 
 let score = 0;
 let rating = 0;
-for (let row = 0, height - 1) {
-    for (let col = 0, width - 1) {
+for (const row : range(height)) {
+    for (const col : range(width)) {
         if (map[row][col] == 0) {
             const peaks = new Set();
             rating += hike(row, col, peaks);

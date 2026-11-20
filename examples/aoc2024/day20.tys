@@ -12,7 +12,7 @@ const width = track[0].length;
 const threshold = System.args.length > 1 ? Number(System.args[1]) : 100;
 
 function find(tile) {
-    for (let row = 0, height - 1) {
+    for (const row : range(height)) {
         const col = track[row].indexOf(tile);
         if (col >= 0) {
             return { row, col };
@@ -50,9 +50,9 @@ const { path, distances } = distancesAlongTheTrack();
 function countCheats(cheatLength) {
     // The offsets within reach, computed once
     const offsets = [];
-    for (let dr = -cheatLength, cheatLength) {
+    for (const dr : range(-cheatLength, cheatLength + 1)) {
         const rest = cheatLength - Math.abs(dr);
-        for (let dc = -rest, rest) {
+        for (const dc : range(-rest, rest + 1)) {
             offsets.push({ dr, dc, length: Math.abs(dr) + Math.abs(dc) });
         }
     }

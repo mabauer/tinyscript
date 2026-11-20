@@ -11,7 +11,7 @@ import inputLines from "./aoc";
 const lines = inputLines();
 const locks = [];
 const keys = [];
-for (let i = 0, lines.length - 1, 7) {
+for (const i : range(0, lines.length, 7)) {
     const schematic = lines.slice(i, i + 7);
     const heights = [0, 1, 2, 3, 4].map(col => schematic.filter(row => row[col] == "#").length - 1);
     if (schematic[0] == "#####") {

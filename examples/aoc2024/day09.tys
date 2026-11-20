@@ -12,9 +12,9 @@ const diskMap = inputText().trim();
 // Part 1: move single blocks from the end of the disk into the leftmost free block
 function compactBlocks() {
     const blocks = [];   // the file id of each block, null for a free block
-    for (let i = 0, diskMap.length - 1) {
+    for (const i : range(diskMap.length)) {
         const id = i % 2 == 0 ? i / 2 : null;
-        for (let n = 1, Number(diskMap[i])) {
+        for (const n : range(1, Number(diskMap[i]) + 1)) {
             blocks.push(id);
         }
     }
@@ -41,7 +41,7 @@ function compactFiles() {
     const files = [];   // { id, start, length }
     const spans = [];   // free spans { start, length }
     let position = 0;
-    for (let i = 0, diskMap.length - 1) {
+    for (const i : range(diskMap.length)) {
         const length = Number(diskMap[i]);
         if (i % 2 == 0) {
             files.push({ id: i / 2, start: position, length });
@@ -62,7 +62,7 @@ function compactFiles() {
     }
     let checksum = 0;
     for (const { id, start, length } : files) {
-        for (let block = start, start + length - 1) {
+        for (const block : range(start, start + length)) {
             checksum += block * id;
         }
     }

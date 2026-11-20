@@ -13,7 +13,7 @@ const width = grid[0].length;
 const directions = [{ row: -1, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 0 }, { row: 0, col: -1 }];
 
 function findGuard() {
-    for (let row = 0, height - 1) {
+    for (const row : range(height)) {
         const col = grid[row].indexOf("^");
         if (col >= 0) {
             return { row, col };

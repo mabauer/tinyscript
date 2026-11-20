@@ -11,8 +11,8 @@ const width = grid[0].length;
 
 // The positions of the antennas, by frequency (a letter or digit)
 const antennas = new Map();
-for (let row = 0, height - 1) {
-    for (let col = 0, width - 1) {
+for (const row : range(height)) {
+    for (const col : range(width)) {
         const frequency = grid[row][col];
         if (frequency != ".") {
             const positions = antennas.get(frequency) ?? [];

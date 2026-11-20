@@ -21,7 +21,7 @@ function letterAt(grid, row, col) {
 
 // Whether word starts at a position and goes on in a direction
 function isWordAt(grid, word, row, col, direction) {
-    for (let i = 0, word.length - 1) {
+    for (const i : range(word.length)) {
         if (letterAt(grid, row + i * direction.row, col + i * direction.col) != word[i]) {
             return false;
         }
@@ -32,8 +32,8 @@ function isWordAt(grid, word, row, col, direction) {
 // Part 1: how often XMAS appears, in any direction
 function countXmas(grid) {
     let count = 0;
-    for (let row = 0, grid.length - 1) {
-        for (let col = 0, grid[row].length - 1) {
+    for (const row : range(grid.length)) {
+        for (const col : range(grid[row].length)) {
             count += directions.filter(direction => isWordAt(grid, "XMAS", row, col, direction)).length;
         }
     }
@@ -56,8 +56,8 @@ function isMS(ends) {
 
 function countCrossedMas(grid) {
     let count = 0;
-    for (let row = 0, grid.length - 1) {
-        for (let col = 0, grid[row].length - 1) {
+    for (const row : range(grid.length)) {
+        for (const col : range(grid[row].length)) {
             if (isCrossedMas(grid, row, col)) {
                 count++;
             }

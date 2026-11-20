@@ -23,7 +23,7 @@ function totalDistance(lists) {
     const left = lists.left.slice().sort((a, b) => a - b);
     const right = lists.right.slice().sort((a, b) => a - b);
     let total = 0;
-    for (let i = 0, left.length - 1) {
+    for (const i : range(left.length)) {
         total += Math.abs(left[i] - right[i]);
     }
     return total;

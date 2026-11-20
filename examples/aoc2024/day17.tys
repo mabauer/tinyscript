@@ -66,7 +66,7 @@ function lowestSelfReproducingA() {
         const expected = program.slice(i).join(",");
         const next = [];
         for (const candidate : candidates) {
-            for (let digit = 0, 7) {
+            for (const digit : range(8)) {
                 const value = candidate * 8 + digit;
                 if (run(program, { a: value, b: registers.b, c: registers.c }).join(",") == expected) {
                     next.push(value);

@@ -51,7 +51,7 @@ function hasNoOverlaps(positions) {
 }
 
 function firstSecondWithoutOverlaps() {
-    for (let seconds = 1, width * height) {
+    for (const seconds : range(1, width * height + 1)) {
         if (hasNoOverlaps(positionsAfter(seconds))) {
             return seconds;
         }
