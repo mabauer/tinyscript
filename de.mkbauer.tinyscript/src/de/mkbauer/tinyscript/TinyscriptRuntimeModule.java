@@ -4,6 +4,7 @@
 package de.mkbauer.tinyscript;
 
 import org.eclipse.xtext.naming.IQualifiedNameProvider;
+import org.eclipse.xtext.parser.antlr.ISyntaxErrorMessageProvider;
 
 import com.google.inject.Provides;
 
@@ -11,6 +12,7 @@ import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
 import de.mkbauer.tinyscript.jvmscriptengine.JvmScriptEngineRunner;
 import de.mkbauer.tinyscript.scoping.TinyscriptGlobalScopeProvider;
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
+import de.mkbauer.tinyscript.validation.TinyscriptSyntaxErrorMessageProvider;
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
@@ -27,6 +29,11 @@ public class TinyscriptRuntimeModule extends AbstractTinyscriptRuntimeModule {
     public Class<? extends IQualifiedNameProvider> bindIQualifiedNameProvider() {
         return TinyscriptQualifiedNameProvider.class;
     }
+
+	// Syntax errors in plain words, with hints for constructs from Javascript
+	public Class<? extends ISyntaxErrorMessageProvider> bindISyntaxErrorMessageProvider() {
+		return TinyscriptSyntaxErrorMessageProvider.class;
+	}
 
 	@Provides
 	public JvmScriptEngineRunner getScriptEngineRunner(TinyscriptGenerator generator) {

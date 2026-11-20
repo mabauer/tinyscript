@@ -186,7 +186,7 @@ public class TinyscriptReplMainTest {
     public void testSyntaxErrorShowsOnlyTheFirstErrorWithTheSourceLine() throws IOException {
         Path file = script("cfor.tys", "let sum = 0;\nfor (let i = 0; i < 10; i++) {\n    sum += i;\n}\n");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(file.toString()));
-        assertEquals("TinyscriptSyntaxError: mismatched input ';' expecting ',' in " + file + ":2:15\n"
+        assertEquals("TinyscriptSyntaxError: tinyscript's numeric for loop has no ';': for (let i = 0, n - 1) { … } counts from 0 to n - 1, including the end in " + file + ":2:15\n"
                 + "    for (let i = 0; i < 10; i++) {\n"
                 + "                  ^\n", err.toString());
     }

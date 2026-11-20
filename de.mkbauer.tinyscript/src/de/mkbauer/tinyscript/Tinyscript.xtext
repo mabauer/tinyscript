@@ -271,7 +271,7 @@ PropertyAssignment:
 
 PropertyName:
 	expr=StringLiteral |
-	name=ID
+	name=(ID | ReservedWord)
 ;
 
 ArrayInitializer:
@@ -318,6 +318,13 @@ terminal OP_INCREMENT:
 
 terminal OP_NOT:
 	'!'
+;
+
+// Javascript keywords that tinyscript does not support. They are reserved, so that the parser
+// can say so (TinyscriptSyntaxErrorMessageProvider); like in Javascript, they are fine as
+// property names (o.class, { case: 1 }).
+ReservedWord:
+	'try' | 'catch' | 'finally' | 'switch' | 'case' | 'class'
 ;
 
 // var and let are the same (block-scoped, like Javascript's let); const cannot be assigned again

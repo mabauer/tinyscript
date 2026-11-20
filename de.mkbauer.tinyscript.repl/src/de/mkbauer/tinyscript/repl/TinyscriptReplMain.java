@@ -29,6 +29,7 @@ import org.eclipse.xtext.validation.Issue;
 import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptDiagnostics;
+import de.mkbauer.tinyscript.validation.TinyscriptSyntaxErrorMessageProvider;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
@@ -358,7 +359,7 @@ class TinyscriptReplMain  {
 		if (!errors.isEmpty()) {
 			Issue issue = errors.get(0);
 			// The statement is not complete yet: continue on the next line
-			if (issue.getMessage().contains("mismatched input '<EOF>'"))
+			if (issue.getMessage().startsWith(TinyscriptSyntaxErrorMessageProvider.UNEXPECTED_END))
 				return null;
 			// A rejected line must not leave its declarations behind for later lines
 			sessionResourceSet.getResources().remove(currentResource);
