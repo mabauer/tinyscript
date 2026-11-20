@@ -328,7 +328,6 @@ Built-ins are registered in `TinyscriptEngine.initialize()` and also declared in
 | `Math` | `MathObject` | `PI`, `sqrt`, `round`, `random` |
 | `Object` | `ObjectConstructor` | `create`, `keys`, `getPrototypeOf`, `defineProperty`, `getOwnPropertyDescriptor`, `getOwnPropertyNames`, `hasOwnProperty` |
 | `Function` | `FunctionConstructor` | `call`, `apply`, `toString` |
-| `fs` | `FSObject` | `readFile`, `writeFile` _(disabled when sandboxed)_ |
 | `System` | `SystemObject` | `currentTimeMillis` |
 | `print` | `Print` | global function |
 
@@ -394,7 +393,7 @@ Without the output and string limits, a script that prints a large string in a l
 
 ### Sandboxed Flag
 
-`engine.sandboxed = true` disables the `fs` built-in and any other privileged operations. The web demo always runs with sandboxing on; the REPL runs with it off.
+`engine.sandboxed = true` disables privileged operations: the native module `std:fs` cannot be imported. The web demo always runs with sandboxing on; the REPL runs with it off.
 
 ---
 
@@ -494,7 +493,7 @@ See `docs/language-reference.md` (section 13) for the language side.
 
 With files as arguments it runs them in order, each with a fresh engine (files share names only via import / export), and stops at the first error; without arguments it starts an interactive session. Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage. `run(args)` returns the exit code and takes its own `out` / `err` streams, so the command line is unit tested (`TinyscriptReplMainTest`).
 
-The interactive session uses JLine for readline-style input; the history is kept in `~/.tinyscript_history`. Incomplete statements continue on the next line (`...` prompt); `!help` and `!quit` / `!bye` are commands. Sandboxing is **off** (full access to `fs` and other built-ins). Each input line is evaluated in a persistent `ExecutionContext` so variable state accumulates across lines; the line resources are marked with `SharedGlobals.share`, so later lines also *see* the earlier declarations.
+The interactive session uses JLine for readline-style input; the history is kept in `~/.tinyscript_history`. Incomplete statements continue on the next line (`...` prompt); `!help` and `!quit` / `!bye` are commands. Sandboxing is **off** (scripts can import `std:fs`). Each input line is evaluated in a persistent `ExecutionContext` so variable state accumulates across lines; the line resources are marked with `SharedGlobals.share`, so later lines also *see* the earlier declarations.
 
 The helper script `de.mkbauer.tinyscript.repl/tinyscript` follows symlinks (so it can be linked into `~/bin`), uses `JAVA_HOME` or the `java` on the `PATH`, checks for Java 25 and starts `target/tinyscript-repl.jar`.
 

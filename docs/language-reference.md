@@ -849,14 +849,9 @@ var start = System.currentTimeMillis();
 print(System.currentTimeMillis() - start);   // elapsed ms
 ```
 
-### `fs` (REPL only, disabled in sandboxed mode)
+### File access
 
-| Method | Description |
-|---|---|
-| `fs.readFile(path)` | Returns file contents as a string |
-| `fs.writeFile(path, content)` | Writes `content` to a file |
-
-The `fs` object is not available in the web demo or any sandboxed execution context.
+There is no global `fs` (since 0.18): file access is the module `std:fs` (see [Modules](#13-modules)), `import * as fs from "std:fs";`. It is not available in the web demo or any sandboxed execution context.
 
 ---
 
