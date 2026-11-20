@@ -863,23 +863,7 @@ print(c1.val());   // 14
 print(c2.val());   // 32
 ```
 
-### Module pattern
-
-Immediately-invoked function expressions (IIFEs) can simulate modules:
-
-```
-let weekDay;
-
-(function(exports) {
-    const names = ["Sunday", "Monday", "Tuesday", "Wednesday",
-                 "Thursday", "Friday", "Saturday"];
-    exports.name = function(number) { return names[number]; };
-    exports.number = function(name) { return names.indexOf(name); };
-})(weekDay);
-
-print(weekDay.name(6));            // "Saturday"
-print(weekDay.number("Monday"));   // 1
-```
+To share functions and values between files, use modules (see [Modules](#13-modules)).
 
 ---
 
