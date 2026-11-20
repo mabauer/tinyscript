@@ -16,6 +16,7 @@ import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Pattern;
+import de.mkbauer.tinyscript.ts.PropertyAssignment;
 import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.ReturnStatement;
@@ -207,6 +208,15 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 
 	private static String name(Expression reference) {
 		return ((Reference) reference).getId().getName();
+	}
+
+	/**
+	 * The shorthand { x } needs a variable; { this } is not allowed (as in Javascript).
+	 */
+	@Check
+	public void checkShorthandProperty(PropertyAssignment property) {
+		if (property.getShorthand() != null && property.getShorthand().isThis())
+			error("this needs a key: { self: this }", TsPackage.Literals.PROPERTY_ASSIGNMENT__SHORTHAND);
 	}
 
 	/**

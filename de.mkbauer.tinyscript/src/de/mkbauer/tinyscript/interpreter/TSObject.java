@@ -1,6 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 
 public non-sealed class TSObject implements TSValue {
 	
+	// Like Javascript, the properties keep their insertion order (Object.keys, printing)
 	protected HashMap<String, TSPropertyDescriptor> properties;
 	
 	private TSObject proto = null;
@@ -16,13 +18,13 @@ public non-sealed class TSObject implements TSValue {
 	
 	protected TSObject(TinyscriptEngine engine) {
 		this.engine = engine;
-		properties = new HashMap<String, TSPropertyDescriptor>();
+		properties = new LinkedHashMap<String, TSPropertyDescriptor>();
 		engine.recordObjectCreation(this);
 	}
 	
 	public TSObject(TinyscriptEngine engine, TSObject proto) {
 		this.engine = engine;
-		properties = new HashMap<String, TSPropertyDescriptor>();
+		properties = new LinkedHashMap<String, TSPropertyDescriptor>();
 		engine.recordObjectCreation(this);
 		if (proto != null)
 			setPrototype(proto);

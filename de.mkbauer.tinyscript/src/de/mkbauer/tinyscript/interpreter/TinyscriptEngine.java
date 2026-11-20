@@ -993,6 +993,11 @@ public class TinyscriptEngine {
     public TSValue caseObjectInitializer(ObjectInitializer expr) {
     	TSObject obj = new TSObject(this, getDefaultPrototype()); 
     	for (PropertyAssignment assignment : expr.getPropertyassignments()) {
+    		if (assignment.getShorthand() != null) {
+    			// { row } is { row: row }
+    			obj.put(assignment.getShorthand().getId().getName(), execute(assignment.getShorthand()));
+    			continue;
+    		}
     		String key = null;
     		TSValue keyValue = execute(assignment.getKey());
     		if (keyValue.isString() || keyValue.isNumber()) {

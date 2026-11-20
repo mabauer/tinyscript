@@ -509,8 +509,12 @@ class TinyscriptGenerator   {
 		'''{«FOR assignment: expr.propertyassignments SEPARATOR ', '»«assignment.generate»«ENDFOR»}'''
 	}
 	
+	// The shorthand { row } becomes row: row, since the generator may rename the variable
 	def dispatch generate(PropertyAssignment expr) {
-		'''«expr.key.generate»: «expr.value.generate»'''
+		if (expr.shorthand !== null)
+			'''«expr.shorthand.id.name»: «expr.shorthand.generate»'''
+		else
+			'''«expr.key.generate»: «expr.value.generate»'''
 	}
 
 	def dispatch generate(ArrayInitializer expr) {

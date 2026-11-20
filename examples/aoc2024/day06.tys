@@ -16,7 +16,7 @@ function findGuard() {
     for (let row = 0, height - 1) {
         const col = grid[row].indexOf("^");
         if (col >= 0) {
-            return { row: row, col: col };
+            return { row, col };
         }
     }
     throw new Error("The input has no guard (^)");
@@ -44,13 +44,13 @@ function patrol(start, extraObstacle) {
         visited.add(position(row, col));
         const state = position(row, col) * 4 + direction;
         if (states.has(state)) {
-            return { visited: visited, loops: true };
+            return { visited, loops: true };
         }
         states.add(state);
         const nextRow = row + directions[direction].row;
         const nextCol = col + directions[direction].col;
         if (!isInside(nextRow, nextCol)) {
-            return { visited: visited, loops: false };
+            return { visited, loops: false };
         }
         if (grid[nextRow][nextCol] == "#" || position(nextRow, nextCol) == extraObstacle) {
             direction = (direction + 1) % 4;
