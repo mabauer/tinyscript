@@ -1,7 +1,7 @@
 package de.mkbauer.tinyscript.repl;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +28,7 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 /**
@@ -62,13 +63,21 @@ class TinyscriptReplMain  {
 			  !quit, !bye    leave (or Ctrl-D)
 			""";
 
+	private final InputStream in;
+
 	private final PrintStream out;
 
 	private final PrintStream err;
 
-	private final TinyscriptEngine engine;
+	/** Where the interactive session keeps its history (null: no history). */
+	private final Path historyFile;
 
-	private final XtextResourceSet resourceSet;
+	private final Injector injector;
+
+	// The interactive session: one engine, its lines see the earlier lines
+	private TinyscriptEngine sessionEngine;
+
+	private XtextResourceSet sessionResourceSet;
 
 	private Resource currentResource;
 
@@ -78,17 +87,23 @@ class TinyscriptReplMain  {
 		if (System.getProperty("guice_bytecode_gen_option") == null)
 			System.setProperty("guice_bytecode_gen_option", "DISABLED");
 
-		System.exit(new TinyscriptReplMain(System.out, System.err).run(args));
+		Path history = Path.of(System.getProperty("user.home"), ".tinyscript_history");
+		System.exit(new TinyscriptReplMain(System.in, System.out, System.err, history).run(args));
 	}
 
-	TinyscriptReplMain(PrintStream out, PrintStream err) {
+	TinyscriptReplMain(InputStream in, PrintStream out, PrintStream err, Path historyFile) {
+		this.in = in;
 		this.out = out;
 		this.err = err;
-		Injector injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
-		resourceSet = injector.getInstance(XtextResourceSet.class);
-		engine = new TinyscriptEngine(resourceSet);
+		this.historyFile = historyFile;
+		injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
+	}
+
+	private TinyscriptEngine newEngine(XtextResourceSet resourceSet) {
+		TinyscriptEngine engine = new TinyscriptEngine(resourceSet);
 		engine.setSandboxed(false);
 		engine.defineStdOut(out);
+		return engine;
 	}
 
 	/**
@@ -129,6 +144,7 @@ class TinyscriptReplMain  {
 				return EXIT_USAGE;
 			}
 		}
+		// Each file runs on its own (fresh engine); files share names only via import / export
 		for (Path file : files) {
 			int exitCode = executeFile(file);
 			if (exitCode != EXIT_OK)
@@ -138,6 +154,8 @@ class TinyscriptReplMain  {
 	}
 
 	private int executeFile(Path file) {
+		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
+		TinyscriptEngine engine = newEngine(resourceSet);
 		Resource resource = resourceSet.createResource(URI.createFileURI(file.toAbsolutePath().toString()));
 		try {
 			resource.load(null);
@@ -164,9 +182,11 @@ class TinyscriptReplMain  {
 	}
 
 	private int interactive() {
+		sessionResourceSet = injector.getInstance(XtextResourceSet.class);
+		sessionEngine = newEngine(sessionResourceSet);
 		ConsoleReader device;
 		try {
-			device = new ConsoleReader();
+			device = new ConsoleReader(in, out);
 		}
 		catch (IOException e) {
 			err.println("Error initializing console: " + e.getMessage());
@@ -190,7 +210,7 @@ class TinyscriptReplMain  {
 				try {
 					Tinyscript ast = parse(script + line, multiline);
 					if (ast != null) {
-						TSValue result = engine.execute(ast);
+						TSValue result = sessionEngine.execute(ast);
 						device.println(result.asString());
 						multiline = false;
 						script = "";
@@ -224,7 +244,9 @@ class TinyscriptReplMain  {
 	 */
 	private Tinyscript parse(String script, boolean reuseResource) {
 		if (!reuseResource || currentResource == null) {
-			currentResource = resourceSet.createResource(newResourceUri());
+			currentResource = sessionResourceSet.createResource(newResourceUri());
+			// The lines of a session see each other's top-level names
+			SharedGlobals.share(currentResource);
 		}
 		else {
 			currentResource.unload();
@@ -243,14 +265,19 @@ class TinyscriptReplMain  {
 					return null;
 				issue = issues.get(1);
 			}
+			// A rejected line must not leave its declarations behind for later lines
+			sessionResourceSet.getResources().remove(currentResource);
+			currentResource = null;
 			throw new TinyscriptRuntimeException("line " + issue.getLineNumber() + ": " + issue.getMessage());
 		}
 		return currentResource.getContents().isEmpty() ? null : (Tinyscript) currentResource.getContents().get(0);
 	}
 
 	private FileHistory loadHistory(ConsoleReader device) {
+		if (historyFile == null)
+			return null;
 		try {
-			FileHistory history = new FileHistory(new File(System.getProperty("user.home"), ".tinyscript_history"));
+			FileHistory history = new FileHistory(historyFile.toFile());
 			device.setHistory(history);
 			return history;
 		}
@@ -284,7 +311,7 @@ class TinyscriptReplMain  {
 		String name = "__repl";
 		for (int i = 0; i < Integer.MAX_VALUE; i++) {
 			URI syntheticUri = URI.createURI(name + i + "." + FILE_EXTENSION);
-			if (resourceSet.getResource(syntheticUri, false) == null)
+			if (sessionResourceSet.getResource(syntheticUri, false) == null)
 				return syntheticUri;
 		}
 		throw new IllegalStateException();

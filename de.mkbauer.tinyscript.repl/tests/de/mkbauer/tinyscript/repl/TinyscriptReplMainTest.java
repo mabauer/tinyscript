@@ -3,9 +3,11 @@ package de.mkbauer.tinyscript.repl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -24,7 +26,12 @@ public class TinyscriptReplMainTest {
     private final ByteArrayOutputStream err = new ByteArrayOutputStream();
 
     private int run(String... args) {
-        return new TinyscriptReplMain(new PrintStream(out, true), new PrintStream(err, true)).run(args);
+        return runWithInput("", args);
+    }
+
+    private int runWithInput(String input, String... args) {
+        return new TinyscriptReplMain(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)),
+                new PrintStream(out, true), new PrintStream(err, true), tempDir.resolve("history")).run(args);
     }
 
     private Path script(String name, String code) throws IOException {
@@ -94,6 +101,23 @@ public class TinyscriptReplMainTest {
         assertTrue(err.toString().contains("TinyscriptSyntaxError"), err.toString());
         assertTrue(err.toString().contains("syntax.tys:2"), err.toString());
         assertEquals("", out.toString());
+    }
+
+    @Test
+    public void testFilesDoNotShareGlobals() throws IOException {
+        // Files share names only via import / export; each file runs on its own
+        Path first = script("first.tys", "var shared = 5;");
+        Path second = script("second.tys", "print(shared);");
+        assertEquals(TinyscriptReplMain.EXIT_ERROR, run(first.toString(), second.toString()));
+        assertTrue(err.toString().contains("Couldn't resolve reference to Identifier 'shared'"), err.toString());
+    }
+
+    @Test
+    public void testInteractiveLinesSeeEarlierLines() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("var x = 21;\nfunction twice(a) {\nreturn 2 * a;\n}\nprint(twice(x));\n!quit\n"));
+        assertTrue(out.toString().contains("42\n"), out.toString());
+        assertEquals("", err.toString());
     }
 
     @Test

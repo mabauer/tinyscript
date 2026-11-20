@@ -479,9 +479,9 @@ function __ts_add(obj1, obj2) { ... }
 
 **Entry point:** `de.mkbauer.tinyscript.repl/src/.../TinyscriptReplMain.java`
 
-With files as arguments it runs them in order (one engine, so later files see the globals of earlier ones) and stops at the first error; without arguments it starts an interactive session. Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage. `run(args)` returns the exit code and takes its own `out` / `err` streams, so the command line is unit tested (`TinyscriptReplMainTest`).
+With files as arguments it runs them in order, each with a fresh engine (files share names only via import / export), and stops at the first error; without arguments it starts an interactive session. Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage. `run(args)` returns the exit code and takes its own `out` / `err` streams, so the command line is unit tested (`TinyscriptReplMainTest`).
 
-The interactive session uses JLine for readline-style input; the history is kept in `~/.tinyscript_history`. Incomplete statements continue on the next line (`...` prompt); `!help` and `!quit` / `!bye` are commands. Sandboxing is **off** (full access to `fs` and other built-ins). Each input line is evaluated in a persistent `ExecutionContext` so variable state accumulates across lines.
+The interactive session uses JLine for readline-style input; the history is kept in `~/.tinyscript_history`. Incomplete statements continue on the next line (`...` prompt); `!help` and `!quit` / `!bye` are commands. Sandboxing is **off** (full access to `fs` and other built-ins). Each input line is evaluated in a persistent `ExecutionContext` so variable state accumulates across lines; the line resources are marked with `SharedGlobals.share`, so later lines also *see* the earlier declarations.
 
 The helper script `de.mkbauer.tinyscript.repl/tinyscript` follows symlinks (so it can be linked into `~/bin`), uses `JAVA_HOME` or the `java` on the `PATH`, checks for Java 25 and starts `target/tinyscript-repl.jar`.
 

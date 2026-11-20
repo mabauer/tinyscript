@@ -14,6 +14,7 @@ import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.impl.ResourceSetGlobalScopeProvider;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 
 import de.mkbauer.tinyscript.ts.Identifier;
@@ -39,11 +40,23 @@ public class TinyscriptGlobalScopeProvider extends
 			ResourceSetReferencingResourceSet set = (ResourceSetReferencingResourceSet) resourceSet;
 			Iterable<ResourceSet> referencedSets = Lists.reverse(set.getReferencedResourceSets());
 			for (ResourceSet referencedSet : referencedSets) {
-				parent = createScopeWithQualifiedNames(parent, resource, filter, referencedSet, type, ignoreCase);
+				parent = createScopeWithQualifiedNames(parent, resource, sharedOnly(filter, referencedSet), referencedSet, type, ignoreCase);
 			}
 		}
-		IScope result = createScopeWithQualifiedNames(parent, resource, filter, resourceSet, type, ignoreCase);
+		IScope result = createScopeWithQualifiedNames(parent, resource, sharedOnly(filter, resourceSet), resourceSet, type, ignoreCase);
 		return result;
+	}
+
+	/**
+	 * Only the names of shared resources (builtins, interactive session) are global;
+	 * files do not see each other's top-level names.
+	 */
+	private static Predicate<IEObjectDescription> sharedOnly(Predicate<IEObjectDescription> filter, ResourceSet resourceSet) {
+		Predicate<IEObjectDescription> shared = description -> {
+			Resource owner = resourceSet.getResource(description.getEObjectURI().trimFragment(), false);
+			return owner != null && SharedGlobals.isShared(owner);
+		};
+		return filter == null ? shared : Predicates.and(filter, shared);
 	}
 	
 	private static Identifier createId(String name) {
@@ -68,6 +81,7 @@ public class TinyscriptGlobalScopeProvider extends
 		if (builtinsResource == null) {
 			builtinsResource = resourceSet.createResource(builtinsUri);
 			builtinsResource.getContents().addAll(createBuiltInIds());
+			SharedGlobals.share(builtinsResource);
 		} 
 	}
 
