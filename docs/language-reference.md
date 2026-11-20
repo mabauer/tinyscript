@@ -167,6 +167,9 @@ print("n = " + 42);          // n = 42
 | `&&` | Logical AND |
 | `\|\|` | Logical OR |
 | `!` | Logical NOT |
+| `??` | `a ?? b` is `b` if `a` is `null` or `undefined`, otherwise `a` |
+
+Unlike Javascript, `&&` and `||` always give a boolean, and their operands must be conditions (see Conditions). So the Javascript idiom `x || defaultValue` does not work; use `x ?? defaultValue`, e.g. `counts.get(key) ?? 0`. As in Javascript, `b` is only evaluated if needed, and `??` cannot be combined with `&&` or `||` without parentheses: write `(a ?? b) || c`.
 
 ### Assignment
 
@@ -204,8 +207,9 @@ var sign = x > 0 ? 1 : x < 0 ? -1 : 0;
 5. `==`, `!=`
 6. `&&`
 7. `||`
-8. `? :` (right-associative)
-9. `=`, `+=`, `-=`, `*=`, `/=`, `%=` (right-associative)
+8. `??`
+9. `? :` (right-associative)
+10. `=`, `+=`, `-=`, `*=`, `/=`, `%=` (right-associative)
 
 ### `assert`
 
@@ -538,6 +542,13 @@ Property keys can be identifiers or string literals. Values can be any expressio
 person.name           // dot notation
 person["name"]        // bracket notation (key is a string expression)
 person["na" + "me"]   // any string expression works
+```
+
+**Optional chaining:** `a?.b`, `a?.[key]` and `a?.m()` are `undefined` if `a` is `null` or `undefined`, instead of a `TypeError`. As in Javascript, the rest of the chain is skipped: `a?.b.c` is `undefined` if `a` is `null` (`.c` is not evaluated). An optional chain cannot be assigned to (`a?.b = 1` is an error).
+
+```
+var list = { value: 1, next: null };
+print(list.next?.value ?? "end");   // end
 ```
 
 ### Property assignment

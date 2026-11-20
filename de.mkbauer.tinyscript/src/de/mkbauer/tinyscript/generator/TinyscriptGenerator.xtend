@@ -458,10 +458,10 @@ class TinyscriptGenerator   {
 		'''(«FOR arg: suffix.arguments SEPARATOR ', '»«arg.generate»«ENDFOR»)'''
 	
 	def dispatch generate(ComputedPropertyAccessSuffix suffix)
-		'''[«suffix.key.generate»]'''
+		'''«IF suffix.optional»?.«ENDIF»[«suffix.key.generate»]'''
 	
 	def dispatch generate(DotPropertyAccessSuffix suffix)
-		'''.«suffix.key.generate»'''
+		'''«IF suffix.optional»?.«ELSE».«ENDIF»«suffix.key.generate»'''
 	
 	def dispatch generate(PropertyName expr) 
 		'''«IF expr.name !== null»«expr.name»«ELSE»«expr.expr.generate»«ENDIF»'''
