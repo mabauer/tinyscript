@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -30,8 +31,12 @@ public class TinyscriptReplMainTest {
     }
 
     private int runWithInput(String input, String... args) {
+        return runWith(input, null, args);
+    }
+
+    private int runWith(String input, String tinyscriptPath, String... args) {
         return new TinyscriptReplMain(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)),
-                new PrintStream(out, true), new PrintStream(err, true), tempDir.resolve("history")).run(args);
+                new PrintStream(out, true), new PrintStream(err, true), tempDir.resolve("history"), tinyscriptPath).run(args);
     }
 
     private Path script(String name, String code) throws IOException {
@@ -118,6 +123,54 @@ public class TinyscriptReplMainTest {
                 runWithInput("var x = 21;\nfunction twice(a) {\nreturn 2 * a;\n}\nprint(twice(x));\n!quit\n"));
         assertTrue(out.toString().contains("42\n"), out.toString());
         assertEquals("", err.toString());
+    }
+
+    @Test
+    public void testImportsRelativeToTheMainFile() throws IOException {
+        script("util.tys", "export function twice(x) { return 2 * x; }");
+        Path main = script("main.tys", "import twice from \"./util\";\nprint(twice(21));");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run(main.toString()));
+        assertEquals("42\n", out.toString());
+    }
+
+    @Test
+    public void testModulePathDefaultsToTheDirectoryOfTheMainFile() throws IOException {
+        script("util.tys", "export function twice(x) { return 2 * x; }");
+        Path main = script("main.tys", "import twice from \"util\";\nprint(twice(2));");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run(main.toString()));
+        assertEquals("4\n", out.toString());
+    }
+
+    @Test
+    public void testModulePathOption() throws IOException {
+        Path mods = Files.createDirectory(tempDir.resolve("mods"));
+        Path other = Files.createDirectory(tempDir.resolve("other"));
+        Files.writeString(mods.resolve("half.tys"), "export function half(x) { return x / 2; }");
+        Path main = script("main.tys", "import half from \"half\";\nprint(half(8));");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run("--module-path", other + File.pathSeparator + mods, main.toString()));
+        assertEquals("4\n", out.toString());
+    }
+
+    @Test
+    public void testModulePathFromEnvironment() throws IOException {
+        Path mods = Files.createDirectory(tempDir.resolve("mods"));
+        Files.writeString(mods.resolve("half.tys"), "export function half(x) { return x / 2; }");
+        Path main = script("main.tys", "import half from \"half\";\nprint(half(8));");
+        assertEquals(TinyscriptReplMain.EXIT_OK, runWith("", mods.toString(), main.toString()));
+        assertEquals("4\n", out.toString());
+    }
+
+    @Test
+    public void testMissingModuleIsAnError() throws IOException {
+        Path main = script("main.tys", "import half from \"half\";\nprint(half(8));");
+        assertEquals(TinyscriptReplMain.EXIT_ERROR, run(main.toString()));
+        assertTrue(err.toString().contains("Module \"half\" not found"), err.toString());
+    }
+
+    @Test
+    public void testModulePathOptionNeedsAValue() {
+        assertEquals(TinyscriptReplMain.EXIT_USAGE, run("--module-path"));
+        assertTrue(err.toString().contains("--module-path needs a value"), err.toString());
     }
 
     @Test

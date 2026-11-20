@@ -473,6 +473,16 @@ function __ts_add(obj1, obj2) { ... }
 
 ---
 
+## Modules
+
+See `docs/language-reference.md` (section 13) for the language side.
+
+- **Grammar:** `Tinyscript: (imports += ImportStatement)* global=Global`; `ImportStatement` has either a `namespace` (`import * as m`) or `names` (`import a, b`) and a `path`; `FunctionDeclaration` and `VariableStatement` have an `exported` flag.
+- **Scoping:** the names of the imports are part of the top-level scope (`TinyscriptScopeProvider`); the global scope only contains shared resources (builtins, REPL session lines), so files never see each other's names.
+- **Validation:** `export` only at top level; imported names unique and not redeclared; no assignment to imported names.
+- **Interpreter:** `TinyscriptEngine.setModuleLoader(ModuleLoader)` enables imports (without a loader, e.g. in the webdemo, `import` is an error). Before running a script, `bindImports` resolves each import, loads the module (cached per URI, so each module runs once), and binds the names in the current context. A module is validated and run in its own `ExecutionContext` whose outer context is the global one (builtins). Its exported names are copied into a `ModuleExports` object that is frozen afterwards. A stack of modules being loaded (rooted at the main script) detects cycles.
+- **Loading:** `FileSystemModuleLoader` resolves relative paths against the importing file and bare paths via the module path, appends `.tys` if missing, and identifies modules by their canonical path (`toRealPath`).
+
 ## 13. Deployment Modes
 
 ### REPL

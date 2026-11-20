@@ -1,11 +1,13 @@
 package de.mkbauer.tinyscript.repl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import jline.console.ConsoleReader;
@@ -26,6 +28,7 @@ import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
@@ -51,8 +54,11 @@ class TinyscriptReplMain  {
 			Without files, starts an interactive session.
 
 			Options:
-			  -h, --help     show this help
-			  --version      show the version
+			  --module-path <dirs>   where imports of bare paths ("x", "lib/y") are searched,
+			                         separated by ":" (default: $TINYSCRIPT_PATH, otherwise
+			                         the directory of each file / the working directory)
+			  -h, --help             show this help
+			  --version              show the version
 
 			Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage
 			""";
@@ -72,6 +78,12 @@ class TinyscriptReplMain  {
 	/** Where the interactive session keeps its history (null: no history). */
 	private final Path historyFile;
 
+	/** The module path from the environment (TINYSCRIPT_PATH), or null. */
+	private final String environmentModulePath;
+
+	/** The module path from --module-path, or null. */
+	private String moduleOption;
+
 	private final Injector injector;
 
 	// The interactive session: one engine, its lines see the earlier lines
@@ -88,33 +100,56 @@ class TinyscriptReplMain  {
 			System.setProperty("guice_bytecode_gen_option", "DISABLED");
 
 		Path history = Path.of(System.getProperty("user.home"), ".tinyscript_history");
-		System.exit(new TinyscriptReplMain(System.in, System.out, System.err, history).run(args));
+		System.exit(new TinyscriptReplMain(System.in, System.out, System.err, history, System.getenv("TINYSCRIPT_PATH")).run(args));
 	}
 
-	TinyscriptReplMain(InputStream in, PrintStream out, PrintStream err, Path historyFile) {
+	TinyscriptReplMain(InputStream in, PrintStream out, PrintStream err, Path historyFile, String environmentModulePath) {
 		this.in = in;
 		this.out = out;
 		this.err = err;
 		this.historyFile = historyFile;
+		this.environmentModulePath = environmentModulePath;
 		injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
 	}
 
-	private TinyscriptEngine newEngine(XtextResourceSet resourceSet) {
+	/**
+	 * A new engine; imports of bare paths are searched in the module path, by default
+	 * in {@code defaultDirectory}.
+	 */
+	private TinyscriptEngine newEngine(XtextResourceSet resourceSet, Path defaultDirectory) {
 		TinyscriptEngine engine = new TinyscriptEngine(resourceSet);
 		engine.setSandboxed(false);
 		engine.defineStdOut(out);
+		engine.setModuleLoader(new FileSystemModuleLoader(modulePath(defaultDirectory)));
 		return engine;
+	}
+
+	private List<Path> modulePath(Path defaultDirectory) {
+		String dirs = moduleOption != null ? moduleOption : environmentModulePath;
+		if (dirs == null || dirs.isBlank())
+			return List.of(defaultDirectory);
+		return Arrays.stream(dirs.split(File.pathSeparator))
+				.filter(dir -> !dir.isBlank())
+				.map(Path::of)
+				.toList();
 	}
 
 	/**
 	 * Runs the command line and returns the exit code.
 	 */
 	int run(String[] args) {
-		if (args.length == 0)
-			return interactive();
 		List<Path> files = new ArrayList<>();
-		for (String arg : args) {
+		for (int i = 0; i < args.length; i++) {
+			String arg = args[i];
 			switch (arg) {
+				case "--module-path" -> {
+					if (i + 1 >= args.length) {
+						err.println("--module-path needs a value");
+						err.print(USAGE);
+						return EXIT_USAGE;
+					}
+					moduleOption = args[++i];
+				}
 				case "-h", "--help" -> {
 					out.print(USAGE);
 					return EXIT_OK;
@@ -133,6 +168,8 @@ class TinyscriptReplMain  {
 				}
 			}
 		}
+		if (files.isEmpty())
+			return interactive();
 		// Check all files before running any of them
 		for (Path file : files) {
 			if (!Files.isReadable(file)) {
@@ -155,7 +192,7 @@ class TinyscriptReplMain  {
 
 	private int executeFile(Path file) {
 		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
-		TinyscriptEngine engine = newEngine(resourceSet);
+		TinyscriptEngine engine = newEngine(resourceSet, file.toAbsolutePath().getParent());
 		Resource resource = resourceSet.createResource(URI.createFileURI(file.toAbsolutePath().toString()));
 		try {
 			resource.load(null);
@@ -183,7 +220,7 @@ class TinyscriptReplMain  {
 
 	private int interactive() {
 		sessionResourceSet = injector.getInstance(XtextResourceSet.class);
-		sessionEngine = newEngine(sessionResourceSet);
+		sessionEngine = newEngine(sessionResourceSet, Path.of("").toAbsolutePath());
 		ConsoleReader device;
 		try {
 			device = new ConsoleReader(in, out);
@@ -222,6 +259,12 @@ class TinyscriptReplMain  {
 				}
 				catch (TinyscriptRuntimeException e) {
 					device.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+					multiline = false;
+					script = "";
+				}
+				catch (RuntimeException e) {
+					// An interpreter bug must not end the session
+					device.println("InternalError: " + e);
 					multiline = false;
 					script = "";
 				}

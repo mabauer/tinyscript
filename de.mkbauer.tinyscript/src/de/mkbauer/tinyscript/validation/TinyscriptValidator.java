@@ -1,18 +1,24 @@
 package de.mkbauer.tinyscript.validation;
 
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BreakStatement;
 import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.ImportStatement;
+import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.WhileStatement;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.validation.Check;
@@ -86,6 +92,63 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 				break;
 		}
 		error("Break only allowed inside a loop", null);
+	}
+
+	/**
+	 * Only top-level functions and variables of a module can be exported.
+	 */
+	@Check
+	public void checkExportOnlyAtTopLevel(FunctionDeclaration function) {
+		if (function.isExported() && !isTopLevel(function))
+			error("Only top-level functions and variables can be exported", TsPackage.Literals.FUNCTION_DEFINITION__ID);
+	}
+
+	@Check
+	public void checkExportOnlyAtTopLevel(VariableStatement variables) {
+		if (variables.isExported() && !isTopLevel(variables))
+			error("Only top-level functions and variables can be exported", null);
+	}
+
+	private static boolean isTopLevel(EObject declaration) {
+		Block block = TinyscriptModelUtil.containingBlock(declaration);
+		return block != null && block.eContainer() instanceof Tinyscript;
+	}
+
+	/**
+	 * Imported names must be unique and must not clash with top-level declarations.
+	 */
+	@Check
+	public void checkImportedNamesAreUnique(Tinyscript script) {
+		Set<String> names = new HashSet<String>();
+		for (Identifier id : TinyscriptModelUtil.declaredVariablesInBlock(script.getGlobal()))
+			names.add(id.getName());
+		for (FunctionDefinition function : TinyscriptModelUtil.functionDeclarationsInBlock(script.getGlobal()))
+			names.add(function.getId().getName());
+		Set<String> imported = new HashSet<String>();
+		for (Identifier id : TinyscriptModelUtil.importedIdentifiers(script)) {
+			if (!imported.add(id.getName()) || names.contains(id.getName()))
+				error("Duplicate identifier", id, TsPackage.Literals.IDENTIFIER__NAME);
+		}
+	}
+
+	/**
+	 * Imported names are read-only.
+	 */
+	@Check
+	public void checkNoAssignmentToImport(BinaryExpression assignment) {
+		if ("=".equals(assignment.getOp()) && isImported(assignment.getLeft()))
+			error("Cannot assign to an imported name", TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+	}
+
+	@Check
+	public void checkNoAssignmentToImport(ForStatement forStatement) {
+		if (forStatement.getRef() != null && isImported(forStatement.getRef()))
+			error("Cannot assign to an imported name", TsPackage.Literals.FOR_STATEMENT__REF);
+	}
+
+	private static boolean isImported(EObject expression) {
+		return expression instanceof Reference reference && reference.getId() != null
+				&& reference.getId().eContainer() instanceof ImportStatement;
 	}
 
 }

@@ -40,6 +40,7 @@ import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
 import de.mkbauer.tinyscript.ts.NullObject
+import de.mkbauer.tinyscript.interpreter.TinyscriptUnsupportedOperationError
 import de.mkbauer.tinyscript.ts.Expression
 
 class TinyscriptGenerator   {
@@ -98,6 +99,8 @@ class TinyscriptGenerator   {
 	'''
 	
 	def generate(Tinyscript script, boolean includeBuiltins) {
+		if (!script.imports.empty)
+			throw new TinyscriptUnsupportedOperationError("The Javascript generator does not support modules yet", script.imports.head)
 		tempCounter = 0
 		generateScript(script, includeBuiltins)
 	}

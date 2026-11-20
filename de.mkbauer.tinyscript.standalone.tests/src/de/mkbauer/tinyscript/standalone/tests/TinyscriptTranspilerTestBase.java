@@ -5,8 +5,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.eclipse.emf.common.util.URI;
@@ -25,7 +26,9 @@ import org.junit.jupiter.api.BeforeEach;
 import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
+import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
 import de.mkbauer.tinyscript.interpreter.ResourceLimits;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
@@ -218,6 +221,26 @@ public abstract class TinyscriptTranspilerTestBase {
         engine.setSandboxed(sandboxed);
         engine.defineStdOut(stdout);
         engine.execute(ast);
+    }
+
+    /**
+     * Runs the file {@code main} like the REPL does, with a file system module loader
+     * that searches {@code modulePath}; returns the captured stdout. Validation errors
+     * of {@code main} are thrown as {@link TinyscriptSyntaxError}.
+     */
+    protected String runModule(Path main, Path... modulePath) {
+        Injector localInjector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
+        XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
+        Resource resource = localResourceSet.getResource(URI.createFileURI(main.toAbsolutePath().toString()), true);
+        List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        if (!issues.isEmpty())
+            throw new TinyscriptSyntaxError(issues.get(0).getMessage(), main.toString(), issues.get(0).getLineNumber());
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        TinyscriptEngine engine = new TinyscriptEngine(localResourceSet);
+        engine.setModuleLoader(new FileSystemModuleLoader(List.of(modulePath)));
+        engine.defineStdOut(stdout);
+        engine.execute((Tinyscript) resource.getContents().get(0));
+        return stdout.toString();
     }
 
     /**
