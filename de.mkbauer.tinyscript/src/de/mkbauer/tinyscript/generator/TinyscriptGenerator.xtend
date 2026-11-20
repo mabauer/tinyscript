@@ -75,8 +75,13 @@ class TinyscriptGenerator   {
 		System.currentTimeMillis = Date.now;
 		
 		if (typeof print !== "function") {
-			print = function(s) {
-				console.log(s);
+			// Like the interpreter: all arguments, concatenated, on one line
+			print = function() {
+				var line = "";
+				for (var i = 0; i < arguments.length; i++) {
+					line = line + String(arguments[i]);
+				}
+				console.log(line);
 			};
 		} 
 		

@@ -243,6 +243,13 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testPrintWithSeveralArguments() {
+        String code = "print(\"a\", 1, true); print(1, 2); print(\"x\" + 1, \"y\"); print(); print(2.5, \" \", -1);";
+        assertEquals("a1true\n12\nx1y\n\n2.5 -1\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testWhile() {
         assertSameOutput("var i = 0; while (i < 3) { print(i); i = i + 1; }");
         assertSameOutput("var i = 0; while (true) { i = i + 1; if (i > 2) { break; } print(i); }");
