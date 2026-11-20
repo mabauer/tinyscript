@@ -265,7 +265,7 @@ public class TinyscriptEngine {
     		return caseCallOrPropertyAccess((CallOrPropertyAccess) object);
 		case TsPackage.PROPERTY_NAME:
     		return casePropertyName((PropertyName) object);
-		case TsPackage.BLOCK:
+		case TsPackage.BLOCK, TsPackage.ARROW_EXPRESSION_BODY:
     		return caseBlock((Block) object);
 		case TsPackage.VARIABLE_STATEMENT:
     		return caseVariableStatement((VariableStatement) object);

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.ts.ArrowExpressionBody;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
@@ -93,9 +94,9 @@ public class InterpretedFunction extends Function {
 			engine.hoistFunctionDeclarations(engine.getLexicalEnvironment(block));
 
 			TSValue result = engine.caseBlock(block);
-			// The result (= value of last statement) of the body in a regular function
-			// is NOT used as return value, if there is no return statement, the function's result is undefined
-			return isArrowFunction() ? result : TSValue.UNDEFINED;
+			// Only an arrow function with an expression body (x => x * 2) returns its value;
+			// otherwise the result is undefined unless there is a return statement
+			return block instanceof ArrowExpressionBody ? result : TSValue.UNDEFINED;
 		}
 		catch (TSReturnValue rv) {
 			return rv.getReturnValue();
