@@ -1,0 +1,47 @@
+// Advent of Code 2024, day 5: Print Queue
+// https://adventofcode.com/2024/day/5
+//
+// Usage: tinyscript day05.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The input starts with ordering rules like "47|53" (page 47 must come before page 53),
+// followed by the updates, the pages to print, like "75,47,61,53,29"
+var lines = inputLines();
+var rules = new Set(lines.filter(line => line.includes("|")));
+var updates = lines.filter(line => line.includes(",")).map(line => line.split(","));
+
+// Compares two pages by the rules: negative if a must come before b
+function compareByRules(a, b) {
+    if (rules.has(a + "|" + b)) {
+        return -1;
+    }
+    if (rules.has(b + "|" + a)) {
+        return 1;
+    }
+    return 0;
+}
+
+function sortedByRules(update) {
+    return update.slice().sort(compareByRules);
+}
+
+// An update is in the right order if sorting it by the rules does not change it
+function isInOrder(update) {
+    return sortedByRules(update).join() == update.join();
+}
+
+function middlePage(update) {
+    return Number(update[Math.floor(update.length / 2)]);
+}
+
+function sumOfMiddlePages(updates) {
+    return updates.reduce((sum, update) => sum + middlePage(update), 0);
+}
+
+// Part 1: the updates already in the right order
+print("Part 1: " + sumOfMiddlePages(updates.filter(isInOrder)));
+
+// Part 2: the other updates, after putting them in the right order
+var corrected = updates.filter(update => !isInOrder(update)).map(sortedByRules);
+print("Part 2: " + sumOfMiddlePages(corrected));
