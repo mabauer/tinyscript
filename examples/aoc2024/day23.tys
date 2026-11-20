@@ -1,0 +1,55 @@
+// Advent of Code 2024, day 23: LAN Party
+// https://adventofcode.com/2024/day/23
+//
+// Usage: tinyscript day23.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The connections between computers, e.g. "kh-tc": for each computer, the Set of its neighbors
+const neighbors = new Map();
+for (const line : inputLines()) {
+    const [a, b] = line.split("-");
+    for (const [x, y] : [[a, b], [b, a]]) {
+        const set = neighbors.get(x) ?? new Set();
+        set.add(y);
+        neighbors.set(x, set);
+    }
+}
+const computers = neighbors.keys().sort();
+
+// Part 1: the sets of three computers connected to each other, with a computer starting with t.
+// Each triangle is counted once, from its alphabetically smallest computer a < b < c.
+let triangles = 0;
+for (const a : computers) {
+    for (const b : neighbors.get(a).values()) {
+        for (const c : neighbors.get(b).values()) {
+            if (a < b && b < c && neighbors.get(a).has(c) && [a, b, c].some(name => name.startsWith("t"))) {
+                triangles++;
+            }
+        }
+    }
+}
+print("Part 1: " + triangles);
+
+// Part 2: the largest set of computers that are all connected to each other (a maximum clique),
+// found with the Bron-Kerbosch algorithm: clique is the set so far, candidates the computers
+// that could still join it, excluded those that were already tried
+let largest = [];
+
+function bronKerbosch(clique, candidates, excluded) {
+    if (candidates.length == 0 && excluded.length == 0) {
+        if (clique.length > largest.length) {
+            largest = clique;
+        }
+        return;
+    }
+    for (const computer : candidates.slice()) {
+        const near = neighbors.get(computer);
+        bronKerbosch(clique + [computer], candidates.filter(c => near.has(c)), excluded.filter(c => near.has(c)));
+        candidates = candidates.filter(c => c != computer);
+        excluded = excluded + [computer];
+    }
+}
+
+bronKerbosch([], computers, []);
+print("Part 2: " + largest.sort().join(","));

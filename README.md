@@ -44,7 +44,7 @@ You can play with it online in your browser [here](https://tinyscript.mkbauer.de
 
 * [Modules](de.mkbauer.tinyscript.webdemo/frontend/public/modules.tys): `import area, unit from "./geometry";`, and a small standard library (`import range, sum from "std:array";`); the web demo can import only the standard library
 
-Larger examples: [Advent of Code 2024](examples/aoc2024), solutions of the first days, written to be read as examples of tinyscript.
+Larger examples: [Advent of Code 2024](examples/aoc2024), solutions of all 25 days, written to be read as examples of tinyscript.
 
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 

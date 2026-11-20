@@ -126,6 +126,35 @@ public class AdventOfCode2024Test extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testDay21() {
+        // Part 2 has no example answer in the puzzle; checked against a reference solution
+        assertDay("day21", "day21.example.txt", "Part 1: 126384\nPart 2: 154115708116294\n");
+    }
+
+    @Test
+    public void testDay22() {
+        // The two parts have different examples
+        assertDay("day22", "day22.example1.txt", "Part 1: 37327623\nPart 2: 24\n");
+        assertDay("day22", "day22.example2.txt", "Part 1: 37990510\nPart 2: 23\n");
+    }
+
+    @Test
+    public void testDay23() {
+        assertDay("day23", "day23.example.txt", "Part 1: 7\nPart 2: co,de,ka,ta\n");
+    }
+
+    @Test
+    public void testDay24() {
+        // Part 2 needs an adder; the small example is none, so its result only shows the rules
+        assertDay("day24", "day24.example.txt", "Part 1: 4\nPart 2: z00,z01\n");
+    }
+
+    @Test
+    public void testDay25() {
+        assertDay("day25", "day25.example.txt", "Part 1: 3\n");
+    }
+
+    @Test
     public void testDay15() {
         assertDay("day15", "day15.example1.txt", "Part 1: 2028\nPart 2: 1751\n");
         assertDay("day15", "day15.example2.txt", "Part 1: 10092\nPart 2: 9021\n");

@@ -1,0 +1,85 @@
+// Advent of Code 2024, day 21: Keypad Conundrum
+// https://adventofcode.com/2024/day/21
+//
+// Usage: tinyscript day21.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The keypads as rows of keys; " " is the gap the robot arms must never point at
+const numericKeypad = ["789", "456", "123", " 0A"];
+const directionalKeypad = [" ^A", "<v>"];
+
+function positionOf(keypad, key) {
+    for (let row = 0, keypad.length - 1) {
+        const col = keypad[row].indexOf(key);
+        if (col >= 0) {
+            return { row, col };
+        }
+    }
+    throw new Error("No key " + key);
+}
+
+// The ways to move from one key to another without passing the gap, as directional key presses
+// ending with A: all horizontal moves first, or all vertical moves first (mixing them is never
+// shorter, since every change of direction costs the robot above extra presses)
+function movesBetween(keypad, start, end) {
+    const a = positionOf(keypad, start);
+    const b = positionOf(keypad, end);
+    const horizontal = (b.col > a.col ? ">" : "<").repeat(Math.abs(b.col - a.col));
+    const vertical = (b.row > a.row ? "v" : "^").repeat(Math.abs(b.row - a.row));
+    const gap = positionOf(keypad, " ");
+    const ways = [];
+    if (!(a.row == gap.row && b.col == gap.col)) {
+        ways.push(horizontal + vertical + "A");
+    }
+    if (!(a.col == gap.col && b.row == gap.row)) {
+        ways.push(vertical + horizontal + "A");
+    }
+    return ways;
+}
+
+// The fewest presses on the outermost keypad to type a sequence on a directional keypad with
+// some robots in between. Every sequence starts with the arm on A and ends with A, so it splits
+// into independent moves; the results are remembered (memoization).
+const known = new Map();
+
+function presses(sequence, robots) {
+    if (robots == 0) {
+        return sequence.length;
+    }
+    const key = sequence + "/" + robots;
+    if (!known.has(key)) {
+        let total = 0;
+        let current = "A";
+        for (const next : sequence) {
+            total += movesBetween(directionalKeypad, current, next)
+                .reduce((min, way) => Math.min(min, presses(way, robots - 1)), Infinity);
+            current = next;
+        }
+        known.set(key, total);
+    }
+    return known.get(key);
+}
+
+// The fewest presses to type a code on the numeric keypad, through some directional keypads
+function pressesForCode(code, robots) {
+    let total = 0;
+    let current = "A";
+    for (const next : code) {
+        total += movesBetween(numericKeypad, current, next)
+            .reduce((min, way) => Math.min(min, presses(way, robots)), Infinity);
+        current = next;
+    }
+    return total;
+}
+
+// The complexity of a code: the presses times the number in the code ("029A" is 29)
+function totalComplexity(robots) {
+    return inputLines().reduce((sum, code) => sum + pressesForCode(code, robots) * parseInt(code), 0);
+}
+
+// Part 1: two robots with directional keypads between you and the numeric keypad
+print("Part 1: " + totalComplexity(2));
+
+// Part 2: 25 of them
+print("Part 2: " + totalComplexity(25));
