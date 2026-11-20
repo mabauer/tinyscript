@@ -75,6 +75,13 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			return UNSUPPORTED.get(text);
 		if (UNSUPPORTED.containsKey(before))
 			return UNSUPPORTED.get(before);
+		// A keyword where a name is expected: const from = 1; or function f(as) (where the
+		// parser reports the "(" before it)
+		Token next = next(tokens, index);
+		if (isKeyword(context, offending) && NAME_POSITIONS.contains(before))
+			return reservedWord(text);
+		if ((text.equals("(") || text.equals(",")) && next != null && isKeyword(context, next))
+			return reservedWord(next.getText());
 		if (text.equals("=") && (before.equals("==") || before.equals("!=")) && previous.getTokenIndex() == offending.getTokenIndex() - 1)
 			return "tinyscript has no === and !==: use == and !=, which never convert types";
 		if (text.equals(";") && isInForHeader(tokens, index))
@@ -84,13 +91,12 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		if (text.equals("`"))
 			return "Template strings (`…`) are not supported: build strings with +, e.g. \"Hello \" + name";
 		if (text.equals("=") && context.getCurrentContext() instanceof FunctionDefinition && isInParentheses(tokens, index)) {
-			Token next = next(tokens, index);
 			return "Parameters cannot have default values: write " + before + " ?? " + (next != null ? next.getText() : "…") + " in the function";
 		}
 		if (text.equals("++") || text.equals("--"))
 			return "++ and -- are statements, not expressions: write i" + text + "; on its own";
 		if (text.equals("..."))
-			return "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)";
+			return spreadOrRest(tokens, index);
 		if (text.equals("/") && (previous == null || BEFORE_EXPRESSION.contains(before)))
 			return "Regular expressions are not supported (std:string has words, integers and isDigit)";
 		// The ';' is missing at the end of the previous line (the error is reported at the next token)
@@ -101,6 +107,56 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		if (context.getDefaultMessage().startsWith("no viable alternative") && OPERATORS.contains(before))
 			return "Unexpected '" + text + "', expected an expression";
 		return null;
+	}
+
+	// Before these, a name can stand (const x, function f, (a, b), let x = y, [a, b], { a })
+	private static final Set<String> NAME_POSITIONS = Set.of("var", "let", "const", "function", "(", ",", "=", "[", "{");
+
+	private static String reservedWord(String word) {
+		return "'" + word + "' is a reserved word in tinyscript and cannot be used as a name";
+	}
+
+	// A keyword of the grammar (like from, as, import), not a name
+	private static boolean isKeyword(IParserErrorContext context, Token token) {
+		String[] names = context.getTokenNames();
+		return token.getText() != null && token.getText().matches("[a-z]+")
+				&& token.getType() >= 0 && token.getType() < names.length && names[token.getType()].startsWith("'");
+	}
+
+	/**
+	 * ... is only allowed for rest parameters; the message depends on where else it stands:
+	 * in a pattern, in an array or object literal, or in a call.
+	 */
+	private static String spreadOrRest(TokenStream tokens, int index) {
+		int open = openingBracket(tokens, index);
+		String bracket = open >= 0 ? tokens.get(open).getText() : "";
+		Token before = open >= 0 ? previous(tokens, open) : null;
+		boolean inDeclaration = before != null && Set.of("var", "let", "const").contains(before.getText());
+		if ((bracket.equals("[") || bracket.equals("{")) && inDeclaration)
+			return "Rest elements (...) in patterns are not supported (for an array, use slice: items.slice(1))";
+		if (bracket.equals("["))
+			return "Spread (...) in array literals is not supported: concatenate arrays with +, e.g. a + b";
+		if (bracket.equals("{"))
+			return "Spread (...) in object literals is not supported: copy the properties, e.g. for (const key : Object.keys(o))";
+		return "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)";
+	}
+
+	// The index of the bracket ( [ or { that encloses the token at index, -1 if there is none
+	private static int openingBracket(TokenStream tokens, int index) {
+		int depth = 0;
+		for (int i = index - 1; i >= 0; i--) {
+			String text = tokens.get(i).getText();
+			if (text == null || tokens.get(i).getChannel() != Token.DEFAULT_CHANNEL)
+				continue;
+			if (text.equals(")") || text.equals("]") || text.equals("}"))
+				depth++;
+			else if (text.equals("(") || text.equals("[") || text.equals("{")) {
+				if (depth == 0)
+					return i;
+				depth--;
+			}
+		}
+		return -1;
 	}
 
 	// Whether the token at index is inside the parentheses of for ( ... )

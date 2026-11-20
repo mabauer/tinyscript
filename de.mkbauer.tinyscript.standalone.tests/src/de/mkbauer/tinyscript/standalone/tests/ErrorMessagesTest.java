@@ -121,6 +121,36 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testReservedWordsAsNames() {
+        assertEquals("'from' is a reserved word in tinyscript and cannot be used as a name", firstError("const from = 1;"));
+        assertEquals("'as' is a reserved word in tinyscript and cannot be used as a name", firstError("function f(as) { return 1; }"));
+        assertEquals("'import' is a reserved word in tinyscript and cannot be used as a name", firstError("let import = 2;"));
+        assertEquals("'function' is a reserved word in tinyscript and cannot be used as a name", firstError("const function = 1;"));
+        assertEquals("'from' is a reserved word in tinyscript and cannot be used as a name", firstError("function f(a, from) { return a; }"));
+    }
+
+    @Test
+    public void testSpreadAndRestOutsideOfParameters() {
+        assertEquals("Rest elements (...) in patterns are not supported (for an array, use slice: items.slice(1))",
+                firstError("const items = [1, 2, 3];\nconst [first, ...rest] = items;"));
+        assertEquals("Rest elements (...) in patterns are not supported (for an array, use slice: items.slice(1))",
+                firstError("const o = { x: 1, y: 2 };\nconst { x, ...others } = o;"));
+        assertEquals("Spread (...) in array literals is not supported: concatenate arrays with +, e.g. a + b",
+                firstError("const a = [1]; const b = [2];\nconst c = [...a, ...b];"));
+        assertEquals("Spread (...) in object literals is not supported: copy the properties, e.g. for (const key : Object.keys(o))",
+                firstError("const o = { x: 1 };\nconst p = { ...o, y: 2 };"));
+    }
+
+    @Test
+    public void testKeywordsAreFineAsPropertyNames() {
+        // Like Javascript: only names of variables are reserved, not names of properties
+        String code = "const range = { from: 1, to: 5, as: \"x\", import: true, if: 2 };\n"
+                + "print(range.from + range.to, \" \", range.as, \" \", range.import, \" \", range.if);";
+        assertEquals("6 x true 2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testReservedWordsAreFineAsPropertyNames() {
         String code = "const o = { class: \"a\", case: 1 }; print(o.class + o.case);";
         assertEquals("a1\n", interpreterOutput(code));
