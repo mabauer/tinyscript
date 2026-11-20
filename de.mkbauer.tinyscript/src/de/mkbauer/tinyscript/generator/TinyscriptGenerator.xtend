@@ -279,7 +279,7 @@ class TinyscriptGenerator   {
 	'''
 	
 	def dispatch generate(VariableStatement stmt) '''
-		«FOR vardecl: stmt.vardecls BEFORE 'var ' SEPARATOR ', ' AFTER ';'»
+		«FOR vardecl: stmt.vardecls BEFORE 'let ' SEPARATOR ', ' AFTER ';'»
 			«vardecl.generate»«ENDFOR»
 	'''
 	
@@ -357,34 +357,30 @@ class TinyscriptGenerator   {
 		}
 	}
 	
+	// Like the interpreter (and Lua), a hidden counter runs the loop; the loop variable gets its
+	// value in each iteration: a block-scoped let, so that closures see the value of their iteration
 	def generateNumericForStatement(ForStatement stmt) {
 		val NumericForExpression expr=stmt.numericForExpr; 
-		var String loopVar; 
-		var String loopVarDefinition;  
-		if (stmt.id !== null) {
-			loopVar = stmt.id.generate as String
-			loopVarDefinition = "var " + loopVar;
-		}
-		else {
-			loopVar = stmt.ref.generate as String
-			loopVarDefinition = loopVar;
-		}
+		val loopVarDefinition = if (stmt.id !== null) "let " + stmt.id.generate else stmt.ref.generate
 		// Like the interpreter, evaluate the bounds once, in the order start, stop, step
 		val preamble = new StringBuilder
 		val start = evaluateOnce(expr.start, "start", preamble)
 		val stop = evaluateOnce(expr.stop, "stop", preamble)
 		val step = if (expr.step !== null) evaluateOnce(expr.step, "step", preamble)
+		val counter = newTempName("n")
 		'''
 		«preamble»
 		«IF (step === null)»
-			for («loopVarDefinition» = «start»; «loopVar» <= «stop»; «loopVar» = «loopVar» + 1) {
+			for (var «counter» = «start»; «counter» <= «stop»; «counter» = «counter» + 1) {
+				«loopVarDefinition» = «counter»;
 				«stmt.^do.generate»
 			}
 		«ELSE»
-			for («loopVarDefinition» = «start»; («step» > 0)?(«loopVar» <= «stop»):(«loopVar» >= «stop»); «loopVar» = «loopVar» + «step») {
+			for (var «counter» = «start»; («step» > 0)?(«counter» <= «stop»):(«counter» >= «stop»); «counter» = «counter» + «step») {
+				«loopVarDefinition» = «counter»;
 				«stmt.^do.generate»
 			}
-		«ENDIF»'''		
+		«ENDIF»'''
 	}
 	
 	/**
@@ -408,8 +404,8 @@ class TinyscriptGenerator   {
 		val IterableForExpression expr=stmt.iterableForExpr; 
 		val iterable = newTempName("iterable")
 		val index = newTempName("i")
-		val loopVarDefinition = if (stmt.id !== null) "var " + stmt.id.generate
-			else if (stmt.pattern !== null) "var " + stmt.pattern.generate
+		val loopVarDefinition = if (stmt.id !== null) "let " + stmt.id.generate
+			else if (stmt.pattern !== null) "let " + stmt.pattern.generate
 			else stmt.ref.generate
 		'''
 		var «iterable» = «expr.iterable.generate»;

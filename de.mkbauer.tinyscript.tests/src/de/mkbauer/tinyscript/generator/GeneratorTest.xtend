@@ -33,7 +33,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			assert (hello == "Hello World!");
 		''')
 		assertEquals('''
-			var hello;
+			let hello;
 			hello = "Hello World!";
 			assert (__ts_eq(hello, "Hello World!"));
 		'''.toString, result)
@@ -75,8 +75,8 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			var x = 2.25;
 			var y = -x;''')
 		assertEquals('''
-			var x = 2.25;
-			var y = -x;'''.toString, 
+			let x = 2.25;
+			let y = -x;'''.toString, 
 			result.trim())
 		result = generateScriptFromString("!false;")
 		assertEquals("!false;", result.trim())
@@ -84,8 +84,8 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			var x = (3 == 4);
 			var true_ = !x;''')
 		assertEquals('''
-			var x = (__ts_eq(3, 4));
-			var true_ = !x;'''.toString, 
+			let x = (__ts_eq(3, 4));
+			let true_ = !x;'''.toString, 
 			result.trim())
 	}
 	
@@ -100,7 +100,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			obj.method();
 		''')
 		assertEquals('''
-			var obj;
+			let obj;
 			obj.key1;
 			obj.key1.key2;
 			obj["key"];
@@ -133,7 +133,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			};
 		''')
 		assertEquals('''
-			var f;
+			let f;
 			f = function (p1, p2) {
 				return p1 * p2;
 			};
@@ -149,7 +149,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			};
 		''')
 		assertEquals('''
-			var f;
+			let f;
 			f = function name(p1, p2) {
 				return p1 * p2;
 			};
@@ -169,7 +169,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			}
 		''')
 		assertEquals('''
-			var x, y, max;
+			let x, y, max;
 			if (x >= y) {
 				max = x;
 			}
@@ -188,8 +188,9 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			}
 		''')
 		assertEquals('''
-			var result;
-			for (var i = 1; i <= 10; i = i + 1) {
+			let result;
+			for (var __ts_n1 = 1; __ts_n1 <= 10; __ts_n1 = __ts_n1 + 1) {
+				let i = __ts_n1;
 				result = i;
 			}
 		'''.toString, result)
@@ -200,8 +201,9 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			}
 		''')
 		assertEquals('''
-			var result;
-			for (var i = 10; (-1 > 0)?(i <= 1):(i >= 1); i = i + -1) {
+			let result;
+			for (var __ts_n1 = 10; (-1 > 0)?(__ts_n1 <= 1):(__ts_n1 >= 1); __ts_n1 = __ts_n1 + -1) {
+				let i = __ts_n1;
 				result = i;
 			}
 		'''.toString, result)
@@ -236,9 +238,10 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			}
 		''')
 		assertEquals('''
-			var result;
-			var i;
-			for (i = 1; i <= 10; i = i + 1) {
+			let result;
+			let i;
+			for (var __ts_n1 = 1; __ts_n1 <= 10; __ts_n1 = __ts_n1 + 1) {
+				i = __ts_n1;
 				result = i;
 			}
 		'''.toString, result)	
