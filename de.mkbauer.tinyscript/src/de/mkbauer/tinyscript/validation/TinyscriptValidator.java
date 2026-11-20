@@ -15,6 +15,7 @@ import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.Pattern;
 import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.ReturnStatement;
@@ -119,7 +120,8 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	 */
 	@Check
 	public void checkAssignmentTarget(BinaryExpression assignment) {
-		if (isAssignment(assignment) && !(assignment.getLeft() instanceof Identifier) && !isAssignable(assignment.getLeft()))
+		if (isAssignment(assignment) && !(assignment.getLeft() instanceof Identifier) && !(assignment.getLeft() instanceof Pattern)
+				&& !isAssignable(assignment.getLeft()))
 			error("Invalid left-hand side of an assignment", TsPackage.Literals.BINARY_EXPRESSION__LEFT);
 	}
 
@@ -150,6 +152,21 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 				return true;
 		}
 		return false;
+	}
+
+	/**
+	 * Destructuring patterns: each name only once, and in a for loop only over an iterable
+	 * (for (var [key, value] : map)), not in a numeric for loop.
+	 */
+	@Check
+	public void checkPattern(Pattern pattern) {
+		Set<String> names = new HashSet<String>();
+		for (Identifier name : pattern.getNames()) {
+			if (!names.add(name.getName()))
+				error("Duplicate identifier", name, TsPackage.Literals.IDENTIFIER__NAME);
+		}
+		if (pattern.eContainer() instanceof ForStatement loop && loop.getNumericForExpr() != null)
+			error("A numeric for loop needs a single variable", null);
 	}
 
 	/**

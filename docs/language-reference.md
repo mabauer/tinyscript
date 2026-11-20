@@ -100,6 +100,18 @@ var a = 1, b = 2, c = a + b;   // multiple declarations in one statement
 
 `let` is accepted as a synonym for `var`.
 
+### Destructuring
+
+A declaration can take apart an array or an object; only flat patterns of names are supported (no nesting, defaults, renaming or `...rest`):
+
+```
+var [quotient, remainder] = divide(17, 5);   // the first elements of an array
+var { row, col } = position;                 // properties of an object
+for (var [key, value] : map) { ... }         // in an iterable for loop
+```
+
+Stricter than Javascript, an array pattern needs an array with at least as many elements (`var [a, b] = [1]` is a `TypeError`; more elements are fine). An object pattern needs an object (or a string); like `o.x`, a missing property gives `undefined`.
+
 ### Block scope
 
 Blocks create real scopes. A variable declared inside a block is not visible outside it:
@@ -1064,7 +1076,7 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 - **Regular expressions** — no regex literals or `RegExp`
 - **`try` / `catch`** — errors cannot be caught; `throw` ends the script
 - **Template literals** — no backtick strings
-- **Destructuring** — no `const { a, b } = obj`
+- **Destructuring** beyond flat patterns in `var` and `for` — no nesting, defaults, renaming, `...rest`, or patterns in parameters and assignments
 - **Spread operator** — no `...array` in call sites
 - **`const`** — no constant declarations
 - **`delete`** operator

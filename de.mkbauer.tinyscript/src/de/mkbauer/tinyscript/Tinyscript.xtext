@@ -171,7 +171,7 @@ ElseStatement:
 ;
 
 ForStatement:
-	'for' '(' ((KW_VAR id=Identifier) | ref=Reference) (numericForExpr=NumericForExpression | iterableForExpr=IterableForExpression) ')' do=Block
+	'for' '(' ((KW_VAR (id=Identifier | pattern=Pattern)) | ref=Reference) (numericForExpr=NumericForExpression | iterableForExpr=IterableForExpression) ')' do=Block
 ;
 
 NumericForExpression:
@@ -206,7 +206,21 @@ VariableStatement:
 ;
 
 VariableDeclaration returns Expression:
-	Identifier ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)?
+	Identifier ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)? |
+	Pattern {BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression
+;
+
+// Destructuring, only flat: var [a, b] = pair; var { row, col } = position;
+Pattern:
+	ArrayPattern | ObjectPattern
+;
+
+ArrayPattern:
+	'[' names += Identifier (',' names += Identifier)* ']'
+;
+
+ObjectPattern:
+	'{' names += Identifier (',' names += Identifier)* '}'
 ;
 
 Reference:
