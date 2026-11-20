@@ -1,0 +1,69 @@
+// Advent of Code 2024, day 18: RAM Run
+// https://adventofcode.com/2024/day/18
+//
+// Usage: tinyscript day18.tys -- input.txt [size bytes]
+// (the memory is 71 x 71 with 1024 fallen bytes; the example in the puzzle uses 7 x 7 and 12)
+
+import inputLines from "./aoc";
+import integers from "std:string";
+
+const size = System.args.length > 2 ? Number(System.args[1]) : 71;
+const fallen = System.args.length > 2 ? Number(System.args[2]) : 1024;
+
+// The positions where bytes fall, in the order they fall: "5,4" is x = 5, y = 4
+const bytes = inputLines().map(line => {
+    const [x, y] = integers(line);
+    return { x, y };
+});
+
+// The fewest steps from the top left to the bottom right corner when the first count bytes
+// have fallen (breadth-first search), null if there is no way
+function shortestPath(count) {
+    const corrupted = new Set(bytes.slice(0, count).map(({ x, y }) => y * size + x));
+    const steps = new Map([[0, 0]]);
+    const queue = [{ x: 0, y: 0 }];
+    let next = 0;   // the queue is an array that is read from the front
+    while (next < queue.length) {
+        const { x, y } = queue[next];
+        next++;
+        if (x == size - 1 && y == size - 1) {
+            return steps.get(y * size + x);
+        }
+        for (const [dx, dy] : [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            const nx = x + dx;
+            const ny = y + dy;
+            const key = ny * size + nx;
+            if (nx >= 0 && nx < size && ny >= 0 && ny < size && !corrupted.has(key) && !steps.has(key)) {
+                steps.set(key, steps.get(y * size + x) + 1);
+                queue.push({ x: nx, y: ny });
+            }
+        }
+    }
+    return null;
+}
+
+// Part 1: after the first bytes have fallen
+print("Part 1: " + shortestPath(fallen));
+
+// Part 2: the first byte that cuts off the way out. A binary search for the smallest count
+// of bytes with no way left: low always has a way, high has none.
+function firstBlockingByte() {
+    let low = fallen;
+    let high = bytes.length;
+    if (shortestPath(high) != null) {
+        return null;
+    }
+    while (high - low > 1) {
+        const middle = Math.floor((low + high) / 2);
+        if (shortestPath(middle) == null) {
+            high = middle;
+        }
+        else {
+            low = middle;
+        }
+    }
+    const { x, y } = bytes[high - 1];
+    return x + "," + y;
+}
+
+print("Part 2: " + (firstBlockingByte() ?? "none"));

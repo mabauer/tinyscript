@@ -1,0 +1,80 @@
+// Advent of Code 2024, day 20: Race Condition
+// https://adventofcode.com/2024/day/20
+//
+// Usage: tinyscript day20.tys -- input.txt [threshold]
+// (counts the cheats that save at least 100 picoseconds, or the given threshold)
+
+import inputLines from "./aoc";
+
+const track = inputLines();
+const height = track.length;
+const width = track[0].length;
+const threshold = System.args.length > 1 ? Number(System.args[1]) : 100;
+
+function find(tile) {
+    for (let row = 0, height - 1) {
+        const col = track[row].indexOf(tile);
+        if (col >= 0) {
+            return { row, col };
+        }
+    }
+    throw new Error("The track has no " + tile);
+}
+
+// The race track is a single path from S to E: the distance from S of each of its positions
+function distancesAlongTheTrack() {
+    const start = find("S");
+    const distances = new Map([[start.row * width + start.col, 0]]);
+    const path = [start];
+    let current = start;
+    while (track[current.row][current.col] != "E") {
+        for (const [dr, dc] : [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+            const row = current.row + dr;
+            const col = current.col + dc;
+            if (track[row][col] != "#" && !distances.has(row * width + col)) {
+                distances.set(row * width + col, distances.size);
+                current = { row, col };
+                break;
+            }
+        }
+        path.push(current);
+    }
+    return { path, distances };
+}
+
+const { path, distances } = distancesAlongTheTrack();
+
+// A cheat goes through walls from one track position to another within cheatLength
+// picoseconds (the Manhattan distance); it saves the distance along the track minus the
+// length of the cheat. Counts the cheats that save at least the threshold.
+function countCheats(cheatLength) {
+    // The offsets within reach, computed once
+    const offsets = [];
+    for (let dr = -cheatLength, cheatLength) {
+        const rest = cheatLength - Math.abs(dr);
+        for (let dc = -rest, rest) {
+            offsets.push({ dr, dc, length: Math.abs(dr) + Math.abs(dc) });
+        }
+    }
+    let count = 0;
+    for (const { row, col } : path) {
+        const here = distances.get(row * width + col);
+        for (const { dr, dc, length } : offsets) {
+            const r = row + dr;
+            const c = col + dc;
+            if (r >= 0 && r < height && c >= 0 && c < width) {
+                const there = distances.get(r * width + c);
+                if (there != null && there - here - length >= threshold) {
+                    count++;
+                }
+            }
+        }
+    }
+    return count;
+}
+
+// Part 1: cheats of up to 2 picoseconds
+print("Part 1: " + countCheats(2));
+
+// Part 2: cheats of up to 20 picoseconds
+print("Part 2: " + countCheats(20));

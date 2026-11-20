@@ -42,6 +42,13 @@ Next
      - ~~Missing: `Infinity`~~ (done, with `NaN`; `Number.MAX_SAFE_INTEGER` etc. still missing); "no limit" had to be written `1 / 0`.
      - ~~Reading numbers out of text~~ (done: `integers(text)` in `std:string`) without regular expressions needs a helper (`integers(line)` in `examples/aoc2024/aoc.tys`, used by days 13 and 14); a candidate for `std:string`.
      - Speed: all days within seconds (day 14 worst case 6.6 s, day 11 3.2 s).
+   - Days 16–20 (2026-11-21): all correct (checked against a Python reference), each within seconds (day 20: 6.6 s). Findings:
+     - **Bug:** `from` and `as` are reserved words (because of `import … from` / `* as m`), but in Javascript they are ordinary names: `const from = 1;` fails with "Unexpected 'from'".
+     - **Bug:** for `const [first, ...rest] = items;` the message says "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)" — about calls, although it is a pattern.
+     - Missing: **bitwise operators** (`^`, `&`, `|`, `<<`, `>>`) and **powers** (`**` or `Math.pow`); day 17 emulates XOR and shifts with arithmetic.
+     - Missing: **spread in calls** (`Math.min(...values)`) — reached for it twice; and **rest elements in array patterns** (`[first, ...rest]`).
+     - Missing: a **priority queue** (day 16 has a binary heap of its own); a candidate for a std module.
+     - The new error messages helped: `queue[next++]` was answered with "++ and -- are statements, not expressions: write i++; on its own".
    - The inclusive numeric `for` makes `for (let i = 0, a.length - 1)` the common case — see item 8.
    - Days 5 and 6 added. **Speed** is the next limit: part 2 of day 6 (a simulation, 20–30 million steps for a real input) takes about a minute; on a test grid with 8 million steps, tinyscript needs 19 s, CPython 1.9 s. A profile (JFR) shows the costs of the tree walk: `dispatch` / `execute` with `eClass()` per node, `HashMap` lookups of variables in the execution contexts, string comparisons of operators. Ideas: resolve variables to slots once, dispatch on cached node kinds or precompiled closures, operators as enums.
 

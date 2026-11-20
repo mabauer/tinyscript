@@ -19,6 +19,11 @@ Solutions of the first days of [Advent of Code 2024](https://adventofcode.com/20
 | [13](day13.tys) | Claw Contraption | reading numbers from text (`integers` of `std:string`), Cramer's rule, `Number.isInteger` |
 | [14](day14.tys) | Restroom Redoubt | optional script arguments (`System.args`), patterns as parameters, a remainder that is never negative |
 | [15](day15.tys) | Warehouse Woes | a mutable grid, recursive pushing of boxes (also two cells wide) |
+| [16](day16.tys) | Reindeer Maze | Dijkstra's algorithm with a priority queue (a binary heap in a closure), searching forward and backward |
+| [17](day17.tys) | Chronospatial Computer | a small virtual machine; XOR and shifts without bitwise operators; a search digit by digit |
+| [18](day18.tys) | RAM Run | breadth-first search, binary search |
+| [19](day19.tys) | Linen Layout | dynamic programming (`startsWith` with a position) |
+| [20](day20.tys) | Race Condition | distances along a path, all cells within a Manhattan distance |
 
 [aoc.tys](aoc.tys) is a module with the helpers for reading the puzzle input (via `std:fs`).
 
@@ -26,6 +31,6 @@ Run a day with your puzzle input (by default `input.txt` in the working director
 
     tinyscript day01.tys -- input.txt
 
-Days 1–5, 8, 10, 12, 13 and 15 take about a second at most, day 11 about 3 s, day 7 and day 14 about 6–7 s and day 9 about 10 s on inputs of real size. Part 2 of day 6 simulates the guard once for each position on her route, about 20–30 million steps for a real input; that takes about a minute (tinyscript is a tree-walking interpreter, roughly ten times slower than CPython).
+Days 1–5, 8, 10, 12, 13 and 15–19 take about 2 seconds at most, day 11 about 3 s, days 7, 14 and 20 about 6–7 s and day 9 about 10 s on inputs of real size. Part 2 of day 6 simulates the guard once for each position on her route, about 20–30 million steps for a real input; that takes about a minute (tinyscript is a tree-walking interpreter, roughly ten times slower than CPython).
 
 The `*.example*.txt` files are the examples from the puzzle texts; the tests in `de.mkbauer.tinyscript.standalone.tests` (`AdventOfCode2024Test`) run each day with them, in the interpreter and, transpiled to Javascript, in node. Your own puzzle inputs are not part of the repository ([as asked by Advent of Code](https://adventofcode.com/2024/about)).
