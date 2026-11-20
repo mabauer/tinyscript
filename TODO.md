@@ -7,7 +7,26 @@ Open issues and ideas for tinyscript. Each item is meant to become its own PR, w
 Next
 ----
 
-Nothing scheduled right now; pick the next items from the sections below.
+**Goal: tinyscript is good enough to solve an Advent of Code** (decided 2026-11-20). A probe of typical building blocks showed what is missing. tinyscript stays deliberately stricter than Javascript; every addition is Javascript-compatible where it exists there, so the generator passes it through and differential tests run against node.
+
+0. **Conversions & strictness.** One consistent rule before adding builtins:
+   - Arithmetic `-`, `*`, `/`, `%` only with numbers (today `1 - "a"`, `"a" * 2` are silently `NaN`) → `TypeError`.
+   - `+` only number + number, string + value, array + array (today `1 + true`, `1 + null`, `1 + undefined` are silently `NaN`) → `TypeError`.
+   - Unary `-`: `-NaN` is `NaN` (today a `TypeError` whose message shows a Java object); other non-numbers → `TypeError` with a readable message.
+   - `undefined` / `null` print and concatenate as `undefined` / `null` (today `Undefined` / `Null`), as in Javascript.
+   - String conversion (`"x" + o`, `String(o)`) uses a user-defined `toString` (today the internal `{toString: [Function: ]}` format).
+   - Reading `"abc"[1]` gives `"b"` (today `undefined`); writing is a `TypeError`.
+   - Builtins do not convert silently: an argument of the wrong type is a `TypeError` (today `Math.sqrt("4")` is `2`). Conversion is explicit (`Number`, `parseInt`, `String`, see 1).
+   - **Conditions** (`if`, `while`, `?:`, `assert`, `!`, `&&`, `||`) accept a boolean, `null` / `undefined` (false) or an object (true); numbers and strings are a `TypeError` (the traps `0`, `""`, `NaN`). So `while (node)`, `if (o.x)` for objects keep working, `if (count)` must be written `count > 0`.
+   - A user-defined `valueOf` is deliberately not supported (it would be implicit conversion in operators).
+   - Kept on purpose (document): calling a user function with too few arguments gives `undefined` for the rest, extra arguments are ignored; reading a missing property gives `undefined`.
+   - Update the scripts that rely on the old behavior; document everything in the README ("Design decisions").
+1. **Strings and numbers:** `split`, `trim`, `startsWith`, `endsWith`, `includes`, `replace` / `replaceAll` (strings only, no regex), `slice`, `lastIndexOf`, `repeat`, `padStart`, `toUpperCase` / `toLowerCase`, `charCodeAt`, `String.fromCharCode`; `Number(s)` (trims, `""` and non-numbers are `NaN`), `parseInt(s[, radix])` (lenient like Javascript), `isNaN`, `Number.isInteger`.
+2. **Arrays:** `sort` (with comparison function), `slice`, `reduce`, `forEach`, `some`, `every`, `find`, `findIndex`, `includes`, `fill`, `new Array(n)`.
+3. **Syntax:** `continue`, `cond ? a : b`, `+=` / `-=` / `*=` / `/=` / `%=`; `++` / `--` only as statements (`i++;`, not inside expressions).
+4. **`Map` and `Set`** as in Javascript (keys of any type, `has` returns a boolean); no `delete` operator.
+5. **Robustness:** deep recursion must not crash the REPL with a Java `StackOverflowError` (run the interpreter in a thread with a large stack, report an overflow as a tinyscript error); a call of a missing method says so ("String has no method 'split'" instead of "Calls are only allowed for function objects"); script arguments after `--` in `System.args` (`tinyscript day1.tys -- input.txt`).
+6. **Practice:** solve two or three real Advent of Code days with the example inputs from the puzzle texts as integration tests; find what is still missing and whether the interpreter is fast enough.
 
 
 Language
@@ -53,11 +72,11 @@ Language
        - no delete / mkdir (dangerous, no need so far)
     6. Optional, IDE: the validator checks while typing that the imported file exists and exports the names (fits the VS Code language server).
 
-- **Conversions.** Builtins convert their arguments with `TSObject.toNumber` / `toInteger` / `toString`. Today `undefined` and non-numeric strings become `0` (Javascript: `NaN`), a user-defined `valueOf` is ignored, and some code uses `TSValue.asString()` where `TSObject.toString(engine, value)` (which calls a user-defined `toString`) would be right. Decide how much of Javascript's conversion rules tinyscript wants, then write tests.
-
 - **Global `this`.** At top level `this` is the global object. In Javascript's strict mode (which tinyscript otherwise follows) it is `undefined`.
 
 - **More functions in the runtime library.** (`concat` is not needed: `+` concatenates arrays.)
+
+- **`?.` and `??`** as in Javascript (`o?.x`, `a ?? b`): shorter null checks.
 
 
 Interpreter and code quality
