@@ -117,12 +117,33 @@ Language
 
 - **Language review** (2026-11-20; grammar, language reference and about 70 probe scripts against the REPL of 0.21.1-SNAPSHOT). The goal stays a small language that is practical for experiments. The bugs it found are under "Interpreter and code quality".
   - **Gaps**, by weight:
-    1. **No error handling.** Without `try` / `catch`, `throw` only ends the script: `fs.readFile` on a missing file cannot be handled, and libraries cannot report errors in a useful way. The biggest gap for practical use; a minimal `try { … } catch (e) { … }` (no `finally`, `e` is the `Error` or the thrown value) would do. Revisits the decision of 2026-11-21.
+    1. **No error handling.** Without `try` / `catch`, `throw` only ends the script: `fs.readFile` on a missing file cannot be handled, and libraries cannot report errors in a useful way. The biggest gap for practical use. Revisits the decision of 2026-11-21. `throw` and all runtime errors are already Java exceptions in the interpreter (like `break` and `return`), so catching is cheap. Decided 2026-11-20: **the minimal `try` / `catch`**. The variants:
+       - **Minimal `try { … } catch (e) { … }`** (chosen), no `finally`: grammar, one case in the interpreter, the generator passes it through; `try` / `catch` are already reserved.
+       - **A protected call as in Lua:** `const r = attempt(() => fs.readFile(p));` with `r.ok`, `r.value`, `r.error`. One builtin, no grammar change; the generator needs a small helper for node.
+       - **Return values instead of errors** (`fs.readFile` gives `null` for a missing file): no new mechanism, but only works for single functions and does not help libraries written in tinyscript.
+       - Still to decide: *what is caught* — everything, or only expected errors (thrown values, input / output) while a `TypeError` stays a programming error that ends the script (stricter, and it avoids comparing runtime messages that differ between the interpreter and node); *what `e` is* — simplest: always an `Error` with `name` and `message`, any other thrown value as it is; *sandbox* — resource limit violations and the stack overflow must never be catchable.
     2. **`undefined` as a name** (see above).
     3. **No input.** Only files and `System.args`; nothing reads standard input, so interactive scripts are not possible. Candidate: `readLine()` in a `std:` module (not sandboxed).
     4. **Arrays and objects cannot shrink.** Arrays: no `splice` (insert / remove in the middle), no `reverse` method (only `std:array`). Objects: no `delete`, no `Object.values` / `Object.entries`.
     5. **Numbers.** `Math` has nine members: powers (`**` or `Math.pow`), `trunc`, `sign`, `log`, the trigonometric functions are missing; so is formatting to n decimal places (Javascript: `toFixed`, but numbers have no methods here).
-    6. **Objects with methods are verbose.** No method shorthand `{ greet() { … } }`; the shorthand is cheap, `class` is not needed.
+    6. **Objects with methods are verbose.** The mechanics are complete (`Object.create`, `prototype`, `instanceof`); what is missing is a comfortable spelling. Tendency (2026-11-20): **no inheritance for now**, in this order:
+       1. **Method shorthand** `{ greet() { … } }` for `greet: function() { … }`: grammar only, the generator passes it through. It also makes factory functions with closures readable (`return { inc() { n++; }, get() { return n; } };`), which give private state without `this`.
+       2. **`class` without inheritance:** short for a constructor function plus methods on its prototype; no `extends`, no `super` (the expensive part), no static members, no getters.
+       3. **`interface` / `implements`** (spelling as in TypeScript), to say that two classes implement the same protocol:
+
+          ```js
+          interface Shape { area(); describe(); }
+
+          class Circle implements Shape {
+              constructor(r) { this.r = r; }
+              area() { return Math.PI * this.r * this.r; }
+              describe() { return "circle " + this.r; }
+          }
+          ```
+
+          An interface names methods and their number of parameters, without bodies. Nominal: only a class that says `implements Shape` is a `Shape`, so the validator checks it before the script runs (a missing method or a wrong number of parameters is an error at the class, also in the Eclipse editor). The generator drops `interface` and `implements`. Limit: without types on parameters nothing checks that an argument is a `Shape`; `shape.area()` stays dynamic.
+       4. If needed: `x instanceof Shape` at runtime (the class remembers its interfaces; the generator needs a helper for node, Javascript has no interfaces).
+       - Not pursued: structural interfaces as in Go (only checkable at runtime); a `std:` module with `extend` / `_new` helpers (a convention nobody knows); a library function that checks for methods at runtime (works with object literals, but loses the check before the run).
     7. Smaller: spread in calls (`Math.max(...values)`), renaming in imports (`import a as x from …`), assignment with a pattern (`[a, b] = [b, a];`).
     - Deliberately not gaps: `switch`, template strings, labels, `do … while`, regular expressions, `Date`. The messages for them are good, and the language stays small.
   - **Design questions:**
