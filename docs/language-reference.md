@@ -842,25 +842,32 @@ print(counter());   // 2
 print(counter());   // 3
 ```
 
-Each call to `makeCounter()` creates a fresh `count` variable — closures from different calls do not share state:
+Each call to `makeCounter()` creates a fresh `count` variable, so closures from different calls do not share state.
+
+Two common uses: a function that remembers results (here in a `Map`, which only the returned function can reach) and a function made from a parameter, e.g. a comparison for `sort`:
 
 ```
-function createCounter() {
-    let value = 0;
-    return {
-        add: function(x) { value = value + x; },
-        sub: function(x) { value = value - x; },
-        val: function()  { return value; }
+function memoize(f) {
+    const cache = new Map();
+    return function(n) {
+        if (!cache.has(n)) {
+            cache.set(n, f(n));
+        }
+        return cache.get(n);
     };
 }
 
-const c1 = createCounter();
-const c2 = createCounter();
+// Without the cache, fib(70) would take years
+const fib = memoize(n => n < 2 ? n : fib(n - 1) + fib(n - 2));
+print(fib(70));   // 190392490709135
 
-c1.add(14);
-c2.add(32);
-print(c1.val());   // 14
-print(c2.val());   // 32
+function by(key) {
+    return (a, b) => a[key] - b[key];
+}
+
+const people = [{ name: "Ann", age: 41 }, { name: "Bob", age: 23 }, { name: "Cy", age: 35 }];
+people.sort(by("age"));
+print(people.map(p => p.name).join(", "));   // Bob, Cy, Ann
 ```
 
 To share functions and values between files, use modules (see [Modules](#13-modules)).
