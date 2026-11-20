@@ -171,7 +171,7 @@ ElseStatement:
 ;
 
 ForStatement:
-	'for' '(' ((KW_VAR (id=Identifier | pattern=Pattern)) | ref=Reference) (numericForExpr=NumericForExpression | iterableForExpr=IterableForExpression) ')' do=Block
+	'for' '(' ((kind=DeclarationKind (id=Identifier | pattern=Pattern)) | ref=Reference) (numericForExpr=NumericForExpression | iterableForExpr=IterableForExpression) ')' do=Block
 ;
 
 NumericForExpression:
@@ -202,7 +202,7 @@ ThrowStatement:
 ;
 
 VariableStatement:
-	(exported ?= 'export')? KW_VAR (vardecls += VariableDeclaration) (',' vardecls += VariableDeclaration)* ';'
+	(exported ?= 'export')? kind=DeclarationKind (vardecls += VariableDeclaration) (',' vardecls += VariableDeclaration)* ';'
 ;
 
 VariableDeclaration returns Expression:
@@ -314,8 +314,9 @@ terminal OP_NOT:
 	'!'
 ;
 
-terminal KW_VAR:
-	'var' | 'let'
+// var and let are the same (block-scoped, like Javascript's let); const cannot be assigned again
+DeclarationKind:
+	'var' | 'let' | 'const'
 ;
 
 terminal BOOLEAN returns ecore::EBoolean:

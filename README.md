@@ -98,7 +98,7 @@ Limitations
 Certainly, *tinyscript* is not perfect. It's just a proof-of-concept (but a usable one!). Some Javascript features are simply missing, for example:
 
 - There is no support for *regular expressions*.
-- There is no `switch`, no `const` and no `delete`.
+- There is no `switch` and no `delete`.
 
 See [TODO.md](TODO.md) for what's planned.
 
