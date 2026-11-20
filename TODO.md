@@ -45,12 +45,12 @@ Next
    - Days 16–20 (2026-11-21): all correct (checked against a Python reference), each within seconds (day 20: 6.6 s). Findings:
      - ~~**Bug:**~~ (fixed: they stay reserved, decided 2026-11-21, with the message "'from' is a reserved word in tinyscript and cannot be used as a name"; all keywords are fine as property names, `range.from`) `from` and `as` are reserved words (because of `import … from` / `* as m`), but in Javascript they are ordinary names: `const from = 1;` fails with "Unexpected 'from'".
      - ~~**Bug:**~~ (fixed: messages for rest elements in patterns and spread in array and object literals) for `const [first, ...rest] = items;` the message says "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)" — about calls, although it is a pattern.
-     - Missing: **bitwise operators** (`^`, `&`, `|`, `<<`, `>>`) and **powers** (`**` or `Math.pow`); day 17 emulates XOR and shifts with arithmetic.
+     - ~~Missing: **bitwise operators**~~ (done) (`^`, `&`, `|`, `<<`, `>>`) and **powers** (`**` or `Math.pow`); day 17 emulates XOR and shifts with arithmetic.
      - Missing: **spread in calls** (`Math.min(...values)`) — reached for it twice; and **rest elements in array patterns** (`[first, ...rest]`).
      - Missing: a **priority queue** (day 16 has a binary heap of its own); a candidate for a std module.
      - The new error messages helped: `queue[next++]` was answered with "++ and -- are statements, not expressions: write i++; on its own".
    - Days 21–25 (2026-11-21): all of Advent of Code 2024 is solved; all days checked against a Python reference. Findings:
-     - **Bitwise operators** are the clearest gap: day 22 (12 million XORs) takes 34 s because XOR has to be done with a table of bytes.
+     - ~~**Bitwise operators**~~ (done, on 53 bits, decided 2026-11-20; day 22 now takes 6.8 s) are the clearest gap: day 22 (12 million XORs) takes 34 s because XOR has to be done with a table of bytes.
      - Cosmetic: in a stack trace the innermost call is named after the block it is in (`at if(…)`) instead of the function (`valueOf`).
      - The message for reserved words caught `function movesBetween(keypad, from, to)` right away.
    - The inclusive numeric `for` makes `for (let i = 0, a.length - 1)` the common case — see item 8.

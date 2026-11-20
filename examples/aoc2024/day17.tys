@@ -10,31 +10,9 @@ import integers from "std:string";
 const [a, b, c, program] = inputLines().map(integers);
 const registers = { a: a[0], b: b[0], c: c[0] };
 
-// tinyscript has no bitwise operators; the numbers stay below 2^53, where these are exact
-function xor(x, y) {
-    let result = 0;
-    let bit = 1;
-    while (x > 0 || y > 0) {
-        if (x % 2 != y % 2) {
-            result += bit;
-        }
-        x = Math.floor(x / 2);
-        y = Math.floor(y / 2);
-        bit *= 2;
-    }
-    return result;
-}
-
-// x / 2^n, rounded down (a right shift)
+// x / 2^n, rounded down: a right shift (the registers have at most 53 bits)
 function shiftRight(x, n) {
-    let divisor = 1;
-    for (let i = 1, n) {
-        divisor *= 2;
-        if (divisor > x) {
-            return 0;
-        }
-    }
-    return Math.floor(x / divisor);
+    return n > 53 ? 0 : x >> n;
 }
 
 // Runs the program and returns its output
@@ -52,7 +30,7 @@ function run(program, registers) {
             a = shiftRight(a, combo(operand));         // adv
         }
         else if (opcode == 1) {
-            b = xor(b, operand);                       // bxl
+            b = b ^ operand;                           // bxl
         }
         else if (opcode == 2) {
             b = combo(operand) % 8;                    // bst
@@ -61,7 +39,7 @@ function run(program, registers) {
             ip = operand;                              // jnz
         }
         else if (opcode == 4) {
-            b = xor(b, c);                             // bxc
+            b = b ^ c;                                 // bxc
         }
         else if (opcode == 5) {
             output.push(combo(operand) % 8);           // out

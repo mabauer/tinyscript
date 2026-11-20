@@ -170,6 +170,22 @@ arr = arr + ["c", "d"];      // ["a", "b", "c", "d"]
 print("n = " + 42);          // n = 42
 ```
 
+### Bitwise
+
+| Operator | Operation |
+|---|---|
+| `a & b`, `a \| b`, `a ^ b` | Bitwise and, or, exclusive or |
+| `~a` | Bitwise not (`~a` is `-a - 1`) |
+| `a << n`, `a >> n` | Shift left / right by `n` bits (`>>` keeps the sign) |
+
+Unlike Javascript, whose bitwise operators work on 32 bits and cut off larger numbers silently, tinyscript's work on integers up to 2^53 (negative ones in two's complement), so `1099511627776 ^ 1` (2^40 ^ 1) is `1099511627777`. Anything else is a `TypeError`: a fraction, a number of 2^53 or more, a shift count outside 0 to 53, or a `<<` whose result needs more than 53 bits. There is no `>>>`. The compound assignments `&=`, `|=`, `^=`, `<<=` and `>>=` work as for the other operators.
+
+```
+const flags = 4 | 1;          // 5
+print(flags & 4);             // 4
+print(-8 >> 1);               // -4
+```
+
 ### Comparison
 
 | Operator | Meaning |
@@ -224,16 +240,20 @@ const sign = x > 0 ? 1 : x < 0 ? -1 : 0;
 
 ### Operator precedence (high to low)
 
-1. `!`, unary `-`
+1. `!`, `~`, unary `-`
 2. `*`, `/`, `%`
 3. `+`, `-`
-4. `<`, `<=`, `>`, `>=`, `instanceof`
-5. `==`, `!=`
-6. `&&`
-7. `||`
-8. `??`
-9. `? :` (right-associative)
-10. `=`, `+=`, `-=`, `*=`, `/=`, `%=` (right-associative)
+4. `<<`, `>>`
+5. `<`, `<=`, `>`, `>=`, `instanceof`
+6. `==`, `!=`
+7. `&`
+8. `^`
+9. `|`
+10. `&&`
+11. `||`
+12. `??`
+13. `? :` (right-associative)
+14. `=`, `+=`, `-=`, `*=`, `/=`, `%=`, `&=`, `|=`, `^=`, `<<=`, `>>=` (right-associative)
 
 ### `assert`
 

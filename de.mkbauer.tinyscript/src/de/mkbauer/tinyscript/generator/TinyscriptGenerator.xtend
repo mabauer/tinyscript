@@ -63,6 +63,10 @@ class TinyscriptGenerator   {
 	@Inject
 	TinyscriptQualifiedNameProvider nameProvider;
 	
+	// tinyscript's bitwise operators work on 53 bits, Javascript's on 32: the generator calls __ts_bitwise
+	static val BITWISE_OPERATORS = #{"&", "|", "^", "<<", ">>"}
+	static val BITWISE_ASSIGNMENTS = #{"&=", "|=", "^=", "<<=", ">>="}
+
 	// Counter for unique names of temporary variables (loop bounds, iterables, indexes)
 	int tempCounter = 0;
 	
@@ -120,6 +124,36 @@ class TinyscriptGenerator   {
 				values() { return Array.from(super.values()); }
 			};
 		})(globalThis.Set);
+
+		// Like the interpreter: bitwise operators on integers up to 53 bits (Javascript's own work on 32 bits)
+		function __ts_bitwise(op, a, b) {
+			const operand = x => {
+				if (!Number.isSafeInteger(x)) {
+					throw new TypeError("'" + op + "' needs integers up to 2^53");
+				}
+				return BigInt(x);
+			};
+			let result;
+			if (op === "~") {
+				result = ~operand(a);
+			}
+			else if (op === "<<" || op === ">>") {
+				if (!Number.isInteger(b) || b < 0 || b > 53) {
+					throw new TypeError("'" + op + "' needs a shift count from 0 to 53");
+				}
+				result = op === "<<" ? operand(a) << BigInt(b) : operand(a) >> BigInt(b);
+			}
+			else {
+				const x = operand(a);
+				const y = operand(b);
+				result = op === "&" ? x & y : op === "|" ? x | y : x ^ y;
+			}
+			const number = Number(result);
+			if (!Number.isSafeInteger(number)) {
+				throw new TypeError("'" + op + "' gives more than 53 bits");
+			}
+			return number;
+		}
 
 		// Like the interpreter: an array pattern [a, b] needs an array with at least as many elements
 		function __ts_pattern(value, count) {
@@ -445,10 +479,11 @@ class TinyscriptGenerator   {
 	}
 	
 	def dispatch generate(BinaryExpression expr) '''
-		«IF (expr.left instanceof Pattern)»«expr.left.generate» = «(expr.left as Pattern).generatePatternValue(expr.right.generate)»«ELSEIF (expr.op.equals("+="))»«expr.generateAddAssignment»«ELSEIF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
+		«IF (expr.left instanceof Pattern)»«expr.left.generate» = «(expr.left as Pattern).generatePatternValue(expr.right.generate)»«ELSEIF (expr.op.equals("+="))»«expr.generateHelperAssignment("__ts_add(")»«ELSEIF BITWISE_ASSIGNMENTS.contains(expr.op)»«expr.generateHelperAssignment('__ts_bitwise("' + expr.op.substring(0, expr.op.length - 1) + '", ')»«ELSEIF BITWISE_OPERATORS.contains(expr.op)»__ts_bitwise("«expr.op»", «expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
 
-	// x += y adds like tinyscript's + (e.g. arrays); a property target is evaluated only once
-	def generateAddAssignment(BinaryExpression expr) {
+	// x += y adds like tinyscript's + (e.g. arrays), x ^= y etc. use the 53-bit bitwise operators
+	// (helper is the start of the call, e.g. '__ts_add('); a property target is evaluated only once
+	def generateHelperAssignment(BinaryExpression expr, String helper) {
 		val left = expr.left
 		if (left instanceof CallOrPropertyAccess) {
 			val suffix = left.suffix as CallOrPropertyAccessSuffix
@@ -458,9 +493,9 @@ class TinyscriptGenerator   {
 				DotPropertyAccessSuffix: property.key.expr.generate.toString
 				ComputedPropertyAccessSuffix: property.key.generate.toString
 			}
-			return '''((o, k) => o[k] = __ts_add(o[k], «expr.right.generate»))(«left.expr.generate», «key»)'''
+			return '''((o, k) => o[k] = «helper»o[k], «expr.right.generate»))(«left.expr.generate», «key»)'''
 		}
-		'''«left.generate» = __ts_add(«left.generate», «expr.right.generate»)'''
+		'''«left.generate» = «helper»«left.generate», «expr.right.generate»)'''
 	}
 
 	def dispatch generate(ArrayPattern pattern)
@@ -482,7 +517,7 @@ class TinyscriptGenerator   {
 
 	// Nested unary operators get parentheses: "- -x" must not become the decrement "--x"
 	def dispatch generate(Unary expr)
-		'''«IF expr.op == "typeof" || expr.expr instanceof Unary»«expr.op»(«expr.expr.generate»)«ELSE»«expr.op»«expr.expr.generate»«ENDIF»'''
+		'''«IF expr.op == "~"»__ts_bitwise("~", «expr.expr.generate»)«ELSEIF expr.op == "typeof" || expr.expr instanceof Unary»«expr.op»(«expr.expr.generate»)«ELSE»«expr.op»«expr.expr.generate»«ENDIF»'''
 		
 	def dispatch generate(NewExpression expr)
 		'''new «expr.expr.generate»'''

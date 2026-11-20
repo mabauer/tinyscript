@@ -36,7 +36,8 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 
 	// After these, an expression has to follow
 	private static final Set<String> OPERATORS = Set.of("+", "-", "*", "/", "%", "=", "+=", "-=", "*=", "/=", "%=",
-			"==", "!=", "<", "<=", ">", ">=", "&&", "||", "??", "!", "?", ":", "(", "[", ",", "return");
+			"==", "!=", "<", "<=", ">", ">=", "&&", "||", "??", "!", "?", ":", "(", "[", ",", "return",
+			"&", "|", "^", "~", "<<", ">>", "&=", "|=", "^=", "<<=", ">>=");
 
 	private static final Map<String, String> TOKEN_NAMES = Map.of(
 			"RULE_ID", "a name",

@@ -721,9 +721,9 @@ public class TinyscriptEngine {
     	switch (op) {
     		case "=":
     			return assignValue(expr.getLeft(), execute(expr.getRight()));
-    		case "+=", "-=", "*=", "/=", "%=":
+    		case "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=":
     			// x op= y is x = x op y, but x (e.g. a[f()]) is evaluated only once
-    			return updateValue(expr.getLeft(), current -> applyOperator(op.substring(0, 1), current, execute(expr.getRight()), expr));
+    			return updateValue(expr.getLeft(), current -> applyOperator(op.substring(0, op.length() - 1), current, execute(expr.getRight()), expr));
     		case "&&":
     			return TSValue.of(condition(expr.getLeft()) && condition(expr.getRight()));
     		case "||":
@@ -743,6 +743,7 @@ public class TinyscriptEngine {
     		case "<", "<=", ">", ">=" -> compare(op, left, right, expr);
     		case "+" -> add(left, right, expr);
     		case "-", "*", "/", "%" -> arithmetic(op, left, right, expr);
+    		case "&", "|", "^", "<<", ">>" -> bitwise(op, left, right, expr);
     		case "instanceof" -> instanceOf(left, right);
     		default -> throw new TinyscriptUnsupportedOperationError("Unsupported binary expression: " + op, expr);
     	};
@@ -793,6 +794,44 @@ public class TinyscriptEngine {
     			+ operand(expr.getLeft(), left) + " and " + operand(expr.getRight(), right), expr);
     }
 
+    // The largest integer whose neighbors are exact as doubles (Number.MAX_SAFE_INTEGER)
+    private static final long MAX_SAFE_INTEGER = 9007199254740991L;
+
+    /**
+     * Bitwise operators on integers up to 53 bits, negative ones in two's complement (decided
+     * 2026-11-20). Javascript's operators work on 32 bits and cut off larger numbers silently;
+     * tinyscript computes them exactly or throws a TypeError.
+     */
+    private TSValue bitwise(String op, TSValue left, TSValue right, BinaryExpression expr) {
+    	long a = bitwiseOperand(op, expr.getLeft(), left, expr);
+    	if (op.equals("<<") || op.equals(">>")) {
+    		if (!(right instanceof TSNumber))
+    			bitwiseOperand(op, expr.getRight(), right, expr);
+    		double n = right.asDouble();
+    		if (!right.isMathematicalInteger() || n < 0 || n > 53)
+    			throw new TinyscriptTypeError("'" + op + "' needs a shift count from 0 to 53, not " + right.asString(), expr);
+    		if (op.equals(">>"))
+    			return TSValue.of((double) (a >> (int) n));
+    		if (Math.abs((double) a) * Math.pow(2, n) > MAX_SAFE_INTEGER)
+    			throw new TinyscriptTypeError("'<<' gives more than 53 bits: " + left.asString() + " << " + right.asString(), expr);
+    		return TSValue.of((double) (a << (int) n));
+    	}
+    	long b = bitwiseOperand(op, expr.getRight(), right, expr);
+    	return TSValue.of((double) switch (op) {
+    		case "&" -> a & b;
+    		case "|" -> a | b;
+    		default -> a ^ b;
+    	});
+    }
+
+    // An operand of a bitwise operator: an integer up to 2^53 (exclusive)
+    private static long bitwiseOperand(String op, Expression expression, TSValue value, EObject node) {
+    	if (value instanceof TSNumber number && value.isMathematicalInteger() && Math.abs(number.value()) <= MAX_SAFE_INTEGER)
+    		return (long) number.value();
+    	String what = value instanceof TSNumber ? value.asString() : describe(value);
+    	throw new TinyscriptTypeError("'" + op + "' needs integers up to 2^53, but " + TinyscriptModelUtil.sourceText(expression) + " is " + what, node);
+    }
+
     private TSValue arithmetic(String op, TSValue left, TSValue right, BinaryExpression expr) {
     	if (!(left instanceof TSNumber leftNumber && right instanceof TSNumber rightNumber)) {
     		// Name the operands that are no numbers
@@ -827,6 +866,7 @@ public class TinyscriptEngine {
     				throw new TinyscriptTypeError("'-' needs a number, but " + operand(expr.getExpr(), value), expr);
     			yield TSValue.of(-number.value());
     		}
+    		case "~" -> TSValue.of((double) ~bitwiseOperand("~", expr.getExpr(), value, expr));
     		case "typeof" -> TSValue.of(value.typeOf());
     		default -> throw new TinyscriptUnsupportedOperationError("Unsupported unary expression: " + expr.getOp(), expr);
     	};
