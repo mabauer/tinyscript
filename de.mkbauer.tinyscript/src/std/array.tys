@@ -1,0 +1,33 @@
+// Standard library: array helpers.  import range, sum from "std:array";
+
+// The array [0, 1, ..., n - 1]
+export function range(n) {
+	var result = [];
+	for (var i = 0, n - 1) {
+		result.push(i);
+	}
+	return result;
+}
+
+// The sum of the numbers in arr
+export function sum(arr) {
+	var result = 0;
+	for (var x : arr) {
+		result = result + x;
+	}
+	return result;
+}
+
+// Whether arr contains an element == x
+export function contains(arr, x) {
+	return arr.indexOf(x) >= 0;
+}
+
+// A new array with the elements of arr in reverse order
+export function reverse(arr) {
+	var result = [];
+	for (var x : arr) {
+		result.unshift(x);
+	}
+	return result;
+}

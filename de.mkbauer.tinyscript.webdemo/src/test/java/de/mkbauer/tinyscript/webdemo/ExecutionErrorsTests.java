@@ -42,6 +42,22 @@ public class ExecutionErrorsTests {
 	}
 
 	@Test
+	public void testStandardLibraryModulesCanBeImported() {
+		TinyscriptExecutionResult result = executionService.executeScriptFromString(
+				"import range, sum from \"std:array\";\nprint(sum(range(4)));");
+		assertEquals(0, result.getErrorCode(), result.getErrorMessage());
+		assertEquals("6\n", result.getOutput());
+	}
+
+	@Test
+	public void testFilesCannotBeImported() {
+		TinyscriptExecutionResult result = executionService.executeScriptFromString(
+				"import x from \"./secret\";\nprint(x);");
+		assertTrue(result.getErrorMessage().contains("Only standard library modules (std:…) are available here"), result.getErrorMessage());
+		assertEquals(1, result.getErrorLine());
+	}
+
+	@Test
 	public void testDoublingAStringHitsTheStringLengthLimit() {
 		// Used to fill the heap: a 1 MB string printed in a loop
 		TinyscriptExecutionResult result = executionService.executeScriptFromString(

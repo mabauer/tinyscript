@@ -931,7 +931,16 @@ print(area(2), unit, geo.area(1));
 - **Imported names are read-only:** `area = 1;` is a compile-time error, and the exports object cannot be changed (`geo.unit = "m";` is a `TypeError`). Objects you import stay mutable, and a module can keep state in closures.
 - Importing the same name twice, or a name that is also declared in the file, is a "Duplicate identifier"; importing a name a module does not export is an error (`"geometry.tys" does not export "helper"`).
 - Files do not see each other's top-level names; sharing works only through `import` / `export`.
-- Modules are not available in the sandboxed web demo. The Javascript generator bundles a program and its modules into one script: each module becomes an immediately invoked function (so it runs once and its private names stay private) that returns its frozen exports.
+- **Standard library:** `std:` modules come with tinyscript (written in tinyscript, in the core bundle under `/std`):
+  - `std:array`: `range(n)` (`[0, …, n - 1]`), `sum(arr)`, `contains(arr, x)`, `reverse(arr)`
+  - `std:math`: `min(a, b)`, `max(a, b)`, `abs(x)`, `clamp(x, lo, hi)`
+
+  ```
+  import range, sum from "std:array";
+  import * as math from "std:math";
+  print(sum(range(10)), " ", math.clamp(15, 0, 10));   // 45 10
+  ```
+- The sandboxed web demo can import only `std:` modules, no files. The Javascript generator bundles a program and its modules into one script: each module becomes an immediately invoked function (so it runs once and its private names stay private) that returns its frozen exports.
 
 ## Quick Reference
 

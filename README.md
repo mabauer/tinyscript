@@ -42,7 +42,7 @@ You can play with it online in your browser [here](https://tinyscript.mkbauer.de
 
 * [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/frontend/public/oo.tys)
 
-* [Modules](docs/language-reference.md#13-modules): `import area, unit from "./geometry";` (not in the web demo)
+* [Modules](de.mkbauer.tinyscript.webdemo/frontend/public/modules.tys): `import area, unit from "./geometry";`, and a small standard library (`import range, sum from "std:array";`); the web demo can import only the standard library
 
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 

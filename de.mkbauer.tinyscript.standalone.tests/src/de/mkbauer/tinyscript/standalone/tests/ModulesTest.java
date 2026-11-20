@@ -18,6 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
+import de.mkbauer.tinyscript.interpreter.StandardLibraryModuleLoader;
 import de.mkbauer.tinyscript.interpreter.TinyscriptReferenceError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptUnsupportedOperationError;
@@ -176,6 +177,42 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     public void testImportWithoutModuleLoaderIsAnError() {
         // e.g. in the sandboxed webdemo
         assertInterpreterThrows(TinyscriptUnsupportedOperationError.class, "import x from \"./m\";\nprint(x);");
+    }
+
+    // =========================================================================
+    // Standard library (std:…), loaded from the classpath
+    // =========================================================================
+
+    @Test
+    public void testStandardLibrary() throws IOException {
+        Path main = write("main.tys", "import range, sum, contains, reverse from \"std:array\";\n"
+                + "import * as math from \"std:math\";\n"
+                + "print(range(5).join(\",\")); print(range(0).length); print(sum(range(5)));\n"
+                + "print(contains([1, 2], 2)); print(contains([1, 2], 3)); print(reverse([1, 2, 3]).join(\",\"));\n"
+                + "print(math.min(3, 4)); print(math.max(3, 4)); print(math.abs(-2)); print(math.clamp(15, 0, 10));");
+        assertEquals("0,1,2,3,4\n0\n10\ntrue\nfalse\n3,2,1\n3\n4\n2\n10\n", runModule(main));
+        assertSameOutputModule(main);
+    }
+
+    @Test
+    public void testStandardLibraryModulesAreLoadedOnce() throws IOException {
+        Path main = write("main.tys", "import * as a from \"std:array\";\nimport * as b from \"std:array\";\nprint(a == b);");
+        assertEquals("true\n", runModule(main));
+    }
+
+    @Test
+    public void testUnknownStandardLibraryModule() throws IOException {
+        Path main = write("main.tys", "import x from \"std:nope\";\nprint(x);");
+        TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class, () -> runModule(main));
+        assertTrue(e.getMessage().contains("Standard library module \"std:nope\" not found"), e.getMessage());
+    }
+
+    @Test
+    public void testStandardLibraryOnlyLoaderRejectsFiles() {
+        // The webdemo's loader
+        TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class,
+                () -> new StandardLibraryModuleLoader().resolve("./m", URI.createURI("__webdemo0.tys")));
+        assertTrue(e.getMessage().contains("Only standard library modules (std:…) are available here"), e.getMessage());
     }
 
     // =========================================================================
