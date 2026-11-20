@@ -1,0 +1,54 @@
+// Advent of Code 2024, day 10: Hoof It
+// https://adventofcode.com/2024/day/10
+//
+// Usage: tinyscript day10.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// A topographic map of heights 0 to 9
+const map = inputLines().map(line => line.split("").map(Number));
+const height = map.length;
+const width = map[0].length;
+
+const steps = [{ row: -1, col: 0 }, { row: 1, col: 0 }, { row: 0, col: -1 }, { row: 0, col: 1 }];
+
+// The neighbors (up, down, left, right) one higher than the position
+function uphillNeighbors(row, col) {
+    const result = [];
+    for (const step : steps) {
+        const r = row + step.row;
+        const c = col + step.col;
+        if (r >= 0 && r < height && c >= 0 && c < width && map[r][c] == map[row][col] + 1) {
+            result.push({ row: r, col: c });
+        }
+    }
+    return result;
+}
+
+// Follows all hiking trails from a position, always one step uphill, and adds each
+// height 9 reached to peaks (a Set); returns the number of distinct trails
+function hike(row, col, peaks) {
+    if (map[row][col] == 9) {
+        peaks.add(row * width + col);
+        return 1;
+    }
+    return uphillNeighbors(row, col).reduce((trails, next) => trails + hike(next.row, next.col, peaks), 0);
+}
+
+let score = 0;
+let rating = 0;
+for (let row = 0, height - 1) {
+    for (let col = 0, width - 1) {
+        if (map[row][col] == 0) {
+            const peaks = new Set();
+            rating += hike(row, col, peaks);
+            score += peaks.size;
+        }
+    }
+}
+
+// Part 1: for each trailhead (height 0), the number of 9s it reaches
+print("Part 1: " + score);
+
+// Part 2: for each trailhead, the number of distinct trails
+print("Part 2: " + rating);
