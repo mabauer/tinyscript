@@ -1,0 +1,69 @@
+// Advent of Code 2024, day 3: Mull It Over
+// https://adventofcode.com/2024/day/3
+//
+// Usage: tinyscript day03.tys -- input.txt
+//
+// tinyscript has no regular expressions, so the instructions are read with a small scanner.
+
+import inputText from "./aoc";
+
+// Whether text contains word at position pos
+function startsAt(text, pos, word) {
+    return text.slice(pos, pos + word.length) == word;
+}
+
+function isDigit(c) {
+    return c != null && c >= "0" && c <= "9";
+}
+
+// The number of digits (1 to 3) at position pos, 0 if there is no digit
+function digitsAt(text, pos) {
+    var count = 0;
+    while (count < 3 && isDigit(text[pos + count])) {
+        count++;
+    }
+    return count;
+}
+
+// The product of the instruction mul(X,Y) at position pos, where X and Y have 1 to 3 digits;
+// null if there is no such instruction
+function multiplicationAt(text, pos) {
+    if (!startsAt(text, pos, "mul(")) {
+        return null;
+    }
+    var x = pos + 4;
+    var xDigits = digitsAt(text, x);
+    if (xDigits == 0 || text[x + xDigits] != ",") {
+        return null;
+    }
+    var y = x + xDigits + 1;
+    var yDigits = digitsAt(text, y);
+    if (yDigits == 0 || text[y + yDigits] != ")") {
+        return null;
+    }
+    return Number(text.slice(x, x + xDigits)) * Number(text.slice(y, y + yDigits));
+}
+
+// Adds up the results of all multiplications; with conditionals, do() and don't()
+// enable and disable the multiplications that follow
+function sumOfMultiplications(memory, withConditionals) {
+    var sum = 0;
+    var enabled = true;
+    for (var pos = 0, memory.length - 1) {
+        if (withConditionals && startsAt(memory, pos, "do()")) {
+            enabled = true;
+        }
+        else if (withConditionals && startsAt(memory, pos, "don't()")) {
+            enabled = false;
+        }
+        var product = multiplicationAt(memory, pos);
+        if (enabled && product != null) {
+            sum += product;
+        }
+    }
+    return sum;
+}
+
+var memory = inputText();
+print("Part 1: " + sumOfMultiplications(memory, false));
+print("Part 2: " + sumOfMultiplications(memory, true));

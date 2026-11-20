@@ -1,0 +1,47 @@
+// Advent of Code 2024, day 1: Historian Hysteria
+// https://adventofcode.com/2024/day/1
+//
+// Usage: tinyscript day01.tys -- input.txt
+
+import inputLines, numbers from "./aoc";
+
+// Each line holds a number of the left list and one of the right list
+function readLists(lines) {
+    var left = [];
+    var right = [];
+    for (var line : lines) {
+        var pair = numbers(line);
+        left.push(pair[0]);
+        right.push(pair[1]);
+    }
+    return { left: left, right: right };
+}
+
+// Part 1: pair up the smallest numbers of both lists, then the second smallest
+// and so on, and add up the distances within the pairs
+function totalDistance(lists) {
+    var left = lists.left.slice().sort((a, b) => a - b);
+    var right = lists.right.slice().sort((a, b) => a - b);
+    var total = 0;
+    for (var i = 0, left.length - 1) {
+        total += Math.abs(left[i] - right[i]);
+    }
+    return total;
+}
+
+// Part 2: add up each number of the left list times how often it appears in the right list
+function similarityScore(lists) {
+    var counts = new Map();
+    for (var n : lists.right) {
+        counts.set(n, countOf(counts, n) + 1);
+    }
+    return lists.left.reduce((score, n) => score + n * countOf(counts, n), 0);
+}
+
+function countOf(counts, n) {
+    return counts.has(n) ? counts.get(n) : 0;
+}
+
+var lists = readLists(inputLines());
+print("Part 1: " + totalDistance(lists));
+print("Part 2: " + similarityScore(lists));

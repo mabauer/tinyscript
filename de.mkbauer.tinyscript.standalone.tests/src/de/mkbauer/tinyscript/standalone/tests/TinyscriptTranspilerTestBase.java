@@ -222,17 +222,17 @@ public abstract class TinyscriptTranspilerTestBase {
      * Validation errors of {@code main} are thrown as {@link TinyscriptSyntaxError}.
      */
     protected String runModule(Path main, Path... modulePath) {
-        return runModule(main, false, modulePath);
+        return runModule(main, false, List.of(), modulePath);
     }
 
     /**
      * Like {@link #runModule(Path, Path...)}, but sandboxed (as in the webdemo).
      */
     protected String runModuleSandboxed(Path main, Path... modulePath) {
-        return runModule(main, true, modulePath);
+        return runModule(main, true, List.of(), modulePath);
     }
 
-    private String runModule(Path main, boolean sandboxed, Path... modulePath) {
+    private String runModule(Path main, boolean sandboxed, List<String> args, Path... modulePath) {
         Injector localInjector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
         Resource resource = localResourceSet.getResource(URI.createFileURI(main.toAbsolutePath().toString()), true);
@@ -243,9 +243,29 @@ public abstract class TinyscriptTranspilerTestBase {
         TinyscriptEngine engine = new TinyscriptEngine(localResourceSet);
         engine.setSandboxed(sandboxed);
         engine.setModuleLoader(new FileSystemModuleLoader(List.of(modulePath)));
+        engine.setScriptArguments(args);
         engine.defineStdOut(stdout);
         engine.execute((Tinyscript) resource.getContents().get(0));
         return stdout.toString();
+    }
+
+    /**
+     * Integration test for a complete program: run with the script arguments {@code args}
+     * (System.args), the interpreter and node, running the bundled Javascript, must both
+     * print {@code expected}. Imports are relative to {@code main}.
+     */
+    protected void assertProgramOutput(String expected, Path main, String... args) {
+        assertEquals(expected, runModule(main, false, List.of(args)), "Interpreter output of " + main);
+        assumeNodeAvailable();
+        String jsCode = transpileModule(main);
+        String nodeOut;
+        try {
+            nodeOut = NodeJsRunner.run(jsCode, args);
+        } catch (AssertionError e) {
+            fail("node.js failed for " + main + "\n--- Generated JS ---\n" + jsCode + "\n--- node error ---\n" + e.getMessage());
+            return;
+        }
+        assertEquals(expected, nodeOut, "node output of " + main + "\n--- Generated JS ---\n" + jsCode);
     }
 
     /**
