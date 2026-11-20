@@ -1,0 +1,91 @@
+// Advent of Code 2024, day 15: Warehouse Woes
+// https://adventofcode.com/2024/day/15
+//
+// Usage: tinyscript day15.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The input is the map of the warehouse ("#" wall, "O" box, "@" robot), followed by the moves
+const lines = inputLines();
+const map = lines.filter(line => line.startsWith("#"));
+const moves = lines.filter(line => !line.startsWith("#")).join("");
+
+const directions = new Map([["^", { row: -1, col: 0 }], ["v", { row: 1, col: 0 }], ["<", { row: 0, col: -1 }], [">", { row: 0, col: 1 }]]);
+
+function isBox(cell) {
+    return cell == "O" || cell == "[" || cell == "]";
+}
+
+// The other half of a wide box (part 2): "[" is left of "]"
+function partnerCol(cell, col) {
+    return cell == "[" ? col + 1 : col - 1;
+}
+
+// Whether the robot or box at row, col can move one step in direction d: there must be
+// free space, or boxes that can move as well. A wide box moving up or down pushes with
+// both halves.
+function canPush(grid, row, col, d) {
+    const r = row + d.row;
+    const c = col + d.col;
+    const target = grid[r][c];
+    if (target == "#") {
+        return false;
+    }
+    if (!isBox(target)) {
+        return true;
+    }
+    if (target == "O" || d.row == 0) {
+        return canPush(grid, r, c, d);
+    }
+    return canPush(grid, r, c, d) && canPush(grid, r, partnerCol(target, c), d);
+}
+
+// Moves the robot or box at row, col one step (canPush has checked that it can)
+function push(grid, row, col, d) {
+    const thing = grid[row][col];
+    if (thing == ".") {
+        return;   // the other half of a wide box, already moved
+    }
+    const r = row + d.row;
+    const c = col + d.col;
+    const target = grid[r][c];
+    if (isBox(target)) {
+        push(grid, r, c, d);
+        if (target != "O" && d.row != 0) {
+            push(grid, r, partnerCol(target, c), d);
+        }
+    }
+    grid[r][c] = thing;
+    grid[row][col] = ".";
+}
+
+// Runs all moves on a copy of the map and adds up the GPS coordinates of the boxes
+function gpsSumAfterMoves(map) {
+    const grid = map.map(line => line.split(""));
+    let row = grid.findIndex(cells => cells.includes("@"));
+    let col = grid[row].indexOf("@");
+    for (const move : moves) {
+        const d = directions.get(move);
+        if (canPush(grid, row, col, d)) {
+            push(grid, row, col, d);
+            row += d.row;
+            col += d.col;
+        }
+    }
+    let sum = 0;
+    for (let r = 0, grid.length - 1) {
+        for (let c = 0, grid[r].length - 1) {
+            if (grid[r][c] == "O" || grid[r][c] == "[") {
+                sum += 100 * r + c;
+            }
+        }
+    }
+    return sum;
+}
+
+print("Part 1: " + gpsSumAfterMoves(map));
+
+// Part 2: everything is twice as wide, except the robot
+const wide = new Map([["#", "##"], ["O", "[]"], [".", ".."], ["@", "@."]]);
+const wideMap = map.map(line => line.split("").map(cell => wide.get(cell)).join(""));
+print("Part 2: " + gpsSumAfterMoves(wideMap));

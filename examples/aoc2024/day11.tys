@@ -1,0 +1,44 @@
+// Advent of Code 2024, day 11: Plutonian Pebbles
+// https://adventofcode.com/2024/day/11
+//
+// Usage: tinyscript day11.tys -- input.txt
+
+import inputText from "./aoc";
+import words from "std:string";
+
+const stones = words(inputText()).map(Number);
+
+// One blink changes a stone into one or two stones
+function blink(stone) {
+    if (stone == 0) {
+        return [1];
+    }
+    const digits = String(stone);
+    if (digits.length % 2 == 0) {
+        const half = digits.length / 2;
+        return [Number(digits.slice(0, half)), Number(digits.slice(half))];
+    }
+    return [stone * 2024];
+}
+
+// The number of stones a single stone turns into after some blinks. The same stones come
+// up again and again, so the results are remembered (memoization).
+const known = new Map();
+
+function count(stone, blinks) {
+    if (blinks == 0) {
+        return 1;
+    }
+    const key = stone + "/" + blinks;
+    if (!known.has(key)) {
+        known.set(key, blink(stone).reduce((sum, next) => sum + count(next, blinks - 1), 0));
+    }
+    return known.get(key);
+}
+
+function countAfter(blinks) {
+    return stones.reduce((sum, stone) => sum + count(stone, blinks), 0);
+}
+
+print("Part 1: " + countAfter(25));
+print("Part 2: " + countAfter(75));

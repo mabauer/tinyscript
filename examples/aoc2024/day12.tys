@@ -1,0 +1,93 @@
+// Advent of Code 2024, day 12: Garden Groups
+// https://adventofcode.com/2024/day/12
+//
+// Usage: tinyscript day12.tys -- input.txt
+
+import inputLines from "./aoc";
+
+const garden = inputLines();
+const height = garden.length;
+const width = garden[0].length;
+
+const directions = [{ row: -1, col: 0 }, { row: 0, col: 1 }, { row: 1, col: 0 }, { row: 0, col: -1 }];
+
+// The plant at a position, "" outside the garden
+function plantAt(row, col) {
+    if (row < 0 || row >= height || col < 0 || col >= width) {
+        return "";
+    }
+    return garden[row][col];
+}
+
+// The region of the plot at row, col: all plots with the same plant connected to it
+// (found with a flood fill), as a list of positions
+function regionAt(row, col, seen) {
+    const plant = plantAt(row, col);
+    const region = [];
+    const todo = [{ row, col }];
+    seen.add(row * width + col);
+    while (todo.length > 0) {
+        const plot = todo.pop();
+        region.push(plot);
+        for (const d : directions) {
+            const next = { row: plot.row + d.row, col: plot.col + d.col };
+            const key = next.row * width + next.col;
+            if (plantAt(next.row, next.col) == plant && !seen.has(key)) {
+                seen.add(key);
+                todo.push(next);
+            }
+        }
+    }
+    return region;
+}
+
+// The perimeter: each side of a plot that does not border a plot of the same region
+function perimeter(region) {
+    const plant = plantAt(region[0].row, region[0].col);
+    let fences = 0;
+    for (const { row, col } : region) {
+        fences += directions.filter(d => plantAt(row + d.row, col + d.col) != plant).length;
+    }
+    return fences;
+}
+
+// The number of sides: a straight fence counts once. Counting the corners of the region
+// gives the same number, since every side has two corners and every corner ends two sides.
+function sides(region) {
+    const plant = plantAt(region[0].row, region[0].col);
+    const same = (row, col) => plantAt(row, col) == plant;
+    let corners = 0;
+    for (const { row, col } : region) {
+        for (let i = 0, 3) {
+            const a = directions[i];
+            const b = directions[(i + 1) % 4];
+            const sideA = same(row + a.row, col + a.col);
+            const sideB = same(row + b.row, col + b.col);
+            const diagonal = same(row + a.row + b.row, col + a.col + b.col);
+            // An outer corner (both sides open) or an inner corner (both sides closed, diagonal open)
+            if (!sideA && !sideB || sideA && sideB && !diagonal) {
+                corners++;
+            }
+        }
+    }
+    return corners;
+}
+
+const seen = new Set();
+let price = 0;
+let discountedPrice = 0;
+for (let row = 0, height - 1) {
+    for (let col = 0, width - 1) {
+        if (!seen.has(row * width + col)) {
+            const region = regionAt(row, col, seen);
+            price += region.length * perimeter(region);
+            discountedPrice += region.length * sides(region);
+        }
+    }
+}
+
+// Part 1: area times perimeter
+print("Part 1: " + price);
+
+// Part 2: area times number of sides
+print("Part 2: " + discountedPrice);
