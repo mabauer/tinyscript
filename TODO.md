@@ -36,6 +36,12 @@ Next
      - Fixed: the generator crashed on a `for` loop with a pattern or over an existing variable nested inside another loop (shadowing check assumed one loop variable).
      - ~~Missing: **object literal shorthand** `{ row, col }`~~ (done; on the way: object properties now keep their insertion order, like Javascript) for `{ row: row, col: col }`, written again and again in days 6, 8, 9 and 10; the counterpart of the object patterns. Cheap: grammar, interpreter, the generator passes it through.
      - Speed: day 7 (up to 3^11 operator combinations per line) takes about 6 s, day 9 (a linear search of the free spans for each of 10,000 files) about 10 s.
+   - Days 11–15 (2026-11-21): all correct on the first run once written (checked against a Python reference); findings:
+     - Missing: **destructuring in parameters**, `robots.map(({ x, y, vx, vy }) => …)` — the natural Javascript idiom, excluded so far (flat patterns only in `var` / `for`). Flat patterns in function and arrow parameters would be the consistent next step.
+     - The parser's messages for it are confusing: "mismatched input '=>' expecting ')'" plus a cascade of follow-up errors ("Couldn't resolve reference …"). Better: one clear message for known unsupported constructs, or only the first syntax error.
+     - Missing: `Infinity` (and `Number.MAX_SAFE_INTEGER` etc.); "no limit" had to be written `1 / 0`.
+     - Reading numbers out of text without regular expressions needs a helper (`integers(line)` in `examples/aoc2024/aoc.tys`, used by days 13 and 14); a candidate for `std:string`.
+     - Speed: all days within seconds (day 14 worst case 6.6 s, day 11 3.2 s).
    - The inclusive numeric `for` makes `for (var i = 0, a.length - 1)` the common case; consider a `for (var i : range(n))` helper or similar.
    - Days 5 and 6 added. **Speed** is the next limit: part 2 of day 6 (a simulation, 20–30 million steps for a real input) takes about a minute; on a test grid with 8 million steps, tinyscript needs 19 s, CPython 1.9 s. A profile (JFR) shows the costs of the tree walk: `dispatch` / `execute` with `eClass()` per node, `HashMap` lookups of variables in the execution contexts, string comparisons of operators. Ideas: resolve variables to slots once, dispatch on cached node kinds or precompiled closures, operators as enums.
 

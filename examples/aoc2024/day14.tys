@@ -1,0 +1,64 @@
+// Advent of Code 2024, day 14: Restroom Redoubt
+// https://adventofcode.com/2024/day/14
+//
+// Usage: tinyscript day14.tys -- input.txt [width height]
+// (the room is 101 x 103 tiles; the example in the puzzle uses 11 x 7)
+
+import inputLines, integers from "./aoc";
+
+const width = System.args.length > 2 ? Number(System.args[1]) : 101;
+const height = System.args.length > 2 ? Number(System.args[2]) : 103;
+
+// Each robot has a position and a velocity: "p=0,4 v=3,-3"
+const robots = inputLines().map(line => {
+    const [x, y, vx, vy] = integers(line);
+    return { x, y, vx, vy };
+});
+
+// The remainder that is never negative: wrap(-1, 10) is 9, not -1 as -1 % 10
+function wrap(value, size) {
+    return ((value % size) + size) % size;
+}
+
+// The positions of the robots after some seconds; they wrap around at the edges
+function positionsAfter(seconds) {
+    return robots.map(robot => ({
+        x: wrap(robot.x + robot.vx * seconds, width),
+        y: wrap(robot.y + robot.vy * seconds, height)
+    }));
+}
+
+// Part 1: after 100 seconds, the number of robots in each quadrant, multiplied
+// (robots exactly in the middle row or column do not count)
+function safetyFactor(positions) {
+    const middleX = (width - 1) / 2;
+    const middleY = (height - 1) / 2;
+    const quadrants = [0, 0, 0, 0];
+    for (const { x, y } : positions) {
+        if (x != middleX && y != middleY) {
+            quadrants[(x < middleX ? 0 : 1) + (y < middleY ? 0 : 2)]++;
+        }
+    }
+    return quadrants.reduce((product, count) => product * count, 1);
+}
+
+print("Part 1: " + safetyFactor(positionsAfter(100)));
+
+// Part 2: the robots form a picture of a Christmas tree. The puzzle does not say more; the
+// picture appears the first time no two robots share a position (the positions repeat after
+// width * height seconds).
+function hasNoOverlaps(positions) {
+    const taken = new Set(positions.map(position => position.y * width + position.x));
+    return taken.size == positions.length;
+}
+
+function firstSecondWithoutOverlaps() {
+    for (let seconds = 1, width * height) {
+        if (hasNoOverlaps(positionsAfter(seconds))) {
+            return seconds;
+        }
+    }
+    return null;
+}
+
+print("Part 2: " + (firstSecondWithoutOverlaps() ?? "none"));
