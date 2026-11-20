@@ -1,0 +1,73 @@
+// Advent of Code 2024, day 9: Disk Fragmenter
+// https://adventofcode.com/2024/day/9
+//
+// Usage: tinyscript day09.tys -- input.txt
+
+import inputText from "./aoc";
+
+// The disk map "12345" alternates file and free space lengths: a file of 1 block (id 0),
+// 2 free blocks, a file of 3 blocks (id 1), 4 free blocks, a file of 5 blocks (id 2)
+const diskMap = inputText().trim();
+
+// Part 1: move single blocks from the end of the disk into the leftmost free block
+function compactBlocks() {
+    const blocks = [];   // the file id of each block, null for a free block
+    for (let i = 0, diskMap.length - 1) {
+        const id = i % 2 == 0 ? i / 2 : null;
+        for (let n = 1, Number(diskMap[i])) {
+            blocks.push(id);
+        }
+    }
+    let free = 0;
+    let last = blocks.length - 1;
+    while (true) {
+        while (free < blocks.length && blocks[free] != null) {
+            free++;
+        }
+        while (last >= 0 && blocks[last] == null) {
+            last--;
+        }
+        if (free >= last) {
+            break;
+        }
+        blocks[free] = blocks[last];
+        blocks[last] = null;
+    }
+    return blocks.reduce((sum, id, position) => sum + position * (id ?? 0), 0);
+}
+
+// Part 2: move whole files, from the highest id down, into the leftmost free span that fits
+function compactFiles() {
+    const files = [];   // { id, start, length }
+    const spans = [];   // free spans { start, length }
+    let position = 0;
+    for (let i = 0, diskMap.length - 1) {
+        const length = Number(diskMap[i]);
+        if (i % 2 == 0) {
+            files.push({ id: i / 2, start: position, length: length });
+        }
+        else if (length > 0) {
+            spans.push({ start: position, length: length });
+        }
+        position += length;
+    }
+    for (let i = files.length - 1, 0, -1) {
+        const file = files[i];
+        const span = spans.find(span => span.start < file.start && span.length >= file.length);
+        if (span != null) {
+            file.start = span.start;
+            span.start += file.length;
+            span.length -= file.length;
+        }
+    }
+    let checksum = 0;
+    for (const { id, start, length } : files) {
+        for (let block = start, start + length - 1) {
+            checksum += block * id;
+        }
+    }
+    return checksum;
+}
+
+print("Part 1: " + compactBlocks());
+print("Part 2: " + compactFiles());

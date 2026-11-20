@@ -47,4 +47,24 @@ public class AdventOfCode2024Test extends TinyscriptTranspilerTestBase {
     public void testDay06() {
         assertDay("day06", "day06.example.txt", "Part 1: 41\nPart 2: 6\n");
     }
+
+    @Test
+    public void testDay07() {
+        assertDay("day07", "day07.example.txt", "Part 1: 3749\nPart 2: 11387\n");
+    }
+
+    @Test
+    public void testDay08() {
+        assertDay("day08", "day08.example.txt", "Part 1: 14\nPart 2: 34\n");
+    }
+
+    @Test
+    public void testDay09() {
+        assertDay("day09", "day09.example.txt", "Part 1: 1928\nPart 2: 2858\n");
+    }
+
+    @Test
+    public void testDay10() {
+        assertDay("day10", "day10.example.txt", "Part 1: 36\nPart 2: 81\n");
+    }
 }

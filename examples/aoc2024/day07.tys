@@ -1,0 +1,45 @@
+// Advent of Code 2024, day 7: Bridge Repair
+// https://adventofcode.com/2024/day/7
+//
+// Usage: tinyscript day07.tys -- input.txt
+
+import inputLines, numbers from "./aoc";
+
+// Each line is an equation like "190: 10 19": a test value and the numbers to combine
+const equations = inputLines().map(line => {
+    const [testValue, rest] = line.split(": ");
+    return { testValue: Number(testValue), numbers: numbers(rest) };
+});
+
+// 12 || 345 is 12345
+function concatenate(a, b) {
+    return Number(String(a) + String(b));
+}
+
+// Whether the numbers from index on, combined left to right with the operators, can turn
+// result into the test value. The operators only make numbers larger, so a result above
+// the test value cannot get there anymore.
+function canReach(equation, result, index, withConcatenation) {
+    if (index == equation.numbers.length) {
+        return result == equation.testValue;
+    }
+    if (result > equation.testValue) {
+        return false;
+    }
+    const next = equation.numbers[index];
+    return canReach(equation, result + next, index + 1, withConcatenation)
+        || canReach(equation, result * next, index + 1, withConcatenation)
+        || withConcatenation && canReach(equation, concatenate(result, next), index + 1, withConcatenation);
+}
+
+function totalCalibration(withConcatenation) {
+    return equations
+        .filter(equation => canReach(equation, equation.numbers[0], 1, withConcatenation))
+        .reduce((sum, equation) => sum + equation.testValue, 0);
+}
+
+// Part 1: the operators + and *
+print("Part 1: " + totalCalibration(false));
+
+// Part 2: also the concatenation operator ||
+print("Part 2: " + totalCalibration(true));

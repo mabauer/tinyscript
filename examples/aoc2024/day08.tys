@@ -1,0 +1,62 @@
+// Advent of Code 2024, day 8: Resonant Collinearity
+// https://adventofcode.com/2024/day/8
+//
+// Usage: tinyscript day08.tys -- input.txt
+
+import inputLines from "./aoc";
+
+const grid = inputLines();
+const height = grid.length;
+const width = grid[0].length;
+
+// The positions of the antennas, by frequency (a letter or digit)
+const antennas = new Map();
+for (let row = 0, height - 1) {
+    for (let col = 0, width - 1) {
+        const frequency = grid[row][col];
+        if (frequency != ".") {
+            const positions = antennas.get(frequency) ?? [];
+            positions.push({ row: row, col: col });
+            antennas.set(frequency, positions);
+        }
+    }
+}
+
+function isInside(row, col) {
+    return row >= 0 && row < height && col >= 0 && col < width;
+}
+
+// Adds the antinodes of the antenna pair a, b: the positions on their line, starting at b and
+// going away from a in steps of the distance between them. Without resonant harmonics, only
+// the first position beyond b counts; with them, all positions on the grid (including b).
+function addAntinodes(antinodes, a, b, resonantHarmonics) {
+    const rowStep = b.row - a.row;
+    const colStep = b.col - a.col;
+    let row = resonantHarmonics ? b.row : b.row + rowStep;
+    let col = resonantHarmonics ? b.col : b.col + colStep;
+    while (isInside(row, col)) {
+        antinodes.add(row * width + col);
+        if (!resonantHarmonics) {
+            break;
+        }
+        row += rowStep;
+        col += colStep;
+    }
+}
+
+function countAntinodes(resonantHarmonics) {
+    const antinodes = new Set();
+    for (const positions : antennas.values()) {
+        for (const a : positions) {
+            for (const b : positions) {
+                if (a != b) {
+                    addAntinodes(antinodes, a, b, resonantHarmonics);
+                }
+            }
+        }
+    }
+    return antinodes.size;
+}
+
+print("Part 1: " + countAntinodes(false));
+print("Part 2: " + countAntinodes(true));
