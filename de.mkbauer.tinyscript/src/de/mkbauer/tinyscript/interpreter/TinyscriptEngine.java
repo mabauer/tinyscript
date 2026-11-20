@@ -701,6 +701,10 @@ public class TinyscriptEngine {
     			return TSValue.of(execute(expr.getLeft()).asCondition() && execute(expr.getRight()).asCondition());
     		case "||":
     			return TSValue.of(execute(expr.getLeft()).asCondition() || execute(expr.getRight()).asCondition());
+    		case "??": {
+    			TSValue left = execute(expr.getLeft());
+    			return left == TSValue.UNDEFINED || left == TSValue.NULL ? execute(expr.getRight()) : left;
+    		}
     	}
     	return applyOperator(op, execute(expr.getLeft()), execute(expr.getRight()), expr);
     }
@@ -822,10 +826,24 @@ public class TinyscriptEngine {
     
 
     public TSValue caseCallOrPropertyAccess(CallOrPropertyAccess expr) {
+    	try {
+    		return evaluateCallOrPropertyAccess(expr);
+    	}
+    	catch (TSOptionalChainEnd end) {
+    		// a?.b.c: an optional access on null or undefined skips the rest of the chain
+    		if (expr.eContainer() instanceof CallOrPropertyAccess outer && outer.getExpr() == expr)
+    			throw end;
+    		return TSValue.UNDEFINED;
+    	}
+    }
+
+    private TSValue evaluateCallOrPropertyAccess(CallOrPropertyAccess expr) {
     	TSValue base = execute(expr.getExpr());
     	EObject suffix = expr.getSuffix();
 		if (suffix instanceof CallOrPropertyAccessSuffix callOrProp) {
 			// object.property or object.method(...)
+			if (isOptional(callOrProp.getProperty()) && (base == TSValue.UNDEFINED || base == TSValue.NULL))
+				throw TSOptionalChainEnd.INSTANCE;
 			TSObject object = toObjectForPropertyAccess(base, expr);
 			TSValue key = evaluatePropertyKey(callOrProp.getProperty());
 			TSValue property = getProperty(object, key);
@@ -849,6 +867,15 @@ public class TinyscriptEngine {
     		return processFunctionCall(expr, function, null, call.getArguments());
     	}
     	return TSValue.UNDEFINED;
+    }
+
+    // a?.b or a?.[b]
+    private static boolean isOptional(PropertyAccessSuffix suffix) {
+    	return switch (suffix) {
+    		case DotPropertyAccessSuffix dot -> dot.isOptional();
+    		case ComputedPropertyAccessSuffix computed -> computed.isOptional();
+    		default -> false;
+    	};
     }
 
     /**

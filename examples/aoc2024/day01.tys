@@ -33,13 +33,9 @@ function totalDistance(lists) {
 function similarityScore(lists) {
     var counts = new Map();
     for (var n : lists.right) {
-        counts.set(n, countOf(counts, n) + 1);
+        counts.set(n, (counts.get(n) ?? 0) + 1);
     }
-    return lists.left.reduce((score, n) => score + n * countOf(counts, n), 0);
-}
-
-function countOf(counts, n) {
-    return counts.has(n) ? counts.get(n) : 0;
+    return lists.left.reduce((score, n) => score + n * (counts.get(n) ?? 0), 0);
 }
 
 var lists = readLists(inputLines());

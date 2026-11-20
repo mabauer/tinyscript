@@ -66,7 +66,7 @@ AssignmentExpression returns Expression:
 
 // cond ? a : b; unlike Javascript, b cannot be an assignment (c ? a : b = 1 is (c ? a : b) = 1, an error)
 ConditionalExpression returns Expression:
-	OrExpression ({ConditionalExpression.cond=current} '?' then=AssignmentExpression ':' else=(ConditionalExpression|ArrowFunctionDefinition))?
+	CoalesceExpression ({ConditionalExpression.cond=current} '?' then=AssignmentExpression ':' else=(ConditionalExpression|ArrowFunctionDefinition))?
 ;
 
 ArrowFunctionDefinition returns FunctionDefinition:
@@ -85,6 +85,12 @@ ArrowFunctionBlock returns Block:
 
 ExpressionStatementWithoutSemicolon returns ExpressionStatement:
 	expr=(ConditionalExpression | ArrowFunctionDefinition)
+;
+
+// a ?? b: b if a is null or undefined. Like Javascript, it cannot be mixed with && or ||
+// without parentheses (checked by the validator).
+CoalesceExpression returns Expression:
+	OrExpression ({BinaryExpression.left=current} op='??' right=OrExpression)*
 ;
 
 OrExpression returns Expression:
@@ -219,12 +225,13 @@ PropertyAccessSuffix:
 	ComputedPropertyAccessSuffix | DotPropertyAccessSuffix
 ;
 
+// a?.[key] and a?.key: undefined (for the whole chain) if a is null or undefined
 ComputedPropertyAccessSuffix:
-	'[' key=AssignmentExpression ']'
+	(optional?='?.')? '[' key=AssignmentExpression ']'
 ;
 	
 DotPropertyAccessSuffix:
-	'.' key=PropertyName 
+	('.' | optional?='?.') key=PropertyName 
 ;
 
 ObjectInitializer:

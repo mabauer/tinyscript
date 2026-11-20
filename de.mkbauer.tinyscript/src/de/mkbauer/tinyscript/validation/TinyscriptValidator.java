@@ -6,7 +6,9 @@ import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BreakStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.ContinueStatement;
+import de.mkbauer.tinyscript.ts.DotPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.ExpressionStatement;
 import de.mkbauer.tinyscript.ts.ForStatement;
@@ -135,7 +137,33 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 		if (expression instanceof Reference reference)
 			return !reference.isThis();
 		return expression instanceof CallOrPropertyAccess access
-				&& access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix && suffix.getCall() == null;
+				&& access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix && suffix.getCall() == null
+				&& !isOptionalChain(access);
+	}
+
+	// Whether a chain like a?.b.c contains an optional access (?.)
+	private static boolean isOptionalChain(CallOrPropertyAccess access) {
+		for (EObject part = access; part instanceof CallOrPropertyAccess chain; part = chain.getExpr()) {
+			if (chain.getSuffix() instanceof CallOrPropertyAccessSuffix suffix
+					&& (suffix.getProperty() instanceof DotPropertyAccessSuffix dot && dot.isOptional()
+						|| suffix.getProperty() instanceof ComputedPropertyAccessSuffix computed && computed.isOptional()))
+				return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Like Javascript, a ?? b cannot be mixed with && or || without parentheses
+	 * (a ?? b || c is ambiguous).
+	 */
+	@Check
+	public void checkNullishCoalescingNotMixedWithAndOr(BinaryExpression expression) {
+		if ("??".equals(expression.getOp()) && (isAndOr(expression.getLeft()) || isAndOr(expression.getRight())))
+			error("Use parentheses to combine ?? with && or ||", null);
+	}
+
+	private static boolean isAndOr(Expression expression) {
+		return expression instanceof BinaryExpression binary && ("&&".equals(binary.getOp()) || "||".equals(binary.getOp()));
 	}
 
 	/**
