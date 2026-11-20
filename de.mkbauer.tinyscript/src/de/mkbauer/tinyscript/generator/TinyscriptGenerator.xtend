@@ -278,8 +278,13 @@ class TinyscriptGenerator   {
 		«stmt.expr.generate»«IF stmt.increment !== null»«stmt.increment»«ENDIF»;
 	'''
 	
+	// tinyscript's var and let are block-scoped: Javascript's let
+	def String declarationKeyword(String kind) {
+		if (kind == "const") "const" else "let"
+	}
+
 	def dispatch generate(VariableStatement stmt) '''
-		«FOR vardecl: stmt.vardecls BEFORE 'let ' SEPARATOR ', ' AFTER ';'»
+		«FOR vardecl: stmt.vardecls BEFORE declarationKeyword(stmt.kind) + ' ' SEPARATOR ', ' AFTER ';'»
 			«vardecl.generate»«ENDFOR»
 	'''
 	
@@ -361,7 +366,7 @@ class TinyscriptGenerator   {
 	// value in each iteration: a block-scoped let, so that closures see the value of their iteration
 	def generateNumericForStatement(ForStatement stmt) {
 		val NumericForExpression expr=stmt.numericForExpr; 
-		val loopVarDefinition = if (stmt.id !== null) "let " + stmt.id.generate else stmt.ref.generate
+		val loopVarDefinition = if (stmt.id !== null) declarationKeyword(stmt.kind) + " " + stmt.id.generate else stmt.ref.generate
 		// Like the interpreter, evaluate the bounds once, in the order start, stop, step
 		val preamble = new StringBuilder
 		val start = evaluateOnce(expr.start, "start", preamble)
@@ -404,8 +409,8 @@ class TinyscriptGenerator   {
 		val IterableForExpression expr=stmt.iterableForExpr; 
 		val iterable = newTempName("iterable")
 		val index = newTempName("i")
-		val loopVarDefinition = if (stmt.id !== null) "let " + stmt.id.generate
-			else if (stmt.pattern !== null) "let " + stmt.pattern.generate
+		val loopVarDefinition = if (stmt.id !== null) declarationKeyword(stmt.kind) + " " + stmt.id.generate
+			else if (stmt.pattern !== null) declarationKeyword(stmt.kind) + " " + stmt.pattern.generate
 			else stmt.ref.generate
 		'''
 		var «iterable» = «expr.iterable.generate»;

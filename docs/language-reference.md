@@ -98,7 +98,17 @@ var y = 10;
 var a = 1, b = 2, c = a + b;   // multiple declarations in one statement
 ```
 
-`let` is accepted as a synonym for `var`.
+`let` is a synonym for `var`. Both are block-scoped like Javascript's `let` (there is no function-scoped `var` as in Javascript), so `let` is the recommended spelling.
+
+`const` declares a constant: it needs a value and cannot be assigned again (with `=`, `+=` etc., `++` / `--`, or as the existing variable of a `for` loop). As in Javascript, the object or array a constant refers to can still be changed:
+
+```
+const limit = 100;
+const seen = new Set();
+seen.add(1);          // fine: seen still refers to the same Set
+for (const x : [1, 2, 3]) { ... }
+// limit = 200;       // error: Cannot assign to the constant limit
+```
 
 ### Destructuring
 
@@ -1049,15 +1059,15 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 | Topic | JavaScript | Tinyscript |
 |---|---|---|
 | **Semicolons** | Optional (ASI) | Required after expression statements, `var`, `return` |
-| **Block scope** | `var` is function-scoped; `let`/`const` are block-scoped | All variables are block-scoped (no hoisting for `var`) |
+| **Block scope** | `var` is function-scoped; `let`/`const` are block-scoped | All variables are block-scoped; `var` is a synonym of `let` |
 | **Control structure bodies** | Braces optional for single statements | Braces always required |
 | **Numeric `for` loop** | `for (let i = 0; i < n; i++)` | `for (var i = 0, n)` (Lua-style) |
-| **Iterable `for` loop** | `for (const x of array)` | `for (var x : array)` |
+| **Iterable `for` loop** | `for (const x of array)` | `for (const x : array)` |
 | **`for...in`** | Iterates over keys | Not supported (use `for...of` style with `:`) |
 | **Array `+`** | String concatenation | Concatenation of two arrays; an array plus a number etc. is a `TypeError` |
 | **`==` vs `===`** | Different (type coercion vs. strict) | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`) |
 | **Relational operators** | Coerce operands (`1 < "2"`) | Only number with number or string with string; otherwise a `TypeError` |
-| **`let` keyword** | Block-scoped variable | Synonym for `var` |
+| **`var` keyword** | Function-scoped variable, hoisted | Synonym for `let` (block-scoped, not hoisted) |
 | **`++` / `--`** | Expressions, prefix and postfix | Only the statements `i++;` / `i--;` |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
@@ -1078,7 +1088,6 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 - **Template literals** — no backtick strings
 - **Destructuring** beyond flat patterns in `var` and `for` — no nesting, defaults, renaming, `...rest`, or patterns in parameters and assignments
 - **Spread operator** — no `...array` in call sites
-- **`const`** — no constant declarations
 - **`delete`** operator
 - **`switch` statement**
 - **Getter / setter properties** (`get`/`set` in object literals)

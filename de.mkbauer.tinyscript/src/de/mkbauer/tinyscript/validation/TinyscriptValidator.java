@@ -155,6 +155,61 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	}
 
 	/**
+	 * A constant needs a value (const x = 1;) and cannot be assigned again: not with =, +=
+	 * etc., ++ / --, or as the existing variable of a for loop.
+	 */
+	@Check
+	public void checkConstantHasAValue(VariableStatement statement) {
+		if (!isConstantDeclaration(statement.getKind()))
+			return;
+		for (Expression declaration : statement.getVardecls()) {
+			if (declaration instanceof Identifier identifier)
+				error("A constant needs a value: const " + identifier.getName() + " = ...;", identifier, TsPackage.Literals.IDENTIFIER__NAME);
+		}
+	}
+
+	@Check
+	public void checkNoAssignmentToConstant(BinaryExpression assignment) {
+		if (isAssignment(assignment) && isConstant(assignment.getLeft()))
+			error("Cannot assign to the constant " + name(assignment.getLeft()), TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+	}
+
+	@Check
+	public void checkNoAssignmentToConstant(ExpressionStatement statement) {
+		if (statement.getIncrement() != null && isConstant(statement.getExpr()))
+			error("Cannot assign to the constant " + name(statement.getExpr()), TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
+	}
+
+	@Check
+	public void checkNoAssignmentToConstant(ForStatement forStatement) {
+		if (forStatement.getRef() != null && isConstant(forStatement.getRef()))
+			error("Cannot assign to the constant " + name(forStatement.getRef()), TsPackage.Literals.FOR_STATEMENT__REF);
+	}
+
+	private static boolean isConstantDeclaration(String kind) {
+		return "const".equals(kind);
+	}
+
+	// Whether expression refers to a variable declared with const (also in a pattern or a for loop)
+	private static boolean isConstant(Expression expression) {
+		if (!(expression instanceof Reference reference) || reference.getId() == null)
+			return false;
+		for (EObject container = reference.getId().eContainer(); container != null; container = container.eContainer()) {
+			if (container instanceof VariableStatement statement)
+				return isConstantDeclaration(statement.getKind());
+			if (container instanceof ForStatement loop)
+				return isConstantDeclaration(loop.getKind());
+			if (!(container instanceof Pattern) && !(container instanceof BinaryExpression))
+				return false;
+		}
+		return false;
+	}
+
+	private static String name(Expression reference) {
+		return ((Reference) reference).getId().getName();
+	}
+
+	/**
 	 * Destructuring patterns: each name only once, and in a for loop only over an iterable
 	 * (for (var [key, value] : map)), not in a numeric for loop.
 	 */
