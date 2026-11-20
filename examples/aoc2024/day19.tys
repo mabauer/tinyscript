@@ -1,0 +1,35 @@
+// Advent of Code 2024, day 19: Linen Layout
+// https://adventofcode.com/2024/day/19
+//
+// Usage: tinyscript day19.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The first line lists the towel patterns ("r, wr, b, g, bwu, rb, gb, br"),
+// the other lines are the designs to make from them
+const lines = inputLines();
+const towels = lines[0].split(", ");
+const designs = lines.slice(1);
+
+// The number of ways to make a design from towels: for each position from the end, the ways
+// to make the rest of the design (dynamic programming)
+function countWays(design) {
+    const ways = new Array(design.length + 1).fill(0);
+    ways[design.length] = 1;   // the empty rest: one way, no towel
+    for (let start = design.length - 1, 0, -1) {
+        for (const towel : towels) {
+            if (design.startsWith(towel, start)) {
+                ways[start] += ways[start + towel.length];
+            }
+        }
+    }
+    return ways[0];
+}
+
+const counts = designs.map(countWays);
+
+// Part 1: the designs that are possible at all
+print("Part 1: " + counts.filter(count => count > 0).length);
+
+// Part 2: all ways to make them, added up
+print("Part 2: " + counts.reduce((sum, count) => sum + count, 0));

@@ -1,0 +1,103 @@
+// Advent of Code 2024, day 17: Chronospatial Computer
+// https://adventofcode.com/2024/day/17
+//
+// Usage: tinyscript day17.tys -- input.txt
+
+import inputLines from "./aoc";
+import integers from "std:string";
+
+// "Register A: 729", "Register B: 0", "Register C: 0", "Program: 0,1,5,4,3,0"
+const [a, b, c, program] = inputLines().map(integers);
+const registers = { a: a[0], b: b[0], c: c[0] };
+
+// tinyscript has no bitwise operators; the numbers stay below 2^53, where these are exact
+function xor(x, y) {
+    let result = 0;
+    let bit = 1;
+    while (x > 0 || y > 0) {
+        if (x % 2 != y % 2) {
+            result += bit;
+        }
+        x = Math.floor(x / 2);
+        y = Math.floor(y / 2);
+        bit *= 2;
+    }
+    return result;
+}
+
+// x / 2^n, rounded down (a right shift)
+function shiftRight(x, n) {
+    let divisor = 1;
+    for (let i = 1, n) {
+        divisor *= 2;
+        if (divisor > x) {
+            return 0;
+        }
+    }
+    return Math.floor(x / divisor);
+}
+
+// Runs the program and returns its output
+function run(program, registers) {
+    let { a, b, c } = registers;
+    const output = [];
+    let ip = 0;   // instruction pointer
+    // The combo operand: 0 to 3 as they are, 4 to 6 the registers A, B, C
+    const combo = operand => [0, 1, 2, 3, a, b, c][operand];
+    while (ip < program.length) {
+        const opcode = program[ip];
+        const operand = program[ip + 1];
+        ip += 2;
+        if (opcode == 0) {
+            a = shiftRight(a, combo(operand));         // adv
+        }
+        else if (opcode == 1) {
+            b = xor(b, operand);                       // bxl
+        }
+        else if (opcode == 2) {
+            b = combo(operand) % 8;                    // bst
+        }
+        else if (opcode == 3 && a != 0) {
+            ip = operand;                              // jnz
+        }
+        else if (opcode == 4) {
+            b = xor(b, c);                             // bxc
+        }
+        else if (opcode == 5) {
+            output.push(combo(operand) % 8);           // out
+        }
+        else if (opcode == 6) {
+            b = shiftRight(a, combo(operand));         // bdv
+        }
+        else if (opcode == 7) {
+            c = shiftRight(a, combo(operand));         // cdv
+        }
+    }
+    return output;
+}
+
+print("Part 1: " + run(program, registers).join(","));
+
+// Part 2: the lowest value of A for which the program outputs itself. The program shifts A
+// by three bits (one octal digit) per output, and the last output depends only on the first
+// digit of A. So A is built digit by digit, from the end of the program: keep the values whose
+// output matches the end of the program, and try the eight next digits for each of them.
+function lowestSelfReproducingA() {
+    let candidates = [0];
+    for (let i = program.length - 1, 0, -1) {
+        const expected = program.slice(i).join(",");
+        const next = [];
+        for (const candidate : candidates) {
+            for (let digit = 0, 7) {
+                const value = candidate * 8 + digit;
+                if (run(program, { a: value, b: registers.b, c: registers.c }).join(",") == expected) {
+                    next.push(value);
+                }
+            }
+        }
+        candidates = next;
+    }
+    return candidates.length > 0 ? candidates.reduce((min, value) => Math.min(min, value)) : null;
+}
+
+print("Part 2: " + (lowestSelfReproducingA() ?? "none"));

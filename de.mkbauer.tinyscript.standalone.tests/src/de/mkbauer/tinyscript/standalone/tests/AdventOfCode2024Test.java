@@ -95,6 +95,37 @@ public class AdventOfCode2024Test extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testDay16() {
+        assertDay("day16", "day16.example1.txt", "Part 1: 7036\nPart 2: 45\n");
+        assertDay("day16", "day16.example2.txt", "Part 1: 11048\nPart 2: 64\n");
+    }
+
+    @Test
+    public void testDay17() {
+        // The two parts have different examples; the first has no self-reproducing value of A
+        assertDay("day17", "day17.example1.txt", "Part 1: 4,6,3,5,6,3,5,2,1,0\nPart 2: none\n");
+        assertDay("day17", "day17.example2.txt", "Part 1: 5,7,3,0\nPart 2: 117440\n");
+    }
+
+    @Test
+    public void testDay18() {
+        // The example memory is 7 x 7, with 12 fallen bytes
+        assertDay("day18", "day18.example.txt", "Part 1: 22\nPart 2: 6,1\n", "7", "12");
+    }
+
+    @Test
+    public void testDay19() {
+        assertDay("day19", "day19.example.txt", "Part 1: 6\nPart 2: 16\n");
+    }
+
+    @Test
+    public void testDay20() {
+        // The cheats of the example save less than 100 picoseconds; the counts are from the puzzle text
+        assertDay("day20", "day20.example.txt", "Part 1: 1\nPart 2: 285\n", "50");
+        assertDay("day20", "day20.example.txt", "Part 1: 5\nPart 2: 1449\n", "20");
+    }
+
+    @Test
     public void testDay15() {
         assertDay("day15", "day15.example1.txt", "Part 1: 2028\nPart 2: 1751\n");
         assertDay("day15", "day15.example2.txt", "Part 1: 10092\nPart 2: 9021\n");

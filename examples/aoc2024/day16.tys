@@ -1,0 +1,130 @@
+// Advent of Code 2024, day 16: Reindeer Maze
+// https://adventofcode.com/2024/day/16
+//
+// Usage: tinyscript day16.tys -- input.txt
+
+import inputLines from "./aoc";
+
+const maze = inputLines();
+const height = maze.length;
+const width = maze[0].length;
+
+// East, south, west, north: turning clockwise goes to the next direction
+const directions = [{ row: 0, col: 1 }, { row: 1, col: 0 }, { row: 0, col: -1 }, { row: -1, col: 0 }];
+
+function find(tile) {
+    for (let row = 0, height - 1) {
+        const col = maze[row].indexOf(tile);
+        if (col >= 0) {
+            return { row, col };
+        }
+    }
+    throw new Error("The maze has no " + tile);
+}
+
+// A priority queue: a binary heap, in which each entry is not larger than its two children
+function createQueue() {
+    const entries = [];
+    function swap(i, j) {
+        const entry = entries[i];
+        entries[i] = entries[j];
+        entries[j] = entry;
+    }
+    return {
+        isEmpty: () => entries.length == 0,
+        push: (priority, value) => {
+            entries.push({ priority, value });
+            let i = entries.length - 1;
+            while (i > 0 && entries[Math.floor((i - 1) / 2)].priority > entries[i].priority) {
+                swap(i, Math.floor((i - 1) / 2));
+                i = Math.floor((i - 1) / 2);
+            }
+        },
+        // Removes and returns the entry with the smallest priority
+        pop: () => {
+            const first = entries[0];
+            const last = entries.pop();
+            if (entries.length > 0) {
+                entries[0] = last;
+                let i = 0;
+                while (true) {
+                    let smallest = i;
+                    for (const child : [2 * i + 1, 2 * i + 2]) {
+                        if (child < entries.length && entries[child].priority < entries[smallest].priority) {
+                            smallest = child;
+                        }
+                    }
+                    if (smallest == i) {
+                        break;
+                    }
+                    swap(i, smallest);
+                    i = smallest;
+                }
+            }
+            return first;
+        }
+    };
+}
+
+// A state is a position and a direction, as one number
+function state(row, col, direction) {
+    return (row * width + col) * 4 + direction;
+}
+
+// The lowest score to reach each state from the start states (Dijkstra's algorithm): a step
+// forward costs 1, a turn by 90 degrees 1000. Backwards, the steps go the other way, which
+// gives the lowest score from each state to the end.
+function lowestScores(starts, backwards) {
+    const scores = new Map();
+    const queue = createQueue();
+    for (const start : starts) {
+        scores.set(start, 0);
+        queue.push(0, start);
+    }
+    while (!queue.isEmpty()) {
+        const entry = queue.pop();
+        const score = entry.priority;
+        const current = entry.value;
+        if (score > scores.get(current)) {
+            continue;   // already reached with a lower score
+        }
+        const direction = current % 4;
+        const position = (current - direction) / 4;
+        const row = Math.floor(position / width);
+        const col = position % width;
+        const step = backwards ? -1 : 1;
+        const next = [
+            { to: state(row + step * directions[direction].row, col + step * directions[direction].col, direction), cost: 1 },
+            { to: state(row, col, (direction + 1) % 4), cost: 1000 },
+            { to: state(row, col, (direction + 3) % 4), cost: 1000 }
+        ];
+        for (const { to, cost } : next) {
+            const tile = Math.floor(to / 4);
+            if (maze[Math.floor(tile / width)][tile % width] != "#" && score + cost < (scores.get(to) ?? Infinity)) {
+                scores.set(to, score + cost);
+                queue.push(score + cost, to);
+            }
+        }
+    }
+    return scores;
+}
+
+const start = find("S");
+const end = find("E");
+const fromStart = lowestScores([state(start.row, start.col, 0)], false);
+const endStates = [0, 1, 2, 3].map(direction => state(end.row, end.col, direction));
+const toEnd = lowestScores(endStates, true);
+
+// Part 1: the lowest score from the start (facing east) to the end
+const best = endStates.reduce((min, s) => Math.min(min, fromStart.get(s) ?? Infinity), Infinity);
+print("Part 1: " + best);
+
+// Part 2: the tiles on any best path: a state is on one if the scores from the start and to
+// the end add up to the best score
+const tiles = new Set();
+for (const [s, score] : fromStart) {
+    if (score + (toEnd.get(s) ?? Infinity) == best) {
+        tiles.add(Math.floor(s / 4));
+    }
+}
+print("Part 2: " + tiles.size);
