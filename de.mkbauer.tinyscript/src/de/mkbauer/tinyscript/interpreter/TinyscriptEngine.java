@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -20,6 +21,7 @@ import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.ArrayInitializer;
+import de.mkbauer.tinyscript.ts.ArrayPattern;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
@@ -28,6 +30,8 @@ import de.mkbauer.tinyscript.ts.BooleanLiteral;
 import de.mkbauer.tinyscript.ts.BreakStatement;
 import de.mkbauer.tinyscript.ts.ConditionalExpression;
 import de.mkbauer.tinyscript.ts.ContinueStatement;
+import de.mkbauer.tinyscript.ts.ObjectPattern;
+import de.mkbauer.tinyscript.ts.Pattern;
 import de.mkbauer.tinyscript.ts.ThrowStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
@@ -671,6 +675,9 @@ public class TinyscriptEngine {
 			if (forstmt.getId() != null) {
 				return executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
 			}
+			if (forstmt.getPattern() != null) {
+				return executeInBlockContext("for", forstmt.getDo(), forstmt.getPattern(), loopValue);
+			}
 			currentContext.store(forstmt.getRef().getId().getName(), loopValue);
 			return executeInBlockContext("for", forstmt.getDo());
     	}
@@ -1017,8 +1024,12 @@ public class TinyscriptEngine {
     	}
     	if (left instanceof Identifier identifier) {
     		// var x = value
-    		currentContext.create(identifier.getName());
-    		currentContext.store(identifier.getName(), value);
+    		declare(identifier, value);
+    		return value;
+    	}
+    	if (left instanceof Pattern pattern) {
+    		// var [a, b] = value or var { a, b } = value
+    		declare(pattern, value);
     		return value;
     	}
     	if (left instanceof CallOrPropertyAccess expr) {
@@ -1052,6 +1063,42 @@ public class TinyscriptEngine {
     		return value;
     	}
     	throw new TinyscriptTypeError("Invalid left-hand side expression", target);
+    }
+
+    // Creates the variable(s) of a declaration: an identifier or a pattern
+    private void declare(EObject target, TSValue value) {
+    	switch (target) {
+    		case Identifier identifier -> {
+    			currentContext.create(identifier.getName());
+    			currentContext.store(identifier.getName(), value);
+    		}
+    		case ArrayPattern pattern -> {
+    			int count = pattern.getNames().size();
+    			if (!(value instanceof ArrayObject array))
+    				throw new TinyscriptTypeError(patternText(pattern) + " needs an array, not " + value.typeOf(), pattern);
+    			// Stricter than Javascript, which would give undefined for the missing elements
+    			if (array.getLength() < count)
+    				throw new TinyscriptTypeError(patternText(pattern) + " needs an array with at least " + count
+    						+ " elements, not " + array.getLength(), pattern);
+    			for (int i = 0; i < count; i++)
+    				declare(pattern.getNames().get(i), array.item(i));
+    		}
+    		case ObjectPattern pattern -> {
+    			if (value == TSValue.NULL || value == TSValue.UNDEFINED)
+    				throw new TinyscriptTypeError(patternText(pattern) + " needs an object, not " + value.asString(), pattern);
+    			TSObject object = TSObject.toObject(this, value);
+    			// Like o.x, a missing property gives undefined
+    			for (Identifier name : pattern.getNames())
+    				declare(name, getProperty(object, TSValue.of(name.getName())));
+    		}
+    		default -> throw new TinyscriptUnsupportedOperationError("Unsupported declaration", target);
+    	}
+    }
+
+    // [a, b] or { a, b }, for error messages
+    private static String patternText(Pattern pattern) {
+    	String names = pattern.getNames().stream().map(Identifier::getName).collect(Collectors.joining(", "));
+    	return pattern instanceof ArrayPattern ? "[" + names + "]" : "{ " + names + " }";
     }
 
 	private TSValue evaluatePropertyKey(PropertyAccessSuffix suffix) {
@@ -1098,7 +1145,11 @@ public class TinyscriptEngine {
 		return executeInBlockContext(name, block, null, null);
 	}
 	
-	private TSValue executeInBlockContext(String name, Block block, Identifier variable, TSValue value) {
+	/**
+	 * Executes a block in a new context; with a variable (an identifier or a pattern, as in
+	 * for (var [key, value] : map)), that is declared in the context with the given value first.
+	 */
+	private TSValue executeInBlockContext(String name, Block block, EObject variable, TSValue value) {
     	LexicalEnvironment env = getLexicalEnvironment(block);
     	if ((variable == null) && env.getFunctionDeclarations().isEmpty() && env.getVariables().isEmpty())
     		return caseBlock(block);
@@ -1107,10 +1158,8 @@ public class TinyscriptEngine {
 		// Leave the context however the block ends: normally, with an error,
 		// or with a return/break that unwinds through it
 		try {
-			if (variable != null) {
-				currentContext.create(variable.getName());
-				currentContext.store(variable.getName(), value);
-			}
+			if (variable != null)
+				declare(variable, value);
 			hoistFunctionDeclarations(env);
 			return caseBlock(block);
 		}

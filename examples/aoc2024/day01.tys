@@ -10,9 +10,9 @@ function readLists(lines) {
     var left = [];
     var right = [];
     for (var line : lines) {
-        var pair = numbers(line);
-        left.push(pair[0]);
-        right.push(pair[1]);
+        var [l, r] = numbers(line);
+        left.push(l);
+        right.push(r);
     }
     return { left: left, right: right };
 }

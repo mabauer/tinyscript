@@ -9,6 +9,9 @@ import de.mkbauer.tinyscript.ts.Reference
 import de.mkbauer.tinyscript.ts.AssertStatement
 import de.mkbauer.tinyscript.ts.BreakStatement
 import de.mkbauer.tinyscript.ts.ContinueStatement
+import de.mkbauer.tinyscript.ts.Pattern
+import de.mkbauer.tinyscript.ts.ArrayPattern
+import de.mkbauer.tinyscript.ts.ObjectPattern
 import de.mkbauer.tinyscript.ts.ThrowStatement
 import de.mkbauer.tinyscript.ts.ConditionalExpression
 import de.mkbauer.tinyscript.ts.WhileStatement
@@ -117,6 +120,14 @@ class TinyscriptGenerator   {
 				values() { return Array.from(super.values()); }
 			};
 		})(globalThis.Set);
+
+		// Like the interpreter: an array pattern [a, b] needs an array with at least as many elements
+		function __ts_pattern(value, count) {
+			if (!Array.isArray(value) || value.length < count) {
+				throw new TypeError("an array pattern needs an array with at least " + count + " elements");
+			}
+			return value;
+		}
 
 		// Tinyscript's ==: no type coercion, but null == undefined; String objects equal their strings
 		function __ts_eq(obj1, obj2) {
@@ -397,7 +408,9 @@ class TinyscriptGenerator   {
 		val IterableForExpression expr=stmt.iterableForExpr; 
 		val iterable = newTempName("iterable")
 		val index = newTempName("i")
-		val loopVarDefinition = if (stmt.id !== null) "var " + stmt.id.generate else stmt.ref.generate
+		val loopVarDefinition = if (stmt.id !== null) "var " + stmt.id.generate
+			else if (stmt.pattern !== null) "var " + stmt.pattern.generate
+			else stmt.ref.generate
 		'''
 		var «iterable» = «expr.iterable.generate»;
 		if (typeof «iterable» === "string" || «iterable» instanceof String) {
@@ -410,14 +423,14 @@ class TinyscriptGenerator   {
 			throw new TypeError("for needs an array, a string, a Map or a Set");
 		}
 		for (var «index» = 0; «index» < «iterable».length; «index»++) {
-			«loopVarDefinition» = «iterable»[«index»];
+			«loopVarDefinition» = «stmt.pattern.generatePatternValue(iterable + "[" + index + "]")»;
 			«stmt.^do.generate»
 		}
 		'''
 	}
 	
 	def dispatch generate(BinaryExpression expr) '''
-		«IF (expr.op.equals("+="))»«expr.generateAddAssignment»«ELSEIF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
+		«IF (expr.left instanceof Pattern)»«expr.left.generate» = «(expr.left as Pattern).generatePatternValue(expr.right.generate)»«ELSEIF (expr.op.equals("+="))»«expr.generateAddAssignment»«ELSEIF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
 
 	// x += y adds like tinyscript's + (e.g. arrays); a property target is evaluated only once
 	def generateAddAssignment(BinaryExpression expr) {
@@ -433,6 +446,20 @@ class TinyscriptGenerator   {
 			return '''((o, k) => o[k] = __ts_add(o[k], «expr.right.generate»))(«left.expr.generate», «key»)'''
 		}
 		'''«left.generate» = __ts_add(«left.generate», «expr.right.generate»)'''
+	}
+
+	def dispatch generate(ArrayPattern pattern)
+		'''[«FOR name: pattern.names SEPARATOR ', '»«name.generate»«ENDFOR»]'''
+
+	def dispatch generate(ObjectPattern pattern)
+		'''{ «FOR name: pattern.names SEPARATOR ', '»«name.generate»«ENDFOR» }'''
+
+	// The value for a declaration: an array pattern checks its value like the interpreter
+	def CharSequence generatePatternValue(Pattern pattern, Object value) {
+		if (pattern instanceof ArrayPattern)
+			'''__ts_pattern(«value», «pattern.names.size»)'''
+		else
+			'''«value»'''
 	}
 
 	def dispatch generate(ConditionalExpression expr)

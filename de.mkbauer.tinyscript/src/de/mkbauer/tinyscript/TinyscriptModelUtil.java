@@ -16,6 +16,7 @@ import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.Pattern;
 import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -77,13 +78,8 @@ public class TinyscriptModelUtil {
 		for (Statement stmt : script.getGlobal().getStatements()) {
 			if (stmt instanceof FunctionDeclaration function && function.isExported())
 				result.add(function.getId());
-			if (stmt instanceof VariableStatement variables && variables.isExported()) {
-				for (Expression declaration : variables.getVardecls()) {
-					Expression id = declaration instanceof BinaryExpression assignment ? assignment.getLeft() : declaration;
-					if (id instanceof Identifier identifier)
-						result.add(identifier);
-				}
-			}
+			if (stmt instanceof VariableStatement variables && variables.isExported())
+				result.addAll(declaredIdentifiers(variables));
 		}
 		return result;
 	}
@@ -101,24 +97,29 @@ public class TinyscriptModelUtil {
 		return result;
 	}
 
+	/**
+	 * The variables a var statement declares: var a = 1, b; or the names of a pattern, var [a, b] = pair;
+	 */
+	public static List<Identifier> declaredIdentifiers(VariableStatement statement) {
+		List<Identifier> result = new ArrayList<Identifier>();
+		for (Expression declaration : statement.getVardecls()) {
+			Expression target = declaration instanceof BinaryExpression assignment ? assignment.getLeft() : declaration;
+			if (target instanceof Identifier identifier)
+				result.add(identifier);
+			if (target instanceof Pattern pattern)
+				result.addAll(pattern.getNames());
+		}
+		return result;
+	}
+
 	public static List<Identifier> declaredVariablesInBlock(Block block) {
 		List<Identifier> result = new ArrayList<Identifier>();
 		List<Statement> stmts= block.getStatements();
 		Iterator<Statement> stmt_it = stmts.iterator();
 		while (stmt_it.hasNext()) {
 			Statement stmt = stmt_it.next();
-			if (stmt instanceof VariableStatement) {
-				VariableStatement varstmt = (VariableStatement) stmt;
-				Iterator<Expression> expr_it = varstmt.getVardecls().iterator();
-				while (expr_it.hasNext()) {
-					Expression expr = expr_it.next();
-					if (expr instanceof BinaryExpression) {
-						expr = ((BinaryExpression) expr).getLeft();
-					}
-					if (expr instanceof Identifier) {
-						result.add((Identifier)expr);
-					}
-				}
+			if (stmt instanceof VariableStatement varstmt) {
+				result.addAll(declaredIdentifiers(varstmt));
 			}
 		}
 		return result;
@@ -139,18 +140,8 @@ public class TinyscriptModelUtil {
 			Statement stmt = stmt_it.next();
 			if (stmt == containingStatement(elem))
 				return result;
-			if (stmt instanceof VariableStatement) {
-				VariableStatement varstmt = (VariableStatement) stmt;
-				Iterator<Expression> expr_it = varstmt.getVardecls().iterator();
-				while (expr_it.hasNext()) {
-					Expression expr = expr_it.next();
-					if (expr instanceof BinaryExpression) {
-						expr = ((BinaryExpression) expr).getLeft();
-					}
-					if (expr instanceof Identifier) {
-						result.add((Identifier)expr);
-					}
-				}
+			if (stmt instanceof VariableStatement varstmt) {
+				result.addAll(declaredIdentifiers(varstmt));
 			}
 		}
 		return result;

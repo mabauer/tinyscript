@@ -110,6 +110,9 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 			if (varId != null) {
 				ids.add(varId);
 			}
+			if (foreach.getPattern() != null) {
+				ids.addAll(foreach.getPattern().getNames());
+			}
 		}
 		// The top level also sees the imported names
 		if (container instanceof Tinyscript) {

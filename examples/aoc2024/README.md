@@ -4,7 +4,7 @@ Solutions of the first days of [Advent of Code 2024](https://adventofcode.com/20
 
 | Day | Puzzle | Shows |
 |---|---|---|
-| [1](day01.tys) | Historian Hysteria | `sort` with a comparison function, `Map` for counting with `??`, `reduce` |
+| [1](day01.tys) | Historian Hysteria | destructuring, `sort` with a comparison function, `Map` for counting with `??`, `reduce` |
 | [2](day02.tys) | Red-Nosed Reports | `filter` and `some` with the index, `cond ? a : b` |
 | [3](day03.tys) | Mull It Over | a small scanner instead of regular expressions, `slice`, `while` |
 | [4](day04.tys) | Ceres Search | a grid of letters, objects as directions, nested loops |
