@@ -30,7 +30,7 @@ Next
 6. ~~**Practice:**~~ (days 1–4 of 2024 in `examples/aoc2024`, tested in the interpreter and in node) Findings:
    - ~~**Bug: builtins ignore extra arguments.**~~ (fixed: Javascript's optional arguments, otherwise a `TypeError`; `words()` in `std:string`) `"abc".startsWith("b", 1)` is `false` (Javascript: `true`); the same for `endsWith(s, end)`, `includes(s, start)` of strings and arrays, `split(sep, limit)`. Either support these arguments like Javascript or make too many arguments a `TypeError`.
    - Speed is fine: each day takes under a second on inputs of real size (1,000 lines, a 140×140 grid), JVM start included.
-   - Missing but bearable: `??` (`counts.has(n) ? counts.get(n) : 0`), a way to stop with an error message (`throw`), destructuring (`pair[0]`, `pair[1]`).
+   - Missing but bearable: `??` (`counts.has(n) ? counts.get(n) : 0`), ~~a way to stop with an error message (`throw`)~~ (done, with a minimal `Error`), destructuring (`pair[0]`, `pair[1]`).
    - The inclusive numeric `for` makes `for (var i = 0, a.length - 1)` the common case; consider a `for (var i : range(n))` helper or similar.
    - Days 5 and 6 added. **Speed** is the next limit: part 2 of day 6 (a simulation, 20–30 million steps for a real input) takes about a minute; on a test grid with 8 million steps, tinyscript needs 19 s, CPython 1.9 s. A profile (JFR) shows the costs of the tree walk: `dispatch` / `execute` with `eClass()` per node, `HashMap` lookups of variables in the execution contexts, string comparisons of operators. Ideas: resolve variables to slots once, dispatch on cached node kinds or precompiled closures, operators as enums.
 
