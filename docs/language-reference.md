@@ -119,6 +119,7 @@ A declaration can take apart an array or an object; only flat patterns of names 
 const [quotient, remainder] = divide(17, 5);   // the first elements of an array
 const { row, col } = position;                 // properties of an object
 for (const [key, value] : map) { ... }         // in an iterable for loop
+robots.map(({ x, y }) => x * y);               // as parameters of functions and arrow functions
 ```
 
 Stricter than Javascript, an array pattern needs an array with at least as many elements (`const [a, b] = [1]` is a `TypeError`; more elements are fine). An object pattern needs an object (or a string); like `o.x`, a missing property gives `undefined`.
@@ -898,6 +899,7 @@ Conversions to numbers are explicit (no operator or builtin converts silently):
 | `parseInt(str[, radix])` | The integer at the start of `str`, ignoring the rest (`"42abc"` → `42`), or `NaN`; leading whitespace and a sign are allowed, `0x` means radix 16. `radix` must be an integer from 2 to 36 |
 | `isNaN(x)` | `true` if the number `x` is `NaN`; `x` must be a number |
 | `Number.isInteger(x)` | `true` if `x` is a finite number without fraction; `false` for anything else |
+| `Infinity`, `NaN` | The numbers infinity and "not a number", as in Javascript |
 
 ```
 print(Number(" 3.5 ") + 1);   // 4.5
@@ -1089,7 +1091,7 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 - **Regular expressions** — no regex literals or `RegExp`
 - **`try` / `catch`** — errors cannot be caught; `throw` ends the script
 - **Template literals** — no backtick strings
-- **Destructuring** beyond flat patterns in declarations and `for` — no nesting, defaults, renaming, `...rest`, or patterns in parameters and assignments
+- **Destructuring** beyond flat patterns in declarations, `for` and parameters — no nesting, defaults, renaming, `...rest`, or patterns in assignments
 - **Spread operator** — no `...array` in call sites
 - **`delete`** operator
 - **`switch` statement**
@@ -1124,7 +1126,7 @@ print(area(2), unit, geo.area(1));
 - Files do not see each other's top-level names; sharing works only through `import` / `export`.
 - **Standard library:** `std:` modules come with tinyscript (written in tinyscript, in the core bundle under `/std`):
   - `std:array`: `range(n)` (`[0, …, n - 1]`), `sum(arr)`, `contains(arr, x)`, `reverse(arr)`
-  - `std:string`: `words(text)` (the words separated by any whitespace: `words(" 3   4\n")` is `["3", "4"]`; Javascript: `text.trim().split(/\s+/)`), `isWhitespace(c)`, `isDigit(c)` (`false` for `undefined`, e.g. `s[s.length]`)
+  - `std:string`: `words(text)` (the words separated by any whitespace: `words(" 3   4\n")` is `["3", "4"]`; Javascript: `text.trim().split(/\s+/)`), `integers(text)` (all integers in a text: `integers("p=0,4 v=3,-3")` is `[0, 4, 3, -3]`), `isWhitespace(c)`, `isDigit(c)` (`false` for `undefined`, e.g. `s[s.length]`)
 
   ```
   import range, sum from "std:array";

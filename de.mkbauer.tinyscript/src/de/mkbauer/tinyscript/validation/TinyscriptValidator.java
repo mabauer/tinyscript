@@ -220,6 +220,18 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	}
 
 	/**
+	 * Each parameter name only once, also across patterns: function f([a, b], a) is an error
+	 */
+	@Check
+	public void checkParameterNamesAreUnique(FunctionDefinition function) {
+		Set<String> names = new HashSet<String>();
+		for (Identifier name : TinyscriptModelUtil.parameterIdentifiers(function)) {
+			if (!names.add(name.getName()))
+				error("Duplicate parameter", name, TsPackage.Literals.IDENTIFIER__NAME);
+		}
+	}
+
+	/**
 	 * Destructuring patterns: each name only once, and in a for loop only over an iterable
 	 * (for (var [key, value] : map)), not in a numeric for loop.
 	 */

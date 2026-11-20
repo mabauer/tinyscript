@@ -73,15 +73,10 @@ public class InterpretedFunction extends Function {
 			currentContext.setFunctionContext(true);
 
 			// Put the arguments into the context
+			// (a name, or a pattern that takes the argument apart; missing arguments are undefined)
 			if (args != null) {
-				int i = 0;
-				for (Identifier param : ast.getParams()) {
-					currentContext.create(param.getName());
-					if (i < args.length) {
-						currentContext.store(param.getName(), args[i]);
-					}
-					i++;
-				}
+				for (int i = 0; i < ast.getParams().size(); i++)
+					engine.declare(ast.getParams().get(i), i < args.length ? args[i] : TSValue.UNDEFINED);
 			}
 
 			// Special case ...rest parameter
@@ -148,7 +143,7 @@ public class InterpretedFunction extends Function {
 		String result = "function " + getName() + "(";
 		if (ast != null) 
 			result = result + ast.getParams().stream()
-				.map(id->id.getName())
+				.map(param -> param instanceof Identifier id ? id.getName() : "...")
 				.collect(Collectors.joining(", "));
 		result = result + ") {...}"; 
 		return result;

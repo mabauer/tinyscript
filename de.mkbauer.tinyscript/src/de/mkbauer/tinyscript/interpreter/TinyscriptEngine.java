@@ -168,6 +168,8 @@ public class TinyscriptEngine {
 		addToGlobalObject("parseInt", NumberFunctions.createParseInt(this));
 		addToGlobalObject("isNaN", NumberFunctions.createIsNaN(this));
 		addToGlobalObject("Math", new MathObject(this));
+		addValueToGlobalObject("Infinity", Double.POSITIVE_INFINITY);
+		addValueToGlobalObject("NaN", Double.NaN);
 		addToGlobalObject("System", new SystemObject(this));
 		addToGlobalObject("print", Print.create(this));
 		
@@ -195,6 +197,11 @@ public class TinyscriptEngine {
 		builtinsResource.getContents().add(id);
 	}
 	
+	private void addValueToGlobalObject(String name, double value) {
+		globalContext.getGlobalObject().defineDefaultProperty(name, value);
+		addIdentifierToBuiltins(name);
+	}
+
 	private void addToGlobalObject(String name, TSObject value) {
 		TSObject globalObject = globalContext.getGlobalObject();
 		globalObject.defineDefaultProperty(name, value);
@@ -1071,7 +1078,7 @@ public class TinyscriptEngine {
     }
 
     // Creates the variable(s) of a declaration: an identifier or a pattern
-    private void declare(EObject target, TSValue value) {
+    void declare(EObject target, TSValue value) {
     	switch (target) {
     		case Identifier identifier -> {
     			currentContext.create(identifier.getName());

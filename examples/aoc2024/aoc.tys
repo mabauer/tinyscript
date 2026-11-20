@@ -1,7 +1,7 @@
 // Helpers for the Advent of Code solutions in this directory
 
 import * as fs from "std:fs";
-import words, isDigit from "std:string";
+import words from "std:string";
 
 // The puzzle input: the file given after --, e.g. tinyscript day01.tys -- input.txt
 // (input.txt if there is none)
@@ -24,21 +24,3 @@ export function numbers(line) {
     return words(line).map(Number);
 }
 
-// All integers in a line, also negative ones: "p=0,4 v=3,-3" gives [0, 4, 3, -3],
-// "Button A: X+94, Y+34" gives [94, 34]
-export function integers(line) {
-    const result = [];
-    let number = "";
-    // One step beyond the end, so that a number at the end is completed as well
-    for (let i = 0, line.length) {
-        const c = line[i];
-        if (isDigit(c) || c == "-" && number == "" && isDigit(line[i + 1])) {
-            number += c;
-        }
-        else if (number != "") {
-            result.push(Number(number));
-            number = "";
-        }
-    }
-    return result;
-}

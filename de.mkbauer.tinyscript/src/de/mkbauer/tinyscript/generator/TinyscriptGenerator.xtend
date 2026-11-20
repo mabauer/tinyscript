@@ -290,7 +290,7 @@ class TinyscriptGenerator   {
 	
 	def dispatch generate(FunctionDeclaration func) '''
 		function «IF (func.id !== null)»«func.id.generate»«ENDIF»(«func.generateParams») {
-			«func.block.generate»
+			«func.parameterPrologue»«func.block.generate»
 		}
 		
 	''' 
@@ -298,20 +298,34 @@ class TinyscriptGenerator   {
 	// A Javascript arrow function, so that this is the one of the surrounding function
 	def dispatch generate(ArrowFunction func) {
 		val body = func.block
-		if (body instanceof ArrowExpressionBody)
+		if (body instanceof ArrowExpressionBody && !func.hasArrayPatternParameter)
 			'''(«func.generateParams») => («(body.statements.head as ExpressionStatement).expr.generate»)'''
+		else if (body instanceof ArrowExpressionBody) '''
+			(«func.generateParams») => {
+				«func.parameterPrologue»return («(body.statements.head as ExpressionStatement).expr.generate»);
+			}'''
 		else '''
 			(«func.generateParams») => {
-				«body.generate»
+				«func.parameterPrologue»«body.generate»
 			}'''
 	}
 
+	// An array pattern as parameter becomes a temporary parameter, taken apart at the start of the
+	// body with the same check as in the interpreter; object patterns stay as they are
 	def generateParams(FunctionDefinition func)
-		'''«FOR param: func.params SEPARATOR ', '»«param.generate»«ENDFOR»«IF func.rest !== null»«IF !func.params.empty», «ENDIF»...«func.rest.generate»«ENDIF»'''
+		'''«FOR i: 0 ..< func.params.size SEPARATOR ', '»«IF func.params.get(i) instanceof ArrayPattern»__ts_param«i»«ELSE»«func.params.get(i).generate»«ENDIF»«ENDFOR»«IF func.rest !== null»«IF !func.params.empty», «ENDIF»...«func.rest.generate»«ENDIF»'''
 	
+	def boolean hasArrayPatternParameter(FunctionDefinition func) {
+		func.params.exists[it instanceof ArrayPattern]
+	}
+
+	def CharSequence parameterPrologue(FunctionDefinition func)
+		'''«FOR i: 0 ..< func.params.size»«IF func.params.get(i) instanceof ArrayPattern»let «func.params.get(i).generate» = __ts_pattern(__ts_param«i», «(func.params.get(i) as ArrayPattern).names.size»);
+		«ENDIF»«ENDFOR»'''
+
 	def dispatch generate(FunctionDefinition func) '''
 		function «IF (func.id !== null)»«func.id.name»«ENDIF»(«func.generateParams») {
-			«func.block.generate»
+			«func.parameterPrologue»«func.block.generate»
 		}'''	
 		
 	def dispatch generate(ReturnStatement stmt) '''

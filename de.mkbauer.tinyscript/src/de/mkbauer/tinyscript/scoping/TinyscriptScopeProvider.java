@@ -95,8 +95,7 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 		EObject container = block.eContainer();
 		if (container instanceof FunctionDefinition) {
 			FunctionDefinition function = (FunctionDefinition) container;
-			List<Identifier> params = function.getParams();
-			ids.addAll(params);
+			ids.addAll(TinyscriptModelUtil.parameterIdentifiers(function));
 			Identifier rest = function.getRest();
 			if (rest != null)
 				ids.add(rest);

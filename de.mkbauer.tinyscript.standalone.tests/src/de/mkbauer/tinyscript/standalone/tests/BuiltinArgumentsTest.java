@@ -110,6 +110,14 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testIntegers() throws IOException {
+        Path main = write("main.tys", "import integers from \"std:string\";\n"
+                + "print(integers(\"p=0,4 v=3,-3\").join()); print(integers(\"Button A: X+94, Y+34\").join()); print(integers(\"a-b - 7-\").join()); print(integers(\"none\").length);");
+        assertEquals("0,4,3,-3\n94,34\n7\n0\n", runModule(main));
+        assertSameOutputModule(main);
+    }
+
+    @Test
     public void testWords() throws IOException {
         Path main = write("main.tys", "import words, isWhitespace, isDigit from \"std:string\";\n"
                 + "print(words(\"  3   4\\t5\\n\").join(\"|\")); print(words(\"\").length); print(words(\"   \").length); print(words(\"one\").join(\"|\"));\n"

@@ -16,8 +16,8 @@ Solutions of the first days of [Advent of Code 2024](https://adventofcode.com/20
 | [10](day10.tys) | Hoof It | depth-first search, counting paths and distinct ends at once |
 | [11](day11.tys) | Plutonian Pebbles | memoization with a `Map`, numbers beyond 32 bits |
 | [12](day12.tys) | Garden Groups | flood fill, counting corners instead of sides, an arrow function as local helper |
-| [13](day13.tys) | Claw Contraption | reading numbers from text (`integers` in `aoc.tys`), Cramer's rule, `Number.isInteger` |
-| [14](day14.tys) | Restroom Redoubt | optional script arguments (`System.args`), a remainder that is never negative |
+| [13](day13.tys) | Claw Contraption | reading numbers from text (`integers` of `std:string`), Cramer's rule, `Number.isInteger` |
+| [14](day14.tys) | Restroom Redoubt | optional script arguments (`System.args`), patterns as parameters, a remainder that is never negative |
 | [15](day15.tys) | Warehouse Woes | a mutable grid, recursive pushing of boxes (also two cells wide) |
 
 [aoc.tys](aoc.tys) is a module with the helpers for reading the puzzle input (via `std:fs`).

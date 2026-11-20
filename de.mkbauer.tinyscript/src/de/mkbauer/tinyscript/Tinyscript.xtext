@@ -51,7 +51,7 @@ BlockStatement:
 FunctionDeclaration returns FunctionDefinition:
 	{FunctionDeclaration}
 	(exported ?= 'export')? 'function' ( id=Identifier ) 
-	( '(' (params += Identifier)? (',' params += Identifier)* (',' '...' rest=Identifier)? ')' 
+	( '(' (params += Parameter)? (',' params += Parameter)* (',' '...' rest=Identifier)? ')' 
 		| '(' '...' rest=Identifier ')'  )
 	block=Block 
 ;
@@ -73,7 +73,7 @@ ConditionalExpression returns Expression:
 ArrowFunctionDefinition returns FunctionDefinition:
 	{ArrowFunction}
 	( (params+=Identifier) 
-		| ( '(' params += Identifier? (',' params += Identifier)* (',' '...' rest=Identifier)? ')')
+		| ( '(' params += Parameter? (',' params += Parameter)* (',' '...' rest=Identifier)? ')')
 		| ( '(' '...' rest=Identifier ')' )
 	)  '=>' block=ArrowFunctionBlock 
 ;
@@ -147,7 +147,7 @@ Atomic:
 
 FunctionExpression returns FunctionDefinition:
 	'function' ( id=Identifier )? 
-		( '(' (params += Identifier)? (',' params += Identifier)* (',' '...' rest=Identifier)? ')' 
+		( '(' (params += Parameter)? (',' params += Parameter)* (',' '...' rest=Identifier)? ')' 
 		| '(' '...' rest=Identifier ')'  )
 	block=Block 
 ;
@@ -208,6 +208,11 @@ VariableStatement:
 VariableDeclaration returns Expression:
 	Identifier ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)? |
 	Pattern {BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression
+;
+
+// A parameter: a name, or a pattern like function f([x, y]) or ({ row, col }) => row + col
+Parameter returns Expression:
+	Identifier | Pattern
 ;
 
 // Destructuring, only flat: var [a, b] = pair; var { row, col } = position;
