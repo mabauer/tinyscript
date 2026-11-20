@@ -559,7 +559,7 @@ const person = {
 };
 ```
 
-Property keys can be identifiers or string literals. Values can be any expression.
+Property keys can be identifiers or string literals. Values can be any expression. As in Javascript, `{ row, col }` is short for `{ row: row, col: col }` (the counterpart of the object pattern `const { row, col } = position;`), and the properties keep the order in which they were added (`Object.keys`).
 
 ### Property access
 

@@ -259,8 +259,9 @@ ObjectInitializer:
 	'{' (propertyassignments+=PropertyAssignment)? (',' propertyassignments+=PropertyAssignment)* '}'
 ;
 
+// key: value, or the shorthand { row, col } for { row: row, col: col }
 PropertyAssignment:
-	key=PropertyName ':' value=AssignmentExpression
+	key=PropertyName ':' value=AssignmentExpression | shorthand=Reference
 ;
 
 PropertyName:

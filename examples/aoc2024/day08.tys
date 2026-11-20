@@ -16,7 +16,7 @@ for (let row = 0, height - 1) {
         const frequency = grid[row][col];
         if (frequency != ".") {
             const positions = antennas.get(frequency) ?? [];
-            positions.push({ row: row, col: col });
+            positions.push({ row, col });
             antennas.set(frequency, positions);
         }
     }

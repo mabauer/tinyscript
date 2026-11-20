@@ -44,10 +44,10 @@ function compactFiles() {
     for (let i = 0, diskMap.length - 1) {
         const length = Number(diskMap[i]);
         if (i % 2 == 0) {
-            files.push({ id: i / 2, start: position, length: length });
+            files.push({ id: i / 2, start: position, length });
         }
         else if (length > 0) {
-            spans.push({ start: position, length: length });
+            spans.push({ start: position, length });
         }
         position += length;
     }

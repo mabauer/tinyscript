@@ -11,7 +11,7 @@ Solutions of the first days of [Advent of Code 2024](https://adventofcode.com/20
 | [5](day05.tys) | Print Queue | a `Set` of rules, `sort` with a comparison function built from them |
 | [6](day06.tys) | Guard Gallivant | a simulation, `Set`s of numbers for visited positions and states, loop detection, `throw` |
 | [7](day07.tys) | Bridge Repair | recursion with pruning, destructuring of `split` |
-| [8](day08.tys) | Resonant Collinearity | a `Map` of arrays (`?? []`), a `Set` of positions |
+| [8](day08.tys) | Resonant Collinearity | a `Map` of arrays (`?? []`), a `Set` of positions, `{ row, col }` |
 | [9](day09.tys) | Disk Fragmenter | two pointers, objects as files and free spans, `find`, destructuring in `for` |
 | [10](day10.tys) | Hoof It | depth-first search, counting paths and distinct ends at once |
 
