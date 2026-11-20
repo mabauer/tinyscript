@@ -19,7 +19,7 @@ function findGuard() {
             return { row: row, col: col };
         }
     }
-    return null;
+    throw new Error("The input has no guard (^)");
 }
 
 function isInside(row, col) {

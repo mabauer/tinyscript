@@ -28,6 +28,7 @@ import de.mkbauer.tinyscript.ts.BooleanLiteral;
 import de.mkbauer.tinyscript.ts.BreakStatement;
 import de.mkbauer.tinyscript.ts.ConditionalExpression;
 import de.mkbauer.tinyscript.ts.ContinueStatement;
+import de.mkbauer.tinyscript.ts.ThrowStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
@@ -68,6 +69,8 @@ import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.number.NumberFunctions;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.collection.MapConstructor;
+import de.mkbauer.tinyscript.runtime.error.ErrorConstructor;
+import de.mkbauer.tinyscript.runtime.error.ErrorObject;
 import de.mkbauer.tinyscript.runtime.collection.MapObject;
 import de.mkbauer.tinyscript.runtime.collection.SetConstructor;
 import de.mkbauer.tinyscript.runtime.collection.SetObject;
@@ -155,6 +158,7 @@ public class TinyscriptEngine {
 		addToGlobalObject("Array", new ArrayConstructor(this));
 		addToGlobalObject("Map", new MapConstructor(this));
 		addToGlobalObject("Set", new SetConstructor(this));
+		addToGlobalObject("Error", new ErrorConstructor(this));
 
 		addToGlobalObject("Number", NumberFunctions.createNumber(this));
 		addToGlobalObject("parseInt", NumberFunctions.createParseInt(this));
@@ -300,6 +304,8 @@ public class TinyscriptEngine {
     		return caseBreakStatement((BreakStatement) object);
 		case TsPackage.CONTINUE_STATEMENT:
     		return caseContinueStatement((ContinueStatement) object);
+		case TsPackage.THROW_STATEMENT:
+    		return caseThrowStatement((ThrowStatement) object);
 		case TsPackage.CONDITIONAL_EXPRESSION:
     		return caseConditionalExpression((ConditionalExpression) object);
 		case TsPackage.FUNCTION_DEFINITION:
@@ -681,6 +687,14 @@ public class TinyscriptEngine {
     public TSValue caseContinueStatement(ContinueStatement object) {
     	recordStatement();
     	throw TSContinue.INSTANCE;
+    }
+
+    // throw value; ends the script: the message is that of an Error object, or the value as a string
+    public TSValue caseThrowStatement(ThrowStatement object) {
+    	recordStatement();
+    	TSValue value = execute(object.getExpr());
+    	String message = value instanceof ErrorObject error ? error.getMessage() : TSObject.stringify(value);
+    	throw new TinyscriptError(message, value, object);
     }
 
     // cond ? a : b evaluates only one of a and b

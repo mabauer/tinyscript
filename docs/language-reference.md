@@ -379,6 +379,19 @@ for (var i = 1, 10) {
 }
 ```
 
+### `throw`
+
+Ends the script with an error. The message is that of an `Error` object, or the thrown value as a string; the REPL prints it with the stack trace as `TinyscriptError: message`. There is no `try` / `catch`: a thrown error cannot be caught.
+
+```
+function parse(line) {
+    if (!line.includes(",")) {
+        throw new Error("expected two numbers: " + line);
+    }
+    return line.split(",").map(Number);
+}
+```
+
 ### `return`
 
 Returns a value from a function. A `return` without an expression returns `undefined`. `return` at global (top-level) scope is a validation error.
@@ -1005,6 +1018,8 @@ var file = System.args.length > 0 ? System.args[0] : "input.txt";
 
 Calling something that is not a function is a `TypeError` that names it: `String has no method 'splitt'`, `'x' of Object is a number, not a function`, `'f' is undefined, not a function`.
 
+`new Error(message)` (or `Error(message)`) creates an error object for `throw`: `e.message`, `e.name` (`"Error"`) and `e.toString()` (`"Error: message"`) as in Javascript; the message must be a string. There are no subclasses like `TypeError` and no stack property.
+
 A too deep (or endless) recursion is a `TinyscriptStackOverflowError` ("Stack overflow: too many nested calls"); its stack trace shows only the innermost and outermost calls. The REPL allows a recursion depth of about 500,000 calls; in the web demo the limit is lower.
 
 ### File access
@@ -1047,7 +1062,7 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 ### Things not supported
 
 - **Regular expressions** — no regex literals or `RegExp`
-- **`try` / `catch` / `throw`** — no exception handling in user code
+- **`try` / `catch`** — errors cannot be caught; `throw` ends the script
 - **Template literals** — no backtick strings
 - **Destructuring** — no `const { a, b } = obj`
 - **Spread operator** — no `...array` in call sites

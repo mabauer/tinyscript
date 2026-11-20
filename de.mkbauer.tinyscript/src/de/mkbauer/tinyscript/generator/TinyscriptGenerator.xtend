@@ -9,6 +9,7 @@ import de.mkbauer.tinyscript.ts.Reference
 import de.mkbauer.tinyscript.ts.AssertStatement
 import de.mkbauer.tinyscript.ts.BreakStatement
 import de.mkbauer.tinyscript.ts.ContinueStatement
+import de.mkbauer.tinyscript.ts.ThrowStatement
 import de.mkbauer.tinyscript.ts.ConditionalExpression
 import de.mkbauer.tinyscript.ts.WhileStatement
 import de.mkbauer.tinyscript.ts.StringLiteral
@@ -313,6 +314,10 @@ class TinyscriptGenerator   {
 
 	def dispatch generate(ContinueStatement stmt) '''
 		continue;
+	'''
+
+	def dispatch generate(ThrowStatement stmt) '''
+		throw «stmt.expr.generate»;
 	'''
 
 	def dispatch generate(AssertStatement stmt) '''

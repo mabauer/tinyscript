@@ -35,6 +35,7 @@ Statement:
 	WhileStatement |
 	BreakStatement |
 	ContinueStatement |
+	ThrowStatement |
 	AssertStatement |
 	EmptyStatement
 ;
@@ -193,6 +194,11 @@ BreakStatement:
 ContinueStatement:
 	{ContinueStatement}
 	'continue' ';'
+;
+
+// throw ends the script with an error (there is no try / catch)
+ThrowStatement:
+	'throw' expr=AssignmentExpression ';'
 ;
 
 VariableStatement:

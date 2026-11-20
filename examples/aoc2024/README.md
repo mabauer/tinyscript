@@ -9,7 +9,7 @@ Solutions of the first days of [Advent of Code 2024](https://adventofcode.com/20
 | [3](day03.tys) | Mull It Over | a small scanner instead of regular expressions, `slice`, `while` |
 | [4](day04.tys) | Ceres Search | a grid of letters, objects as directions, nested loops |
 | [5](day05.tys) | Print Queue | a `Set` of rules, `sort` with a comparison function built from them |
-| [6](day06.tys) | Guard Gallivant | a simulation, `Set`s of numbers for visited positions and states, loop detection |
+| [6](day06.tys) | Guard Gallivant | a simulation, `Set`s of numbers for visited positions and states, loop detection, `throw` |
 
 [aoc.tys](aoc.tys) is a module with the helpers for reading the puzzle input (via `std:fs`).
 
