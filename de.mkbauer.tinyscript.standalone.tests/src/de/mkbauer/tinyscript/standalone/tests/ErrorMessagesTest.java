@@ -26,7 +26,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         // A C-style for loop used to give 2 syntax errors and 3 unresolved references
         List<String> errors = reportedErrors("let sum = 0;\nfor (let i = 0; i < 10; i++) {\n    sum += i;\n}");
         assertEquals(1, errors.size(), errors.toString());
-        assertEquals("2:15: tinyscript's numeric for loop has no ';': for (let i = 0, n - 1) { … } counts from 0 to n - 1, including the end", errors.get(0));
+        assertEquals("2:15: tinyscript's for loop has no ';': for (const i : range(n)) { … } counts from 0 to n - 1", errors.get(0));
     }
 
     @Test
@@ -55,7 +55,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testCStyleForLoop() {
-        assertEquals("tinyscript's numeric for loop has no ';': for (let i = 0, n - 1) { … } counts from 0 to n - 1, including the end",
+        assertEquals("tinyscript's for loop has no ';': for (const i : range(n)) { … } counts from 0 to n - 1",
                 firstError("let sum = 0;\nfor (let i = 0; i < 10; i++) {\n    sum += i;\n}"));
     }
 

@@ -334,6 +334,8 @@ if (x < 0) {
 
 ### `for` — numeric loop
 
+To count from 0 to n - 1, the iterable loop with `range` is usually simpler: `for (const i : range(n)) { ... }` (see below).
+
 Tinyscript's numeric `for` loop is inspired by Lua. It counts an integer variable from `start` to `stop` (inclusive):
 
 ```
@@ -360,11 +362,13 @@ for (let i = 10, 1, -2) {
 
 ### `for` — iterable loop
 
-Iterates over the elements of an array (values, not indices), the characters of a string, the values of a `Set` or the entries `[key, value]` of a `Map`; anything else is a `TypeError`:
+Iterates over the elements of an array (values, not indices), the characters of a string, the values of a `Set`, the entries `[key, value]` of a `Map` or the numbers of a `range`; anything else is a `TypeError`:
 
 ```
 for (const element : array) { ... }
 for (const c : "abc") { ... }
+for (const i : range(n)) { ... }              // 0, 1, …, n - 1
+for (const i : range(array.length)) { ... }   // the indexes of an array
 ```
 
 A loop over an array sees elements that its body appends; a loop over a string, `Set` or `Map` goes through the elements it had when the loop started.
@@ -711,8 +715,8 @@ Array.isArray("hello")     // false
 ### Iterating
 
 ```
-for (const x : array) { ... }          // iterates values
-for (let i = 0, array.length) { ... } // numeric index loop (if you track length)
+for (const x : array) { ... }                 // iterates values
+for (const i : range(array.length)) { ... }   // iterates indexes
 ```
 
 ---
@@ -890,6 +894,25 @@ print("hello");
 print(42);
 print([1, 2, 3]);   // [1, 2, 3]
 ```
+
+### `range`
+
+`range(end)` and `range(start, end[, step])` are the integers from `start` (default `0`) up to, but not including, `end`, as in Python. A range is lazy: it does not build an array, so `range(1000000000000)` costs nothing until a loop goes through it.
+
+```
+for (const i : range(5)) { ... }         // 0, 1, 2, 3, 4
+for (const i : range(2, 6)) { ... }      // 2, 3, 4, 5
+for (const i : range(10, 0, -3)) { ... } // 10, 7, 4, 1
+```
+
+| Member | Description |
+|---|---|
+| `r.length` | The number of integers |
+| `r.toArray()` | An array of the integers: `range(3).toArray()` is `[0, 1, 2]` |
+| `r.map(f)` | An array of `f(i)` for each integer: `range(4).map(i => i * i)` is `[0, 1, 4, 9]` |
+| `r.forEach(f)` | Calls `f(i)` for each integer |
+
+The arguments must be integers, the step must not be `0`; anything else is a `TypeError`. A range cannot be changed. The callbacks get `(i, index, range)`, like those of arrays. Javascript has no `range`: the transpiler adds one.
 
 ### `Math`
 
@@ -1086,7 +1109,7 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 | **Semicolons** | Optional (ASI) | Required after expression statements, declarations, `return` |
 | **Block scope** | `var` is function-scoped; `let`/`const` are block-scoped | All variables are block-scoped; `var` is a synonym of `let` |
 | **Control structure bodies** | Braces optional for single statements | Braces always required |
-| **Numeric `for` loop** | `for (let i = 0; i < n; i++)` | `for (let i = 0, n)` (Lua-style) |
+| **Numeric `for` loop** | `for (let i = 0; i < n; i++)` | `for (const i : range(n))`, or `for (let i = 0, n - 1)` (Lua-style, inclusive end) |
 | **Iterable `for` loop** | `for (const x of array)` | `for (const x : array)` |
 | **`for...in`** | Iterates over keys | Not supported (use `for...of` style with `:`) |
 | **Array `+`** | String concatenation | Concatenation of two arrays; an array plus a number etc. is a `TypeError` |
@@ -1145,11 +1168,11 @@ print(area(2), unit, geo.area(1));
 - Importing the same name twice, or a name that is also declared in the file, is a "Duplicate identifier"; importing a name a module does not export is an error (`"geometry.tys" does not export "helper"`).
 - Files do not see each other's top-level names; sharing works only through `import` / `export`.
 - **Standard library:** `std:` modules come with tinyscript (written in tinyscript, in the core bundle under `/std`):
-  - `std:array`: `range(n)` (`[0, …, n - 1]`), `sum(arr)`, `contains(arr, x)`, `reverse(arr)`
+  - `std:array`: `sum(arr)`, `contains(arr, x)`, `reverse(arr)`; they work on anything the iterable `for` loop goes through (arrays, ranges, strings, `Set`s and `Map`s)
   - `std:string`: `words(text)` (the words separated by any whitespace: `words(" 3   4\n")` is `["3", "4"]`; Javascript: `text.trim().split(/\s+/)`), `integers(text)` (all integers in a text: `integers("p=0,4 v=3,-3")` is `[0, 4, 3, -3]`), `isWhitespace(c)`, `isDigit(c)` (`false` for `undefined`, e.g. `s[s.length]`)
 
   ```
-  import range, sum from "std:array";
+  import sum from "std:array";
   print(sum(range(10)));   // 45
   ```
   - `std:fs` (native, not available sandboxed): file access, UTF-8, relative paths against the working directory. Strict: errors end the script (tinyscript has no `try` / `catch`), so check with `exists` first.

@@ -141,7 +141,7 @@ Source text
 - Semicolons are required after statements; `if`/`else` bodies must be `{ … }` blocks (`else if (…) { … }` chains are allowed)
 - Variables are block-scoped (no `var` hoisting); `let` is a synonym of `var`, `const` cannot be assigned again
 - Style for tinyscript code (examples, docs, `std:`): `const` for variables that are never assigned again, otherwise `let`; not `var`
-- Loops: numeric `for (let i = 0, n[, step])`, iterable `for (const x : array)` (values, not keys; also strings, `Set`s and `Map`s) and `while (cond) { … }`; `break` leaves the innermost loop, `continue` goes on with its next iteration. In sandboxed mode every loop iteration counts against the statement limit.
+- Loops: numeric `for (let i = 0, n[, step])`, iterable `for (const x : array)` (values, not keys; also strings, `Set`s, `Map`s and lazy ranges: `for (const i : range(n))` counts 0 … n - 1) and `while (cond) { … }`; `break` leaves the innermost loop, `continue` goes on with its next iteration. In sandboxed mode every loop iteration counts against the statement limit.
 - Only `==` / `!=` (no type coercion, except `null == undefined`; `NaN != NaN`; there is no `===` / `!==`)
 - No silent conversions: arithmetic needs numbers, `+` adds numbers, arrays, or a string and a value; builtins check their argument types and count (JavaScript's optional arguments are supported, more is a `TypeError`). Conditions accept booleans, `null` / `undefined` (false) and objects (true), not numbers or strings; `<`, `<=`, `>`, `>=` compare number with number or string with string, anything else is a `TypeError`
 - `+` concatenates two arrays; with a string on either side it concatenates strings; an array plus anything else is a `TypeError`

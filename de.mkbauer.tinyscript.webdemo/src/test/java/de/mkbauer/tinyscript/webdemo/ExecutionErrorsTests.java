@@ -44,7 +44,7 @@ public class ExecutionErrorsTests {
 	@Test
 	public void testStandardLibraryModulesCanBeImported() {
 		TinyscriptExecutionResult result = executionService.executeScriptFromString(
-				"import range, sum from \"std:array\";\nprint(sum(range(4)));");
+				"import sum from \"std:array\";\nprint(sum(range(4)));");
 		assertEquals(0, result.getErrorCode(), result.getErrorMessage());
 		assertEquals("6\n", result.getOutput());
 	}

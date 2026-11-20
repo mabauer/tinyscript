@@ -1,13 +1,5 @@
-// Standard library: array helpers.  import range, sum from "std:array";
-
-// The array [0, 1, ..., n - 1]
-export function range(n) {
-	const result = [];
-	for (let i = 0, n - 1) {
-		result.push(i);
-	}
-	return result;
-}
+// Standard library: array helpers.  import sum, reverse from "std:array";
+// (They work on anything the for loop goes through: arrays, ranges, strings, Sets and Maps.)
 
 // The sum of the numbers in arr
 export function sum(arr) {

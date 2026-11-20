@@ -124,6 +124,72 @@ class TinyscriptGenerator   {
 			};
 		})(globalThis.Set);
 
+		// Like the interpreter: range(end), range(start, end[, step]) is a lazy range of integers
+		// with an exclusive end
+		class __ts_Range {
+			constructor(start, end, step) {
+				this.start = start;
+				this.end = end;
+				this.step = step;
+			}
+			get length() {
+				return Math.max(0, Math.ceil((this.end - this.start) / this.step));
+			}
+			*[Symbol.iterator]() {
+				for (let i = this.start; this.step > 0 ? i < this.end : i > this.end; i += this.step) {
+					yield i;
+				}
+			}
+			toArray() {
+				return Array.from(this);
+			}
+			map(f) {
+				return Array.from(this).map((value, index) => f(value, index, this));
+			}
+			forEach(f) {
+				let index = 0;
+				for (const value of this) {
+					f(value, index++, this);
+				}
+			}
+			toString() {
+				return "range(" + this.start + ", " + this.end + (this.step !== 1 ? ", " + this.step : "") + ")";
+			}
+		}
+
+		// A property of the global object, so that a script can declare its own range
+		globalThis.range = function range(...args) {
+			if (args.length < 1 || args.length > 3) {
+				throw new TypeError("range() needs 1 to 3 arguments, not " + args.length);
+			}
+			for (const arg of args) {
+				if (!Number.isInteger(arg)) {
+					throw new TypeError("range() needs integers, not " + (typeof arg === "number" ? arg : typeof arg));
+				}
+			}
+			const [start, end, step] = args.length > 1 ? [args[0], args[1], args[2] ?? 1] : [0, args[0], 1];
+			if (step === 0) {
+				throw new TypeError("range() needs a step other than 0");
+			}
+			return new __ts_Range(start, end, step);
+		};
+
+		// Like the interpreter, what the iterable for loop goes through: an array item by item (seeing
+		// the items the loop adds), the characters of a string, a copy of the entries of a Map or Set,
+		// a range lazily
+		function __ts_iterate(value) {
+			if (typeof value === "string" || value instanceof String) {
+				return String(value).split("")[Symbol.iterator]();
+			}
+			if (value instanceof globalThis.Map || value instanceof globalThis.Set) {
+				return Array.from(value)[Symbol.iterator]();
+			}
+			if (Array.isArray(value) || value instanceof __ts_Range) {
+				return value[Symbol.iterator]();
+			}
+			throw new TypeError("for needs an array, a string, a Map, a Set or a range");
+		}
+
 		// Like the interpreter: bitwise operators on integers up to 53 bits (Javascript's own work on 32 bits)
 		function __ts_bitwise(op, a, b) {
 			const operand = x => {
@@ -454,24 +520,15 @@ class TinyscriptGenerator   {
 	
 	def generateIterableForStatement(ForStatement stmt) {
 		val IterableForExpression expr=stmt.iterableForExpr; 
-		val iterable = newTempName("iterable")
-		val index = newTempName("i")
+		val iterator = newTempName("iterator")
+		val step = newTempName("step")
 		val loopVarDefinition = if (stmt.id !== null) declarationKeyword(stmt.kind) + " " + stmt.id.generate
 			else if (stmt.pattern !== null) declarationKeyword(stmt.kind) + " " + stmt.pattern.generate
 			else stmt.ref.generate
 		'''
-		var «iterable» = «expr.iterable.generate»;
-		if (typeof «iterable» === "string" || «iterable» instanceof String) {
-			«iterable» = String(«iterable»).split("");
-		}
-		else if («iterable» instanceof globalThis.Map || «iterable» instanceof globalThis.Set) {
-			«iterable» = Array.from(«iterable»);
-		}
-		else if (!Array.isArray(«iterable»)) {
-			throw new TypeError("for needs an array, a string, a Map or a Set");
-		}
-		for (var «index» = 0; «index» < «iterable».length; «index»++) {
-			«loopVarDefinition» = «stmt.pattern.generatePatternValue(iterable + "[" + index + "]")»;
+		var «iterator» = __ts_iterate(«expr.iterable.generate»);
+		for (var «step» = «iterator».next(); !«step».done; «step» = «iterator».next()) {
+			«loopVarDefinition» = «stmt.pattern.generatePatternValue(step + ".value")»;
 			«stmt.^do.generate»
 		}
 		'''
