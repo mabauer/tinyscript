@@ -22,7 +22,7 @@ Next
    - Kept on purpose (document): calling a user function with too few arguments gives `undefined` for the rest, extra arguments are ignored; reading a missing property gives `undefined`.
    - Update the scripts that rely on the old behavior; document everything in the README ("Design decisions").
 1. ~~**Strings and numbers:**~~ (done, plus `padEnd`) `split`, `trim`, `startsWith`, `endsWith`, `includes`, `replace` / `replaceAll` (strings only, no regex), `slice`, `lastIndexOf`, `repeat`, `padStart`, `toUpperCase` / `toLowerCase`, `charCodeAt`, `String.fromCharCode`; `Number(s)` (trims, `""` and non-numbers are `NaN`), `parseInt(s[, radix])` (lenient like Javascript), `isNaN`, `Number.isInteger`.
-2. **Arrays:** `sort` (with comparison function), `slice`, `reduce`, `forEach`, `some`, `every`, `find`, `findIndex`, `includes`, `fill`, `new Array(n)`.
+2. ~~**Arrays:**~~ (done; also `join()` defaults to `","`, callbacks get `(item, index, array)`) `sort` (with comparison function), `slice`, `reduce`, `forEach`, `some`, `every`, `find`, `findIndex`, `includes`, `fill`, `new Array(n)`.
 3. **Syntax:** `continue`, `cond ? a : b`, `+=` / `-=` / `*=` / `/=` / `%=`; `++` / `--` only as statements (`i++;`, not inside expressions).
 4. **`Map` and `Set`** as in Javascript (keys of any type, `has` returns a boolean); no `delete` operator.
 5. **Robustness:** deep recursion must not crash the REPL with a Java `StackOverflowError` (run the interpreter in a thread with a large stack, report an overflow as a tinyscript error); a call of a missing method says so ("String has no method 'split'" instead of "Calls are only allowed for function objects"); script arguments after `--` in `System.args` (`tinyscript day1.tys -- input.txt`).

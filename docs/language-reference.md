@@ -543,14 +543,28 @@ Arrays are lists: besides their items, only `length` can be set. Unlike Javascri
 |---|---|
 | `arr.at(i)` | Element at index `i`; a negative `i` counts from the end (`arr.at(-1)` is the last element); `undefined` if out of range |
 | `arr.indexOf(x[, start])` | Index of the first element `== x` (tinyscript's `==`), or `-1`; searching from `start` (negative: counts from the end) |
+| `arr.includes(x)` | `true` if an element `== x` |
 | `arr.push(x)` | Appends `x` to the end; returns new element count |
 | `arr.pop()` | Removes and returns the last element |
 | `arr.shift()` | Removes and returns the first element |
 | `arr.unshift(x)` | Prepends `x`; returns new element count |
-| `arr.join(sep)` | Returns a string with elements joined by `sep` |
-| `arr.map(fn)` | Returns a new array by applying `fn(element)` to each element |
-| `arr.filter(fn)` | Returns a new array of elements where `fn(element)` is truthy |
+| `arr.slice([start[, end]])` | A new array with the elements from `start` (inclusive) to `end` (exclusive); negative indices count from the end; `arr.slice()` copies the array |
+| `arr.fill(x[, start[, end]])` | Sets the elements from `start` to `end` to `x`; returns the array |
+| `arr.join([sep])` | Returns a string with elements joined by `sep` (default `","`) |
+| `arr.forEach(fn)` | Calls `fn(element, index, array)` for each element |
+| `arr.map(fn)` | Returns a new array of the results of `fn(element, index, array)` |
+| `arr.filter(fn)` | Returns a new array of the elements for which `fn(element, index, array)` is true |
+| `arr.some(fn)` / `arr.every(fn)` | Whether `fn` is true for some / every element |
+| `arr.find(fn)` / `arr.findIndex(fn)` | The first element / its index for which `fn` is true, or `undefined` / `-1` |
+| `arr.reduce(fn[, initial])` | Combines the elements with `fn(accumulator, element, index, array)`, starting with `initial` (or the first element; then an empty array is a `TypeError`) |
+| `arr.sort([compare])` | Sorts the array in place (stable) and returns it; `compare(a, b)` returns a negative number if `a` comes first, a positive one if `b` does, `0` otherwise |
 | `arr.toString()` | Returns a string representation |
+
+The callbacks must be functions; the results of the callbacks of `filter`, `some`, `every`, `find` and `findIndex` are conditions (a boolean, `null` / `undefined` or an object, see [Conditions](#conditions)).
+
+Without a comparison function, `sort` only sorts strings; unlike Javascript, which would sort numbers as strings (`[10, 9, 1].sort()` gives `[1, 10, 9]`), sorting other values without one is a `TypeError`. Sort numbers with `arr.sort((a, b) => a - b)`.
+
+`new Array(n)` creates an array of `n` elements `undefined` (fill it with `fill`); `new Array(a, b, ...)` or `new Array("x")` create an array of these elements. Unlike Javascript, `new Array(n)` has no "holes": `map` and `forEach` see all `n` elements.
 
 ```
 var numbers = [1, 5, 4, 2, 9, 7];
@@ -562,6 +576,10 @@ var odds = numbers.filter(x => x % 2 == 1);
 print(odds);      // [1, 5, 9, 7]
 
 print(numbers.join(", "));   // "1, 5, 4, 2, 9, 7"
+print(numbers.reduce((sum, x) => sum + x, 0));   // 28
+print(numbers.slice().sort((a, b) => a - b));     // [1, 2, 4, 5, 7, 9]
+
+var grid = new Array(3).fill(0).map(() => new Array(3).fill("."));
 ```
 
 ### Array concatenation with `+`
@@ -570,8 +588,9 @@ The `+` operator has array-specific semantics:
 
 ```
 var a = [1, 2];
-var b = a + 3;         // [1, 2, 3]   — append element
 var c = a + [3, 4];    // [1, 2, 3, 4] — concatenate arrays
+var s = a + "!";       // "[1, 2]!"    — with a string: string concatenation
+// a + 3 is a TypeError
 ```
 
 ### `Array.isArray`

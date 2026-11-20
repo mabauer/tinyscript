@@ -1,5 +1,6 @@
 package de.mkbauer.tinyscript.runtime;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.eclipse.xtext.testing.extensions.InjectionExtension;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import de.mkbauer.tinyscript.interpreter.TSValue;
+import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
 
 @ExtendWith(InjectionExtension.class)
@@ -50,8 +52,7 @@ public class ArrayObjectTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testMapWithInvalidFunction() {
-		TSValue value = executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; var empty = arr.map({}); " 
-				+ "assert(0 == empty.length);");
+		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("var arr = [1, 5, 4, 2, 9, 7]; arr.map({});"));
 	}
 	
 	@Test
