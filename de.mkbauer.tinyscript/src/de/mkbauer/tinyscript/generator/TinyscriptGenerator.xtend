@@ -157,7 +157,8 @@ class TinyscriptGenerator   {
 			}
 		}
 
-		function range(...args) {
+		// A property of the global object, so that a script can declare its own range
+		globalThis.range = function range(...args) {
 			if (args.length < 1 || args.length > 3) {
 				throw new TypeError("range() needs 1 to 3 arguments, not " + args.length);
 			}
@@ -171,7 +172,7 @@ class TinyscriptGenerator   {
 				throw new TypeError("range() needs a step other than 0");
 			}
 			return new __ts_Range(start, end, step);
-		}
+		};
 
 		// Like the interpreter, what the iterable for loop goes through: an array item by item (seeing
 		// the items the loop adds), the characters of a string, a copy of the entries of a Map or Set,
