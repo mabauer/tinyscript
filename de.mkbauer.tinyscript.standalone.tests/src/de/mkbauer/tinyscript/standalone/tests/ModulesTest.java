@@ -187,8 +187,8 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testStandardLibrary() throws IOException {
-        Path main = write("main.tys", "import range, sum, contains, reverse from \"std:array\";\n"
-                + "print(range(5).join(\",\")); print(range(0).length); print(sum(range(5)));\n"
+        Path main = write("main.tys", "import sum, contains, reverse from \"std:array\";\n"
+                + "print(range(5).toArray().join(\",\")); print(range(0).length); print(sum(range(5)));\n"
                 + "print(contains([1, 2], 2)); print(contains([1, 2], 3)); print(reverse([1, 2, 3]).join(\",\"));");
         assertEquals("0,1,2,3,4\n0\n10\ntrue\nfalse\n3,2,1\n", runModule(main));
         assertSameOutputModule(main);

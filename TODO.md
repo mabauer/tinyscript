@@ -62,7 +62,7 @@ Next
    3. ~~**Unknown names:**~~ (done) "Unknown name 'valeus' (did you mean 'values'?)" — an own linking diagnostic message provider with suggestions from the visible names (edit distance).
    4. ~~**Runtime errors with context:**~~ (done; open: the web demo editor could use line and column to mark the place) `o.lst is undefined, cannot read 'length'` instead of "Cannot access property of undefined or null"; review the other runtime messages; column and source excerpt as for syntax errors.
    - Each step extends `ErrorMessagesTest` (the catalog: mistake → expected message). The Eclipse editor gets 2 and 3 for free.
-8. **The numeric `for` loop** annoys in practice: with the inclusive end, `for (let i = 0, a.length - 1)` is the common case, and Javascript habits (`for (let i = 0; i < n; i++)`) fail. Options to discuss: an exclusive form or a `range(n)` that the iterable loop can use (`for (const i : range(n))`, already in `std:array`), supporting the C-style loop, or at least a precise error message (see 7.2).
+8. ~~**The numeric `for` loop**~~ (done, decided 2026-11-20: a global, lazy `range(end)` / `range(start, end[, step])` with exclusive end as in Python, for `for (const i : range(n))`; replaces `std:array.range`; the Lua-style numeric loop stays) annoys in practice: with the inclusive end, `for (let i = 0, a.length - 1)` is the common case, and Javascript habits (`for (let i = 0; i < n; i++)`) fail. Options to discuss: an exclusive form or a `range(n)` that the iterable loop can use (`for (const i : range(n))`, already in `std:array`), supporting the C-style loop, or at least a precise error message (see 7.2).
 
 Language
 --------

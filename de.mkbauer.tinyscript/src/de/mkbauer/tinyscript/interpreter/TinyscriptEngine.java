@@ -74,6 +74,8 @@ import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.number.NumberFunctions;
+import de.mkbauer.tinyscript.runtime.range.RangeFunction;
+import de.mkbauer.tinyscript.runtime.range.RangeObject;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.collection.MapConstructor;
 import de.mkbauer.tinyscript.runtime.error.ErrorConstructor;
@@ -171,6 +173,7 @@ public class TinyscriptEngine {
 		addToGlobalObject("parseInt", NumberFunctions.createParseInt(this));
 		addToGlobalObject("isNaN", NumberFunctions.createIsNaN(this));
 		addToGlobalObject("Math", new MathObject(this));
+		addToGlobalObject("range", RangeFunction.create(this));
 		addValueToGlobalObject("Infinity", Double.POSITIVE_INFINITY);
 		addValueToGlobalObject("NaN", Double.NaN);
 		addToGlobalObject("System", new SystemObject(this));
@@ -602,9 +605,16 @@ public class TinyscriptEngine {
 				}
 				return result;
 			}
+			if (iterable instanceof RangeObject range) {
+				// A range is lazy: count without creating its numbers
+				for (double i = range.getStart(); range.contains(i); i += range.getStep()) {
+					result = executeLoopIteration(forstmt, TSValue.of(i));
+				}
+				return result;
+			}
 			List<TSValue> items = iterableItems(iterable);
 			if (items == null)
-				throw new TinyscriptTypeError("for needs an array, a string, a Map or a Set, not " + iterable.typeOf(), expr.getIterable());
+				throw new TinyscriptTypeError("for needs an array, a string, a Map, a Set or a range, not " + iterable.typeOf(), expr.getIterable());
 			for (TSValue item : items) {
 				result = executeLoopIteration(forstmt, item);
 			}
@@ -626,6 +636,12 @@ public class TinyscriptEngine {
     		case TSString s -> characters(s.value());
     		case StringObject s -> characters(s.getValue());
     		case SetObject set -> new ArrayList<>(set.getValues());
+    		case RangeObject range -> {
+    			List<TSValue> numbers = new ArrayList<>();
+    			for (double i = range.getStart(); range.contains(i); i += range.getStep())
+    				numbers.add(TSValue.of(i));
+    			yield numbers;
+    		}
     		case MapObject map -> map.getEntries().entrySet().stream()
     				.map(entry -> {
     					ArrayObject pair = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject();

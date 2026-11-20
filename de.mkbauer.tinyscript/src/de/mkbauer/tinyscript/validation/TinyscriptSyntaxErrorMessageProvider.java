@@ -80,7 +80,7 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		if (text.equals("=") && (before.equals("==") || before.equals("!=")) && previous.getTokenIndex() == offending.getTokenIndex() - 1)
 			return "tinyscript has no === and !==: use == and !=, which never convert types";
 		if (text.equals(";") && isInForHeader(tokens, index))
-			return "tinyscript's numeric for loop has no ';': for (let i = 0, n - 1) { … } counts from 0 to n - 1, including the end";
+			return "tinyscript's for loop has no ';': for (const i : range(n)) { … } counts from 0 to n - 1";
 		if ((text.equals("of") || text.equals("in")) && isInForHeader(tokens, index))
 			return "A loop over the elements of an array, string, Map or Set is written for (const x : items) in tinyscript";
 		if (text.equals("`"))
