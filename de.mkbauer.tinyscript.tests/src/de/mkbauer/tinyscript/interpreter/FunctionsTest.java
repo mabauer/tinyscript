@@ -1,7 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.eclipse.xtext.testing.extensions.InjectionExtension;
@@ -11,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
 import de.mkbauer.tinyscript.tests.TinyscriptInterpreterTestHelper;
+import de.mkbauer.tinyscript.ts.Tinyscript;
+import de.mkbauer.tinyscript.ts.TsPackage;
 
 
 @ExtendWith(InjectionExtension.class)
@@ -64,13 +66,10 @@ public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 	public void testFunctionCallOnLHSExpression() {
 		TSValue value = executeScriptFromString("function f() {return {};} f().key1 = \"Hello\";");
 		assertEquals("Hello", value.asString());
-		try {
-			value = executeScriptFromString("function f() {return {};} f() = \"Hello\";");
-			fail("Expected an exception indicating an invalid lefthand-side expression.");
-		}
-		catch (TinyscriptTypeError e) {
-			assertTrue(true);
-		}
+		// A call is no valid assignment target: rejected by the validator, and by the interpreter
+		Tinyscript ast = parseScriptFromStringWithoutValidating("function f() {return {};} f() = \"Hello\";");
+		getValidator().assertError(ast, TsPackage.Literals.BINARY_EXPRESSION, null, "Invalid left-hand side");
+		assertThrows(TinyscriptTypeError.class, () -> execute(ast));
 	}
 	
 	@Test

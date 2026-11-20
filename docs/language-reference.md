@@ -172,9 +172,28 @@ print("n = " + 42);          // n = 42
 
 ```
 x = value;
+x += 2;      // x = x + 2, also -=, *=, /=, %=
+a[i()] += 1; // a and i() are evaluated only once
 ```
 
-Assignment is an expression — it returns the assigned value — so it can appear on the right side of another assignment.
+Assignment is an expression — it returns the assigned value — so it can appear on the right side of another assignment. Only variables and properties can be assigned to. `+=` follows the rules of `+` (numbers, strings, arrays), the others need numbers.
+
+### Increment and decrement
+
+```
+i++;
+counts[c]--;
+```
+
+`++` and `--` add or subtract 1. Unlike Javascript, they are only statements: `x = i++`, `f(i++)` and the prefix forms `++i` / `--i` are syntax errors. The value must be a number.
+
+### Conditional operator
+
+```
+var sign = x > 0 ? 1 : x < 0 ? -1 : 0;
+```
+
+`cond ? a : b` evaluates `a` if `cond` is true, otherwise `b`; the condition follows the rules for conditions. Unlike Javascript, `b` cannot be an assignment: write `c ? a : (b = 1)`.
 
 ### Operator precedence (high to low)
 
@@ -185,7 +204,8 @@ Assignment is an expression — it returns the assigned value — so it can appe
 5. `==`, `!=`
 6. `&&`
 7. `||`
-8. `=` (right-associative)
+8. `? :` (right-associative)
+9. `=`, `+=`, `-=`, `*=`, `/=`, `%=` (right-associative)
 
 ### `assert`
 
@@ -336,6 +356,19 @@ for (var i = 0, 100) {
         break;
     }
     print(i);
+}
+```
+
+### `continue`
+
+Skips the rest of the current iteration of the innermost enclosing `for` or `while` loop and goes on with the next one. Like `break`, it is only allowed inside a loop of the same function:
+
+```
+for (var i = 1, 10) {
+    if (i % 2 == 0) {
+        continue;
+    }
+    print(i);   // 1, 3, 5, 7, 9
 }
 ```
 
@@ -925,10 +958,11 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 | **Numeric `for` loop** | `for (let i = 0; i < n; i++)` | `for (var i = 0, n)` (Lua-style) |
 | **Iterable `for` loop** | `for (const x of array)` | `for (var x : array)` |
 | **`for...in`** | Iterates over keys | Not supported (use `for...of` style with `:`) |
-| **Array `+`** | String concatenation | Array append / concatenation |
+| **Array `+`** | String concatenation | Concatenation of two arrays; an array plus a number etc. is a `TypeError` |
 | **`==` vs `===`** | Different (type coercion vs. strict) | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`) |
 | **Relational operators** | Coerce operands (`1 < "2"`) | Only number with number or string with string; otherwise a `TypeError` |
 | **`let` keyword** | Block-scoped variable | Synonym for `var` |
+| **`++` / `--`** | Expressions, prefix and postfix | Only the statements `i++;` / `i--;` |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
 
@@ -951,12 +985,10 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 - **`const`** — no constant declarations
 - **`delete`** operator
 - **`switch` statement**
-- **Ternary operator** (`? :`)
 - **Getter / setter properties** (`get`/`set` in object literals)
 - **`Symbol`, `Map`, `Set`, `Promise`**, and other ES6+ built-ins
 - **`Date`** object (use `System.currentTimeMillis()` instead)
 - **`console`** (use `print()` instead)
-- **Modules** (`import`/`export`) — use the IIFE/closure pattern instead
 
 ---
 

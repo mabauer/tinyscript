@@ -4,6 +4,11 @@ import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BreakStatement;
+import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
+import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.ContinueStatement;
+import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.ExpressionStatement;
 import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
@@ -18,6 +23,7 @@ import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.WhileStatement;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
@@ -80,18 +86,56 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	}
 
 	/**
-	 * Checks that a break statement is inside a loop of the same function
-	 * (a break cannot leave a function body).
+	 * Checks that break and continue statements are inside a loop of the same function
+	 * (they cannot leave a function body).
 	 */
 	@Check
 	public void checkBreakOnlyInsideLoop(BreakStatement breakStmt) {
-		for (EObject container = breakStmt.eContainer(); container != null; container = container.eContainer()) {
+		if (!isInsideLoop(breakStmt))
+			error("Break only allowed inside a loop", null);
+	}
+
+	@Check
+	public void checkContinueOnlyInsideLoop(ContinueStatement continueStmt) {
+		if (!isInsideLoop(continueStmt))
+			error("Continue only allowed inside a loop", null);
+	}
+
+	private static boolean isInsideLoop(EObject statement) {
+		for (EObject container = statement.eContainer(); container != null; container = container.eContainer()) {
 			if (container instanceof ForStatement || container instanceof WhileStatement)
-				return;
+				return true;
 			if (container instanceof FunctionDefinition)
-				break;
+				return false;
 		}
-		error("Break only allowed inside a loop", null);
+		return false;
+	}
+
+	/**
+	 * Only variables and properties can be assigned to (x = 1, o.p += 1, a[i]++),
+	 * not e.g. literals or calls.
+	 */
+	@Check
+	public void checkAssignmentTarget(BinaryExpression assignment) {
+		if (isAssignment(assignment) && !(assignment.getLeft() instanceof Identifier) && !isAssignable(assignment.getLeft()))
+			error("Invalid left-hand side of an assignment", TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+	}
+
+	@Check
+	public void checkIncrementTarget(ExpressionStatement statement) {
+		if (statement.getIncrement() != null && !isAssignable(statement.getExpr()))
+			error("'" + statement.getIncrement() + "' needs a variable or a property", TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
+	}
+
+	private static boolean isAssignment(BinaryExpression expression) {
+		return expression.getOp().endsWith("=") && !List.of("==", "!=", "<=", ">=").contains(expression.getOp());
+	}
+
+	private static boolean isAssignable(Expression expression) {
+		if (expression instanceof Reference reference)
+			return !reference.isThis();
+		return expression instanceof CallOrPropertyAccess access
+				&& access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix && suffix.getCall() == null;
 	}
 
 	/**
@@ -136,8 +180,14 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	 */
 	@Check
 	public void checkNoAssignmentToImport(BinaryExpression assignment) {
-		if ("=".equals(assignment.getOp()) && isImported(assignment.getLeft()))
+		if (isAssignment(assignment) && isImported(assignment.getLeft()))
 			error("Cannot assign to an imported name", TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+	}
+
+	@Check
+	public void checkNoAssignmentToImport(ExpressionStatement statement) {
+		if (statement.getIncrement() != null && isImported(statement.getExpr()))
+			error("Cannot assign to an imported name", TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
 	}
 
 	@Check
