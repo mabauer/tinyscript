@@ -48,8 +48,8 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
     public void testPatternVariablesAreBlockScoped() {
         String code = "var a = \"outer\"; { var [a, b] = [1, 2]; print(a); } print(a);\n"
                 + "var fs = []; for (var [k, v] : [[1, 2], [3, 4]]) { fs.push(() => k + v); } print(fs[0]() + fs[1]());";
-        // Interpreter only: the generator emits var (function-scoped), see TODO.md
         assertEquals("1\nouter\n10\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     @Test
