@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.resource.XtextResourceSet;
@@ -286,10 +287,25 @@ public class TinyscriptEngine {
     	}
     }
 
+    // The kind of a node (its classifier ID) by its implementation class: cheaper than
+    // object.eClass().getClassifierID(), a virtual call on every node
+    private static final ClassValue<Integer> NODE_KIND = new ClassValue<Integer>() {
+    	@Override
+    	protected Integer computeValue(Class<?> implementation) {
+    		for (Class<?> type : implementation.getInterfaces()) {
+    			for (EClassifier classifier : TsPackage.eINSTANCE.getEClassifiers()) {
+    				if (classifier.getInstanceClass() == type)
+    					return classifier.getClassifierID();
+    			}
+    		}
+    		return -1;
+    	}
+    };
+
     private TSValue dispatch(EObject object) {
     	if (object == null)
     		throw new NullPointerException();
-    	int id = object.eClass().getClassifierID();
+    	int id = NODE_KIND.get(object.getClass());
     	switch (id) {
 		case TsPackage.REFERENCE: 
 			return caseReference((Reference) object);
