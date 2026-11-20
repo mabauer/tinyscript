@@ -51,6 +51,16 @@ public class BlockScopeTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testNestedLoopsWithPatternsAndExistingVariables() {
+        // The generator checks the loop variables of the enclosing loops for shadowing
+        String code = "let sum = 0; let j = 0;\n"
+                + "for (const [a, b] : [[1, 2], [3, 4]]) { for (let i = a, b) { for (j = 1, 2) { const x = i * j; sum += x; } } }\n"
+                + "print(sum, \" \", j);";
+        assertEquals("30 2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testAnExistingVariableAsLoopVariable() {
         // for (i = ...) without var uses the variable i of the surrounding block
         String code = "var i = 0; for (i = 1, 3) { } print(i);\n"

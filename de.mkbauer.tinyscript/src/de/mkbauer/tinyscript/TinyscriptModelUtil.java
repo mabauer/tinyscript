@@ -212,12 +212,23 @@ public class TinyscriptModelUtil {
 		}
 		if (countDuplicates > 0)
 			return true;
-		if (block.eContainer() instanceof ForStatement) {
-			ForStatement forStmt = (ForStatement) block.eContainer();
-			if (forStmt.getId().getName().equals(name))
+		if (block.eContainer() instanceof ForStatement forStmt) {
+			if (loopVariables(forStmt).stream().anyMatch(id -> id.getName().equals(name)))
 				return true;
 		}
 		return false;
+	}
+
+	/**
+	 * The variables a for loop declares: for (let x ...), the names of for (const [a, b] : ...),
+	 * none for a loop over an existing variable (for (x : ...)).
+	 */
+	public static List<Identifier> loopVariables(ForStatement loop) {
+		if (loop.getId() != null)
+			return List.of(loop.getId());
+		if (loop.getPattern() != null)
+			return loop.getPattern().getNames();
+		return List.of();
 	}
 	
 	public static boolean blockContainsConflictingIdentifiersBefore(EObject elem, Block block) {
@@ -244,7 +255,7 @@ public class TinyscriptModelUtil {
 			return true;
 		if (block.eContainer() instanceof ForStatement) {
 			ForStatement forStmt = (ForStatement) block.eContainer();
-			if (forStmt.getId().getName().equals(name))
+			if (loopVariables(forStmt).stream().anyMatch(id -> id.getName().equals(name)))
 				return true;
 		}
 
