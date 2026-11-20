@@ -58,11 +58,16 @@ FunctionDeclaration returns FunctionDefinition:
 
 // i++; and i--; are only statements, not expressions
 ExpressionStatement:
-	expr=AssignmentExpression (increment=OP_INCREMENT)? ';'
+	expr=AssignmentExpression (increment=Increment)? ';'
+;
+
+// An object of its own, so that it is null if there is none (an enum attribute is never null)
+Increment:
+	op=IncrementOperator
 ;
 
 AssignmentExpression returns Expression:
-	(ConditionalExpression|ArrowFunctionDefinition) ({BinaryExpression.left=current} op=(OP_ASSIGN|OP_COMPOUND_ASSIGN) right=AssignmentExpression)?	
+	(ConditionalExpression|ArrowFunctionDefinition) ({BinaryExpression.left=current} op=AssignmentOperator right=AssignmentExpression)?	
 ;
 
 // cond ? a : b; unlike Javascript, b cannot be an assignment (c ? a : b = 1 is (c ? a : b) = 1, an error)
@@ -91,52 +96,52 @@ ExpressionStatementWithoutSemicolon returns ExpressionStatement:
 // a ?? b: b if a is null or undefined. Like Javascript, it cannot be mixed with && or ||
 // without parentheses (checked by the validator).
 CoalesceExpression returns Expression:
-	OrExpression ({BinaryExpression.left=current} op='??' right=OrExpression)*
+	OrExpression ({BinaryExpression.left=current} op=NullishOperator right=OrExpression)*
 ;
 
 OrExpression returns Expression:
-	AndExpression ({BinaryExpression.left=current} op=('||') right=AndExpression)*
+	AndExpression ({BinaryExpression.left=current} op=OrOperator right=AndExpression)*
 ;
 
 AndExpression returns Expression:
-	BitOrExpression ({BinaryExpression.left=current} op=('&&') right=BitOrExpression)*
+	BitOrExpression ({BinaryExpression.left=current} op=AndOperator right=BitOrExpression)*
 ;
 
 // Bitwise operators on integers up to 53 bits, with the precedence of Javascript: & before ^ before |
 BitOrExpression returns Expression:
-	BitXorExpression ({BinaryExpression.left=current} op='|' right=BitXorExpression)*
+	BitXorExpression ({BinaryExpression.left=current} op=BitOrOperator right=BitXorExpression)*
 ;
 
 BitXorExpression returns Expression:
-	BitAndExpression ({BinaryExpression.left=current} op='^' right=BitAndExpression)*
+	BitAndExpression ({BinaryExpression.left=current} op=BitXorOperator right=BitAndExpression)*
 ;
 
 BitAndExpression returns Expression:
-	EqualityExpression ({BinaryExpression.left=current} op='&' right=EqualityExpression)*
+	EqualityExpression ({BinaryExpression.left=current} op=BitAndOperator right=EqualityExpression)*
 ;
 
 EqualityExpression returns Expression:
-	CompareExpression ({BinaryExpression.left=current} op=OP_EQUALS right=CompareExpression)?
+	CompareExpression ({BinaryExpression.left=current} op=EqualityOperator right=CompareExpression)?
 ;
 
 CompareExpression returns Expression:
-	ShiftExpression ({BinaryExpression.left=current} op=OP_COMP right=ShiftExpression)?
+	ShiftExpression ({BinaryExpression.left=current} op=CompareOperator right=ShiftExpression)?
 ;
 
 ShiftExpression returns Expression:
-	Addition ({BinaryExpression.left=current} op=('<<' | '>>') right=Addition)*
+	Addition ({BinaryExpression.left=current} op=ShiftOperator right=Addition)*
 ;
 
 Addition returns Expression:
-	Multiplication ({BinaryExpression.left=current} op=('+' | '-') right=Multiplication)*
+	Multiplication ({BinaryExpression.left=current} op=AdditiveOperator right=Multiplication)*
 ;
 
 Multiplication returns Expression:
-    (Unary | Primary ) ({BinaryExpression.left=current} op=('*' | '/' | '%' ) right=(Unary | Primary ))*
+    (Unary | Primary ) ({BinaryExpression.left=current} op=MultiplicativeOperator right=(Unary | Primary ))*
 ;
 
 Unary:
-	op=('-'|OP_NOT|'~'|'typeof') expr=(Unary | Primary)
+	op=UnaryOperator expr=(Unary | Primary)
 ;
 
 Primary returns Expression:
@@ -192,7 +197,7 @@ ForStatement:
 ;
 
 NumericForExpression:
-	OP_ASSIGN start=Addition ',' stop=Addition (',' step=Addition )?
+	'=' start=Addition ',' stop=Addition (',' step=Addition )?
 ;
 
 IterableForExpression:
@@ -223,8 +228,8 @@ VariableStatement:
 ;
 
 VariableDeclaration returns Expression:
-	Identifier ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)? |
-	Pattern {BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression
+	Identifier ({BinaryExpression.left=current} op=PlainAssignmentOperator right=AssignmentExpression)? |
+	Pattern {BinaryExpression.left=current} op=PlainAssignmentOperator right=AssignmentExpression
 ;
 
 // A parameter: a name, or a pattern like function f([x, y]) or ({ row, col }) => row + col
@@ -313,28 +318,71 @@ NumberLiteral:
 	value=DOUBLE
 ;
 
-terminal OP_EQUALS:
-	'==' | '!='
+// The operators are enums in the syntax tree (not strings), so that the interpreter switches
+// over them directly. All binary operators are literals of BinaryOperator; each level of
+// precedence has a rule with the operators allowed there.
+
+enum PlainAssignmentOperator returns BinaryOperator:
+	ASSIGN='='
 ;
 
-terminal OP_COMP:
-    '<' | '<=' | '>' | '>=' | 'instanceof'
+enum AssignmentOperator returns BinaryOperator:
+	ASSIGN='=' | ADD_ASSIGN='+=' | SUBTRACT_ASSIGN='-=' | MULTIPLY_ASSIGN='*=' | DIVIDE_ASSIGN='/='
+	| REMAINDER_ASSIGN='%=' | BIT_AND_ASSIGN='&=' | BIT_OR_ASSIGN='|=' | BIT_XOR_ASSIGN='^='
+	| SHIFT_LEFT_ASSIGN='<<=' | SHIFT_RIGHT_ASSIGN='>>='
 ;
 
-terminal OP_ASSIGN:
-	'='
+enum NullishOperator returns BinaryOperator:
+	NULLISH='??'
 ;
 
-terminal OP_COMPOUND_ASSIGN:
-	'+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>='
+enum OrOperator returns BinaryOperator:
+	OR='||'
 ;
 
-terminal OP_INCREMENT:
-	'++' | '--'
+enum AndOperator returns BinaryOperator:
+	AND='&&'
 ;
 
-terminal OP_NOT:
-	'!'
+enum BitOrOperator returns BinaryOperator:
+	BIT_OR='|'
+;
+
+enum BitXorOperator returns BinaryOperator:
+	BIT_XOR='^'
+;
+
+enum BitAndOperator returns BinaryOperator:
+	BIT_AND='&'
+;
+
+enum EqualityOperator returns BinaryOperator:
+	EQUALS='==' | NOT_EQUALS='!='
+;
+
+enum CompareOperator returns BinaryOperator:
+	LESS='<' | LESS_OR_EQUAL='<=' | GREATER='>' | GREATER_OR_EQUAL='>=' | INSTANCEOF='instanceof'
+;
+
+enum ShiftOperator returns BinaryOperator:
+	SHIFT_LEFT='<<' | SHIFT_RIGHT='>>'
+;
+
+enum AdditiveOperator returns BinaryOperator:
+	ADD='+' | SUBTRACT='-'
+;
+
+enum MultiplicativeOperator returns BinaryOperator:
+	MULTIPLY='*' | DIVIDE='/' | REMAINDER='%'
+;
+
+enum UnaryOperator:
+	NEGATE='-' | NOT='!' | BIT_NOT='~' | TYPEOF='typeof'
+;
+
+// i++; and i--; (only statements)
+enum IncrementOperator:
+	INCREMENT='++' | DECREMENT='--'
 ;
 
 // Javascript keywords that tinyscript does not support. They are reserved, so that the parser
@@ -348,7 +396,7 @@ ReservedWord:
 // are fine as property names (range.from, { if: 1 })
 Keyword:
 	ReservedWord | 'var' | 'let' | 'const' | 'function' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
-	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'typeof' | 'assert' | 'import' | 'export' | 'from' | 'as'
+	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'typeof' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
 ;
 
 // var and let are the same (block-scoped, like Javascript's let); const cannot be assigned again

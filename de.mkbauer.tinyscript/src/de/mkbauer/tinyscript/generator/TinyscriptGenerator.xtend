@@ -4,6 +4,9 @@ package de.mkbauer.tinyscript.generator
 import de.mkbauer.tinyscript.ts.Tinyscript
 import de.mkbauer.tinyscript.ts.VariableStatement
 import de.mkbauer.tinyscript.ts.BinaryExpression
+import de.mkbauer.tinyscript.ts.BinaryOperator
+import de.mkbauer.tinyscript.ts.UnaryOperator
+import de.mkbauer.tinyscript.Operators
 import de.mkbauer.tinyscript.ts.Identifier
 import de.mkbauer.tinyscript.ts.Reference
 import de.mkbauer.tinyscript.ts.AssertStatement
@@ -63,10 +66,6 @@ class TinyscriptGenerator   {
 	@Inject
 	TinyscriptQualifiedNameProvider nameProvider;
 	
-	// tinyscript's bitwise operators work on 53 bits, Javascript's on 32: the generator calls __ts_bitwise
-	static val BITWISE_OPERATORS = #{"&", "|", "^", "<<", ">>"}
-	static val BITWISE_ASSIGNMENTS = #{"&=", "|=", "^=", "<<=", ">>="}
-
 	// Counter for unique names of temporary variables (loop bounds, iterables, indexes)
 	int tempCounter = 0;
 	
@@ -309,7 +308,7 @@ class TinyscriptGenerator   {
 	'''
 
 	def dispatch generate(ExpressionStatement stmt) '''
-		«stmt.expr.generate»«IF stmt.increment !== null»«stmt.increment»«ENDIF»;
+		«stmt.expr.generate»«IF Operators.increment(stmt) !== null»«Operators.increment(stmt).literal»«ENDIF»;
 	'''
 	
 	// tinyscript's var and let are block-scoped: Javascript's let
@@ -479,7 +478,14 @@ class TinyscriptGenerator   {
 	}
 	
 	def dispatch generate(BinaryExpression expr) '''
-		«IF (expr.left instanceof Pattern)»«expr.left.generate» = «(expr.left as Pattern).generatePatternValue(expr.right.generate)»«ELSEIF (expr.op.equals("+="))»«expr.generateHelperAssignment("__ts_add(")»«ELSEIF BITWISE_ASSIGNMENTS.contains(expr.op)»«expr.generateHelperAssignment('__ts_bitwise("' + expr.op.substring(0, expr.op.length - 1) + '", ')»«ELSEIF BITWISE_OPERATORS.contains(expr.op)»__ts_bitwise("«expr.op»", «expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
+		«IF (expr.left instanceof Pattern)»«expr.left.generate» = «(expr.left as Pattern).generatePatternValue(expr.right.generate)»«ELSEIF expr.op == BinaryOperator.ADD_ASSIGN»«expr.generateHelperAssignment("__ts_add(")»«ELSEIF expr.op.isBitwiseAssignment»«expr.generateHelperAssignment('__ts_bitwise("' + Operators.baseOf(expr.op).literal + '", ')»«ELSEIF Operators.isBitwise(expr.op)»__ts_bitwise("«expr.op.literal»", «expr.left.generate», «expr.right.generate»)«ELSEIF expr.op == BinaryOperator.ADD»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF expr.op == BinaryOperator.EQUALS»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF expr.op == BinaryOperator.NOT_EQUALS»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op.literal» «expr.right.generate»«ENDIF»'''
+
+	// &=, |=, ^=, <<=, >>=: tinyscript's bitwise operators work on 53 bits, Javascript's on 32,
+	// so the generator calls __ts_bitwise for them
+	def boolean isBitwiseAssignment(BinaryOperator op) {
+		val base = Operators.baseOf(op)
+		base !== null && Operators.isBitwise(base)
+	}
 
 	// x += y adds like tinyscript's + (e.g. arrays), x ^= y etc. use the 53-bit bitwise operators
 	// (helper is the start of the call, e.g. '__ts_add('); a property target is evaluated only once
@@ -517,7 +523,7 @@ class TinyscriptGenerator   {
 
 	// Nested unary operators get parentheses: "- -x" must not become the decrement "--x"
 	def dispatch generate(Unary expr)
-		'''«IF expr.op == "~"»__ts_bitwise("~", «expr.expr.generate»)«ELSEIF expr.op == "typeof" || expr.expr instanceof Unary»«expr.op»(«expr.expr.generate»)«ELSE»«expr.op»«expr.expr.generate»«ENDIF»'''
+		'''«IF expr.op == UnaryOperator.BIT_NOT»__ts_bitwise("~", «expr.expr.generate»)«ELSEIF expr.op == UnaryOperator.TYPEOF || expr.expr instanceof Unary»«expr.op.literal»(«expr.expr.generate»)«ELSE»«expr.op.literal»«expr.expr.generate»«ENDIF»'''
 		
 	def dispatch generate(NewExpression expr)
 		'''new «expr.expr.generate»'''

@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.URI;
@@ -18,12 +17,16 @@ import org.eclipse.xtext.resource.XtextResourceSet;
 
 import de.mkbauer.tinyscript.TSStacktraceElement;
 import de.mkbauer.tinyscript.TinyscriptAssertationError;
+import de.mkbauer.tinyscript.Operators;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.ts.ArrayInitializer;
 import de.mkbauer.tinyscript.ts.ArrayPattern;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
+import de.mkbauer.tinyscript.ts.BinaryOperator;
+import de.mkbauer.tinyscript.ts.IncrementOperator;
+import de.mkbauer.tinyscript.ts.UnaryOperator;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BlockStatement;
 import de.mkbauer.tinyscript.ts.BooleanLiteral;
@@ -471,18 +474,18 @@ public class TinyscriptEngine {
     
     public TSValue caseExpressionStatement(ExpressionStatement object) {
     	recordStatement();
-    	if (object.getIncrement() != null)
+    	if (Operators.increment(object) != null)
     		return increment(object);
     	return execute(object.getExpr());
     }
 
     // i++; and i--; (only statements)
     private TSValue increment(ExpressionStatement object) {
-    	String op = object.getIncrement();
+    	IncrementOperator op = Operators.increment(object);
     	return updateValue(object.getExpr(), current -> {
     		if (!(current instanceof TSNumber number))
-    			throw new TinyscriptTypeError("'" + op + "' needs a number, not " + current.typeOf(), object);
-    		return TSValue.of(op.equals("++") ? number.value() + 1 : number.value() - 1);
+    			throw new TinyscriptTypeError("'" + op.getLiteral() + "' needs a number, not " + current.typeOf(), object);
+    		return TSValue.of(op == IncrementOperator.INCREMENT ? number.value() + 1 : number.value() - 1);
     	});
     }    
     
@@ -716,36 +719,38 @@ public class TinyscriptEngine {
     }
     
     public TSValue caseBinaryExpression(BinaryExpression expr) {
-    	String op = expr.getOp();
+    	BinaryOperator op = expr.getOp();
     	// Operators that evaluate their right operand only when needed
     	switch (op) {
-    		case "=":
+    		case ASSIGN:
     			return assignValue(expr.getLeft(), execute(expr.getRight()));
-    		case "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>=":
+    		case ADD_ASSIGN, SUBTRACT_ASSIGN, MULTIPLY_ASSIGN, DIVIDE_ASSIGN, REMAINDER_ASSIGN,
+    				BIT_AND_ASSIGN, BIT_OR_ASSIGN, BIT_XOR_ASSIGN, SHIFT_LEFT_ASSIGN, SHIFT_RIGHT_ASSIGN:
     			// x op= y is x = x op y, but x (e.g. a[f()]) is evaluated only once
-    			return updateValue(expr.getLeft(), current -> applyOperator(op.substring(0, op.length() - 1), current, execute(expr.getRight()), expr));
-    		case "&&":
+    			return updateValue(expr.getLeft(), current -> applyOperator(Operators.baseOf(op), current, execute(expr.getRight()), expr));
+    		case AND:
     			return TSValue.of(condition(expr.getLeft()) && condition(expr.getRight()));
-    		case "||":
+    		case OR:
     			return TSValue.of(condition(expr.getLeft()) || condition(expr.getRight()));
-    		case "??": {
+    		case NULLISH: {
     			TSValue left = execute(expr.getLeft());
     			return left == TSValue.UNDEFINED || left == TSValue.NULL ? execute(expr.getRight()) : left;
     		}
+    		default:
+    			return applyOperator(op, execute(expr.getLeft()), execute(expr.getRight()), expr);
     	}
-    	return applyOperator(op, execute(expr.getLeft()), execute(expr.getRight()), expr);
     }
 
-    private TSValue applyOperator(String op, TSValue left, TSValue right, BinaryExpression expr) {
+    private TSValue applyOperator(BinaryOperator op, TSValue left, TSValue right, BinaryExpression expr) {
     	return switch (op) {
-    		case "==" -> TSValue.of(left.tinyscriptEquals(right));
-    		case "!=" -> TSValue.of(!left.tinyscriptEquals(right));
-    		case "<", "<=", ">", ">=" -> compare(op, left, right, expr);
-    		case "+" -> add(left, right, expr);
-    		case "-", "*", "/", "%" -> arithmetic(op, left, right, expr);
-    		case "&", "|", "^", "<<", ">>" -> bitwise(op, left, right, expr);
-    		case "instanceof" -> instanceOf(left, right);
-    		default -> throw new TinyscriptUnsupportedOperationError("Unsupported binary expression: " + op, expr);
+    		case EQUALS -> TSValue.of(left.tinyscriptEquals(right));
+    		case NOT_EQUALS -> TSValue.of(!left.tinyscriptEquals(right));
+    		case LESS, LESS_OR_EQUAL, GREATER, GREATER_OR_EQUAL -> compare(op, left, right, expr);
+    		case ADD -> add(left, right, expr);
+    		case SUBTRACT, MULTIPLY, DIVIDE, REMAINDER -> arithmetic(op, left, right, expr);
+    		case BIT_AND, BIT_OR, BIT_XOR, SHIFT_LEFT, SHIFT_RIGHT -> bitwise(op, left, right, expr);
+    		case INSTANCEOF -> instanceOf(left, right);
+    		default -> throw new TinyscriptUnsupportedOperationError("Unsupported binary expression: " + op.getLiteral(), expr);
     	};
     }
 
@@ -753,19 +758,19 @@ public class TinyscriptEngine {
      * Compares two numbers or two strings (lexicographically). Comparing values
      * of other or mixed types is a type error: there is no implicit conversion.
      */
-    private TSValue compare(String op, TSValue left, TSValue right, BinaryExpression expr) {
+    private TSValue compare(BinaryOperator op, TSValue left, TSValue right, BinaryExpression expr) {
     	int comparison;
     	if (left.isNumber() && right.isNumber())
     		comparison = Double.compare(left.asDouble(), right.asDouble());
     	else if (left.isString() && right.isString())
     		comparison = left.asString().compareTo(right.asString());
     	else
-    		throw new TinyscriptTypeError("'" + op + "' compares two numbers or two strings, but "
+    		throw new TinyscriptTypeError("'" + op.getLiteral() + "' compares two numbers or two strings, but "
     				+ operand(expr.getLeft(), left) + " and " + operand(expr.getRight(), right), expr);
     	return TSValue.of(switch (op) {
-    		case "<" -> comparison < 0;
-    		case "<=" -> comparison <= 0;
-    		case ">" -> comparison > 0;
+    		case LESS -> comparison < 0;
+    		case LESS_OR_EQUAL -> comparison <= 0;
+    		case GREATER -> comparison > 0;
     		default -> comparison >= 0;
     	});
     }
@@ -786,11 +791,11 @@ public class TinyscriptEngine {
     		return result;
     	}
     	if (left instanceof ArrayObject || right instanceof ArrayObject)
-    		throw new TinyscriptTypeError("'" + expr.getOp() + "' can only add an array to another array or to a string, but "
+    		throw new TinyscriptTypeError("'" + expr.getOp().getLiteral() + "' can only add an array to another array or to a string, but "
     				+ (left instanceof ArrayObject ? operand(expr.getRight(), right) : operand(expr.getLeft(), left)), expr);
     	if (left instanceof TSNumber l && right instanceof TSNumber r)
     		return TSValue.of(l.value() + r.value());
-    	throw new TinyscriptTypeError("'" + expr.getOp() + "' adds two numbers, two arrays, or a string and a value, but "
+    	throw new TinyscriptTypeError("'" + expr.getOp().getLiteral() + "' adds two numbers, two arrays, or a string and a value, but "
     			+ operand(expr.getLeft(), left) + " and " + operand(expr.getRight(), right), expr);
     }
 
@@ -802,24 +807,25 @@ public class TinyscriptEngine {
      * 2026-11-20). Javascript's operators work on 32 bits and cut off larger numbers silently;
      * tinyscript computes them exactly or throws a TypeError.
      */
-    private TSValue bitwise(String op, TSValue left, TSValue right, BinaryExpression expr) {
-    	long a = bitwiseOperand(op, expr.getLeft(), left, expr);
-    	if (op.equals("<<") || op.equals(">>")) {
+    private TSValue bitwise(BinaryOperator op, TSValue left, TSValue right, BinaryExpression expr) {
+    	String symbol = op.getLiteral();
+    	long a = bitwiseOperand(symbol, expr.getLeft(), left, expr);
+    	if (op == BinaryOperator.SHIFT_LEFT || op == BinaryOperator.SHIFT_RIGHT) {
     		if (!(right instanceof TSNumber))
-    			bitwiseOperand(op, expr.getRight(), right, expr);
+    			bitwiseOperand(symbol, expr.getRight(), right, expr);
     		double n = right.asDouble();
     		if (!right.isMathematicalInteger() || n < 0 || n > 53)
-    			throw new TinyscriptTypeError("'" + op + "' needs a shift count from 0 to 53, not " + right.asString(), expr);
-    		if (op.equals(">>"))
+    			throw new TinyscriptTypeError("'" + symbol + "' needs a shift count from 0 to 53, not " + right.asString(), expr);
+    		if (op == BinaryOperator.SHIFT_RIGHT)
     			return TSValue.of((double) (a >> (int) n));
     		if (Math.abs((double) a) * Math.pow(2, n) > MAX_SAFE_INTEGER)
     			throw new TinyscriptTypeError("'<<' gives more than 53 bits: " + left.asString() + " << " + right.asString(), expr);
     		return TSValue.of((double) (a << (int) n));
     	}
-    	long b = bitwiseOperand(op, expr.getRight(), right, expr);
+    	long b = bitwiseOperand(symbol, expr.getRight(), right, expr);
     	return TSValue.of((double) switch (op) {
-    		case "&" -> a & b;
-    		case "|" -> a | b;
+    		case BIT_AND -> a & b;
+    		case BIT_OR -> a | b;
     		default -> a ^ b;
     	});
     }
@@ -832,20 +838,20 @@ public class TinyscriptEngine {
     	throw new TinyscriptTypeError("'" + op + "' needs integers up to 2^53, but " + TinyscriptModelUtil.sourceText(expression) + " is " + what, node);
     }
 
-    private TSValue arithmetic(String op, TSValue left, TSValue right, BinaryExpression expr) {
+    private TSValue arithmetic(BinaryOperator op, TSValue left, TSValue right, BinaryExpression expr) {
     	if (!(left instanceof TSNumber leftNumber && right instanceof TSNumber rightNumber)) {
     		// Name the operands that are no numbers
     		String wrong = left instanceof TSNumber ? operand(expr.getRight(), right)
     				: right instanceof TSNumber ? operand(expr.getLeft(), left)
     				: operand(expr.getLeft(), left) + " and " + operand(expr.getRight(), right);
-    		throw new TinyscriptTypeError("'" + expr.getOp() + "' needs two numbers, but " + wrong, expr);
+    		throw new TinyscriptTypeError("'" + expr.getOp().getLiteral() + "' needs two numbers, but " + wrong, expr);
     	}
     	double l = leftNumber.value();
     	double r = rightNumber.value();
     	return TSValue.of(switch (op) {
-    		case "-" -> l - r;
-    		case "*" -> l * r;
-    		case "/" -> l / r;
+    		case SUBTRACT -> l - r;
+    		case MULTIPLY -> l * r;
+    		case DIVIDE -> l / r;
     		default -> l % r;
     	});
     }
@@ -857,18 +863,18 @@ public class TinyscriptEngine {
     }
 
     public TSValue caseUnary(Unary expr) {
-    	if (expr.getOp().equals("!"))
+    	if (expr.getOp() == UnaryOperator.NOT)
     		return TSValue.of(!condition(expr.getExpr()));
     	TSValue value = execute(expr.getExpr());
     	return switch (expr.getOp()) {
-    		case "-" -> {
+    		case NEGATE -> {
     			if (!(value instanceof TSNumber number))
     				throw new TinyscriptTypeError("'-' needs a number, but " + operand(expr.getExpr(), value), expr);
     			yield TSValue.of(-number.value());
     		}
-    		case "~" -> TSValue.of((double) ~bitwiseOperand("~", expr.getExpr(), value, expr));
-    		case "typeof" -> TSValue.of(value.typeOf());
-    		default -> throw new TinyscriptUnsupportedOperationError("Unsupported unary expression: " + expr.getOp(), expr);
+    		case BIT_NOT -> TSValue.of((double) ~bitwiseOperand("~", expr.getExpr(), value, expr));
+    		case TYPEOF -> TSValue.of(value.typeOf());
+    		case NOT -> TSValue.of(!value.asCondition());
     	};
     }
 
@@ -1150,7 +1156,7 @@ public class TinyscriptEngine {
      * Replaces the value of a variable or property with update(old value) and returns
      * the new value; the variable or property (e.g. a[f()]) is evaluated only once.
      */
-    private TSValue updateValue(Expression target, UnaryOperator<TSValue> update) {
+    private TSValue updateValue(Expression target, java.util.function.UnaryOperator<TSValue> update) {
     	if (target instanceof Reference reference && !reference.isThis()) {
     		TSValue value = update.apply(caseReference(reference));
     		currentContext.store(reference.getId().getName(), value);

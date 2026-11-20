@@ -41,7 +41,7 @@ public class AssociativityTest {
 		}
 		
 		public String caseBinaryExpression(BinaryExpression expr) {
-			String result = "(" + doSwitch(expr.getLeft()) + expr.getOp() + doSwitch(expr.getRight()) + ")";
+			String result = "(" + doSwitch(expr.getLeft()) + expr.getOp().getLiteral() + doSwitch(expr.getRight()) + ")";
 			return result;
 		}
 
