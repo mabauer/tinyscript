@@ -76,7 +76,7 @@ Design decisions
 - **Statements:** the rules for ending statements with `;` are roughly the same as in Java.
 - **Scoping:** blocks create real *scopes*; `var` is block-scoped and there is no hoisting. Like Javascript in *strict mode*, all variables have to be declared before they can be used. This includes `typeof`: `typeof undeclared` is a compile-time error, not `"undefined"`.
 - **Blocks are mandatory:** control structures always need blocks: `if (cond) { stmts; } else if (cond) { stmts; } else { stmts; }`
-- **Loops:** there are two types of `for` loops: a numeric one inspired by *Lua*, where the end value is inclusive and an optional step can be given (`for (var i = 1, 10) { … }`, `for (var i = 10, 1, -1) { … }`), and one that iterates over the *values* of an array (`for (var x : arr) { … }`). Additionally there is `while (cond) { … }`; `break` leaves the innermost loop.
+- **Loops:** there are two types of `for` loops: a numeric one inspired by *Lua*, where the end value is inclusive and an optional step can be given (`for (var i = 1, 10) { … }`, `for (var i = 10, 1, -1) { … }`), and one that iterates over the *values* of an array (`for (var x : arr) { … }`). Additionally there is `while (cond) { … }`; `break` leaves the innermost loop, `continue` goes on with its next iteration. `i++;` and `i--;` are statements, not expressions (no `x = i++`, no `++i`).
 - **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). The one deliberate exception: `null == undefined` is `true`, so `o.x == null` checks for a missing property. Numbers compare like in Javascript (`NaN != NaN`). There is no `===` / `!==`.
 - **Strict comparisons:** `<`, `<=`, `>` and `>=` compare a number with a number or a string with a string; anything else is a `TypeError`. Comparisons cannot be chained: `a < b < c` is a syntax error (in Javascript `1 < 3 < 2` is `true`).
 - **Conditions are booleans:** `if`, `while`, `!`, `&&`, `||` accept a boolean, `null` / `undefined` (false) or an object (true). Numbers and strings are a `TypeError`, since `0`, `""` and `NaN` being false is a classic trap: write `count > 0`. `&&` and `||` short-circuit and return `true` or `false`.
@@ -96,7 +96,7 @@ Limitations
 Certainly, *tinyscript* is not perfect. It's just a proof-of-concept (but a usable one!). Some Javascript features are simply missing, for example:
 
 - There is no support for *regular expressions*.
-- There is no `continue`, no `switch`, no `const` and no `delete`.
+- There is no `switch`, no `const` and no `delete`.
 
 See [TODO.md](TODO.md) for what's planned.
 

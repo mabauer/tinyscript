@@ -8,6 +8,8 @@ import de.mkbauer.tinyscript.ts.Identifier
 import de.mkbauer.tinyscript.ts.Reference
 import de.mkbauer.tinyscript.ts.AssertStatement
 import de.mkbauer.tinyscript.ts.BreakStatement
+import de.mkbauer.tinyscript.ts.ContinueStatement
+import de.mkbauer.tinyscript.ts.ConditionalExpression
 import de.mkbauer.tinyscript.ts.WhileStatement
 import de.mkbauer.tinyscript.ts.StringLiteral
 import de.mkbauer.tinyscript.ts.BlockStatement
@@ -244,7 +246,7 @@ class TinyscriptGenerator   {
 	'''
 
 	def dispatch generate(ExpressionStatement stmt) '''
-		«stmt.expr.generate»;
+		«stmt.expr.generate»«IF stmt.increment !== null»«stmt.increment»«ENDIF»;
 	'''
 	
 	def dispatch generate(VariableStatement stmt) '''
@@ -279,6 +281,10 @@ class TinyscriptGenerator   {
 
 	def dispatch generate(BreakStatement stmt) '''
 		break;
+	'''
+
+	def dispatch generate(ContinueStatement stmt) '''
+		continue;
 	'''
 
 	def dispatch generate(AssertStatement stmt) '''
@@ -371,7 +377,26 @@ class TinyscriptGenerator   {
 	}
 	
 	def dispatch generate(BinaryExpression expr) '''
-		«IF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
+		«IF (expr.op.equals("+="))»«expr.generateAddAssignment»«ELSEIF (expr.op.equals("+"))»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("=="))»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF (expr.op.equals("!="))»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op» «expr.right.generate»«ENDIF»'''
+
+	// x += y adds like tinyscript's + (e.g. arrays); a property target is evaluated only once
+	def generateAddAssignment(BinaryExpression expr) {
+		val left = expr.left
+		if (left instanceof CallOrPropertyAccess) {
+			val suffix = left.suffix as CallOrPropertyAccessSuffix
+			val property = suffix.property
+			val key = switch property {
+				DotPropertyAccessSuffix case property.key.name !== null: '"' + property.key.name + '"'
+				DotPropertyAccessSuffix: property.key.expr.generate.toString
+				ComputedPropertyAccessSuffix: property.key.generate.toString
+			}
+			return '''((o, k) => o[k] = __ts_add(o[k], «expr.right.generate»))(«left.expr.generate», «key»)'''
+		}
+		'''«left.generate» = __ts_add(«left.generate», «expr.right.generate»)'''
+	}
+
+	def dispatch generate(ConditionalExpression expr)
+		'''(«expr.cond.generate» ? «expr.then.generate» : «expr.^else.generate»)'''
 
 	// Nested unary operators get parentheses: "- -x" must not become the decrement "--x"
 	def dispatch generate(Unary expr)

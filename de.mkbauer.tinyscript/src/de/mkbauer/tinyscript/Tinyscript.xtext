@@ -34,6 +34,7 @@ Statement:
 	ForStatement |
 	WhileStatement |
 	BreakStatement |
+	ContinueStatement |
 	AssertStatement |
 	EmptyStatement
 ;
@@ -54,12 +55,18 @@ FunctionDeclaration returns FunctionDefinition:
 	block=Block 
 ;
 
+// i++; and i--; are only statements, not expressions
 ExpressionStatement:
-	expr=AssignmentExpression ';'
+	expr=AssignmentExpression (increment=OP_INCREMENT)? ';'
 ;
 
 AssignmentExpression returns Expression:
-	(OrExpression|ArrowFunctionDefinition) ({BinaryExpression.left=current} op=OP_ASSIGN right=AssignmentExpression)?	
+	(ConditionalExpression|ArrowFunctionDefinition) ({BinaryExpression.left=current} op=(OP_ASSIGN|OP_COMPOUND_ASSIGN) right=AssignmentExpression)?	
+;
+
+// cond ? a : b; unlike Javascript, b cannot be an assignment (c ? a : b = 1 is (c ? a : b) = 1, an error)
+ConditionalExpression returns Expression:
+	OrExpression ({ConditionalExpression.cond=current} '?' then=AssignmentExpression ':' else=(ConditionalExpression|ArrowFunctionDefinition))?
 ;
 
 ArrowFunctionDefinition returns FunctionDefinition:
@@ -75,7 +82,7 @@ ArrowFunctionBlock returns Block:
 ;
 
 ExpressionStatementWithoutSemicolon returns ExpressionStatement:
-	expr=OrExpression
+	expr=ConditionalExpression
 ;
 
 OrExpression returns Expression:
@@ -175,6 +182,11 @@ BreakStatement:
 	'break' ';'
 ;
 
+ContinueStatement:
+	{ContinueStatement}
+	'continue' ';'
+;
+
 VariableStatement:
 	(exported ?= 'export')? KW_VAR (vardecls += VariableDeclaration) (',' vardecls += VariableDeclaration)* ';'
 ;
@@ -259,6 +271,14 @@ terminal OP_COMP:
 
 terminal OP_ASSIGN:
 	'='
+;
+
+terminal OP_COMPOUND_ASSIGN:
+	'+=' | '-=' | '*=' | '/=' | '%='
+;
+
+terminal OP_INCREMENT:
+	'++' | '--'
 ;
 
 terminal OP_NOT:

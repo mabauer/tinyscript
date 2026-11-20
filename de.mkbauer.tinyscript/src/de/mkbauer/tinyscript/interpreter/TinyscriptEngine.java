@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
@@ -25,6 +26,8 @@ import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BlockStatement;
 import de.mkbauer.tinyscript.ts.BooleanLiteral;
 import de.mkbauer.tinyscript.ts.BreakStatement;
+import de.mkbauer.tinyscript.ts.ConditionalExpression;
+import de.mkbauer.tinyscript.ts.ContinueStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
@@ -270,6 +273,10 @@ public class TinyscriptEngine {
     		return caseWhileStatement((WhileStatement) object);
 		case TsPackage.BREAK_STATEMENT:
     		return caseBreakStatement((BreakStatement) object);
+		case TsPackage.CONTINUE_STATEMENT:
+    		return caseContinueStatement((ContinueStatement) object);
+		case TsPackage.CONDITIONAL_EXPRESSION:
+    		return caseConditionalExpression((ConditionalExpression) object);
 		case TsPackage.FUNCTION_DEFINITION:
 			return caseFunctionDefinition((FunctionDefinition) object);
 		case TsPackage.ARROW_FUNCTION:
@@ -422,7 +429,19 @@ public class TinyscriptEngine {
     
     public TSValue caseExpressionStatement(ExpressionStatement object) {
     	recordStatement();
+    	if (object.getIncrement() != null)
+    		return increment(object);
     	return execute(object.getExpr());
+    }
+
+    // i++; and i--; (only statements)
+    private TSValue increment(ExpressionStatement object) {
+    	String op = object.getIncrement();
+    	return updateValue(object.getExpr(), current -> {
+    		if (!(current instanceof TSNumber number))
+    			throw new TinyscriptTypeError("'" + op + "' needs a number, not " + current.typeOf(), object);
+    		return TSValue.of(op.equals("++") ? number.value() + 1 : number.value() - 1);
+    	});
     }    
     
     public TSValue caseFunctionDefinition(FunctionDefinition object) {
@@ -551,7 +570,12 @@ public class TinyscriptEngine {
     			countLoopIteration();
     			if (!execute(whilestmt.getCond()).asCondition())
     				break;
-    			result = executeInBlockContext("while", whilestmt.getDo());
+    			try {
+    				result = executeInBlockContext("while", whilestmt.getDo());
+    			}
+    			catch (TSContinue c) {
+    				// go on with the next iteration
+    			}
     		}
     	}
     	catch (TSBreak b) {
@@ -574,16 +598,31 @@ public class TinyscriptEngine {
      */
     private TSValue executeLoopIteration(ForStatement forstmt, TSValue loopValue) {
     	countLoopIteration();
-		if (forstmt.getId() != null) {
-			return executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
-		}
-		currentContext.store(forstmt.getRef().getId().getName(), loopValue);
-		return executeInBlockContext("for", forstmt.getDo());
+    	try {
+			if (forstmt.getId() != null) {
+				return executeInBlockContext("for", forstmt.getDo(), forstmt.getId(), loopValue);
+			}
+			currentContext.store(forstmt.getRef().getId().getName(), loopValue);
+			return executeInBlockContext("for", forstmt.getDo());
+    	}
+    	catch (TSContinue c) {
+    		return TSValue.UNDEFINED;
+    	}
     }
 
     public TSValue caseBreakStatement(BreakStatement object) {
     	recordStatement();
     	throw TSBreak.INSTANCE;
+    }
+
+    public TSValue caseContinueStatement(ContinueStatement object) {
+    	recordStatement();
+    	throw TSContinue.INSTANCE;
+    }
+
+    // cond ? a : b evaluates only one of a and b
+    public TSValue caseConditionalExpression(ConditionalExpression expr) {
+    	return execute(expr.getCond()).asCondition() ? execute(expr.getThen()) : execute(expr.getElse());
     }
     
     public TSValue caseBinaryExpression(BinaryExpression expr) {
@@ -592,13 +631,18 @@ public class TinyscriptEngine {
     	switch (op) {
     		case "=":
     			return assignValue(expr.getLeft(), execute(expr.getRight()));
+    		case "+=", "-=", "*=", "/=", "%=":
+    			// x op= y is x = x op y, but x (e.g. a[f()]) is evaluated only once
+    			return updateValue(expr.getLeft(), current -> applyOperator(op.substring(0, 1), current, execute(expr.getRight()), expr));
     		case "&&":
     			return TSValue.of(execute(expr.getLeft()).asCondition() && execute(expr.getRight()).asCondition());
     		case "||":
     			return TSValue.of(execute(expr.getLeft()).asCondition() || execute(expr.getRight()).asCondition());
     	}
-    	TSValue left = execute(expr.getLeft());
-    	TSValue right = execute(expr.getRight());
+    	return applyOperator(op, execute(expr.getLeft()), execute(expr.getRight()), expr);
+    }
+
+    private TSValue applyOperator(String op, TSValue left, TSValue right, BinaryExpression expr) {
     	return switch (op) {
     		case "==" -> TSValue.of(left.tinyscriptEquals(right));
     		case "!=" -> TSValue.of(!left.tinyscriptEquals(right));
@@ -859,6 +903,27 @@ public class TinyscriptEngine {
 			return value;
     	}
     	return TSValue.UNDEFINED;
+    }
+
+    /**
+     * Replaces the value of a variable or property with update(old value) and returns
+     * the new value; the variable or property (e.g. a[f()]) is evaluated only once.
+     */
+    private TSValue updateValue(Expression target, UnaryOperator<TSValue> update) {
+    	if (target instanceof Reference reference && !reference.isThis()) {
+    		TSValue value = update.apply(caseReference(reference));
+    		currentContext.store(reference.getId().getName(), value);
+    		return value;
+    	}
+    	if (target instanceof CallOrPropertyAccess expr && expr.getSuffix() instanceof CallOrPropertyAccessSuffix callOrProp
+    			&& callOrProp.getCall() == null) {
+    		TSObject object = toObjectForPropertyAccess(execute(expr.getExpr()), expr);
+    		TSValue key = evaluatePropertyKey(callOrProp.getProperty());
+    		TSValue value = update.apply(getProperty(object, key));
+    		putProperty(object, key, value);
+    		return value;
+    	}
+    	throw new TinyscriptTypeError("Invalid left-hand side expression", target);
     }
 
 	private TSValue evaluatePropertyKey(PropertyAccessSuffix suffix) {

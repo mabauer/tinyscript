@@ -155,6 +155,8 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     public void testExportsAreReadOnly() throws IOException {
         Path main = write("main.tys", "import * as geo from \"./geometry\";\ngeo.unit = \"m\";");
         assertThrows(TinyscriptTypeError.class, () -> runModule(main));
+        Path increment = write("increment.tys", "import * as geo from \"./geometry\";\ngeo.unit += \"m\";");
+        assertThrows(TinyscriptTypeError.class, () -> runModule(increment));
     }
 
     @Test
@@ -292,6 +294,8 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
         assertRejected("import a from \"./m\";\na = 1;");
         assertRejected("import * as m from \"./m\";\nm = 1;");
         assertRejected("import a from \"./m\";\nfor (a : [1]) { }");
+        assertRejected("import a from \"./m\";\na += 1;");
+        assertRejected("import a from \"./m\";\na++;");
     }
 
     @Test
