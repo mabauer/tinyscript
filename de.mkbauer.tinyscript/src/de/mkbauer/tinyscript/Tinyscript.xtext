@@ -271,7 +271,7 @@ PropertyAssignment:
 
 PropertyName:
 	expr=StringLiteral |
-	name=(ID | ReservedWord)
+	name=(ID | Keyword)
 ;
 
 ArrayInitializer:
@@ -325,6 +325,13 @@ terminal OP_NOT:
 // property names (o.class, { case: 1 }).
 ReservedWord:
 	'try' | 'catch' | 'finally' | 'switch' | 'case' | 'class'
+;
+
+// All keywords of tinyscript: they cannot be names of variables, but like in Javascript, they
+// are fine as property names (range.from, { if: 1 })
+Keyword:
+	ReservedWord | 'var' | 'let' | 'const' | 'function' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
+	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'typeof' | 'assert' | 'import' | 'export' | 'from' | 'as'
 ;
 
 // var and let are the same (block-scoped, like Javascript's let); const cannot be assigned again

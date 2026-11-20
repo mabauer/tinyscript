@@ -43,8 +43,8 @@ Next
      - ~~Reading numbers out of text~~ (done: `integers(text)` in `std:string`) without regular expressions needs a helper (`integers(line)` in `examples/aoc2024/aoc.tys`, used by days 13 and 14); a candidate for `std:string`.
      - Speed: all days within seconds (day 14 worst case 6.6 s, day 11 3.2 s).
    - Days 16–20 (2026-11-21): all correct (checked against a Python reference), each within seconds (day 20: 6.6 s). Findings:
-     - **Bug:** `from` and `as` are reserved words (because of `import … from` / `* as m`), but in Javascript they are ordinary names: `const from = 1;` fails with "Unexpected 'from'".
-     - **Bug:** for `const [first, ...rest] = items;` the message says "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)" — about calls, although it is a pattern.
+     - ~~**Bug:**~~ (fixed: they stay reserved, decided 2026-11-21, with the message "'from' is a reserved word in tinyscript and cannot be used as a name"; all keywords are fine as property names, `range.from`) `from` and `as` are reserved words (because of `import … from` / `* as m`), but in Javascript they are ordinary names: `const from = 1;` fails with "Unexpected 'from'".
+     - ~~**Bug:**~~ (fixed: messages for rest elements in patterns and spread in array and object literals) for `const [first, ...rest] = items;` the message says "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)" — about calls, although it is a pattern.
      - Missing: **bitwise operators** (`^`, `&`, `|`, `<<`, `>>`) and **powers** (`**` or `Math.pow`); day 17 emulates XOR and shifts with arithmetic.
      - Missing: **spread in calls** (`Math.min(...values)`) — reached for it twice; and **rest elements in array patterns** (`[first, ...rest]`).
      - Missing: a **priority queue** (day 16 has a binary heap of its own); a candidate for a std module.
