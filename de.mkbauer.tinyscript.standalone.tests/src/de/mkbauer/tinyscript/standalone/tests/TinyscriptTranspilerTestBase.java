@@ -177,13 +177,6 @@ public abstract class TinyscriptTranspilerTestBase {
         runInterpreter(tsCode, null, true, stdout);
     }
 
-    /**
-     * Like {@link #interpreterOutput(String)}, but with sandboxing switched off
-     * (as in the REPL), e.g. to test the file system builtins.
-     */
-    public String interpreterOutputUnsandboxed(String tsCode) {
-        return interpreterOutput(tsCode, null, false);
-    }
 
     private String interpreterOutput(String tsCode, ResourceLimits limits, boolean sandboxed) {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();

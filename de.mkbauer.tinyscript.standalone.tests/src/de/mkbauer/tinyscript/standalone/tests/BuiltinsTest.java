@@ -3,17 +3,14 @@ package de.mkbauer.tinyscript.standalone.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.TinyscriptArgumentError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
-import de.mkbauer.tinyscript.interpreter.TinyscriptUnsupportedOperationError;
 
 /**
  * Characterization tests for the built-in objects and functions.
@@ -352,22 +349,12 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     }
 
     // =========================================================================
-    // fs: only available when not sandboxed
+    // fs: only as the module std:fs (see StdFsTest)
     // =========================================================================
 
     @Test
-    public void testFileSystemIsNotAvailableWhenSandboxed() {
-        assertInterpreterThrows(TinyscriptUnsupportedOperationError.class, "fs.readFile(\"x\");");
-        assertInterpreterThrows(TinyscriptUnsupportedOperationError.class, "fs.writeFile(\"x\", \"y\");");
-    }
-
-    @Test
-    public void testFileSystemWriteAndRead(@TempDir File tempDir) throws IOException {
-        String path = new File(tempDir, "test.txt").getAbsolutePath().replace("\\", "\\\\");
-        assertEquals("5\nhello\nundefined\n", interpreterOutputUnsandboxed(
-                "print(fs.writeFile(\"" + path + "\", \"hello\"));\n"
-                + "print(fs.readFile(\"" + path + "\"));\n"
-                + "var missing = fs.readFile(\"" + path + ".missing\");\n"
-                + "print(typeof missing);"));
+    public void testThereIsNoGlobalFs() {
+        assertRejected("fs.readFile(\"x\");");
+        assertRejected("print(typeof fs);");
     }
 }

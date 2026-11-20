@@ -63,7 +63,6 @@ import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
-import de.mkbauer.tinyscript.runtime.fs.FSObject;
 import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
 import de.mkbauer.tinyscript.runtime.object.ObjectConstructor;
@@ -147,7 +146,6 @@ public class TinyscriptEngine {
 		addToGlobalObject("Array", new ArrayConstructor(this));
 
 		addToGlobalObject("Math", new MathObject(this));
-		addToGlobalObject("fs", new FSObject(this));		
 		addToGlobalObject("System", new SystemObject(this));
 		addToGlobalObject("print", Print.create(this));
 		
@@ -184,16 +182,6 @@ public class TinyscriptEngine {
 
 	public boolean isSandboxed() {
 		return sandboxed;
-	}
-
-	/**
-	 * Used by builtins that must not be available in sandboxed mode (e.g. file access).
-	 */
-	public void enforceSandboxing(String builtinName) {
-		if (sandboxed) {
-			throw new TinyscriptUnsupportedOperationError("Builtin function " + builtinName + " is not available when running sandboxed.",
-					currentContext.currentExpression);
-		}
 	}
 
 	public void setSandboxed(boolean sandboxed) {
