@@ -482,6 +482,7 @@ See `docs/language-reference.md` (section 13) for the language side.
 - **Validation:** `export` only at top level; imported names unique and not redeclared; no assignment to imported names.
 - **Interpreter:** `TinyscriptEngine.setModuleLoader(ModuleLoader)` enables imports (without a loader, e.g. in the webdemo, `import` is an error). Before running a script, `bindImports` resolves each import, loads the module (cached per URI, so each module runs once), and binds the names in the current context. A module is validated and run in its own `ExecutionContext` whose outer context is the global one (builtins). Its exported names are copied into a `ModuleExports` object that is frozen afterwards. A stack of modules being loaded (rooted at the main script) detects cycles.
 - **Generator:** `TinyscriptGenerator.generate(script, includeBuiltins, loader)` collects the imported modules in dependency order and emits each as `var __ts_modN = (function () { …; return Object.freeze({ … }); })();`, followed by `var a = __ts_modN.a;` per named import. Resolving, loading (with validation) and the cycle error are shared with the interpreter (`Modules`).
+- **Standard library:** `StandardLibraryModuleLoader` resolves `std:name` to the classpath resource `/std/name.tys` (source: `de.mkbauer.tinyscript/src/std/`); `FileSystemModuleLoader` delegates `std:` imports to it, and the webdemo uses it alone (no file imports). This also works from the webdemo's nested Spring Boot jar.
 - **Loading:** `FileSystemModuleLoader` resolves relative paths against the importing file and bare paths via the module path, appends `.tys` if missing, and identifies modules by their canonical path (`toRealPath`).
 
 ## 13. Deployment Modes
@@ -523,7 +524,7 @@ The frontend source lives in `frontend/` and is built by `frontend-maven-plugin`
 | `frontend/src/components/tinyscript-lang.ts` | CM6 `StreamLanguage` tokenizer for Tinyscript syntax |
 | `frontend/src/components/Output.vue` | Spinner, success/error alerts, formatted statistics |
 | `frontend/src/types.ts` | TypeScript interfaces: `ExecutionResult`, `Statistics` |
-| `frontend/public/*.tys` | 10 example scripts served as static files |
+| `frontend/public/*.tys` | 11 example scripts served as static files |
 
 Frontend unit tests (Vitest) cover `Output`, `Toolbar`, and the `tinyscript-lang` tokenizer. They run as part of the Maven build before the Spring Boot tests.
 

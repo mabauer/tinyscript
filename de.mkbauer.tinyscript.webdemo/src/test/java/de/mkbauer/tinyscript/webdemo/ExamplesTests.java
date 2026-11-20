@@ -80,4 +80,10 @@ public class ExamplesTests {
 		assertEquals(0, result.getErrorCode());
 	}
 
+	@Test
+	public void testModules() {
+		TinyscriptExecutionResult result = executeScriptFromFile("modules.tys");
+		assertEquals(0, result.getErrorCode(), result.getErrorMessage());
+	}
+
 }

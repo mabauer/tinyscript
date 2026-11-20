@@ -15,6 +15,7 @@ import org.eclipse.emf.common.util.URI;
  * (or the working directory, if the importer is not a file, e.g. a REPL line).</li>
  * <li>Bare paths ({@code "x"}, {@code "math/vector"}) are searched in the module path.</li>
  * <li>The extension {@code .tys} may be omitted.</li>
+ * <li>{@code "std:…"} imports the standard library.</li>
  * <li>A module is identified by its canonical path, so a symlink is the same module.</li>
  * </ul>
  */
@@ -24,14 +25,16 @@ public class FileSystemModuleLoader implements ModuleLoader {
 
 	private final List<Path> modulePath;
 
+	private final StandardLibraryModuleLoader standardLibrary = new StandardLibraryModuleLoader();
+
 	public FileSystemModuleLoader(List<Path> modulePath) {
 		this.modulePath = List.copyOf(modulePath);
 	}
 
 	@Override
 	public URI resolve(String path, URI importer) {
-		if (path.startsWith("std:"))
-			throw new TinyscriptReferenceError("Standard library modules are not available yet: \"" + path + "\"");
+		if (path.startsWith(StandardLibraryModuleLoader.PREFIX))
+			return standardLibrary.resolve(path, importer);
 		String fileName = withExtension(path);
 		List<Path> candidates;
 		if (path.startsWith("./") || path.startsWith("../")) {

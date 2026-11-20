@@ -1,0 +1,13 @@
+// Modules: import functions from the standard library.
+// (In your own programs, a file can also import the exports of another file:
+//  import area, unit from "./geometry";)
+import range, sum, reverse from "std:array";
+import * as math from "std:math";
+
+var numbers = range(10);         // [0, 1, ..., 9]
+print(numbers);
+print(sum(numbers));             // 45
+print(reverse(range(3)));        // [2, 1, 0]
+
+print(math.clamp(15, 0, 10));    // 10
+print(math.abs(-7));             // 7

@@ -25,6 +25,7 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
+import de.mkbauer.tinyscript.interpreter.StandardLibraryModuleLoader;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 @Component
@@ -64,7 +65,8 @@ public class TinyscriptCrossCompilingService {
 			if (issues.size()!=0)
 				throw new TinyscriptSyntaxError(issues.get(0).getMessage(), currentResource.getURI().toString(), issues.get(0).getLineNumber());
 
-			jsscript = generator.generate(ast, true).toString();
+			// Bundles imported standard library modules; files cannot be imported
+			jsscript = generator.generate(ast, true, new StandardLibraryModuleLoader()).toString();
 			return new TinyscriptCrossCompilingResult(jsscript);
 		}
 		catch (TinyscriptRuntimeException e) {

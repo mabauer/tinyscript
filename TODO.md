@@ -44,8 +44,9 @@ Language
     1. ~~Restrict the global scope to the builtins~~ (done: `TinyscriptGlobalScopeProvider` only sees resources marked with `SharedGlobals`, i.e. the builtins and the lines of an interactive REPL session; files are isolated, the REPL runs each file with a fresh engine).
     2. ~~Core~~ (done: grammar, validator, interpreter with `ModuleLoader` / `FileSystemModuleLoader` and `ModuleExports`, REPL `--module-path` / `TINYSCRIPT_PATH`; `ModulesTest`).
     3. ~~Generator~~ (done: bundles a program and its modules into one script; differential tests in `ModulesTest`).
-    4. Standard library and webdemo: `std:` modules from the classpath; the webdemo allows only those. Optionally `fs` becomes `std:fs`, which the sandbox simply does not provide.
-    5. Optional, IDE: the validator checks while typing that the imported file exists and exports the names (fits the VS Code language server).
+    4. ~~Standard library and webdemo~~ (done: `std:array`, `std:math` written in tinyscript, `StandardLibraryModuleLoader`; the webdemo imports only `std:` modules and has a "Modules" example).
+    5. `fs` as a module (target, decided 2026-11-20): first `std:fs` as a *native* module implemented in Java (the engine needs native modules; the sandbox does not provide `std:fs`), then remove the global `fs` (breaking: scripts must `import * as fs from "std:fs";`). Separate PRs.
+    6. Optional, IDE: the validator checks while typing that the imported file exists and exports the names (fits the VS Code language server).
 
 - **Conversions.** Builtins convert their arguments with `TSObject.toNumber` / `toInteger` / `toString`. Today `undefined` and non-numeric strings become `0` (Javascript: `NaN`), a user-defined `valueOf` is ignored, and some code uses `TSValue.asString()` where `TSObject.toString(engine, value)` (which calls a user-defined `toString`) would be right. Decide how much of Javascript's conversion rules tinyscript wants, then write tests.
 

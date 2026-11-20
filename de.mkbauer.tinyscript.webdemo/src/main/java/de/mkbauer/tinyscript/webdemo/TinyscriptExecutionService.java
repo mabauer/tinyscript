@@ -26,6 +26,7 @@ import com.google.inject.Injector;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
+import de.mkbauer.tinyscript.interpreter.StandardLibraryModuleLoader;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.ResourceConsumption;
@@ -82,6 +83,8 @@ public class TinyscriptExecutionService {
 		monitor.enableMXBeanInspection();
 		monitor.configureLimits(limits);
 		TinyscriptEngine engine = new TinyscriptEngine(resourceSet, monitor);
+		// Scripts may import the standard library, but no files
+		engine.setModuleLoader(new StandardLibraryModuleLoader());
 		ResourceConsumption statistics = new ResourceConsumption();
 		
 		try {
