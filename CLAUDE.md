@@ -178,7 +178,7 @@ The deployed webdemo is monitored by checkmk via `GET /test` (runs a fixed sampl
 
 ## Releasing
 
-See `Release-HOWTO.md` for the full procedure. Key commands:
+See `Release-HOWTO.md` for the full procedure. Every non-trivial release gets release notes (incompatible changes first, then new features and fixes), published as a GitHub release for the tag. Key commands:
 
 ```bash
 # 1. Bump version in OSGi modules (pom.xml + MANIFEST.MF + feature.xml)

@@ -43,12 +43,31 @@ dependency version to `X.Y.Z` in:
         | grep -v "target/" | grep -v ".git/" | grep -v "bin/"
 
 
-## 3. Commit, tag, push
+## 3. Write release notes
+
+For every release that is more than a small fix, write release notes and publish
+them as a GitHub release for the tag (step 4). Structure (see v0.19.0 as example):
+
+- one sentence on what the release is about;
+- **Incompatible changes** first: everything that can break existing scripts, each
+  with what to write instead;
+- **New**: language features, builtins, REPL / web demo, grouped by topic;
+- **Fixes**: bugs that users could have noticed;
+- links as full URLs to the tagged version (GitHub release pages do not resolve
+  relative links).
+
+Collect the content from the merged pull requests since the last tag:
+
+    git log --oneline vOLD_VERSION..HEAD --first-parent
+
+
+## 4. Commit, tag, push, publish
 
     git add -A
     git commit -m "Release version X.Y.Z"
     git tag vX.Y.Z
     git push && git push --tags
+    gh release create vX.Y.Z --title "tinyscript X.Y.Z" --notes-file release-notes.md
 
 Pushing the `vX.Y.Z` tag triggers `.github/workflows/docker.yml`, which:
 
@@ -59,7 +78,7 @@ Pushing the `vX.Y.Z` tag triggers `.github/workflows/docker.yml`, which:
 Monitor progress at: https://github.com/mabauer/tinyscript/actions
 
 
-## 4. Bump to next SNAPSHOT
+## 5. Bump to next SNAPSHOT
 
     ./mvnw org.eclipse.tycho:tycho-versions-plugin:set-version \
         -DnewVersion=X.Y.(Z+1)-SNAPSHOT
