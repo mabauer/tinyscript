@@ -49,7 +49,7 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testUnaryMinusNeedsANumber() {
         TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("print(-\"a\");"));
-        assertTrue(e.getMessage().contains("'-' needs a number, not string"), e.getMessage());
+        assertTrue(e.getMessage().contains("'-' needs a number, but \"a\" is a string"), e.getMessage());
     }
 
     // =========================================================================
@@ -126,7 +126,7 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
         assertInterpreterThrows(TinyscriptTypeError.class, "assert(1);");
         assertInterpreterThrows(TinyscriptTypeError.class, "print([1, 2].filter(x => x - 1).length);");
         TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("var count = 0;\nif (count) { print(1); }"));
-        assertTrue(e.getMessage().contains("Condition must be a boolean, not number"), e.getMessage());
+        assertTrue(e.getMessage().contains("The condition count is a number, not a boolean"), e.getMessage());
         assertEquals(2, e.getAffectedLine());
     }
 

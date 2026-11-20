@@ -257,6 +257,7 @@ class TinyscriptReplMain  {
 		}
 		catch (TinyscriptRuntimeException e) {
 			err.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+			err.print(TinyscriptDiagnostics.excerpt(e));
 			err.print(e.getTinyscriptStacktraceAsString());
 			return EXIT_ERROR;
 		}
