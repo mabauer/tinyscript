@@ -1,6 +1,7 @@
 // Helpers for the Advent of Code solutions in this directory
 
 import * as fs from "std:fs";
+import words from "std:string";
 
 // The puzzle input: the file given after --, e.g. tinyscript day01.tys -- input.txt
 // (input.txt if there is none)
@@ -18,7 +19,7 @@ export function inputLines() {
     return fs.readLines(inputFile()).filter(line => line.trim() != "");
 }
 
-// The numbers in a line separated by spaces: "3   4" gives [3, 4]
+// The numbers in a line separated by whitespace: "3   4" gives [3, 4]
 export function numbers(line) {
-    return line.split(" ").filter(word => word != "").map(word => Number(word));
+    return words(line).map(Number);
 }

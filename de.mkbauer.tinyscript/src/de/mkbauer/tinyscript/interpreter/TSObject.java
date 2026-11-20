@@ -123,8 +123,18 @@ public non-sealed class TSObject implements TSValue {
 		return getOwnPropertyDescriptor(key) != null;
 	}
 	
+	/**
+	 * Defines a builtin method that takes exactly {@code length} arguments.
+	 */
 	public void defineBuiltinMethod(String name, BuiltinFunctionImplementation implementation, int length) {
 		defineDefaultProperty(name, engine.defineBuiltinFunction(name, implementation, length));
+	}
+
+	/**
+	 * Defines a builtin method that takes {@code minArgs} to {@code maxArgs} arguments.
+	 */
+	public void defineBuiltinMethod(String name, BuiltinFunctionImplementation implementation, int minArgs, int maxArgs) {
+		defineDefaultProperty(name, engine.defineBuiltinFunction(name, implementation, minArgs, maxArgs));
 	}
 	
 	

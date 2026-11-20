@@ -1,0 +1,31 @@
+// Standard library: string helpers.  import words from "std:string";
+
+// Whether c is a whitespace character: a space, a tab or a line break
+export function isWhitespace(c) {
+	return c == " " || c == "\t" || c == "\n" || c == "\r";
+}
+
+// Whether c is a digit 0 to 9 (false for undefined, e.g. "abc"[5])
+export function isDigit(c) {
+	return c != null && c >= "0" && c <= "9";
+}
+
+// The words of text, separated by any amount of whitespace:
+// words(" 3   4\n") is ["3", "4"] (Javascript: text.trim().split(/\s+/))
+export function words(text) {
+	var result = [];
+	var word = "";
+	for (var c : text) {
+		if (!isWhitespace(c)) {
+			word += c;
+		}
+		else if (word != "") {
+			result.push(word);
+			word = "";
+		}
+	}
+	if (word != "") {
+		result.push(word);
+	}
+	return result;
+}

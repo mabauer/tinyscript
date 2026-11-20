@@ -19,7 +19,7 @@ public final class Print {
 	}
 
 	public static BuiltinFunction create(TinyscriptEngine engine) {
-		return engine.defineBuiltinFunction("print", (self, args) -> print(engine, args), 0);
+		return engine.defineBuiltinFunction("print", (self, args) -> print(engine, args), 0, BuiltinFunction.VARIADIC);
 	}
 
 	private static TSValue print(TinyscriptEngine engine, TSValue[] args) {

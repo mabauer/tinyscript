@@ -23,6 +23,7 @@ public class MapConstructor extends BuiltinConstructor {
 
 	public MapConstructor(TinyscriptEngine engine) {
 		super(engine);
+		setMaxArgs(1);
 		TSObject mapPrototype = getPrototypeProperty().asObject();
 		mapPrototype.defineBuiltinMethod("get", this::get, 1);
 		mapPrototype.defineBuiltinMethod("set", this::set, 2);

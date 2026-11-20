@@ -581,7 +581,7 @@ Arrays are lists: besides their items, only `length` can be set. Unlike Javascri
 |---|---|
 | `arr.at(i)` | Element at index `i`; a negative `i` counts from the end (`arr.at(-1)` is the last element); `undefined` if out of range |
 | `arr.indexOf(x[, start])` | Index of the first element `== x` (tinyscript's `==`), or `-1`; searching from `start` (negative: counts from the end) |
-| `arr.includes(x)` | `true` if an element `== x` |
+| `arr.includes(x[, start])` | `true` if an element `== x`, searching from `start` (negative: counts from the end) |
 | `arr.push(x)` | Appends `x` to the end; returns new element count |
 | `arr.pop()` | Removes and returns the last element |
 | `arr.shift()` | Removes and returns the first element |
@@ -892,10 +892,11 @@ String methods:
 | `str.charCodeAt(i)` | UTF-16 code of the character at index `i`, or `NaN` |
 | `str.indexOf(sub[, pos])` | First index of `sub` at or after `pos` (negative: 0), or `-1` |
 | `str.lastIndexOf(sub[, pos])` | Last index of `sub` at or before `pos`, or `-1` |
-| `str.includes(sub)` / `str.startsWith(sub)` / `str.endsWith(sub)` | Whether `str` contains / starts with / ends with `sub` |
+| `str.includes(sub[, pos])` / `str.startsWith(sub[, pos])` | Whether `str` contains `sub` at or after `pos` / starts with `sub` at `pos` |
+| `str.endsWith(sub[, end])` | Whether `str` up to `end` ends with `sub` |
 | `str.substring(start, end)` | Substring from `start` (inclusive) to `end` (exclusive) |
 | `str.slice(start[, end])` | Like `substring`, but negative indices count from the end, and `start > end` gives `""` |
-| `str.split(sep)` | Array of the parts between occurrences of `sep`; `""` splits into characters |
+| `str.split(sep[, limit])` | Array of the parts between occurrences of `sep` (at most `limit` of them); `""` splits into characters. To split at any whitespace, use `words(str)` of `std:string` |
 | `str.trim()` | Without leading and trailing whitespace |
 | `str.replace(search, repl)` / `str.replaceAll(search, repl)` | Replaces the first / every occurrence of `search`; `repl` may contain `$&` (the match), `` $` `` / `$'` (the text before / after it) and `$$` |
 | `str.repeat(n)` | `str` repeated `n` times |
@@ -904,6 +905,8 @@ String methods:
 | `str.toString()` | The string itself |
 
 String arguments must be strings and indices integers, otherwise the method throws a `TypeError`. `search` and `sep` are plain strings; there are no regular expressions.
+
+All builtins (methods of strings, arrays, `Map`, `Set`, `Math`, …) understand the optional arguments of their Javascript counterparts as listed here; calling one with more arguments than it takes is a `TypeError` (`"abc".startsWith("a", 0, 1)`: "startsWith() takes at most 2 arguments, not 3"), where Javascript would ignore them. A builtin used as a callback, e.g. `lines.map(Number)`, gets `(item, index, array)` like any callback and uses what it needs. Your own functions are not checked: extra arguments are ignored, as in Javascript.
 
 `String.fromCharCode(c1, c2, ...)` builds a string from UTF-16 codes.
 
@@ -1071,6 +1074,7 @@ print(area(2), unit, geo.area(1));
 - Files do not see each other's top-level names; sharing works only through `import` / `export`.
 - **Standard library:** `std:` modules come with tinyscript (written in tinyscript, in the core bundle under `/std`):
   - `std:array`: `range(n)` (`[0, …, n - 1]`), `sum(arr)`, `contains(arr, x)`, `reverse(arr)`
+  - `std:string`: `words(text)` (the words separated by any whitespace: `words(" 3   4\n")` is `["3", "4"]`; Javascript: `text.trim().split(/\s+/)`), `isWhitespace(c)`, `isDigit(c)` (`false` for `undefined`, e.g. `s[s.length]`)
 
   ```
   import range, sum from "std:array";

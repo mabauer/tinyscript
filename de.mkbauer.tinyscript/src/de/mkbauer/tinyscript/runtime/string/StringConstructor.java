@@ -3,6 +3,7 @@ package de.mkbauer.tinyscript.runtime.string;
 import java.util.Locale;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
+import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -17,26 +18,27 @@ public class StringConstructor extends BuiltinConstructor {
 
 	public StringConstructor(TinyscriptEngine engine) {
 		super(engine);
-		defineBuiltinMethod("fromCharCode", this::fromCharCode, 0);
+		defineBuiltinMethod("fromCharCode", this::fromCharCode, 0, BuiltinFunction.VARIADIC);
+		setMaxArgs(1);
 
 		TSObject stringPrototype = getPrototypeProperty().asObject();
 		stringPrototype.defineBuiltinMethod("toString", this::stringToString, 0);
 		stringPrototype.defineBuiltinMethod("at", this::at, 1);
 		stringPrototype.defineBuiltinMethod("charAt", this::charAt, 1);
-		stringPrototype.defineBuiltinMethod("substring", this::substring, 1);
-		stringPrototype.defineBuiltinMethod("indexOf", this::indexOf, 1);
-		stringPrototype.defineBuiltinMethod("lastIndexOf", this::lastIndexOf, 1);
-		stringPrototype.defineBuiltinMethod("includes", this::includes, 1);
-		stringPrototype.defineBuiltinMethod("startsWith", this::startsWith, 1);
-		stringPrototype.defineBuiltinMethod("endsWith", this::endsWith, 1);
-		stringPrototype.defineBuiltinMethod("slice", this::slice, 1);
-		stringPrototype.defineBuiltinMethod("split", this::split, 1);
+		stringPrototype.defineBuiltinMethod("substring", this::substring, 1, 2);
+		stringPrototype.defineBuiltinMethod("indexOf", this::indexOf, 1, 2);
+		stringPrototype.defineBuiltinMethod("lastIndexOf", this::lastIndexOf, 1, 2);
+		stringPrototype.defineBuiltinMethod("includes", this::includes, 1, 2);
+		stringPrototype.defineBuiltinMethod("startsWith", this::startsWith, 1, 2);
+		stringPrototype.defineBuiltinMethod("endsWith", this::endsWith, 1, 2);
+		stringPrototype.defineBuiltinMethod("slice", this::slice, 0, 2);
+		stringPrototype.defineBuiltinMethod("split", this::split, 1, 2);
 		stringPrototype.defineBuiltinMethod("trim", this::trim, 0);
 		stringPrototype.defineBuiltinMethod("replace", this::replace, 2);
 		stringPrototype.defineBuiltinMethod("replaceAll", this::replaceAll, 2);
 		stringPrototype.defineBuiltinMethod("repeat", this::repeat, 1);
-		stringPrototype.defineBuiltinMethod("padStart", this::padStart, 1);
-		stringPrototype.defineBuiltinMethod("padEnd", this::padEnd, 1);
+		stringPrototype.defineBuiltinMethod("padStart", this::padStart, 1, 2);
+		stringPrototype.defineBuiltinMethod("padEnd", this::padEnd, 1, 2);
 		stringPrototype.defineBuiltinMethod("toUpperCase", this::toUpperCase, 0);
 		stringPrototype.defineBuiltinMethod("toLowerCase", this::toLowerCase, 0);
 		stringPrototype.defineBuiltinMethod("charCodeAt", this::charCodeAt, 1);
@@ -141,23 +143,37 @@ public class StringConstructor extends BuiltinConstructor {
 		return TSValue.of(str.lastIndexOf(string(args[0], "lastIndexOf"), position));
 	}
 
+	// String.prototype.includes(search[, position]), startsWith(search[, position]): like Javascript,
+	// the search starts at position (clamped to the string)
 	private TSValue includes(TSObject self, TSValue[] args) {
-		return TSValue.of(thisString(self, "includes").contains(string(args[0], "includes")));
+		String str = thisString(self, "includes");
+		return TSValue.of(str.indexOf(string(args[0], "includes"), position(args, 1, 0, str, "includes")) >= 0);
 	}
 
 	private TSValue startsWith(TSObject self, TSValue[] args) {
-		return TSValue.of(thisString(self, "startsWith").startsWith(string(args[0], "startsWith")));
+		String str = thisString(self, "startsWith");
+		return TSValue.of(str.startsWith(string(args[0], "startsWith"), position(args, 1, 0, str, "startsWith")));
 	}
 
+	// String.prototype.endsWith(search[, end]): whether the string up to end ends with search
 	private TSValue endsWith(TSObject self, TSValue[] args) {
-		return TSValue.of(thisString(self, "endsWith").endsWith(string(args[0], "endsWith")));
+		String str = thisString(self, "endsWith");
+		int end = position(args, 1, str.length(), str, "endsWith");
+		return TSValue.of(str.substring(0, end).endsWith(string(args[0], "endsWith")));
+	}
+
+	// The optional position argument args[index], clamped to the string; defaultValue if it is missing
+	private static int position(TSValue[] args, int index, int defaultValue, String str, String function) {
+		if (args.length <= index)
+			return defaultValue;
+		return Math.clamp(integer(args[index], function), 0, str.length());
 	}
 
 	// String.prototype.slice(start[, end]): like substring, but a negative index counts from the end
 	// and start > end gives ""
 	private TSValue slice(TSObject self, TSValue[] args) {
 		String str = thisString(self, "slice");
-		int start = sliceIndex(integer(args[0], "slice"), str.length());
+		int start = args.length > 0 ? sliceIndex(integer(args[0], "slice"), str.length()) : 0;
 		int end = args.length > 1 ? sliceIndex(integer(args[1], "slice"), str.length()) : str.length();
 		return TSValue.of(start < end ? str.substring(start, end) : "");
 	}
@@ -166,24 +182,32 @@ public class StringConstructor extends BuiltinConstructor {
 		return index < 0 ? Math.max(0, length + index) : Math.min(index, length);
 	}
 
-	// String.prototype.split(separator): the parts between the separators; "" splits into characters.
-	// Unlike Java's String.split, the separator is no regular expression and empty parts are kept.
+	// String.prototype.split(separator[, limit]): the parts between the separators (at most limit
+	// of them); "" splits into characters. Unlike Java's String.split, the separator is no regular
+	// expression and empty parts are kept. To split at any whitespace, use words() of std:string.
 	private TSValue split(TSObject self, TSValue[] args) {
 		String str = thisString(self, "split");
 		String separator = string(args[0], "split");
+		int limit = Integer.MAX_VALUE;
+		if (args.length > 1) {
+			limit = integer(args[1], "split");
+			if (limit < 0)
+				throw new TinyscriptTypeError("split() needs a non-negative limit, not " + limit);
+		}
 		ArrayObject parts = (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();
 		if (separator.isEmpty()) {
-			for (int i = 0; i < str.length(); i++)
+			for (int i = 0; i < str.length() && parts.getLength() < limit; i++)
 				parts.push(TSValue.of(str.substring(i, i + 1)));
 			return parts;
 		}
 		int start = 0;
 		int next;
-		while ((next = str.indexOf(separator, start)) >= 0) {
+		while (parts.getLength() < limit && (next = str.indexOf(separator, start)) >= 0) {
 			parts.push(TSValue.of(str.substring(start, next)));
 			start = next + separator.length();
 		}
-		parts.push(TSValue.of(str.substring(start)));
+		if (parts.getLength() < limit)
+			parts.push(TSValue.of(str.substring(start)));
 		return parts;
 	}
 

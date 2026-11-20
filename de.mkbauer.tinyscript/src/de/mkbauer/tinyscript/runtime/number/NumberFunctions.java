@@ -32,7 +32,7 @@ public final class NumberFunctions {
 	}
 
 	public static BuiltinFunction createParseInt(TinyscriptEngine engine) {
-		return engine.defineBuiltinFunction("parseInt", (self, args) -> parseInt(args), 1);
+		return engine.defineBuiltinFunction("parseInt", (self, args) -> parseInt(args), 1, 2);
 	}
 
 	public static BuiltinFunction createIsNaN(TinyscriptEngine engine) {

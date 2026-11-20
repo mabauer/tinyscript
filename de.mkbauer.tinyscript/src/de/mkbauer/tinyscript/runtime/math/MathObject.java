@@ -1,5 +1,6 @@
 package de.mkbauer.tinyscript.runtime.math;
 
+import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSNumber;
@@ -15,8 +16,8 @@ public class MathObject extends TSObject {
 		defineBuiltinMethod("sqrt", this::sqrt, 1);
 		defineBuiltinMethod("round", this::round, 1);
 		defineBuiltinMethod("random", this::random, 0);
-		defineBuiltinMethod("min", this::min, 1);
-		defineBuiltinMethod("max", this::max, 1);
+		defineBuiltinMethod("min", this::min, 0, BuiltinFunction.VARIADIC);
+		defineBuiltinMethod("max", this::max, 0, BuiltinFunction.VARIADIC);
 		defineBuiltinMethod("abs", this::abs, 1);
 		defineBuiltinMethod("floor", this::floor, 1);
 		defineBuiltinMethod("ceil", this::ceil, 1);

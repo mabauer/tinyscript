@@ -6,14 +6,11 @@
 // tinyscript has no regular expressions, so the instructions are read with a small scanner.
 
 import inputText from "./aoc";
+import isDigit from "std:string";
 
 // Whether text contains word at position pos
 function startsAt(text, pos, word) {
     return text.slice(pos, pos + word.length) == word;
-}
-
-function isDigit(c) {
-    return c != null && c >= "0" && c <= "9";
 }
 
 // The number of digits (1 to 3) at position pos, 0 if there is no digit
