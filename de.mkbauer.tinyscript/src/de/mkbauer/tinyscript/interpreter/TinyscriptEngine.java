@@ -447,6 +447,8 @@ public class TinyscriptEngine {
 		Tinyscript script = Modules.load(resourceSet, module);
 		modulesBeingLoaded.push(module);
 		enterNewExecutionContext("module " + module.lastSegment(), globalContext);
+		// A frame of its own in stack traces, like a function
+		currentContext.setFunctionContext(true);
 		try {
 			bindImports(script);
 			hoistFunctionDeclarations(getLexicalEnvironment(script.getGlobal()));
@@ -1345,25 +1347,52 @@ public class TinyscriptEngine {
 	protected void attachStackTrace(TinyscriptRuntimeException e) {
 		if (e.getTinyscriptStacktrace() != null)
 			return;
-		List<ExecutionContext> calls = contextStack.stream()
-				.filter(ctx -> ctx.isFunctionContext() && ctx.currentExpression != null)
-				.toList();
+		List<TSStacktraceElement> calls = calls();
 		int kept = TinyscriptRuntimeException.SHORTENED_STACKTRACE_CALLS;
-		int omitted = calls.size() > 2 * kept ? calls.size() - 2 * kept : 0;
+		int omitted = calls.size() > 2 * kept + 1 ? calls.size() - 1 - 2 * kept : 0;
 		List<TSStacktraceElement> stacktrace = new ArrayList<TSStacktraceElement>();
+		// The innermost call: where the error happened
+		TSStacktraceElement innermost = calls.get(0);
 		if (e.getNode() != null)
-			stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(e.getNode()), 
-					currentContext.name, TinyscriptModelUtil.getLineOfASTNode(e.getNode())));
-		else 
-			stacktrace.add(new TSStacktraceElement(currentContext.name, 0));
-		for (int i = 0; i < calls.size(); i++) {
-			if (omitted > 0 && i == kept)
+			stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(e.getNode()),
+					innermost.getFunctionName(), TinyscriptModelUtil.getLineOfASTNode(e.getNode())));
+		else
+			stacktrace.add(new TSStacktraceElement(innermost.getFunctionName(), 0));
+		// The callers: where they called
+		for (int i = 1; i < calls.size(); i++) {
+			if (omitted > 0 && i == kept + 1)
 				i += omitted;
-			ExecutionContext ctx = calls.get(i);
-			stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(ctx.currentExpression), 
-					ctx.name, TinyscriptModelUtil.getLineOfASTNode(ctx.currentExpression)));
+			stacktrace.add(calls.get(i));
 		}
 		e.setTinyscriptStacktrace(stacktrace.toArray(new TSStacktraceElement[0]), omitted, kept + 1);
+	}
+
+	/**
+	 * The calls on the stack, innermost first: each named after its function (or global, or the
+	 * module), with the place of the call it is making. Blocks with variables of their own run in
+	 * contexts of their own (named if, for ...); they belong to the call they are in, and the
+	 * innermost of them knows where the call is.
+	 */
+	private List<TSStacktraceElement> calls() {
+		List<ExecutionContext> contexts = new ArrayList<ExecutionContext>();
+		contexts.add(currentContext);
+		contexts.addAll(contextStack);
+		List<TSStacktraceElement> calls = new ArrayList<TSStacktraceElement>();
+		ExecutionContext innermostOfCall = currentContext;
+		for (ExecutionContext ctx : contexts) {
+			if (innermostOfCall == null)
+				innermostOfCall = ctx;
+			if (ctx.isFunctionContext() || ctx.isGlobal()) {
+				EObject callSite = innermostOfCall.currentExpression;
+				calls.add(callSite != null
+						? new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(callSite), ctx.name, TinyscriptModelUtil.getLineOfASTNode(callSite))
+						: new TSStacktraceElement(ctx.name, 0));
+				innermostOfCall = null;
+			}
+		}
+		if (calls.isEmpty())
+			calls.add(new TSStacktraceElement(currentContext.name, 0));
+		return calls;
 	}
 
 	private void recordStatement() {
