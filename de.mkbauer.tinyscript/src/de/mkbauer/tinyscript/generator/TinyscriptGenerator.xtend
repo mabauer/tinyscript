@@ -76,6 +76,8 @@ class TinyscriptGenerator   {
 		
 		var System = {};
 		System.currentTimeMillis = Date.now;
+		// Like the interpreter: the arguments of the script
+		System.args = typeof process !== "undefined" ? process.argv.slice(2) : [];
 		
 		if (typeof print !== "function") {
 			// Like the interpreter: all arguments, concatenated, on one line

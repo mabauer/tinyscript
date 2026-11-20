@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 import jline.console.ConsoleReader;
 import jline.console.history.FileHistory;
@@ -47,11 +49,20 @@ class TinyscriptReplMain  {
 
 	private static final String FILE_EXTENSION = "tys";
 
+	/**
+	 * Each tinyscript call nests many Java calls; with the default stack, a recursion
+	 * ends after a few thousand calls. The interpreter runs in a thread with this stack
+	 * (reserved, not allocated up front), which allows a recursion depth of about 500,000
+	 * and still ends an endless recursion within a few seconds.
+	 */
+	private static final long STACK_SIZE = 256L << 20;
+
 	private static final String USAGE = """
-			Usage: tinyscript [options] [file.tys ...]
+			Usage: tinyscript [options] [file.tys ...] [-- arguments ...]
 
 			Runs the given tinyscript files in order and stops at the first error.
-			Without files, starts an interactive session.
+			Without files, starts an interactive session. The arguments after --
+			are the scripts' System.args.
 
 			Options:
 			  --module-path <dirs>   where imports of bare paths ("x", "lib/y") are searched,
@@ -83,6 +94,9 @@ class TinyscriptReplMain  {
 
 	/** The module path from --module-path, or null. */
 	private String moduleOption;
+
+	/** The arguments after --, the scripts' System.args. */
+	private List<String> scriptArguments = List.of();
 
 	private final Injector injector;
 
@@ -121,6 +135,7 @@ class TinyscriptReplMain  {
 		engine.setSandboxed(false);
 		engine.defineStdOut(out);
 		engine.setModuleLoader(new FileSystemModuleLoader(modulePath(defaultDirectory)));
+		engine.setScriptArguments(scriptArguments);
 		return engine;
 	}
 
@@ -138,6 +153,25 @@ class TinyscriptReplMain  {
 	 * Runs the command line and returns the exit code.
 	 */
 	int run(String[] args) {
+		FutureTask<Integer> task = new FutureTask<>(() -> runWithLargeStack(args));
+		new Thread(null, task, "tinyscript", STACK_SIZE).start();
+		try {
+			return task.get();
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			return EXIT_ERROR;
+		}
+		catch (ExecutionException e) {
+			if (e.getCause() instanceof RuntimeException runtimeException)
+				throw runtimeException;
+			if (e.getCause() instanceof Error error)
+				throw error;
+			throw new IllegalStateException(e.getCause());
+		}
+	}
+
+	private int runWithLargeStack(String[] args) {
 		List<Path> files = new ArrayList<>();
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i];
@@ -157,6 +191,10 @@ class TinyscriptReplMain  {
 				case "--version" -> {
 					out.println("tinyscript " + version());
 					return EXIT_OK;
+				}
+				case "--" -> {
+					scriptArguments = List.of(args).subList(i + 1, args.length);
+					i = args.length;
 				}
 				default -> {
 					if (arg.startsWith("-")) {

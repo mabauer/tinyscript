@@ -977,12 +977,21 @@ print(visited.has("1,2"));   // true
 | Method | Description |
 |---|---|
 | `System.currentTimeMillis()` | Current wall-clock time in milliseconds (like `Date.now()`) |
+| `System.args` | The arguments of the script, an array of strings: in the REPL, the arguments after `--` (`tinyscript day1.tys -- input.txt`); otherwise empty |
 
 ```
 var start = System.currentTimeMillis();
 // ... do work ...
 print(System.currentTimeMillis() - start);   // elapsed ms
+
+var file = System.args.length > 0 ? System.args[0] : "input.txt";
 ```
+
+### Errors
+
+Calling something that is not a function is a `TypeError` that names it: `String has no method 'splitt'`, `'x' of Object is a number, not a function`, `'f' is undefined, not a function`.
+
+A too deep (or endless) recursion is a `TinyscriptStackOverflowError` ("Stack overflow: too many nested calls"); its stack trace shows only the innermost and outermost calls. The REPL allows a recursion depth of about 500,000 calls; in the web demo the limit is lower.
 
 ### File access
 

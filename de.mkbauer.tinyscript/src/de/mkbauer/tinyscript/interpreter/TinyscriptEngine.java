@@ -167,6 +167,13 @@ public class TinyscriptEngine {
 			resourceMonitor.stop();
 	}
 	
+	/**
+	 * Sets System.args, the arguments of the script (e.g. from the command line).
+	 */
+	public void setScriptArguments(List<String> arguments) {
+		((SystemObject) globalContext.getGlobalObject().get("System")).setArguments(arguments);
+	}
+
 	private void addIdentifierToBuiltins(String name) {
 		TsFactory factory = TsFactory.eINSTANCE;
 		Identifier id = factory.createIdentifier();
@@ -808,22 +815,46 @@ public class TinyscriptEngine {
 		if (suffix instanceof CallOrPropertyAccessSuffix callOrProp) {
 			// object.property or object.method(...)
 			TSObject object = toObjectForPropertyAccess(base, expr);
-			TSValue property = getProperty(object, evaluatePropertyKey(callOrProp.getProperty()));
+			TSValue key = evaluatePropertyKey(callOrProp.getProperty());
+			TSValue property = getProperty(object, key);
 			if (callOrProp.getCall() == null)
 				return property;
-			return callFunction(expr, property, object, callOrProp.getCall());
+			if (!(property instanceof Function method)) {
+				String type = typeName(object);
+				throw new TinyscriptTypeError(property == TSValue.UNDEFINED
+						? type + " has no method '" + key.asString() + "'"
+						: "'" + key.asString() + "' of " + type + " is " + article(property) + ", not a function", expr);
+			}
+			return processFunctionCall(expr, method, object, callOrProp.getCall().getArguments());
 		}
     	if (suffix instanceof CallSuffix call) {
     		// function(...)
-    		return callFunction(expr, base, null, call);
+    		if (!(base instanceof Function function)) {
+    			throw new TinyscriptTypeError(expr.getExpr() instanceof Reference reference && !reference.isThis()
+    					? "'" + reference.getId().getName() + "' is " + article(base) + ", not a function"
+    					: "Only functions can be called, not " + base.typeOf(), expr);
+    		}
+    		return processFunctionCall(expr, function, null, call.getArguments());
     	}
     	return TSValue.UNDEFINED;
     }
 
-    private TSValue callFunction(CallOrPropertyAccess expr, TSValue function, TSObject thisRef, CallSuffix call) {
-    	if (!(function instanceof Function functionObject))
-    		throw new TinyscriptTypeError("Calls are only allowed for function objects", expr);
-    	return processFunctionCall(expr, functionObject, thisRef, call.getArguments());
+    /**
+     * The name of an object's type for error messages: the name of its constructor,
+     * e.g. String, Array, Map or a constructor function written in tinyscript.
+     */
+    private static String typeName(TSObject object) {
+    	if (object.get("constructor") instanceof Function constructor && constructor.getName() != null && !constructor.getName().isEmpty())
+    		return constructor.getName();
+    	return "Object";
+    }
+
+    // "a number", "an object", "undefined"
+    private static String article(TSValue value) {
+    	String type = value.typeOf();
+    	if (value == TSValue.UNDEFINED || value == TSValue.NULL)
+    		return value.asString();
+    	return (type.startsWith("o") ? "an " : "a ") + type;
     }
 
     /**
@@ -1077,23 +1108,33 @@ public class TinyscriptEngine {
 		return result;
 	}
 	
+	/**
+	 * Attaches the tinyscript call stack to an error, in the innermost function call
+	 * (the callers that the error passes on its way up keep it). Of a deep stack (a deep
+	 * recursion), only the innermost and outermost calls are kept.
+	 */
 	protected void attachStackTrace(TinyscriptRuntimeException e) {
+		if (e.getTinyscriptStacktrace() != null)
+			return;
+		List<ExecutionContext> calls = contextStack.stream()
+				.filter(ctx -> ctx.isFunctionContext() && ctx.currentExpression != null)
+				.toList();
+		int kept = TinyscriptRuntimeException.SHORTENED_STACKTRACE_CALLS;
+		int omitted = calls.size() > 2 * kept ? calls.size() - 2 * kept : 0;
 		List<TSStacktraceElement> stacktrace = new ArrayList<TSStacktraceElement>();
 		if (e.getNode() != null)
 			stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(e.getNode()), 
 					currentContext.name, TinyscriptModelUtil.getLineOfASTNode(e.getNode())));
 		else 
 			stacktrace.add(new TSStacktraceElement(currentContext.name, 0));
-		for (ExecutionContext ctx: contextStack) {
-			if (ctx.isFunctionContext() && ctx.currentExpression != null) {
-				stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(ctx.currentExpression), 
-						ctx.name, TinyscriptModelUtil.getLineOfASTNode(ctx.currentExpression)));
-			}
+		for (int i = 0; i < calls.size(); i++) {
+			if (omitted > 0 && i == kept)
+				i += omitted;
+			ExecutionContext ctx = calls.get(i);
+			stacktrace.add(new TSStacktraceElement(TinyscriptModelUtil.getFilenameOfASTNode(ctx.currentExpression), 
+					ctx.name, TinyscriptModelUtil.getLineOfASTNode(ctx.currentExpression)));
 		}
-			
-		TSStacktraceElement[] result = new TSStacktraceElement[0];
-		result = stacktrace.toArray(result);
-		e.setTinyscriptStacktrace(result);
+		e.setTinyscriptStacktrace(stacktrace.toArray(new TSStacktraceElement[0]), omitted, kept + 1);
 	}
 
 	private void recordStatement() {
