@@ -49,6 +49,10 @@ Next
      - Missing: **spread in calls** (`Math.min(...values)`) — reached for it twice; and **rest elements in array patterns** (`[first, ...rest]`).
      - Missing: a **priority queue** (day 16 has a binary heap of its own); a candidate for a std module.
      - The new error messages helped: `queue[next++]` was answered with "++ and -- are statements, not expressions: write i++; on its own".
+   - Days 21–25 (2026-11-21): all of Advent of Code 2024 is solved; all days checked against a Python reference. Findings:
+     - **Bitwise operators** are the clearest gap: day 22 (12 million XORs) takes 34 s because XOR has to be done with a table of bytes.
+     - Cosmetic: in a stack trace the innermost call is named after the block it is in (`at if(…)`) instead of the function (`valueOf`).
+     - The message for reserved words caught `function movesBetween(keypad, from, to)` right away.
    - The inclusive numeric `for` makes `for (let i = 0, a.length - 1)` the common case — see item 8.
    - Days 5 and 6 added. **Speed** is the next limit: part 2 of day 6 (a simulation, 20–30 million steps for a real input) takes about a minute; on a test grid with 8 million steps, tinyscript needs 19 s, CPython 1.9 s. A profile (JFR) shows the costs of the tree walk: `dispatch` / `execute` with `eClass()` per node, `HashMap` lookups of variables in the execution contexts, string comparisons of operators. Ideas: resolve variables to slots once, dispatch on cached node kinds or precompiled closures, operators as enums.
 

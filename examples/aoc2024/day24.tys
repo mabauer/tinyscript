@@ -1,0 +1,70 @@
+// Advent of Code 2024, day 24: Crossed Wires
+// https://adventofcode.com/2024/day/24
+//
+// Usage: tinyscript day24.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The input lists the initial values of wires ("x00: 1"), then the gates ("x00 AND y00 -> z00")
+const values = new Map();
+const gates = [];
+for (const line : inputLines()) {
+    if (line.includes(": ")) {
+        const [wire, value] = line.split(": ");
+        values.set(wire, Number(value));
+    }
+    else {
+        const [a, op, b, arrow, output] = line.split(" ");
+        gates.push({ a, op, b, output });
+    }
+}
+const gateFor = new Map(gates.map(gate => [gate.output, gate]));
+
+// The value of a wire: its initial value, or the output of its gate (computed once)
+function valueOf(wire) {
+    if (!values.has(wire)) {
+        const { a, op, b } = gateFor.get(wire);
+        const x = valueOf(a);
+        const y = valueOf(b);
+        values.set(wire, op == "AND" ? (x == 1 && y == 1 ? 1 : 0) : op == "OR" ? (x == 1 || y == 1 ? 1 : 0) : (x != y ? 1 : 0));
+    }
+    return values.get(wire);
+}
+
+// Part 1: the number on the wires z00, z01, ... (z00 is the lowest bit)
+const zWires = gates.map(gate => gate.output).filter(wire => wire.startsWith("z")).sort();
+let number = 0;
+for (let i = zWires.length - 1, 0, -1) {
+    number = number * 2 + valueOf(zWires[i]);
+}
+print("Part 1: " + number);
+
+// Part 2: the gates form an adder of the numbers on x and y (a ripple-carry adder), but eight
+// outputs are swapped. In a correct adder:
+// - every z output comes from an XOR gate (except the last one, the final carry)
+// - every XOR gate that does not read x and y writes a z output
+// - the output of an XOR of x and y goes into another XOR (except for bit 0)
+// - the output of an AND goes into an OR (except for bit 0, x00 AND y00)
+// The outputs breaking a rule are the swapped ones.
+const lastZ = zWires[zWires.length - 1];
+const isInput = wire => wire.startsWith("x") || wire.startsWith("y");
+const feedsInto = (wire, op) => gates.some(gate => gate.op == op && (gate.a == wire || gate.b == wire));
+const isFirstBit = gate => gate.a.slice(1) == "00" && isInput(gate.a);
+
+const wrong = new Set();
+for (const gate : gates) {
+    const { a, op, output } = gate;
+    if (output.startsWith("z") && output != lastZ && op != "XOR") {
+        wrong.add(output);
+    }
+    if (op == "XOR" && !isInput(a) && !output.startsWith("z")) {
+        wrong.add(output);
+    }
+    if (op == "XOR" && isInput(a) && !isFirstBit(gate) && !feedsInto(output, "XOR")) {
+        wrong.add(output);
+    }
+    if (op == "AND" && !isFirstBit(gate) && !feedsInto(output, "OR")) {
+        wrong.add(output);
+    }
+}
+print("Part 2: " + wrong.values().sort().join(","));

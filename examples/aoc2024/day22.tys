@@ -1,0 +1,74 @@
+// Advent of Code 2024, day 22: Monkey Market
+// https://adventofcode.com/2024/day/22
+//
+// Usage: tinyscript day22.tys -- input.txt
+
+import inputLines from "./aoc";
+
+const buyers = inputLines().map(Number);
+
+// tinyscript has no bitwise operators. The secret numbers have 24 bits, so XOR is done byte by
+// byte with a table of the XOR of all pairs of bytes, computed once.
+const xorTable = new Array(256 * 256).fill(0);
+for (let a = 0, 255) {
+    for (let b = 0, 255) {
+        let result = 0;
+        let bit = 1;
+        for (let i = 1, 8) {
+            if (Math.floor(a / bit) % 2 != Math.floor(b / bit) % 2) {
+                result += bit;
+            }
+            bit *= 2;
+        }
+        xorTable[a * 256 + b] = result;
+    }
+}
+
+function xor24(x, y) {
+    let result = 0;
+    let factor = 1;
+    for (let i = 1, 3) {
+        result += xorTable[(x % 256) * 256 + (y % 256)] * factor;
+        x = Math.floor(x / 256);
+        y = Math.floor(y / 256);
+        factor *= 256;
+    }
+    return result;
+}
+
+const MODULO = 16777216;   // 2^24: "prune"
+
+// The next secret number: mix in (XOR) the number times 64, divided by 32 and times 2048
+function nextSecret(secret) {
+    secret = xor24(secret, (secret * 64) % MODULO);
+    secret = xor24(secret, Math.floor(secret / 32));
+    return xor24(secret, (secret * 2048) % MODULO);
+}
+
+// Part 1: the 2000th secret number of each buyer, added up
+// Part 2: the price is the last digit of the secret number. The monkey sells at the first time
+// it sees a sequence of four price changes; find the sequence with the most bananas over all
+// buyers. A sequence of four changes (-9 to 9 each) is a number in base 19.
+const SEQUENCES = 19 * 19 * 19 * 19;
+const bananas = new Array(SEQUENCES).fill(0);
+const lastBuyer = new Array(SEQUENCES).fill(-1);   // the last buyer that has seen each sequence
+let sum = 0;
+for (let buyer = 0, buyers.length - 1) {
+    let secret = buyers[buyer];
+    let price = secret % 10;
+    let sequence = 0;
+    for (let step = 1, 2000) {
+        secret = nextSecret(secret);
+        const change = secret % 10 - price;
+        price = secret % 10;
+        sequence = (sequence * 19 + change + 9) % SEQUENCES;   // the last four changes
+        if (step >= 4 && lastBuyer[sequence] != buyer) {
+            lastBuyer[sequence] = buyer;
+            bananas[sequence] += price;
+        }
+    }
+    sum += secret;
+}
+
+print("Part 1: " + sum);
+print("Part 2: " + bananas.reduce((max, count) => Math.max(max, count), 0));
