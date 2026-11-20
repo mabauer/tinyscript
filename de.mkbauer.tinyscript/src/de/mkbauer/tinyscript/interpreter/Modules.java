@@ -13,6 +13,7 @@ import org.eclipse.xtext.validation.CheckMode;
 import org.eclipse.xtext.validation.Issue;
 
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
+import de.mkbauer.tinyscript.runtime.fs.FileSystemModule;
 import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
@@ -22,7 +23,41 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
  */
 public final class Modules {
 
+	/** Standard library modules implemented in Java; their URI is "std:name". */
+	public static final List<String> NATIVE_MODULES = List.of("fs");
+
 	private Modules() {
+	}
+
+	public static boolean isNative(URI module) {
+		return "std".equals(module.scheme());
+	}
+
+	/** The names a native module exports. */
+	public static List<String> nativeExports(URI module) {
+		return switch (module.opaquePart()) {
+			case "fs" -> FileSystemModule.EXPORTS;
+			default -> throw new IllegalArgumentException("Not a native module: " + module);
+		};
+	}
+
+	/**
+	 * Creates the exports of a native module.
+	 *
+	 * @throws TinyscriptUnsupportedOperationError if the module is not available sandboxed
+	 */
+	public static ModuleExports createNative(URI module, TinyscriptEngine engine, boolean sandboxed) {
+		if (sandboxed)
+			throw new TinyscriptUnsupportedOperationError(module + " is not available when running sandboxed");
+		return switch (module.opaquePart()) {
+			case "fs" -> FileSystemModule.create(engine);
+			default -> throw new IllegalArgumentException("Not a native module: " + module);
+		};
+	}
+
+	/** The file name of a module, or the name of a native module ("std:fs"). */
+	private static String name(URI module) {
+		return module.lastSegment() != null ? module.lastSegment() : module.toString();
 	}
 
 	/**
@@ -59,12 +94,12 @@ public final class Modules {
 	 */
 	public static TinyscriptReferenceError cyclicImport(Deque<URI> loading, URI module) {
 		List<String> chain = new ArrayList<>();
-		loading.descendingIterator().forEachRemaining(uri -> chain.add(uri.lastSegment()));
-		chain.add(module.lastSegment());
+		loading.descendingIterator().forEachRemaining(uri -> chain.add(name(uri)));
+		chain.add(name(module));
 		return new TinyscriptReferenceError("Cyclic import: " + String.join(" → ", chain));
 	}
 
 	public static String displayName(URI module) {
-		return "\"" + module.lastSegment() + "\"";
+		return "\"" + name(module) + "\"";
 	}
 }

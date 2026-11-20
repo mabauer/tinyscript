@@ -50,6 +50,14 @@ public class ExecutionErrorsTests {
 	}
 
 	@Test
+	public void testStdFsIsNotAvailable() {
+		TinyscriptExecutionResult result = executionService.executeScriptFromString(
+				"import * as fs from \"std:fs\";\nprint(fs.readFile(\"/etc/passwd\"));");
+		assertTrue(result.getErrorMessage().contains("std:fs is not available when running sandboxed"), result.getErrorMessage());
+		assertEquals(1, result.getErrorLine());
+	}
+
+	@Test
 	public void testFilesCannotBeImported() {
 		TinyscriptExecutionResult result = executionService.executeScriptFromString(
 				"import x from \"./secret\";\nprint(x);");

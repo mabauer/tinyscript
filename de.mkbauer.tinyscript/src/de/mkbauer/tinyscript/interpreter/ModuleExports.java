@@ -12,7 +12,7 @@ public class ModuleExports extends TSObject {
 
 	private final boolean frozen;
 
-	ModuleExports(TinyscriptEngine engine, String moduleName, Map<String, TSValue> exports) {
+	public ModuleExports(TinyscriptEngine engine, String moduleName, Map<String, TSValue> exports) {
 		super(engine, engine.getDefaultPrototype());
 		this.moduleName = moduleName;
 		exports.forEach(super::put);
