@@ -57,11 +57,12 @@ public class NodeJsRunner {
      * and returns the standard output as a string.
      *
      * @param jsCode JavaScript source to execute
+     * @param args the arguments of the script (process.argv after the script)
      * @return everything written to stdout
      * @throws AssertionError if node exits with a non-zero status; the error
      *     message includes the node stderr output so the failure is actionable
      */
-    public static String run(String jsCode) {
+    public static String run(String jsCode, String... args) {
         File tmpFile = null;
         try {
             tmpFile = Files.createTempFile("tinyscript_test_", ".js").toFile();
@@ -72,6 +73,8 @@ public class NodeJsRunner {
 
             CommandLine cmd = new CommandLine("node");
             cmd.addArgument(tmpFile.getAbsolutePath());
+            for (String arg : args)
+                cmd.addArgument(arg, false);
 
             DefaultExecutor executor = DefaultExecutor.builder().get();
             executor.setStreamHandler(new PumpStreamHandler(stdout, stderr));

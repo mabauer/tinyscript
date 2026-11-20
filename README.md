@@ -44,6 +44,8 @@ You can play with it online in your browser [here](https://tinyscript.mkbauer.de
 
 * [Modules](de.mkbauer.tinyscript.webdemo/frontend/public/modules.tys): `import area, unit from "./geometry";`, and a small standard library (`import range, sum from "std:array";`); the web demo can import only the standard library
 
+Larger examples: [Advent of Code 2024](examples/aoc2024), solutions of the first days, written to be read as examples of tinyscript.
+
 Around Christmas time 2015, I've designed *tinyscript* and implemented an interpreter for it in Java for a couple of reasons:
 
 - I believe every software engineer should at some point design and implement his own language just for the fun of it. I wanted to go a bit further than the usual toy examples taught in compiler construction classes, so I came up with *tinyscript*.

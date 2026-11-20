@@ -1,0 +1,36 @@
+// Advent of Code 2024, day 2: Red-Nosed Reports
+// https://adventofcode.com/2024/day/2
+//
+// Usage: tinyscript day02.tys -- input.txt
+
+import inputLines, numbers from "./aoc";
+
+// A report is safe if its levels only increase or only decrease,
+// by at least 1 and at most 3 from one level to the next
+function isSafe(levels) {
+    if (levels.length < 2) {
+        return true;
+    }
+    var direction = levels[1] > levels[0] ? 1 : -1;
+    for (var i = 1, levels.length - 1) {
+        var step = (levels[i] - levels[i - 1]) * direction;
+        if (step < 1 || step > 3) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Part 2: the Problem Dampener tolerates a single bad level,
+// so a report is also safe if it is safe without one of its levels
+function isSafeWithDampener(levels) {
+    return isSafe(levels) || levels.some((level, i) => isSafe(withoutLevel(levels, i)));
+}
+
+function withoutLevel(levels, index) {
+    return levels.filter((level, i) => i != index);
+}
+
+var reports = inputLines().map(numbers);
+print("Part 1: " + reports.filter(isSafe).length);
+print("Part 2: " + reports.filter(isSafeWithDampener).length);

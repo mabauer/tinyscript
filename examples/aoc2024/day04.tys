@@ -1,0 +1,71 @@
+// Advent of Code 2024, day 4: Ceres Search
+// https://adventofcode.com/2024/day/4
+//
+// Usage: tinyscript day04.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The eight directions a word can be written in: right, left, down, up and diagonally
+var directions = [
+    { row: 0, col: 1 }, { row: 0, col: -1 }, { row: 1, col: 0 }, { row: -1, col: 0 },
+    { row: 1, col: 1 }, { row: 1, col: -1 }, { row: -1, col: 1 }, { row: -1, col: -1 }
+];
+
+// The letter at a position of the grid (an array of lines), "" outside the grid
+function letterAt(grid, row, col) {
+    if (row < 0 || row >= grid.length || col < 0 || col >= grid[row].length) {
+        return "";
+    }
+    return grid[row][col];
+}
+
+// Whether word starts at a position and goes on in a direction
+function isWordAt(grid, word, row, col, direction) {
+    for (var i = 0, word.length - 1) {
+        if (letterAt(grid, row + i * direction.row, col + i * direction.col) != word[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Part 1: how often XMAS appears, in any direction
+function countXmas(grid) {
+    var count = 0;
+    for (var row = 0, grid.length - 1) {
+        for (var col = 0, grid[row].length - 1) {
+            count += directions.filter(direction => isWordAt(grid, "XMAS", row, col, direction)).length;
+        }
+    }
+    return count;
+}
+
+// Part 2: an X-MAS is an A with MAS (or SAM) on both diagonals through it
+function isCrossedMas(grid, row, col) {
+    if (letterAt(grid, row, col) != "A") {
+        return false;
+    }
+    var diagonal = letterAt(grid, row - 1, col - 1) + letterAt(grid, row + 1, col + 1);
+    var antidiagonal = letterAt(grid, row - 1, col + 1) + letterAt(grid, row + 1, col - 1);
+    return isMS(diagonal) && isMS(antidiagonal);
+}
+
+function isMS(ends) {
+    return ends == "MS" || ends == "SM";
+}
+
+function countCrossedMas(grid) {
+    var count = 0;
+    for (var row = 0, grid.length - 1) {
+        for (var col = 0, grid[row].length - 1) {
+            if (isCrossedMas(grid, row, col)) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+var grid = inputLines();
+print("Part 1: " + countXmas(grid));
+print("Part 2: " + countCrossedMas(grid));
