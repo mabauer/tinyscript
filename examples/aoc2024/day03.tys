@@ -15,7 +15,7 @@ function startsAt(text, pos, word) {
 
 // The number of digits (1 to 3) at position pos, 0 if there is no digit
 function digitsAt(text, pos) {
-    var count = 0;
+    let count = 0;
     while (count < 3 && isDigit(text[pos + count])) {
         count++;
     }
@@ -28,13 +28,13 @@ function multiplicationAt(text, pos) {
     if (!startsAt(text, pos, "mul(")) {
         return null;
     }
-    var x = pos + 4;
-    var xDigits = digitsAt(text, x);
+    const x = pos + 4;
+    const xDigits = digitsAt(text, x);
     if (xDigits == 0 || text[x + xDigits] != ",") {
         return null;
     }
-    var y = x + xDigits + 1;
-    var yDigits = digitsAt(text, y);
+    const y = x + xDigits + 1;
+    const yDigits = digitsAt(text, y);
     if (yDigits == 0 || text[y + yDigits] != ")") {
         return null;
     }
@@ -44,16 +44,16 @@ function multiplicationAt(text, pos) {
 // Adds up the results of all multiplications; with conditionals, do() and don't()
 // enable and disable the multiplications that follow
 function sumOfMultiplications(memory, withConditionals) {
-    var sum = 0;
-    var enabled = true;
-    for (var pos = 0, memory.length - 1) {
+    let sum = 0;
+    let enabled = true;
+    for (let pos = 0, memory.length - 1) {
         if (withConditionals && startsAt(memory, pos, "do()")) {
             enabled = true;
         }
         else if (withConditionals && startsAt(memory, pos, "don't()")) {
             enabled = false;
         }
-        var product = multiplicationAt(memory, pos);
+        const product = multiplicationAt(memory, pos);
         if (enabled && product != null) {
             sum += product;
         }
@@ -61,6 +61,6 @@ function sumOfMultiplications(memory, withConditionals) {
     return sum;
 }
 
-var memory = inputText();
+const memory = inputText();
 print("Part 1: " + sumOfMultiplications(memory, false));
 print("Part 2: " + sumOfMultiplications(memory, true));

@@ -38,7 +38,7 @@ Tinyscript is a small JavaScript-like scripting language. It is intentionally mi
 Statements end with `;`. Unlike JavaScript's automatic semicolon insertion, Tinyscript follows Java-like rules: **the semicolon is required** at the end of expression statements, variable declarations, and return statements.
 
 ```
-var x = 42;
+const x = 42;
 print(x);
 return x;
 ```
@@ -93,9 +93,10 @@ typeof 1 + "x"  // "numberx": typeof binds tighter than binary operators
 Variables must be declared before use. Tinyscript runs in strict mode — using an undeclared identifier throws a `ReferenceError`.
 
 ```
-var x;          // declared, value is undefined
-var y = 10;
-var a = 1, b = 2, c = a + b;   // multiple declarations in one statement
+let x;          // declared, value is undefined
+let y = 10;
+let a = 1, b = 2, c = a + b;   // multiple declarations in one statement
+const limit = 100;             // a constant (see below)
 ```
 
 `let` is a synonym for `var`. Both are block-scoped like Javascript's `let` (there is no function-scoped `var` as in Javascript), so `let` is the recommended spelling.
@@ -115,12 +116,12 @@ for (const x : [1, 2, 3]) { ... }
 A declaration can take apart an array or an object; only flat patterns of names are supported (no nesting, defaults, renaming or `...rest`):
 
 ```
-var [quotient, remainder] = divide(17, 5);   // the first elements of an array
-var { row, col } = position;                 // properties of an object
-for (var [key, value] : map) { ... }         // in an iterable for loop
+const [quotient, remainder] = divide(17, 5);   // the first elements of an array
+const { row, col } = position;                 // properties of an object
+for (const [key, value] : map) { ... }         // in an iterable for loop
 ```
 
-Stricter than Javascript, an array pattern needs an array with at least as many elements (`var [a, b] = [1]` is a `TypeError`; more elements are fine). An object pattern needs an object (or a string); like `o.x`, a missing property gives `undefined`.
+Stricter than Javascript, an array pattern needs an array with at least as many elements (`const [a, b] = [1]` is a `TypeError`; more elements are fine). An object pattern needs an object (or a string); like `o.x`, a missing property gives `undefined`.
 
 ### Block scope
 
@@ -128,7 +129,7 @@ Blocks create real scopes. A variable declared inside a block is not visible out
 
 ```
 {
-    var inner = "only visible here";
+    const inner = "only visible here";
 }
 // inner is not accessible here — ReferenceError
 ```
@@ -163,7 +164,7 @@ Operators do not convert their operands: `-`, `*`, `/`, `%` and unary `-` need n
 With a string, `+` converts the other value to a string: `undefined` and `null` as `"undefined"` / `"null"`, an object with a `toString` method written in tinyscript by calling it, other values in their usual form. tinyscript does not support `valueOf` (it would convert objects implicitly in operators).
 
 ```
-var arr = ["a", "b"];
+let arr = ["a", "b"];
 arr = arr + ["c", "d"];      // ["a", "b", "c", "d"]
 print("n = " + 42);          // n = 42
 ```
@@ -215,7 +216,7 @@ counts[c]--;
 ### Conditional operator
 
 ```
-var sign = x > 0 ? 1 : x < 0 ? -1 : 0;
+const sign = x > 0 ? 1 : x < 0 ? -1 : 0;
 ```
 
 `cond ? a : b` evaluates `a` if `cond` is true, otherwise `b`; the condition follows the rules for conditions. Unlike Javascript, `b` cannot be an assignment: write `c ? a : (b = 1)`.
@@ -252,9 +253,11 @@ assert fibonacci(7) == 21;
 ### Variable declaration
 
 ```
-var name;
-var name = expression;
-var a = 1, b = 2, c = 3;
+let name;
+let name = expression;
+let a = 1, b = 2, c = 3;
+const name = expression;
+var name = expression;     // the same as let
 ```
 
 ### Expression statement
@@ -273,7 +276,7 @@ A block groups statements and introduces a new scope:
 
 ```
 {
-    var local = 1;
+    const local = 1;
     print(local);
 }
 ```
@@ -313,23 +316,23 @@ if (x < 0) {
 Tinyscript's numeric `for` loop is inspired by Lua. It counts an integer variable from `start` to `stop` (inclusive):
 
 ```
-for (var i = start, stop) { ... }
-for (var i = start, stop, step) { ... }
+for (let i = start, stop) { ... }
+for (let i = start, stop, step) { ... }
 ```
 
-- The loop variable is declared with `var` or can be an existing variable reference.
+- The loop variable is declared with `let` (or `const`, `var`) or can be an existing variable reference.
 - `start`, `stop`, and optional `step` are evaluated once before the loop begins.
 - With a positive `step`, the condition is `i <= stop`. With a negative `step`, the condition is `i >= stop`.
 - The loop variable is incremented by `step` (default `1`) after each iteration.
 
 ```
 // Prints 0 1 2 3 4 5
-for (var i = 0, 5) {
+for (let i = 0, 5) {
     print(i);
 }
 
 // Count down: prints 10 8 6 4 2
-for (var i = 10, 1, -2) {
+for (let i = 10, 1, -2) {
     print(i);
 }
 ```
@@ -339,15 +342,15 @@ for (var i = 10, 1, -2) {
 Iterates over the elements of an array (values, not indices), the characters of a string, the values of a `Set` or the entries `[key, value]` of a `Map`; anything else is a `TypeError`:
 
 ```
-for (var element : array) { ... }
-for (var c : "abc") { ... }
+for (const element : array) { ... }
+for (const c : "abc") { ... }
 ```
 
 A loop over an array sees elements that its body appends; a loop over a string, `Set` or `Map` goes through the elements it had when the loop started.
 
 ```
-var fruits = ["apple", "banana", "cherry"];
-for (var fruit : fruits) {
+const fruits = ["apple", "banana", "cherry"];
+for (const fruit : fruits) {
     print(fruit);   // apple, then banana, then cherry
 }
 ```
@@ -355,8 +358,8 @@ for (var fruit : fruits) {
 To iterate over object keys, combine with `Object.keys()`:
 
 ```
-var person = { name: "Alice", age: 30 };
-for (var key : Object.keys(person)) {
+const person = { name: "Alice", age: 30 };
+for (const key : Object.keys(person)) {
     print(key + " = " + person[key]);
 }
 ```
@@ -366,7 +369,7 @@ for (var key : Object.keys(person)) {
 Runs the block as long as the condition is `true` (see Conditions). Braces are required:
 
 ```
-var i = 0;
+let i = 0;
 while (i < 3) {
     print(i);
     i = i + 1;
@@ -380,7 +383,7 @@ In sandboxed mode every iteration counts against the statement limit, so even `w
 Exits the innermost enclosing `for` or `while` loop. `break` is only allowed inside a loop of the same function (a function defined inside a loop cannot break out of it):
 
 ```
-for (var i = 0, 100) {
+for (let i = 0, 100) {
     if (i == 10) {
         break;
     }
@@ -393,7 +396,7 @@ for (var i = 0, 100) {
 Skips the rest of the current iteration of the innermost enclosing `for` or `while` loop and goes on with the next one. Like `break`, it is only allowed inside a loop of the same function:
 
 ```
-for (var i = 1, 10) {
+for (let i = 1, 10) {
     if (i % 2 == 0) {
         continue;
     }
@@ -452,12 +455,12 @@ print(add(3, 4));   // 7
 Functions can be assigned to variables or passed as values. An optional name can be given for recursion:
 
 ```
-var square = function(x) {
+const square = function(x) {
     return x * x;
 };
 
 // Named function expression (name is only in scope inside the function body)
-var factorial = function fact(n) {
+const factorial = function fact(n) {
     if (n <= 1) { return 1; }
     return n * fact(n - 1);
 };
@@ -470,27 +473,27 @@ Arrow functions provide a concise syntax and capture `this` from their surroundi
 **Expression body** (implicit return):
 
 ```
-var double = x => x * 2;
-var add = (a, b) => a + b;
+const double = x => x * 2;
+const add = (a, b) => a + b;
 ```
 
 **Block body** (explicit `return` required; without it, the result is `undefined`):
 
 ```
-var greet = name => {
-    var msg = "Hello, " + name;
+const greet = name => {
+    let msg = "Hello, " + name;
     return msg;
 };
 ```
 
-As in Javascript, a `{` after `=>` always starts a block body; to return an object, put it in parentheses: `x => ({ value: x })`. The body can be another arrow function: `var add = x => y => x + y;`.
+As in Javascript, a `{` after `=>` always starts a block body; to return an object, put it in parentheses: `x => ({ value: x })`. The body can be another arrow function: `const add = x => y => x + y;`.
 
 Parentheses around parameters are optional for a single parameter, required for zero or multiple:
 
 ```
-var noArgs = () => 42;
-var oneArg = x => x + 1;
-var twoArgs = (x, y) => x + y;
+const noArgs = () => 42;
+const oneArg = x => x + 1;
+const twoArgs = (x, y) => x + y;
 ```
 
 ### Rest parameters
@@ -499,8 +502,8 @@ The last parameter can be a rest parameter, collecting all extra arguments into 
 
 ```
 function sum(...nums) {
-    var total = 0;
-    for (var n : nums) {
+    let total = 0;
+    for (const n : nums) {
         total = total + n;
     }
     return total;
@@ -527,7 +530,7 @@ function Point(x, y) {
     this.y = y;
 }
 
-var p = new Point(3, 4);
+const p = new Point(3, 4);
 print(p.x);   // 3
 ```
 
@@ -547,7 +550,7 @@ These call `fn` with an explicit `this` value. `.apply` takes the arguments as a
 ### Object literal
 
 ```
-var person = {
+const person = {
     name: "Alice",
     age: 30,
     greet: function() {
@@ -569,7 +572,7 @@ person["na" + "me"]   // any string expression works
 **Optional chaining:** `a?.b`, `a?.[key]` and `a?.m()` are `undefined` if `a` is `null` or `undefined`, instead of a `TypeError`. As in Javascript, the rest of the chain is skipped: `a?.b.c` is `undefined` if `a` is `null` (`.c` is not evaluated). An optional chain cannot be assigned to (`a?.b = 1` is an error).
 
 ```
-var list = { value: 1, next: null };
+const list = { value: 1, next: null };
 print(list.next?.value ?? "end");   // end
 ```
 
@@ -601,9 +604,9 @@ Property deletion is not directly supported. Setting a property to `undefined` e
 ### Array literal
 
 ```
-var empty = [];
-var nums = [1, 2, 3];
-var mixed = ["hello", 42, true, null];
+const empty = [];
+const nums = [1, 2, 3];
+const mixed = ["hello", 42, true, null];
 ```
 
 ### Element access and `length`
@@ -651,19 +654,19 @@ Without a comparison function, `sort` only sorts strings; unlike Javascript, whi
 `new Array(n)` creates an array of `n` elements `undefined` (fill it with `fill`); `new Array(a, b, ...)` or `new Array("x")` create an array of these elements. Unlike Javascript, `new Array(n)` has no "holes": `map` and `forEach` see all `n` elements.
 
 ```
-var numbers = [1, 5, 4, 2, 9, 7];
+const numbers = [1, 5, 4, 2, 9, 7];
 
-var squares = numbers.map(x => x * x);
+const squares = numbers.map(x => x * x);
 print(squares);   // [1, 25, 16, 4, 81, 49]
 
-var odds = numbers.filter(x => x % 2 == 1);
+const odds = numbers.filter(x => x % 2 == 1);
 print(odds);      // [1, 5, 9, 7]
 
 print(numbers.join(", "));   // "1, 5, 4, 2, 9, 7"
 print(numbers.reduce((sum, x) => sum + x, 0));   // 28
 print(numbers.slice().sort((a, b) => a - b));     // [1, 2, 4, 5, 7, 9]
 
-var grid = new Array(3).fill(0).map(() => new Array(3).fill("."));
+const grid = new Array(3).fill(0).map(() => new Array(3).fill("."));
 ```
 
 ### Array concatenation with `+`
@@ -671,9 +674,9 @@ var grid = new Array(3).fill(0).map(() => new Array(3).fill("."));
 The `+` operator has array-specific semantics:
 
 ```
-var a = [1, 2];
-var c = a + [3, 4];    // [1, 2, 3, 4] — concatenate arrays
-var s = a + "!";       // "[1, 2]!"    — with a string: string concatenation
+const a = [1, 2];
+const c = a + [3, 4];    // [1, 2, 3, 4] — concatenate arrays
+const s = a + "!";       // "[1, 2]!"    — with a string: string concatenation
 // a + 3 is a TypeError
 ```
 
@@ -687,8 +690,8 @@ Array.isArray("hello")     // false
 ### Iterating
 
 ```
-for (var x : array) { ... }          // iterates values
-for (var i = 0, array.length) { ... } // numeric index loop (if you track length)
+for (const x : array) { ... }          // iterates values
+for (let i = 0, array.length) { ... } // numeric index loop (if you track length)
 ```
 
 ---
@@ -720,7 +723,7 @@ Dog.prototype.speak = function() {
     print(this.name + " barks.");
 };
 
-var d = new Dog("Rex");
+const d = new Dog("Rex");
 d.speak();                     // "Rex barks."
 print(d instanceof Dog);       // true
 print(d instanceof Animal);    // true
@@ -731,8 +734,8 @@ print(d instanceof Animal);    // true
 Creates a new object with `proto` as its prototype:
 
 ```
-var base = { greet: function() { print("Hello!"); } };
-var child = Object.create(base);
+const base = { greet: function() { print("Hello!"); } };
+const child = Object.create(base);
 child.greet();   // "Hello!" — inherited from base
 ```
 
@@ -741,27 +744,27 @@ child.greet();   // "Hello!" — inherited from base
 Objects themselves can serve as "classes". The `oo_with_proto.tys` example demonstrates this:
 
 ```
-var Proto = {
+const Proto = {
     _new: function(...args) {
-        var instance = Object.create(this);
+        const instance = Object.create(this);
         if (instance.constructor) {
             instance.constructor.apply(instance, args);
         }
         return instance;
     },
     extend: function(subProps) {
-        var subProto = Object.create(this);
+        const subProto = Object.create(this);
         // copy subProps properties to subProto ...
         return subProto;
     }
 };
 
-var Person = Proto.extend({
+const Person = Proto.extend({
     constructor: function(name) { this.name = name; },
     describe: function() { return "Person called " + this.name; }
 });
 
-var Employee = Person.extend({
+const Employee = Person.extend({
     constructor: function(name, title) {
         Employee.super.constructor.call(this, name);
         this.title = title;
@@ -771,7 +774,7 @@ var Employee = Person.extend({
     }
 });
 
-var jane = Employee._new("Jane", "CTO");
+const jane = Employee._new("Jane", "CTO");
 print(jane.describe());   // "Person called Jane (CTO)"
 ```
 
@@ -801,14 +804,14 @@ A closure is a function that retains access to variables from the scope in which
 
 ```
 function makeCounter() {
-    var count = 0;
+    let count = 0;
     return function() {
         count = count + 1;
         return count;
     };
 }
 
-var counter = makeCounter();
+const counter = makeCounter();
 print(counter());   // 1
 print(counter());   // 2
 print(counter());   // 3
@@ -818,7 +821,7 @@ Each call to `makeCounter()` creates a fresh `count` variable — closures from 
 
 ```
 function createCounter() {
-    var value = 0;
+    let value = 0;
     return {
         add: function(x) { value = value + x; },
         sub: function(x) { value = value - x; },
@@ -826,8 +829,8 @@ function createCounter() {
     };
 }
 
-var c1 = createCounter();
-var c2 = createCounter();
+const c1 = createCounter();
+const c2 = createCounter();
 
 c1.add(14);
 c2.add(32);
@@ -840,10 +843,10 @@ print(c2.val());   // 32
 Immediately-invoked function expressions (IIFEs) can simulate modules:
 
 ```
-var weekDay;
+let weekDay;
 
 (function(exports) {
-    var names = ["Sunday", "Monday", "Tuesday", "Wednesday",
+    const names = ["Sunday", "Monday", "Tuesday", "Wednesday",
                  "Thursday", "Friday", "Saturday"];
     exports.name = function(number) { return names[number]; };
     exports.number = function(name) { return names.indexOf(name); };
@@ -916,8 +919,8 @@ print(parseInt("ff", 16));    // 255
 | `obj.hasOwnProperty(key)` | `true` if `key` is an own (non-inherited) property |
 
 ```
-var proto = { greet: function() { print("hi"); } };
-var obj = Object.create(proto);
+const proto = { greet: function() { print("hi"); } };
+const obj = Object.create(proto);
 obj.name = "Alice";
 
 print(Object.keys(obj));             // ["name"]
@@ -957,7 +960,7 @@ All builtins (methods of strings, arrays, `Map`, `Set`, `Math`, …) understand 
 `String.fromCharCode(c1, c2, ...)` builds a string from UTF-16 codes.
 
 ```
-var s = "Hello World";
+const s = "Hello World";
 print(s.substring(0, 5));   // "Hello"
 print(s.indexOf("World"));  // 6
 print(s.charAt(0));         // "H"
@@ -1003,13 +1006,13 @@ As in Javascript, keys of a `Map` and values of a `Set` can be of any type: numb
 Differences from Javascript: `keys()`, `values()` and `entries()` return arrays, not iterators, so `m.keys().length`, `m.keys().sort()` etc. work. A `Map` or `Set` has no other properties: `m[key] = value` (instead of `m.set(key, value)`) is a `TypeError`.
 
 ```
-var counts = new Map();
-for (var word : "a b a".split(" ")) {
+const counts = new Map();
+for (const word : "a b a".split(" ")) {
     counts.set(word, (counts.has(word) ? counts.get(word) : 0) + 1);
 }
 print(counts.get("a"));      // 2
 
-var visited = new Set();
+const visited = new Set();
 visited.add(1 + "," + 2);
 print(visited.has("1,2"));   // true
 ```
@@ -1029,11 +1032,11 @@ print(visited.has("1,2"));   // true
 | `System.args` | The arguments of the script, an array of strings: in the REPL, the arguments after `--` (`tinyscript day1.tys -- input.txt`); otherwise empty |
 
 ```
-var start = System.currentTimeMillis();
+const start = System.currentTimeMillis();
 // ... do work ...
 print(System.currentTimeMillis() - start);   // elapsed ms
 
-var file = System.args.length > 0 ? System.args[0] : "input.txt";
+const file = System.args.length > 0 ? System.args[0] : "input.txt";
 ```
 
 ### Errors
@@ -1058,10 +1061,10 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 
 | Topic | JavaScript | Tinyscript |
 |---|---|---|
-| **Semicolons** | Optional (ASI) | Required after expression statements, `var`, `return` |
+| **Semicolons** | Optional (ASI) | Required after expression statements, declarations, `return` |
 | **Block scope** | `var` is function-scoped; `let`/`const` are block-scoped | All variables are block-scoped; `var` is a synonym of `let` |
 | **Control structure bodies** | Braces optional for single statements | Braces always required |
-| **Numeric `for` loop** | `for (let i = 0; i < n; i++)` | `for (var i = 0, n)` (Lua-style) |
+| **Numeric `for` loop** | `for (let i = 0; i < n; i++)` | `for (let i = 0, n)` (Lua-style) |
 | **Iterable `for` loop** | `for (const x of array)` | `for (const x : array)` |
 | **`for...in`** | Iterates over keys | Not supported (use `for...of` style with `:`) |
 | **Array `+`** | String concatenation | Concatenation of two arrays; an array plus a number etc. is a `TypeError` |
@@ -1086,7 +1089,7 @@ Understanding where Tinyscript diverges from JavaScript is important both for wr
 - **Regular expressions** — no regex literals or `RegExp`
 - **`try` / `catch`** — errors cannot be caught; `throw` ends the script
 - **Template literals** — no backtick strings
-- **Destructuring** beyond flat patterns in `var` and `for` — no nesting, defaults, renaming, `...rest`, or patterns in parameters and assignments
+- **Destructuring** beyond flat patterns in declarations and `for` — no nesting, defaults, renaming, `...rest`, or patterns in parameters and assignments
 - **Spread operator** — no `...array` in call sites
 - **`delete`** operator
 - **`switch` statement**
@@ -1104,8 +1107,8 @@ A file is a module. Top-level functions and variables marked with `export` can b
 ```
 // geometry.tys
 export function area(r) { return Math.PI * r * r; }
-export var unit = "cm";
-var helper = 2;                          // not exported: private to the module
+export const unit = "cm";
+const helper = 2;                          // not exported: private to the module
 
 // main.tys
 import area, unit from "./geometry";     // named imports
@@ -1142,7 +1145,7 @@ print(area(2), unit, geo.area(1));
     ```
     import * as fs from "std:fs";
     if (fs.exists("todo.txt")) {
-        for (var line : fs.readLines("todo.txt")) { print("- " + line); }
+        for (const line : fs.readLines("todo.txt")) { print("- " + line); }
     }
     ```
 - The sandboxed web demo can import only `std:` modules, no files, and not `std:fs`. The Javascript generator bundles a program and its modules into one script: each module becomes an immediately invoked function (so it runs once and its private names stay private) that returns its frozen exports.
@@ -1152,8 +1155,8 @@ print(area(2), unit, geo.area(1));
 ### Keywords
 
 ```
-var  let  function  return  if  else  for  while  break
-new  this  null  true  false  typeof  instanceof  assert
+let  const  var  function  return  if  else  for  while  break  continue  throw
+new  this  null  true  false  typeof  instanceof  assert  import  export  from  as
 ```
 
 ### Literals
@@ -1177,7 +1180,7 @@ function Circle(r) {
     this.radius = r;
     this.area = function() { return Math.PI * r * r; };
 }
-var c = new Circle(5);
+const c = new Circle(5);
 print(c.area());
 
 // Inheritance
@@ -1190,12 +1193,12 @@ Box.prototype = Object.create(Shape.prototype);
 
 // Counter via closure
 function makeCounter() {
-    var n = 0;
+    let n = 0;
     return { inc: function() { n = n + 1; }, get: function() { return n; } };
 }
 
 // Functional array processing
-var evens = [1,2,3,4,5,6].filter(x => x % 2 == 0);
-var doubled = evens.map(x => x * 2);
+const evens = [1,2,3,4,5,6].filter(x => x % 2 == 0);
+const doubled = evens.map(x => x * 2);
 print(doubled.join(", "));   // "4, 8, 12"
 ```

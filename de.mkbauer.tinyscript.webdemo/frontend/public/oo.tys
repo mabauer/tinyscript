@@ -9,13 +9,13 @@ function createObject(proto) {
 }
 
 // Helper function because console.log(s) is not yet implemented
-var console = {};
+const console = {};
 console.log = function(s) {
     print(s);
 };
 
 // Define the Person constructor
-var Person = function(firstName) {
+const Person = function(firstName) {
 	this.firstName = firstName;
 };
 
@@ -61,7 +61,7 @@ Student.prototype.sayGoodBye = function() {
 };
 
 // Example usage:
-var student1 = new Student("Janet", "Applied Physics");
+const student1 = new Student("Janet", "Applied Physics");
 student1.sayHello(); // "Hello, I'm Janet. I'm studying Applied Physics."
 student1.walk(); // "I am walking!"
 student1.sayGoodBye(); // "Goodbye!"

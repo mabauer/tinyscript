@@ -11,9 +11,9 @@ function isSafe(levels) {
     if (levels.length < 2) {
         return true;
     }
-    var direction = levels[1] > levels[0] ? 1 : -1;
-    for (var i = 1, levels.length - 1) {
-        var step = (levels[i] - levels[i - 1]) * direction;
+    const direction = levels[1] > levels[0] ? 1 : -1;
+    for (let i = 1, levels.length - 1) {
+        const step = (levels[i] - levels[i - 1]) * direction;
         if (step < 1 || step > 3) {
             return false;
         }
@@ -31,6 +31,6 @@ function withoutLevel(levels, index) {
     return levels.filter((level, i) => i != index);
 }
 
-var reports = inputLines().map(numbers);
+const reports = inputLines().map(numbers);
 print("Part 1: " + reports.filter(isSafe).length);
 print("Part 2: " + reports.filter(isSafeWithDampener).length);

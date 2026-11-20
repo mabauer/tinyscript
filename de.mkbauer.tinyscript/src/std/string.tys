@@ -13,9 +13,9 @@ export function isDigit(c) {
 // The words of text, separated by any amount of whitespace:
 // words(" 3   4\n") is ["3", "4"] (Javascript: text.trim().split(/\s+/))
 export function words(text) {
-	var result = [];
-	var word = "";
-	for (var c : text) {
+	const result = [];
+	let word = "";
+	for (const c : text) {
 		if (!isWhitespace(c)) {
 			word += c;
 		}

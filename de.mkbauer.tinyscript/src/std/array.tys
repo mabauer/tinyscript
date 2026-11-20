@@ -2,8 +2,8 @@
 
 // The array [0, 1, ..., n - 1]
 export function range(n) {
-	var result = [];
-	for (var i = 0, n - 1) {
+	const result = [];
+	for (let i = 0, n - 1) {
 		result.push(i);
 	}
 	return result;
@@ -11,8 +11,8 @@ export function range(n) {
 
 // The sum of the numbers in arr
 export function sum(arr) {
-	var result = 0;
-	for (var x : arr) {
+	let result = 0;
+	for (const x : arr) {
 		result = result + x;
 	}
 	return result;
@@ -25,8 +25,8 @@ export function contains(arr, x) {
 
 // A new array with the elements of arr in reverse order
 export function reverse(arr) {
-	var result = [];
-	for (var x : arr) {
+	const result = [];
+	for (const x : arr) {
 		result.unshift(x);
 	}
 	return result;

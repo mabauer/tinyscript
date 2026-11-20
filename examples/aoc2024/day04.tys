@@ -6,7 +6,7 @@
 import inputLines from "./aoc";
 
 // The eight directions a word can be written in: right, left, down, up and diagonally
-var directions = [
+const directions = [
     { row: 0, col: 1 }, { row: 0, col: -1 }, { row: 1, col: 0 }, { row: -1, col: 0 },
     { row: 1, col: 1 }, { row: 1, col: -1 }, { row: -1, col: 1 }, { row: -1, col: -1 }
 ];
@@ -21,7 +21,7 @@ function letterAt(grid, row, col) {
 
 // Whether word starts at a position and goes on in a direction
 function isWordAt(grid, word, row, col, direction) {
-    for (var i = 0, word.length - 1) {
+    for (let i = 0, word.length - 1) {
         if (letterAt(grid, row + i * direction.row, col + i * direction.col) != word[i]) {
             return false;
         }
@@ -31,9 +31,9 @@ function isWordAt(grid, word, row, col, direction) {
 
 // Part 1: how often XMAS appears, in any direction
 function countXmas(grid) {
-    var count = 0;
-    for (var row = 0, grid.length - 1) {
-        for (var col = 0, grid[row].length - 1) {
+    let count = 0;
+    for (let row = 0, grid.length - 1) {
+        for (let col = 0, grid[row].length - 1) {
             count += directions.filter(direction => isWordAt(grid, "XMAS", row, col, direction)).length;
         }
     }
@@ -45,8 +45,8 @@ function isCrossedMas(grid, row, col) {
     if (letterAt(grid, row, col) != "A") {
         return false;
     }
-    var diagonal = letterAt(grid, row - 1, col - 1) + letterAt(grid, row + 1, col + 1);
-    var antidiagonal = letterAt(grid, row - 1, col + 1) + letterAt(grid, row + 1, col - 1);
+    const diagonal = letterAt(grid, row - 1, col - 1) + letterAt(grid, row + 1, col + 1);
+    const antidiagonal = letterAt(grid, row - 1, col + 1) + letterAt(grid, row + 1, col - 1);
     return isMS(diagonal) && isMS(antidiagonal);
 }
 
@@ -55,9 +55,9 @@ function isMS(ends) {
 }
 
 function countCrossedMas(grid) {
-    var count = 0;
-    for (var row = 0, grid.length - 1) {
-        for (var col = 0, grid[row].length - 1) {
+    let count = 0;
+    for (let row = 0, grid.length - 1) {
+        for (let col = 0, grid[row].length - 1) {
             if (isCrossedMas(grid, row, col)) {
                 count++;
             }
@@ -66,6 +66,6 @@ function countCrossedMas(grid) {
     return count;
 }
 
-var grid = inputLines();
+const grid = inputLines();
 print("Part 1: " + countXmas(grid));
 print("Part 2: " + countCrossedMas(grid));
