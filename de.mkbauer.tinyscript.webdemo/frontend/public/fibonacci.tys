@@ -1,8 +1,8 @@
 // Compute fibonacci numbers
 
 function fibonacci(n) {
-    var h = 1, g = 1, f = 1;
-    for (var i = 2, n) {
+    let h = 1, g = 1, f = 1;
+    for (let i = 2, n) {
         h = g;
         g = f;
         f = g + h;

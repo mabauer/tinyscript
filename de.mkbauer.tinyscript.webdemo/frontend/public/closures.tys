@@ -3,7 +3,7 @@
 
 // Create a counter object
 function createCounter() {
-    var value = 0; // used by add, sub, val
+    let value = 0; // used by add, sub, val
   	return {
     	add: function(x) { value = value + x; },
     	sub: function(x) { value = value - x; },
@@ -12,8 +12,8 @@ function createCounter() {
 };
  
 // create two counters
-var counter1 = createCounter();
-var counter2 = createCounter();
+const counter1 = createCounter();
+const counter2 = createCounter();
  
 // use the counters
 counter1.add(14);

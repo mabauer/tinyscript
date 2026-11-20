@@ -7,10 +7,10 @@ import inputLines, numbers from "./aoc";
 
 // Each line holds a number of the left list and one of the right list
 function readLists(lines) {
-    var left = [];
-    var right = [];
-    for (var line : lines) {
-        var [l, r] = numbers(line);
+    const left = [];
+    const right = [];
+    for (const line : lines) {
+        const [l, r] = numbers(line);
         left.push(l);
         right.push(r);
     }
@@ -20,10 +20,10 @@ function readLists(lines) {
 // Part 1: pair up the smallest numbers of both lists, then the second smallest
 // and so on, and add up the distances within the pairs
 function totalDistance(lists) {
-    var left = lists.left.slice().sort((a, b) => a - b);
-    var right = lists.right.slice().sort((a, b) => a - b);
-    var total = 0;
-    for (var i = 0, left.length - 1) {
+    const left = lists.left.slice().sort((a, b) => a - b);
+    const right = lists.right.slice().sort((a, b) => a - b);
+    let total = 0;
+    for (let i = 0, left.length - 1) {
         total += Math.abs(left[i] - right[i]);
     }
     return total;
@@ -31,13 +31,13 @@ function totalDistance(lists) {
 
 // Part 2: add up each number of the left list times how often it appears in the right list
 function similarityScore(lists) {
-    var counts = new Map();
-    for (var n : lists.right) {
+    const counts = new Map();
+    for (const n : lists.right) {
         counts.set(n, (counts.get(n) ?? 0) + 1);
     }
     return lists.left.reduce((score, n) => score + n * (counts.get(n) ?? 0), 0);
 }
 
-var lists = readLists(inputLines());
+const lists = readLists(inputLines());
 print("Part 1: " + totalDistance(lists));
 print("Part 2: " + similarityScore(lists));

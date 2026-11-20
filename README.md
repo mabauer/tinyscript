@@ -11,8 +11,8 @@ What is tinyscript?
 	// Compute fibonacci numbers
 
 	function fibonacci(n) {
-		var h = 1, g = 1, f = 1;
-		for (var i = 2, n) {
+		let h = 1, g = 1, f = 1;
+		for (let i = 2, n) {
 			h = g;
 			g = f;
 			f = g + h;
@@ -76,9 +76,9 @@ Design decisions
 
 - **File extension `.tys`:** tinyscript files end in `.tys` (not `.ts`, which belongs to TypeScript).
 - **Statements:** the rules for ending statements with `;` are roughly the same as in Java.
-- **Scoping:** blocks create real *scopes*; `var` is block-scoped and there is no hoisting. Like Javascript in *strict mode*, all variables have to be declared before they can be used. This includes `typeof`: `typeof undeclared` is a compile-time error, not `"undefined"`.
+- **Scoping:** blocks create real *scopes*; variables (`let`, `const`, and `var` as a synonym of `let`) are block-scoped and there is no hoisting. Like Javascript in *strict mode*, all variables have to be declared before they can be used. This includes `typeof`: `typeof undeclared` is a compile-time error, not `"undefined"`.
 - **Blocks are mandatory:** control structures always need blocks: `if (cond) { stmts; } else if (cond) { stmts; } else { stmts; }`
-- **Loops:** there are two types of `for` loops: a numeric one inspired by *Lua*, where the end value is inclusive and an optional step can be given (`for (var i = 1, 10) { … }`, `for (var i = 10, 1, -1) { … }`), and one that iterates over the *values* of an array (`for (var x : arr) { … }`). Additionally there is `while (cond) { … }`; `break` leaves the innermost loop, `continue` goes on with its next iteration. `i++;` and `i--;` are statements, not expressions (no `x = i++`, no `++i`).
+- **Loops:** there are two types of `for` loops: a numeric one inspired by *Lua*, where the end value is inclusive and an optional step can be given (`for (let i = 1, 10) { … }`, `for (let i = 10, 1, -1) { … }`), and one that iterates over the *values* of an array (`for (const x : arr) { … }`). Additionally there is `while (cond) { … }`; `break` leaves the innermost loop, `continue` goes on with its next iteration. `i++;` and `i--;` are statements, not expressions (no `x = i++`, no `++i`).
 - **Equality without coercion:** there are only `==` and `!=`, and they never convert types (`1 == "1"` is `false`). The one deliberate exception: `null == undefined` is `true`, so `o.x == null` checks for a missing property. Numbers compare like in Javascript (`NaN != NaN`). There is no `===` / `!==`.
 - **Strict comparisons:** `<`, `<=`, `>` and `>=` compare a number with a number or a string with a string; anything else is a `TypeError`. Comparisons cannot be chained: `a < b < c` is a syntax error (in Javascript `1 < 3 < 2` is `true`).
 - **Conditions are booleans:** `if`, `while`, `!`, `&&`, `||` accept a boolean, `null` / `undefined` (false) or an object (true). Numbers and strings are a `TypeError`, since `0`, `""` and `NaN` being false is a classic trap: write `count > 0`. `&&` and `||` short-circuit and return `true` or `false`; for a default value use `??` (`counts.get(key) ?? 0`), for null checks in a chain `?.` (`node.next?.value`).
@@ -87,7 +87,7 @@ Design decisions
 - **File access is a module:** there is no global `fs`; use `import * as fs from "std:fs";` (not available in the sandboxed web demo).
 - **Only strings have methods:** a property access on a number or boolean (`(5).toString()`, `n.x`) is a `TypeError`; use `String(n)` or `"" + n` to convert. Strings keep `length`, `charAt`, `at`, ...
 - **Arrays are lists:** besides their items only `length` can be set; `a.x = 1` or `a[-1] = 1` is a `TypeError` instead of silently creating a property. To index from the end, use `a.at(-1)`.
-- **Arrays can be added:** the operator `+` also works on arrays: `var arr = ["hello"]; arr = arr + ["world"];` results in `["hello", "world"]`. With a string on either side, `+` concatenates strings (`"arr: " + arr`); an array plus anything else is a `TypeError`.
+- **Arrays can be added:** the operator `+` also works on arrays: `let arr = ["hello"]; arr = arr + ["world"];` results in `["hello", "world"]`. With a string on either side, `+` concatenates strings (`"arr: " + arr`); an array plus anything else is a `TypeError`.
 - **Arrow functions** are supported. These are part of Javascript starting with Ecmascript 6 :-)
 - **Sandboxing:** in sandboxed mode every loop iteration counts against the statement limit, so even endless loops cannot exceed the resource limits (see [Sandboxing](#sandboxing)).
 

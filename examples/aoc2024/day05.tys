@@ -7,9 +7,9 @@ import inputLines from "./aoc";
 
 // The input starts with ordering rules like "47|53" (page 47 must come before page 53),
 // followed by the updates, the pages to print, like "75,47,61,53,29"
-var lines = inputLines();
-var rules = new Set(lines.filter(line => line.includes("|")));
-var updates = lines.filter(line => line.includes(",")).map(line => line.split(","));
+const lines = inputLines();
+const rules = new Set(lines.filter(line => line.includes("|")));
+const updates = lines.filter(line => line.includes(",")).map(line => line.split(","));
 
 // Compares two pages by the rules: negative if a must come before b
 function compareByRules(a, b) {
@@ -43,5 +43,5 @@ function sumOfMiddlePages(updates) {
 print("Part 1: " + sumOfMiddlePages(updates.filter(isInOrder)));
 
 // Part 2: the other updates, after putting them in the right order
-var corrected = updates.filter(update => !isInOrder(update)).map(sortedByRules);
+const corrected = updates.filter(update => !isInOrder(update)).map(sortedByRules);
 print("Part 2: " + sumOfMiddlePages(corrected));

@@ -1,5 +1,5 @@
 // Basic expressions
-var result;
+let result;
 
 print(result); // Undefined
 
@@ -22,15 +22,15 @@ result = (4 > 10);
 print(result); // false
 
 // Arrays
-var fruits = ["Banana", "Apple", "Strawberry"];
+const fruits = ["Banana", "Apple", "Strawberry"];
 result = fruits + "Cherry";
 print(result); // ["Banana", "Apple", "Strawberry", "Cherry"]
 
-var mixed = ["Banana", 3, true, 1.5];
+const mixed = ["Banana", 3, true, 1.5];
 print(mixed);  // ["Banana", 3, true, 1.5]
 
 // Simple Objects
-var person = { name: "Markus", age: 42 };
+const person = { name: "Markus", age: 42 };
 print(person);		// { name: "Markus", age: 42}
 print(person.name); // "Markus"
 print(person.age);  // 42
