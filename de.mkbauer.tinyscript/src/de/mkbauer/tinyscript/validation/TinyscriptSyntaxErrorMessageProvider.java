@@ -43,12 +43,6 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			"RULE_ID", "a name",
 			"RULE_DOUBLE", "a number",
 			"RULE_STRING", "a string",
-			"RULE_OP_ASSIGN", "'='",
-			"RULE_OP_EQUALS", "'==' or '!='",
-			"RULE_OP_COMP", "a comparison",
-			"RULE_OP_NOT", "'!'",
-			"RULE_OP_COMPOUND_ASSIGN", "an assignment",
-			"RULE_OP_INCREMENT", "'++' or '--'",
 			"EOF", "the end of input");
 
 	@Override

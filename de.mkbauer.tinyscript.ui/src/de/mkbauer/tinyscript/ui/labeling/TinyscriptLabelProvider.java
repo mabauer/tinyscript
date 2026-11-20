@@ -30,7 +30,7 @@ public class TinyscriptLabelProvider extends org.eclipse.xtext.ui.label.DefaultE
 	}
 	
 	public String text(final BinaryExpression ele) {
-		return ele.getOp();
+		return ele.getOp().getLiteral();
 	}
 	
 	public String text(final FunctionDefinition ele) {

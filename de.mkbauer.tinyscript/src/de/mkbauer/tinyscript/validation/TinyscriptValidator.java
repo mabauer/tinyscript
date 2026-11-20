@@ -1,7 +1,9 @@
 package de.mkbauer.tinyscript.validation;
 
+import de.mkbauer.tinyscript.Operators;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
+import de.mkbauer.tinyscript.ts.BinaryOperator;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BreakStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
@@ -128,12 +130,12 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 
 	@Check
 	public void checkIncrementTarget(ExpressionStatement statement) {
-		if (statement.getIncrement() != null && !isAssignable(statement.getExpr()))
-			error("'" + statement.getIncrement() + "' needs a variable or a property", TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
+		if (Operators.increment(statement) != null && !isAssignable(statement.getExpr()))
+			error("'" + Operators.increment(statement).getLiteral() + "' needs a variable or a property", TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
 	}
 
 	private static boolean isAssignment(BinaryExpression expression) {
-		return expression.getOp().endsWith("=") && !List.of("==", "!=", "<=", ">=").contains(expression.getOp());
+		return Operators.isAssignment(expression.getOp());
 	}
 
 	private static boolean isAssignable(Expression expression) {
@@ -177,7 +179,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 
 	@Check
 	public void checkNoAssignmentToConstant(ExpressionStatement statement) {
-		if (statement.getIncrement() != null && isConstant(statement.getExpr()))
+		if (Operators.increment(statement) != null && isConstant(statement.getExpr()))
 			error("Cannot assign to the constant " + name(statement.getExpr()), TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
 	}
 
@@ -252,12 +254,12 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	 */
 	@Check
 	public void checkNullishCoalescingNotMixedWithAndOr(BinaryExpression expression) {
-		if ("??".equals(expression.getOp()) && (isAndOr(expression.getLeft()) || isAndOr(expression.getRight())))
+		if (expression.getOp() == BinaryOperator.NULLISH && (isAndOr(expression.getLeft()) || isAndOr(expression.getRight())))
 			error("Use parentheses to combine ?? with && or ||", null);
 	}
 
 	private static boolean isAndOr(Expression expression) {
-		return expression instanceof BinaryExpression binary && ("&&".equals(binary.getOp()) || "||".equals(binary.getOp()));
+		return expression instanceof BinaryExpression binary && (binary.getOp() == BinaryOperator.AND || binary.getOp() == BinaryOperator.OR);
 	}
 
 	/**
@@ -308,7 +310,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 
 	@Check
 	public void checkNoAssignmentToImport(ExpressionStatement statement) {
-		if (statement.getIncrement() != null && isImported(statement.getExpr()))
+		if (Operators.increment(statement) != null && isImported(statement.getExpr()))
 			error("Cannot assign to an imported name", TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
 	}
 
