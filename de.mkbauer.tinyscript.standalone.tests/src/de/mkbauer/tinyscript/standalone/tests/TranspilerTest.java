@@ -236,6 +236,13 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testEscapesInStringLiterals() {
+        String code = "var s = \"a\\nb\\t\\\"q\\\" \\\\ \\u00e4\";\nprint(s); print(s.length); print('it\\'s');";
+        assertEquals("a\nb\t\"q\" \\ ä\n11\nit's\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testWhile() {
         assertSameOutput("var i = 0; while (i < 3) { print(i); i = i + 1; }");
         assertSameOutput("var i = 0; while (true) { i = i + 1; if (i > 2) { break; } print(i); }");

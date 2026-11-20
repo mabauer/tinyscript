@@ -139,14 +139,18 @@ class TinyscriptGenerator   {
 				if (loading.contains(uri))
 					throw Modules.cyclicImport(loading, uri)
 				if (!modules.containsKey(uri)) {
-					val module = Modules.load(script.eResource.resourceSet, uri)
-					loading.push(uri)
-					collectModules(module, loader, loading)
-					loading.pop
+					// Native modules (std:fs) have no script; they are emitted as Javascript directly
+					val module = if (Modules.isNative(uri)) null else Modules.load(script.eResource.resourceSet, uri)
+					if (module !== null) {
+						loading.push(uri)
+						collectModules(module, loader, loading)
+						loading.pop
+					}
 					modules.put(uri, module)
 					moduleVariables.put(uri, "__ts_mod" + modules.size)
 				}
-				val exported = TinyscriptModelUtil.exportedIdentifiers(modules.get(uri)).map[name].toSet
+				val exported = if (Modules.isNative(uri)) Modules.nativeExports(uri).toSet
+					else TinyscriptModelUtil.exportedIdentifiers(modules.get(uri)).map[name].toSet
 				for (name : importStatement.names) {
 					if (!exported.contains(name.name))
 						throw new TinyscriptReferenceError(Modules.displayName(uri) + " does not export \"" + name.name + "\"")
@@ -164,7 +168,10 @@ class TinyscriptGenerator   {
 		«IF includeBuiltins»
 			«generateBuiltins»
 		«ENDIF»
-		«FOR entry : modules.entrySet»
+		«FOR entry : modules.entrySet.filter[value === null]»
+			var «moduleVariables.get(entry.key)» = «generateNativeModule(entry.key)»;
+		«ENDFOR»
+		«FOR entry : modules.entrySet.filter[value !== null]»
 			var «moduleVariables.get(entry.key)» = (function () {
 				«generateImports(entry.value)»
 				«entry.value.generate»
@@ -174,6 +181,32 @@ class TinyscriptGenerator   {
 		«generateImports(script)»
 		«script.generate»
 	'''
+	
+	// std:fs for node, with the same behavior as FileSystemModule (UTF-8, errors end the script)
+	def private generateNativeModule(URI module) {
+		switch (module.opaquePart) {
+			case "fs": '''
+				(function () {
+					var nodefs = require("fs");
+					return Object.freeze({
+						exists: function (path) { return nodefs.existsSync(path); },
+						readFile: function (path) { return nodefs.readFileSync(path, "utf8"); },
+						readLines: function (path) {
+							var text = nodefs.readFileSync(path, "utf8");
+							if (text === "") { return []; }
+							var lines = text.split(/\r?\n/);
+							if (lines[lines.length - 1] === "") { lines.pop(); }
+							return lines;
+						},
+						writeFile: function (path, text) { nodefs.writeFileSync(path, text, "utf8"); },
+						writeLines: function (path, lines) { nodefs.writeFileSync(path, lines.map(function (line) { return line + "\n"; }).join(""), "utf8"); },
+						appendFile: function (path, text) { nodefs.appendFileSync(path, text, "utf8"); },
+						listDir: function (path) { return nodefs.readdirSync(path).sort(); }
+					});
+				})()'''
+			default: throw new IllegalArgumentException("Not a native module: " + module)
+		}
+	}
 	
 	def private generateImports(Tinyscript script) '''
 		«FOR importStatement : script.imports»
@@ -387,7 +420,24 @@ class TinyscriptGenerator   {
 	}
 	
 	def dispatch generate(StringLiteral expr) {
-		"\"" + expr.value + "\"";	
+		quote(expr.value)
+	}
+	
+	// A Javascript string literal for value (the parser has already resolved the escapes)
+	def private static String quote(String value) {
+		val result = new StringBuilder("\"")
+		for (c : value.toCharArray) {
+			switch (c) {
+				case c == '"'.charAt(0): result.append("\\\"")
+				case c == '\\'.charAt(0): result.append("\\\\")
+				case c == '\n'.charAt(0): result.append("\\n")
+				case c == '\r'.charAt(0): result.append("\\r")
+				case c == '\t'.charAt(0): result.append("\\t")
+				case c < 0x20 || c == 0x2028 || c == 0x2029: result.append(String.format("\\u%04x", c as int))
+				default: result.append(c)
+			}
+		}
+		result.append("\"").toString
 	}
 	
 	def dispatch generate(NumberLiteral expr) {

@@ -5,9 +5,10 @@ import java.net.URL;
 import org.eclipse.emf.common.util.URI;
 
 /**
- * Loads the standard library modules ({@code "std:array"}, {@code "std:math"}, ...),
- * which are tinyscript files in the core bundle ({@code /std/*.tys}). On its own it
- * allows no other imports, e.g. in the sandboxed webdemo.
+ * Loads the standard library modules: tinyscript files in the core bundle
+ * ({@code "std:array"} is {@code /std/array.tys}) and native modules implemented in Java
+ * ({@code "std:fs"}, see {@link Modules#isNative}). On its own it allows no other
+ * imports, e.g. in the sandboxed webdemo.
  */
 public class StandardLibraryModuleLoader implements ModuleLoader {
 
@@ -18,6 +19,8 @@ public class StandardLibraryModuleLoader implements ModuleLoader {
 		if (!path.startsWith(PREFIX))
 			throw new TinyscriptReferenceError("Only standard library modules (std:…) are available here, not \"" + path + "\"");
 		String name = path.substring(PREFIX.length());
+		if (Modules.NATIVE_MODULES.contains(name))
+			return URI.createURI(path);
 		URL module = name.matches("[a-z]+") ? StandardLibraryModuleLoader.class.getResource("/std/" + name + ".tys") : null;
 		if (module == null)
 			throw new TinyscriptReferenceError("Standard library module \"" + path + "\" not found");

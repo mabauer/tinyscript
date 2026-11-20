@@ -386,7 +386,7 @@ public class TinyscriptEngine {
 			return exports;
 		if (modulesBeingLoaded.contains(module))
 			throw Modules.cyclicImport(modulesBeingLoaded, module);
-		exports = executeModule(module);
+		exports = Modules.isNative(module) ? Modules.createNative(module, this, sandboxed) : executeModule(module);
 		loadedModules.put(module, exports);
 		return exports;
 	}

@@ -45,7 +45,12 @@ Language
     2. ~~Core~~ (done: grammar, validator, interpreter with `ModuleLoader` / `FileSystemModuleLoader` and `ModuleExports`, REPL `--module-path` / `TINYSCRIPT_PATH`; `ModulesTest`).
     3. ~~Generator~~ (done: bundles a program and its modules into one script; differential tests in `ModulesTest`).
     4. ~~Standard library and webdemo~~ (done: `std:array`, `std:math` written in tinyscript, `StandardLibraryModuleLoader`; the webdemo imports only `std:` modules and has a "Modules" example).
-    5. `fs` as a module (target, decided 2026-11-20): first `std:fs` as a *native* module implemented in Java (the engine needs native modules; the sandbox does not provide `std:fs`), then remove the global `fs` (breaking: scripts must `import * as fs from "std:fs";`). Separate PRs.
+    5. `fs` as a module (target, decided 2026-11-20): ~~first `std:fs` as a *native* module~~ (done: `FileSystemModule`, generator wrapper for node), implemented in Java (the engine needs native modules; the sandbox does not provide `std:fs`), then remove the global `fs` (breaking: scripts must `import * as fs from "std:fs";`). Separate PRs. The new API (strict: errors end the script, since tinyscript has no try/catch; UTF-8; relative paths against the working directory):
+       - `exists(path)` → boolean, never fails
+       - `readFile(path)` → string; `readLines(path)` → array of lines (split at `\n` / `\r\n`, a final line break adds no empty line)
+       - `writeFile(path, text)`, `writeLines(path, lines)` (each line ends with `\n`), `appendFile(path, text)` → `undefined`; text / lines must be strings (`TypeError` otherwise); `readLines` after `writeLines` gives the same array
+       - `listDir(path)` → sorted array of names
+       - no delete / mkdir (dangerous, no need so far)
     6. Optional, IDE: the validator checks while typing that the imported file exists and exports the names (fits the VS Code language server).
 
 - **Conversions.** Builtins convert their arguments with `TSObject.toNumber` / `toInteger` / `toString`. Today `undefined` and non-numeric strings become `0` (Javascript: `NaN`), a user-defined `valueOf` is ignored, and some code uses `TSValue.asString()` where `TSObject.toString(engine, value)` (which calls a user-defined `toString`) would be right. Decide how much of Javascript's conversion rules tinyscript wants, then write tests.

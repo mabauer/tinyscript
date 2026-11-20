@@ -940,7 +940,25 @@ print(area(2), unit, geo.area(1));
   import * as math from "std:math";
   print(sum(range(10)), " ", math.clamp(15, 0, 10));   // 45 10
   ```
-- The sandboxed web demo can import only `std:` modules, no files. The Javascript generator bundles a program and its modules into one script: each module becomes an immediately invoked function (so it runs once and its private names stay private) that returns its frozen exports.
+  - `std:fs` (native, not available sandboxed): file access, UTF-8, relative paths against the working directory. Strict: errors end the script (tinyscript has no `try` / `catch`), so check with `exists` first.
+
+    | Function | |
+    |---|---|
+    | `exists(path)` | `true` / `false`, never fails |
+    | `readFile(path)` | the contents as a string |
+    | `readLines(path)` | the lines as an array (split at `\n` / `\r\n`; a final line break adds no empty line) |
+    | `writeFile(path, text)` | replaces the file; `text` must be a string |
+    | `writeLines(path, lines)` | replaces the file; each line ends with `\n`; `readLines` gives the same array back |
+    | `appendFile(path, text)` | appends, creating the file if needed |
+    | `listDir(path)` | the sorted names in a directory |
+
+    ```
+    import * as fs from "std:fs";
+    if (fs.exists("todo.txt")) {
+        for (var line : fs.readLines("todo.txt")) { print("- " + line); }
+    }
+    ```
+- The sandboxed web demo can import only `std:` modules, no files, and not `std:fs`. The Javascript generator bundles a program and its modules into one script: each module becomes an immediately invoked function (so it runs once and its private names stay private) that returns its frozen exports.
 
 ## Quick Reference
 
