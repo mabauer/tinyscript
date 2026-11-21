@@ -89,6 +89,17 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testThisOutsideAFunction() {
+        String message = "'this' is undefined outside a function (an arrow function takes 'this' from where it is written)";
+        assertEquals(message, firstError("print(this);"));
+        assertEquals(message, firstError("this.Math = null;"));
+        assertEquals(message, firstError("const counter = { n: 0, get: () => this.n };"));
+        // Inside a function (also an arrow function in one), this is fine
+        assertEquals(List.of(), reportedErrors("function f() { return this; }\n"
+                + "const o = { n: 1, get: function() { return [1].map(x => this.n); } };\nprint(o.get());"));
+    }
+
+    @Test
     public void testTemplateString() {
         assertEquals("Template strings (`…`) are not supported: build strings with +, e.g. \"Hello \" + name",
                 firstError("const name = \"x\";\nprint(`Hello ${name}`);"));

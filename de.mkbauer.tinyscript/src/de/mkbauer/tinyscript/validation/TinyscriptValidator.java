@@ -2,6 +2,7 @@ package de.mkbauer.tinyscript.validation;
 
 import de.mkbauer.tinyscript.Operators;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.ts.ArrowFunction;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.BinaryOperator;
 import de.mkbauer.tinyscript.ts.Block;
@@ -215,6 +216,22 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	/**
 	 * The shorthand { x } needs a variable; { this } is not allowed (as in Javascript).
 	 */
+	/**
+	 * Outside a function, `this` is undefined (as in a Javascript module); an arrow function
+	 * takes it from where it is defined, so at top level it is undefined there as well.
+	 * Writing it there is a mistake, e.g. { total: () => this.sum } in an object literal.
+	 */
+	@Check
+	public void checkThisInsideAFunction(Reference reference) {
+		if (!reference.isThis())
+			return;
+		for (EObject container = reference.eContainer(); container != null; container = container.eContainer()) {
+			if (container instanceof FunctionDefinition && !(container instanceof ArrowFunction))
+				return;
+		}
+		error("'this' is undefined outside a function (an arrow function takes 'this' from where it is written)", null);
+	}
+
 	@Check
 	public void checkShorthandProperty(PropertyAssignment property) {
 		if (property.getShorthand() != null && property.getShorthand().isThis())
