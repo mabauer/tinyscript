@@ -11,17 +11,17 @@ public class MathObjectTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testsqrt() {
-		executeScriptFromString("var x = 4; var result = Math.sqrt(x); assert (2 == result);");
+		executeScriptFromString("let x = 4; let result = Math.sqrt(x); assert (2 == result);");
 	}
 	
 	@Test
 	public void testround() {
-		executeScriptFromString("var x = Math.PI; var result = Math.round(x); assert (3 == result);");
+		executeScriptFromString("let x = Math.PI; let result = Math.round(x); assert (3 == result);");
 	}
 	
 	@Test
 	public void testrandom() {
-		executeScriptFromString("var result = Math.random(); assert (0.0 <= result && result < 1.0);");
+		executeScriptFromString("let result = Math.random(); assert (0.0 <= result && result < 1.0);");
 	}
 
 }

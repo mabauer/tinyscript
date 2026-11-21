@@ -93,7 +93,7 @@ public class TinyscriptReplMainTest {
 
     @Test
     public void testRuntimeErrorExitsWithOne() throws IOException {
-        Path file = script("error.tys", "var n = 1;\nprint(n.x);");
+        Path file = script("error.tys", "let n = 1;\nprint(n.x);");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(file.toString()));
         assertTrue(err.toString().contains("TinyscriptTypeError: Cannot read 'x' of n: numbers only have the methods toFixed and toString"), err.toString());
         assertTrue(err.toString().contains("error.tys:2"), err.toString());
@@ -112,7 +112,7 @@ public class TinyscriptReplMainTest {
 
     @Test
     public void testSyntaxErrorExitsWithOne() throws IOException {
-        Path file = script("syntax.tys", "print(1);\nvar ;");
+        Path file = script("syntax.tys", "print(1);\nlet ;");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(file.toString()));
         assertTrue(err.toString().contains("TinyscriptSyntaxError"), err.toString());
         assertTrue(err.toString().contains("syntax.tys:2"), err.toString());
@@ -122,7 +122,7 @@ public class TinyscriptReplMainTest {
     @Test
     public void testFilesDoNotShareGlobals() throws IOException {
         // Files share names only via import / export; each file runs on its own
-        Path first = script("first.tys", "var shared = 5;");
+        Path first = script("first.tys", "let shared = 5;");
         Path second = script("second.tys", "print(shared);");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(first.toString(), second.toString()));
         assertTrue(err.toString().contains("Unknown name 'shared'"), err.toString());
@@ -131,7 +131,7 @@ public class TinyscriptReplMainTest {
     @Test
     public void testInteractiveLinesSeeEarlierLines() {
         assertEquals(TinyscriptReplMain.EXIT_OK,
-                runWithInput("var x = 21;\nfunction twice(a) {\nreturn 2 * a;\n}\nprint(twice(x));\n!quit\n"));
+                runWithInput("let x = 21;\nfunction twice(a) {\nreturn 2 * a;\n}\nprint(twice(x));\n!quit\n"));
         assertTrue(out.toString().contains("42\n"), out.toString());
         assertEquals("", err.toString());
     }
@@ -234,7 +234,7 @@ public class TinyscriptReplMainTest {
     @Test
     public void testRunsFilesInOrderAndStopsAtTheFirstError() throws IOException {
         Path first = script("first.tys", "print(\"first\");");
-        Path failing = script("failing.tys", "var n = 1;\nn.x = 1;");
+        Path failing = script("failing.tys", "let n = 1;\nn.x = 1;");
         Path third = script("third.tys", "print(\"third\");");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(first.toString(), failing.toString(), third.toString()));
         assertEquals("first\n", out.toString());
@@ -244,9 +244,10 @@ public class TinyscriptReplMainTest {
     public void testSyntaxErrorShowsOnlyTheFirstErrorWithTheSourceLine() throws IOException {
         Path file = script("cfor.tys", "let sum = 0;\nfor (let i = 0; i < 10; i++) {\n    sum += i;\n}\n");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(file.toString()));
-        assertEquals("TinyscriptSyntaxError: tinyscript's for loop has no ';': for (const i : range(n)) { … } counts from 0 to n - 1 in " + file + ":2:15\n"
+        assertEquals("TinyscriptSyntaxError: tinyscript's for loop goes through items: for (const i : range(n)) { … } counts from 0 to n - 1, "
+                + "range(a, b) from a to b - 1, range(n).reverse() from n - 1 down to 0 in " + file + ":2:12\n"
                 + "    for (let i = 0; i < 10; i++) {\n"
-                + "                  ^\n", err.toString());
+                + "               ^\n", err.toString());
     }
 
     @Test

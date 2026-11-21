@@ -10,11 +10,11 @@ function Array() {
 function String() {
 }
 
-var Math;
+let Math;
 
-var fs;
+let fs;
 
-var System; 
+let System; 
 
 function print() {
 }

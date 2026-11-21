@@ -17,7 +17,7 @@ public class ScopingTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testGlobalsOfOtherFilesAreNotVisible() {
-        parse("var shared = 1; function helper() { return 2; }");
+        parse("let shared = 1; function helper() { return 2; }");
         assertRejected("print(shared);");
         assertRejected("print(helper());");
     }
@@ -30,7 +30,7 @@ public class ScopingTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testGlobalsOfSharedResourcesAreVisible() throws IOException {
         Resource line = resourceSet().createResource(URI.createURI("__session0.tys"));
-        line.load(new StringInputStream("var shared = 1;"), null);
+        line.load(new StringInputStream("let shared = 1;"), null);
         SharedGlobals.share(line);
         parse("print(shared);");
     }

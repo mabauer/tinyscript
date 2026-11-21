@@ -67,9 +67,9 @@ public class TinyScriptModelUtilsTest {
 		
 	@Test
 	public void testGetGlobalVariables() {
-		Tinyscript ast = parseFromString("var x = 2; var f = function (x) { var local = x*x; return local; }; f(x)==4;");
+		Tinyscript ast = parseFromString("let x = 2; let f = function (x) { let local = x*x; return local; }; f(x)==4;");
 		List<Identifier> vars = TinyscriptModelUtil.declaredVariablesInBlock(ast.getGlobal());
-		List<String> names = vars.stream().map(var -> var.getName()).collect(Collectors.toList());
+		List<String> names = vars.stream().map(v -> v.getName()).collect(Collectors.toList());
 		Assertions.assertTrue(names.stream().anyMatch(s -> s.equals("x")));
 		Assertions.assertTrue(names.stream().anyMatch(s -> s.equals("f")));
 		Assertions.assertFalse(names.stream().anyMatch(s -> s.equals("local")));
@@ -77,10 +77,10 @@ public class TinyScriptModelUtilsTest {
 	
 	@Test
 	public void testGetVariablesInFunctionScope() {
-		Tinyscript ast = parseFromString("var x = 2; var f = function (x) { var local = x*x; return local; }; f(x)==4;");
+		Tinyscript ast = parseFromString("let x = 2; let f = function (x) { let local = x*x; return local; }; f(x)==4;");
 		FunctionDefinition f = EcoreUtil2.getAllContentsOfType(ast.getGlobal(), FunctionDefinition.class).get(0);
 		List<Identifier> vars = TinyscriptModelUtil.declaredVariablesInBlock(f.getBlock());
-		List<String> names = vars.stream().map(var -> var.getName()).collect(Collectors.toList());
+		List<String> names = vars.stream().map(v -> v.getName()).collect(Collectors.toList());
 		Assertions.assertTrue(names.stream().anyMatch(s -> s.equals("local")));
 		Assertions.assertFalse(names.stream().anyMatch(s -> s.equals("x")));
 		Assertions.assertFalse(names.stream().anyMatch(s -> s.equals("f")));
@@ -89,14 +89,14 @@ public class TinyScriptModelUtilsTest {
 	
 	@Test
 	public void testGetGlobalFunctionDeclarations() {
-		String source = "var x = 2; function f(x) { var local = x*x; return local; } f(x)==4;";
+		String source = "let x = 2; function f(x) { let local = x*x; return local; } f(x)==4;";
 		Tinyscript ast = parseFromString(source);
 				
 		List<FunctionDefinition> functions = TinyscriptModelUtil.functionDeclarationsInBlock(ast.getGlobal());
 		List<String> names = functions.stream().map(f -> f.getId().getName()).collect(Collectors.toList());
 		Assertions.assertTrue(names.stream().anyMatch(s -> s.equals("f")));
 		
-		source = "var x = 2; (function (x) { var local = x*x; return local; })(2) == 4;";
+		source = "let x = 2; (function (x) { let local = x*x; return local; })(2) == 4;";
 		ast = parseFromString(source);
 		functions = TinyscriptModelUtil.functionDeclarationsInBlock(ast.getGlobal());
 		Assertions.assertEquals(0, functions.size());
@@ -104,28 +104,28 @@ public class TinyScriptModelUtilsTest {
 	
 	@Test
 	public void testSimpleBlockContainsConflictingIdentifiers() {
-		String source = "var i; var j;";
+		String source = "let i; let j;";
 		Tinyscript ast = parseFromStringNoValidation(source);
 		Block block = ast.getGlobal();
 		List<Identifier> declaredVars = TinyscriptModelUtil.declaredVariablesInBlock(block);
 		Identifier j = declaredVars.get(declaredVars.size()-1);
 		assertFalse(TinyscriptModelUtil.blockContainsConflictingIdentifiers(j, block));
 		
-		source = "var i; var j; var i;";
+		source = "let i; let j; let i;";
 		ast = parseFromStringNoValidation(source);
 		block = ast.getGlobal();
 		declaredVars = TinyscriptModelUtil.declaredVariablesInBlock(block);
 		Identifier i2 = declaredVars.get(declaredVars.size()-1);
 		assertTrue(TinyscriptModelUtil.blockContainsConflictingIdentifiers(j, block));
 		
-		source = "function f() {}; var j; var f;";
+		source = "function f() {}; let j; let f;";
 		ast = parseFromStringNoValidation(source);
 		block = ast.getGlobal();
 		declaredVars = TinyscriptModelUtil.declaredVariablesInBlock(block);
 		Identifier f = declaredVars.get(declaredVars.size()-1);
 		assertTrue(TinyscriptModelUtil.blockContainsConflictingIdentifiers(f, block));
 		
-		source = "var j; var f; function f() {};";
+		source = "let j; let f; function f() {};";
 		ast = parseFromStringNoValidation(source);
 		block = ast.getGlobal();
 		declaredVars = TinyscriptModelUtil.declaredVariablesInBlock(block);
@@ -138,7 +138,7 @@ public class TinyScriptModelUtilsTest {
 		
 	@Test
 	public void testFunctionBlockContainsConflictingIdentifiers() {
-		String source = "function f(x) { var local = 1; var x = 2; } ";
+		String source = "function f(x) { let local = 1; let x = 2; } ";
 		Tinyscript ast = parseFromStringNoValidation(source);
 		List<FunctionDefinition> declaredFuncs = TinyscriptModelUtil.functionDeclarationsInBlock(ast.getGlobal());
 		Block block_f = declaredFuncs.get(0).getBlock();
@@ -149,7 +149,7 @@ public class TinyScriptModelUtilsTest {
 	
 	@Test
 	public void testForBlockContainsConflictingIdentifiers() {
-		String source = "for (var i = 1, 10) { var i = 1; } ";
+		String source = "for (const i : range(1, 11)) { let i = 1; } ";
 		Tinyscript ast = parseFromStringNoValidation(source);
 		ForStatement forStmt = (ForStatement) ast.getGlobal().getStatements().get(0);
 		Block block_for = forStmt.getDo();

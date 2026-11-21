@@ -36,7 +36,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArrayPushPop() {
         assertEquals("3\n1,2,3\n3\n2\n", interpreterOutput(
-                "var a = [1];\n"
+                "let a = [1];\n"
                 + "print(a.push(2, 3));\n"
                 + "print(a.join(\",\"));\n"
                 + "print(a.pop());\n"
@@ -45,7 +45,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrayShiftUnshift() {
-        String code = "var a = [2];\n"
+        String code = "let a = [2];\n"
                 + "print(a.unshift(0, 1));\n"
                 + "print(a.join(\",\"));\n"
                 + "print(a.shift());\n"
@@ -71,24 +71,24 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testInvalidArrayLengthIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a.length = -1;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a.length = 1.5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a.length = \"2\";");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a.length = -1;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a.length = 1.5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a.length = \"2\";");
     }
 
     @Test
     public void testArraysHaveNoNamedProperties() {
         // Arrays are lists: writing anything but an integer index or length is a TypeError
-        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a.x = 5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; a[\"name\"] = 5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var a = [1]; a[-1] = 5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var a = [1]; a[1.5] = 5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var a = []; Object.defineProperty(a, \"x\", { value: 1 });");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a.x = 5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a[\"name\"] = 5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let a = [1]; a[-1] = 5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let a = [1]; a[1.5] = 5;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; Object.defineProperty(a, \"x\", { value: 1 });");
     }
 
     @Test
     public void testArrayAt() {
-        String code = "var a = [1, 2, 3];\n"
+        String code = "let a = [1, 2, 3];\n"
                 + "print(a.at(0)); print(a.at(-1)); print(a.at(-3));\n"
                 + "print(a.at(3) == null); print(a.at(-4) == null); print([].at(-1) == null);";
         assertEquals("1\n3\n1\ntrue\ntrue\ntrue\n", interpreterOutput(code));
@@ -97,7 +97,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrayIndexOf() {
-        String code = "var o = {}; var a = [1, \"two\", o, 1, null];\n"
+        String code = "let o = {}; let a = [1, \"two\", o, 1, null];\n"
                 + "print(a.indexOf(1)); print(a.indexOf(\"two\")); print(a.indexOf(o)); print(a.indexOf(null));\n"
                 + "print(a.indexOf(\"1\")); print(a.indexOf({})); print([].indexOf(1));";
         assertEquals("0\n1\n2\n4\n-1\n-1\n-1\n", interpreterOutput(code));
@@ -107,7 +107,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArrayIndexOfWithStartIndex() {
         // Like Javascript: a negative start index counts from the end
-        String code = "var a = [1, 2, 1, 2];\n"
+        String code = "let a = [1, 2, 1, 2];\n"
                 + "print(a.indexOf(1, 1)); print(a.indexOf(2, -1)); print(a.indexOf(2, -10)); print(a.indexOf(1, 4)); print(a.indexOf(1, 0));";
         assertEquals("2\n3\n1\n-1\n0\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -123,7 +123,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     public void testArrayIndexOfUsesTinyscriptEquality() {
         // Unlike Javascript's ===: null == undefined, and NaN is never found
         assertEquals("0\n-1\n", interpreterOutput(
-                "var u; print([u].indexOf(null)); print([0 / 0].indexOf(0 / 0));"));
+                "let u; print([u].indexOf(null)); print([0 / 0].indexOf(0 / 0));"));
     }
 
     @Test
@@ -137,7 +137,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArrayMethodOnNonArrayIsATypeError() {
         assertInterpreterThrows(TinyscriptTypeError.class,
-                "var o = {};\no.push = [].push;\no.push(1);");
+                "let o = {};\no.push = [].push;\no.push(1);");
     }
 
     @Test
@@ -159,7 +159,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testStringAt() {
-        String code = "var s = \"abc\"; print(s.at(0)); print(s.at(-1)); print(s.at(3) == null); print(\"\".at(0) == null);";
+        String code = "let s = \"abc\"; print(s.at(0)); print(s.at(-1)); print(s.at(3) == null); print(\"\".at(0) == null);";
         assertEquals("a\nc\ntrue\ntrue\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -183,7 +183,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testStringIndexOfWithStartIndex() {
         // Like Javascript: a negative position counts as 0
-        String code = "var s = \"abcabc\";\n"
+        String code = "let s = \"abcabc\";\n"
                 + "print(s.indexOf(\"b\", 2)); print(s.indexOf(\"b\", -5)); print(s.indexOf(\"c\", 10)); print(s.indexOf(\"\", 10));";
         assertEquals("4\n1\n-1\n6\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -192,7 +192,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testStringToStringAndLength() {
         assertEquals("ab\n3\n", interpreterOutput(
-                "var s = new String(\"ab\");\n"
+                "let s = new String(\"ab\");\n"
                 + "print(s.toString());\n"
                 + "print(\"abc\".length);"));
     }
@@ -204,8 +204,8 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testObjectCreateAndGetPrototypeOf() {
         assertEquals("1\ntrue\ntrue\n", interpreterOutput(
-                "var p = { x: 1 };\n"
-                + "var o = Object.create(p);\n"
+                "let p = { x: 1 };\n"
+                + "let o = Object.create(p);\n"
                 + "print(o.x);\n"
                 + "print(Object.getPrototypeOf(o) == p);\n"
                 + "print(Object.getPrototypeOf(Object.create(null)) == null);"));
@@ -219,7 +219,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testObjectDefinePropertyKeysAndPropertyNames() {
         assertEquals("2\na\na,b\n", interpreterOutput(
-                "var o = { a: 1 };\n"
+                "let o = { a: 1 };\n"
                 + "Object.defineProperty(o, \"b\", { value: 2, enumerable: false });\n"
                 + "print(o.b);\n"
                 + "print(Object.keys(o).join(\",\"));\n"
@@ -234,7 +234,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testObjectGetOwnPropertyDescriptor() {
         assertEquals("1\ntrue\ntrue\ntrue\n", interpreterOutput(
-                "var d = Object.getOwnPropertyDescriptor({ a: 1 }, \"a\");\n"
+                "let d = Object.getOwnPropertyDescriptor({ a: 1 }, \"a\");\n"
                 + "print(d.value);\n"
                 + "print(d.enumerable);\n"
                 + "print(d.writable);\n"
@@ -253,18 +253,18 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
         assertEquals("true\n", interpreterOutput(
                 "function F() { }\n"
                 + "F.prototype = 5;\n"
-                + "var o = new F();\n"
+                + "let o = new F();\n"
                 + "print(o.toString != null);"));
     }
 
     @Test
     public void testRedefiningANonConfigurablePropertyIsATypeError() {
         assertInterpreterThrows(TinyscriptTypeError.class,
-                "var o = {};\n"
+                "let o = {};\n"
                 + "Object.defineProperty(o, \"a\", { value: 1, configurable: false });\n"
                 + "Object.defineProperty(o, \"a\", { value: 2 });");
         assertEquals("2\n", interpreterOutput(
-                "var o = {};\n"
+                "let o = {};\n"
                 + "Object.defineProperty(o, \"a\", { value: 1, configurable: true });\n"
                 + "Object.defineProperty(o, \"a\", { value: 2 });\n"
                 + "print(o.a);"));
@@ -273,7 +273,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testObjectDefinePropertyReadOnly() {
         assertEquals("1\nfalse\n", interpreterOutput(
-                "var o = {};\n"
+                "let o = {};\n"
                 + "Object.defineProperty(o, \"a\", { value: 1, writable: false });\n"
                 + "o.a = 2;\n"
                 + "print(o.a);\n"
@@ -283,8 +283,8 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testObjectHasOwnPropertyAndToString() {
         assertEquals("true\nfalse\n[object Object]\n", interpreterOutput(
-                "var p = { x: 1 };\n"
-                + "var o = Object.create(p);\n"
+                "let p = { x: 1 };\n"
+                + "let o = Object.create(p);\n"
                 + "o.y = 2;\n"
                 + "print(o.hasOwnProperty(\"y\"));\n"
                 + "print(o.hasOwnProperty(\"x\"));\n"
@@ -299,7 +299,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     public void testFunctionCallAndApply() {
         assertEquals("6\n6\n", interpreterOutput(
                 "function f(a, b) { return this.x + a + b; }\n"
-                + "var o = { x: 1 };\n"
+                + "let o = { x: 1 };\n"
                 + "print(f.call(o, 2, 3));\n"
                 + "print(f.apply(o, [2, 3]));"));
     }
@@ -322,7 +322,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
                 "print(Math.sqrt(16));\n"
                 + "print(Math.round(2.5));\n"
                 + "print(Math.round(-2.5));\n"
-                + "var r = Math.random();\n"
+                + "let r = Math.random();\n"
                 + "print(r >= 0 && r < 1);\n"
                 + "print(Math.PI);"));
     }
@@ -400,7 +400,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testPrintLimitsTheNestingDepth() {
-        String out = interpreterOutput("let l = null; for (let i = 1, 1000) { l = { next: l }; } print(l); print([[[1]]]);");
+        String out = interpreterOutput("let l = null; for (const i : range(1, 1001)) { l = { next: l }; } print(l); print([[[1]]]);");
         assertTrue(out.contains("{next: [Object]}"), out);
         assertTrue(out.endsWith("[[[1]]]\n"), out);
     }

@@ -21,7 +21,7 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testSplitAndTrim() {
-        String code = "var s = \"  a,b,,c \\n\";\n"
+        String code = "let s = \"  a,b,,c \\n\";\n"
                 + "print(\"[\" + s.trim() + \"]\"); print(s.trim().split(\",\").length); print(s.trim().split(\",\").join(\"|\"));\n"
                 + "print(\"abc\".split(\"\").join(\"-\")); print(\"a b  c\".split(\" \").length); print(\"\".split(\",\").length);";
         assertEquals("[a,b,,c]\n4\na|b||c\na-b-c\n4\n1\n", interpreterOutput(code));
@@ -136,7 +136,7 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testConversionsCheckTheirArguments() {
         assertInterpreterThrows(TinyscriptTypeError.class, "Number(null);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var u; Number(u);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let u; Number(u);");
         assertInterpreterThrows(TinyscriptTypeError.class, "Number({});");
         assertInterpreterThrows(TinyscriptTypeError.class, "parseInt(42);");
         assertInterpreterThrows(TinyscriptTypeError.class, "parseInt(\"1\", 1);");

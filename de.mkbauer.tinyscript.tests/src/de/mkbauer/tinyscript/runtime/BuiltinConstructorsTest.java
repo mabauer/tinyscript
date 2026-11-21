@@ -16,16 +16,16 @@ public class BuiltinConstructorsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testStringConstructor() {
-		executeScriptFromString("var s = new String(\"Hello\"); assert (\"Hello\" == s);");
-		TSValue value = executeScriptFromString("var s = new String(\"Hello\"); s;");
+		executeScriptFromString("let s = new String(\"Hello\"); assert (\"Hello\" == s);");
+		TSValue value = executeScriptFromString("let s = new String(\"Hello\"); s;");
 		assertTrue(value.isObject() && (value.isString()),
 				"constructor String creates instances of StringObjects");
 	}
 	
 	@Test
 	public void testStringConstructorWithoutNew() {
-		executeScriptFromString("var s = String(\"Hello\"); assert (\"Hello\" == s);");
-		executeScriptFromString("var s = String(4); assert (\"4\" == s);");
+		executeScriptFromString("let s = String(\"Hello\"); assert (\"Hello\" == s);");
+		executeScriptFromString("let s = String(4); assert (\"4\" == s);");
 	}
 
 }

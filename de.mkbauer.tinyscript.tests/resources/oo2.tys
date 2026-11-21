@@ -11,12 +11,12 @@ function createObject(proto) {
 }
 
 // Helper function because console.log(s) is not yet implemented
-var console = {};
+let console = {};
 console.log = function(s) {
     print(s);
 };
 
-var Person = (function() {
+let Person = (function() {
     // Constructor
     function Person(firstName) {
         this.firstName = firstName;
@@ -36,7 +36,7 @@ var Person = (function() {
     return Person;
 })();
 
-var Student = (function() {
+let Student = (function() {
 
     // Define the Student constructor
     function Student(firstName, subject) {
@@ -73,7 +73,7 @@ var Student = (function() {
 })();
 
 // Example usage:
-var student1 = new Student("Janet", "Applied Physics");
+let student1 = new Student("Janet", "Applied Physics");
 student1.sayHello(); // "Hello, I'm Janet. I'm studying Applied Physics."
 student1.walk(); // "I am walking!"
 student1.sayGoodBye(); // "Goodbye!"
@@ -86,8 +86,8 @@ assert((student1 instanceof Student) == true); // true
 console.log("Janet:");
 console.log(student1);
 console.log("Prototype chain of Janet:");
-var prototype_chain = [student1.__proto__, student1.__proto__.__proto__];
-for (var p: prototype_chain) {
+let prototype_chain = [student1.__proto__, student1.__proto__.__proto__];
+for (let p: prototype_chain) {
     console.log(p);
 };
 

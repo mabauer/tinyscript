@@ -11,7 +11,7 @@ function createObject(proto) {
 }
 
 // Define the Person constructor
-var Person = function(firstName) {
+let Person = function(firstName) {
 	this.firstName = firstName;
 };
 
@@ -57,7 +57,7 @@ Student.prototype.sayGoodBye = function() {
 };
 
 // Example usage:
-var student1 = new Student("Janet", "Applied Physics");
+let student1 = new Student("Janet", "Applied Physics");
 assert ("Hello, I'm Janet. I'm studying Applied Physics." == student1.sayHello()) ;
 assert ("I am walking!" == student1.walk()); 
 assert ("Goodbye!" == student1.sayGoodBye());

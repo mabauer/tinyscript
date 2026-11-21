@@ -1,6 +1,6 @@
 function fibonacci(n) {
-    var h = 1, g = 1, f = 1;
-    for (var i = 2, n) {
+    let h = 1, g = 1, f = 1;
+    for (const i : range(2, n + 1)) {
         h = g;
         g = f;
         f = g + h;

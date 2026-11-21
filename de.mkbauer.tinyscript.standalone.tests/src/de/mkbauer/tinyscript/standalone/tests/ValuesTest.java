@@ -18,8 +18,8 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     private static final String VALUES =
-            "var u; var n = null; var b = true; var i = 1; var nan = 0 / 0; var s = \"s\";\n"
-            + "var f = function() { return 1; }; var o = {}; var a = [];\n";
+            "let u; let n = null; let b = true; let i = 1; let nan = 0 / 0; let s = \"s\";\n"
+            + "let f = function() { return 1; }; let o = {}; let a = [];\n";
 
     @Test
     public void testTypeOf() {
@@ -33,7 +33,7 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testTypeOfArbitraryExpressions() {
-        String code = "function f() { return 1; } var a = [\"s\"]; var o = { x: true, g: f };\n"
+        String code = "function f() { return 1; } let a = [\"s\"]; let o = { x: true, g: f };\n"
                 + "print(typeof f()); print(typeof a[0]); print(typeof (1 + 2)); print(typeof o.x);\n"
                 + "print(typeof o.g); print(typeof o.missing); print(typeof [1]); print(typeof {});";
         assertEquals("number\nstring\nnumber\nboolean\nfunction\nundefined\nobject\nobject\n",
@@ -55,7 +55,7 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testTypeOfPropertyOfUndefinedIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "var o = {}; print(typeof o.x.y);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let o = {}; print(typeof o.x.y);");
     }
 
     @Test
@@ -71,8 +71,8 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNaNIsNoCondition() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "var nan = 0 / 0; print(!nan);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var nan = 0 / 0; print(nan || false);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let nan = 0 / 0; print(!nan);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan || false);");
     }
 
     @Test
@@ -86,7 +86,7 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNullEqualsUndefined() {
-        String code = "var u; var o = {};\nprint(u == null); print(null == u); print(o.x == null); print(o.x != null);";
+        String code = "let u; let o = {};\nprint(u == null); print(null == u); print(o.x == null); print(o.x != null);";
         assertEquals("true\ntrue\ntrue\nfalse\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -102,7 +102,7 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testStringObjectsEqualTheirStrings() {
-        String code = "var s = new String(\"a\");\n"
+        String code = "let s = new String(\"a\");\n"
                 + "print(s == \"a\"); print(\"a\" == s); print(s == new String(\"a\")); print(s != \"b\");";
         assertEquals("true\ntrue\ntrue\ntrue\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -120,15 +120,15 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
         // Numbers have toFixed and toString (see NumberMethodsTest), nothing else
         assertInterpreterThrows(TinyscriptTypeError.class, "print((5).hasOwnProperty(\"x\"));");
         assertInterpreterThrows(TinyscriptTypeError.class, "print(true.toString());");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var n = 5; print(n.x);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var n = 5; n.x = 1;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var nan = 0 / 0; print(nan.x);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "var b = false; print(b.hasOwnProperty(\"value\"));");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let n = 5; print(n.x);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let n = 5; n.x = 1;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan.x);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let b = false; print(b.hasOwnProperty(\"value\"));");
     }
 
     @Test
     public void testStringsKeepTheirMethods() {
-        String code = "var n = 5; print(String(n) + String(true)); print(\"abc\".length); print(\"abc\".charAt(1));";
+        String code = "let n = 5; print(String(n) + String(true)); print(\"abc\".length); print(\"abc\".charAt(1));";
         assertEquals("5true\n3\nb\n", interpreterOutput(code));
         assertSameOutput(code);
     }

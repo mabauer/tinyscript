@@ -12,7 +12,7 @@ _tinyscript_ code:
 
     function fibonacci(n) {
     	let h = 1, g = 1, f = 1;
-    	for (let i = 2, n) {
+    	for (const i : range(2, n + 1)) {
     		h = g;
     		g = f;
     		f = g + h;
@@ -118,22 +118,23 @@ of primitive datatypes in Javascript is a mine-field on its own.
   belongs to TypeScript).
 - **Statements:** the rules for ending statements with `;` are roughly the same
   as in Java.
-- **Scoping:** blocks create real _scopes_; variables (`let`, `const`, and `var`
-  as a synonym of `let`) are block-scoped and there is no hoisting. Like
+- **Scoping:** blocks create real _scopes_; variables (`let`, and `const` for
+  those never assigned again) are block-scoped and there is no hoisting. There
+  is no `var`: it is a reserved word, and the compiler says to use `let`. Like
   Javascript in _strict mode_, all variables have to be declared before they can
   be used. This includes `typeof`: `typeof undeclared` is a compile-time error,
   not `"undefined"`.
 - **Blocks are mandatory:** control structures always need blocks:
   `if (cond) { stmts; } else if (cond) { stmts; } else { stmts; }`
-- **Loops:** there are two types of `for` loops: a numeric one inspired by
-  _Lua_, where the end value is inclusive and an optional step can be given
-  (`for (let i = 1, 10) { … }`, `for (let i = 10, 1, -1) { … }`), and one that
-  iterates over the _values_ of an array (`for (const x : arr) { … }`), also of
-  strings, `Map`s, `Set`s and lazy ranges: `for (const i : range(n)) { … }`
-  counts from 0 to n - 1, as in Python. Additionally there is
-  `while (cond) { … }`; `break` leaves the innermost loop, `continue` goes on
-  with its next iteration. `i++;` and `i--;` are statements, not expressions (no
-  `x = i++`, no `++i`).
+- **Loops:** `for` goes through the _values_ of an array
+  (`for (const x : arr) { … }`), the characters of a string, the entries of a
+  `Map` or `Set`, or the integers of a lazy range: `for (const i : range(n))`
+  counts from 0 to n - 1, `range(1, 11)` from 1 to 10, and
+  `for (const i : range(a.length).reverse())` goes backwards over the indexes
+  (ranges as in Python). There is no counting `for (let i = 0; i < n; i++)`. For
+  anything else there is `while (cond) { … }`. `break` leaves the innermost
+  loop, `continue` goes on with its next iteration. `i++;` and `i--;` are
+  statements, not expressions (no `x = i++`, no `++i`).
 - **Equality without coercion:** there are only `==` and `!=`, and they never
   convert types (`1 == "1"` is `false`). The one deliberate exception:
   `null == undefined` is `true`, so `o.x == null` checks for a missing property.

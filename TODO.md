@@ -232,8 +232,8 @@ and differential tests run against node.
   ```js
   // geometry.tys
   export function area(r) { return Math.PI * r * r; }
-  export var unit = "cm";
-  var helper = 2;                          // not exported, private
+  export const unit = "cm";
+  const helper = 2;                          // not exported, private
 
   // main.tys
   import area, unit from "./geometry";     // named imports
@@ -416,8 +416,10 @@ and differential tests run against node.
       `for (const i : range(a.length).reverse())` instead of
       `range(a.length - 1, -1, -1)`. Done 2026-11-21: `range(…).reverse()`; the
       four backward loops of the AoC solutions use it, so they have no Lua-style
-      loop left, and the web demo has a loops example without one. Still to
-      decide: whether the Lua-style loop and `var` are phased out.
+      loop left, and the web demo has a loops example without one. Decided and
+      done 2026-11-21: the Lua-style loop and `var` are removed (no deprecation,
+      there are no other users); `var` stays a reserved word, and both get a
+      syntax error that says what to write instead.
     - **Half truthiness.** In conditions `null` / `undefined` are false and
       objects are true (`if (node)`, `while (node)`), but `&&` and `||` always
       give a boolean. So the Javascript habit `const cfg = options || {};`
@@ -435,6 +437,12 @@ and differential tests run against node.
     comfortable REPL, standard input.
 
 ## Interpreter and code quality
+
+- **A slow REPL test** (found 2026-11-21): `testEndlessRecursionIsAnError` takes
+  about 65 s when the whole `TinyscriptReplMainTest` runs, but 6 s alone (on
+  `master` as well; the REPL runs the same script in 5 s). Probably the deep
+  stack (about 500,000 calls) after earlier tests in the same JVM; find out why
+  before it slows down CI further.
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always
   skipped. Either add the GraalJS dependency or remove it (decision deferred).

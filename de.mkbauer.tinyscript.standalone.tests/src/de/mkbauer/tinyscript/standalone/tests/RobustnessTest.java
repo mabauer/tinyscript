@@ -99,15 +99,15 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
     public void testCallingAMissingMethod() {
         assertTypeError("String has no method 'splitt'", "\"a,b\".splitt(\",\");");
         assertTypeError("Array has no method 'foo'", "[1].foo();");
-        assertTypeError("Object has no method 'f'", "var o = {}; o.f();");
+        assertTypeError("Object has no method 'f'", "let o = {}; o.f();");
         assertTypeError("Map has no method 'push'", "new Map().push(1);");
-        assertTypeError("Car has no method 'drive'", "function Car() { } var c = new Car(); c.drive();");
-        assertTypeError("Object has no method 'g'", "var o = {}; o[\"g\"]();");
+        assertTypeError("Car has no method 'drive'", "function Car() { } let c = new Car(); c.drive();");
+        assertTypeError("Object has no method 'g'", "let o = {}; o[\"g\"]();");
     }
 
     @Test
     public void testObjectsKnowTheirConstructor() {
-        String code = "function Car() { } var c = new Car();\n"
+        String code = "function Car() { } let c = new Car();\n"
                 + "print(c.constructor == Car, Object.keys(Car.prototype).length, Car.prototype.constructor == Car, {}.constructor == Object);\n"
                 + "print(c.toString());";
         assertEquals("true 0 true true\n[object Object]\n", interpreterOutput(code));
@@ -116,14 +116,14 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testCallingAPropertyThatIsNoFunction() {
-        assertTypeError("'x' of Object is a number, not a function", "var o = { x: 1 }; o.x();");
+        assertTypeError("'x' of Object is a number, not a function", "let o = { x: 1 }; o.x();");
         assertTypeError("'length' of String is a number, not a function", "\"abc\".length();");
     }
 
     @Test
     public void testCallingAVariableThatIsNoFunction() {
-        assertTypeError("'f' is a number, not a function", "var f = 1; f();");
-        assertTypeError("'f' is undefined, not a function", "var f; f();");
+        assertTypeError("'f' is a number, not a function", "let f = 1; f();");
+        assertTypeError("'f' is undefined, not a function", "let f; f();");
         assertTypeError("Only functions can be called, not string", "(\"a\")();");
     }
 

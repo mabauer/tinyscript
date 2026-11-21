@@ -4,17 +4,17 @@ const n = 15000;
 
 const primes = [];
 
-for (let i = 1,n) {
+for (const i : range(1, n + 1)) {
 	primes[i] = true;	
 }
 	
-for (let i = 2,n/2) {
-  for (let j = 2,n/i) { 
+for (const i : range(2, Math.floor(n/2) + 1)) {
+  for (const j : range(2, Math.floor(n/i) + 1)) { 
   	primes[(i*j)]=false;
   }
 }
 
-for (let i = 0,n) {
+for (const i : range(n + 1)) {
 	if (primes[i]) {
 		print(i);	
 	}

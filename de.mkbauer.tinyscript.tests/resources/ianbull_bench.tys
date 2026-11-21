@@ -1,20 +1,20 @@
-var fibonacci = function() {
-	var i;
- 	var fib = [];
+let fibonacci = function() {
+	let i;
+ 	let fib = [];
  	fib[0] = 1;
  	fib[1] = 1;
- 	for(i = 2, 100) {
+ 	for (i : range(2, 101)) {
   		fib[i] = fib[i-2] + fib[i-1];
  	}
  	return fib;
 };
 
-var bench = function(times) {
-	var start = System.currentTimeMillis();
- 	for (var n = 1, times) {
+let bench = function(times) {
+	let start = System.currentTimeMillis();
+ 	for (const n : range(1, times + 1)) {
   		fibonacci();
  	}
- 	var duration = times + ": " + (System.currentTimeMillis() - start);
+ 	let duration = times + ": " + (System.currentTimeMillis() - start);
  	print(duration);
 };
 

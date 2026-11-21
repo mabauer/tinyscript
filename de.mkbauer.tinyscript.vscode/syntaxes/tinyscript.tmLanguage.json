@@ -71,7 +71,7 @@
         {
           "comment": "Reserved, but not supported: the compiler reports them with a hint",
           "name": "invalid.illegal.reserved.tinyscript",
-          "match": "(?<!\\.)\\b(try|catch|finally|switch|case|class)\\b"
+          "match": "(?<!\\.)\\b(try|catch|finally|switch|case|class|var)\\b"
         },
         {
           "name": "keyword.control.tinyscript",
@@ -83,7 +83,7 @@
         },
         {
           "name": "storage.type.tinyscript",
-          "match": "(?<!\\.)\\b(var|let|const|function)\\b"
+          "match": "(?<!\\.)\\b(let|const|function)\\b"
         },
         {
           "name": "keyword.operator.expression.tinyscript",

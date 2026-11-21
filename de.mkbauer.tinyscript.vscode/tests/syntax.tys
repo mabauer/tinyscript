@@ -67,3 +67,6 @@ assert typeof x == "number" && x instanceof Object;
 // <----- keyword.other.assert.tinyscript
 //     ^^^^^^ keyword.operator.expression.tinyscript
 //                               ^^^^^^^^^^ keyword.operator.expression.tinyscript
+
+var old = 1;
+// <--- invalid.illegal.reserved.tinyscript

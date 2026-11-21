@@ -108,16 +108,16 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 		assertEquals("Hello 2", value.asString());
 		value = evaluateSimpleExpression("\"Hello, \" + 2 + \" Worlds!\"");
 		assertEquals("Hello, 2 Worlds!", value.asString());
-		value = executeScriptFromString("var s = \"Hello \"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; result;");
+		value = executeScriptFromString("let s = \"Hello \"; let a = [ \"Markus\", \"Bauer\" ]; let result = s + a; result;");
 		assertTrue(value.isString());
 		assertEquals("Hello [\"Markus\", \"Bauer\"]", value.asString());
 	}
 	
 	@Test
 	public void testArrayAddition() {
-		executeScriptFromString("var a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; var result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
-		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; var result = [s] + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
-		executeScriptFromString("var s = \"Hello\"; var a = [ \"Markus\", \"Bauer\" ]; ; var result = a + [s]; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
+		executeScriptFromString("let a1 = [ \"Hello\", \"Dear\"], a2 = [ \"Markus\", \"Bauer\" ]; let result = a1 + a2; assert (result[0]==\"Hello\"); assert (result[3]==\"Bauer\");");
+		executeScriptFromString("let s = \"Hello\"; let a = [ \"Markus\", \"Bauer\" ]; let result = [s] + a; assert (result[0]==\"Hello\"); assert (result[2]==\"Bauer\");");
+		executeScriptFromString("let s = \"Hello\"; let a = [ \"Markus\", \"Bauer\" ]; ; let result = a + [s]; assert (result[0]==\"Markus\"); assert (result[2]==\"Hello\");");
 	}
 
 }

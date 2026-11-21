@@ -67,7 +67,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testUnaryMinus() {
         assertEquals("-5\n", interpreterOutput("print(-5);"));
-        assertEquals("-5\n", interpreterOutput("var x = 5; print(-x);"));
+        assertEquals("-5\n", interpreterOutput("let x = 5; print(-x);"));
     }
 
     // =========================================================================
@@ -102,10 +102,10 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testElseIfWithoutFinalElse() {
         assertEquals("b\n", interpreterOutput(
-                "var x = 2;\n"
+                "let x = 2;\n"
                 + "if (x == 1) { print(\"a\"); } else if (x == 2) { print(\"b\"); } else if (x == 3) { print(\"c\"); }"));
         assertEquals("", interpreterOutput(
-                "var x = 4;\n"
+                "let x = 4;\n"
                 + "if (x == 1) { print(\"a\"); } else if (x == 2) { print(\"b\"); }"));
     }
 
@@ -121,15 +121,15 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testElseIfBranchesHaveTheirOwnScope() {
         assertEquals("2\n1\n", interpreterOutput(
-                "var x = 1;\n"
-                + "if (false) { var y = 1; } else if (true) { var y = 2; var x = 2; print(x); }\n"
+                "let x = 1;\n"
+                + "if (false) { let y = 1; } else if (true) { let y = 2; let x = 2; print(x); }\n"
                 + "print(x);"));
     }
 
     @Test
     public void testBreakInsideElseIf() {
         assertEquals("1\ntwo\n", interpreterOutput(
-                "for (var i = 1, 5) {\n"
+                "for (const i : range(1, 6)) {\n"
                 + "  if (i == 2) { print(\"two\"); } else if (i == 3) { break; } else { print(i); }\n"
                 + "}"));
     }
@@ -141,14 +141,14 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testNumericForLoop() {
         assertEquals("1\n2\n3\n", interpreterOutput(
-                "for (var i = 1, 3) { print(i); }"));
+                "for (const i : range(1, 4)) { print(i); }"));
     }
 
     @Test
     public void testNumericForLoopSum() {
         assertEquals("6\n", interpreterOutput(
-                "var sum = 0;\n"
-                + "for (var i = 1, 3) { sum = sum + i; }\n"
+                "let sum = 0;\n"
+                + "for (const i : range(1, 4)) { sum = sum + i; }\n"
                 + "print(sum);"));
     }
 
@@ -159,15 +159,15 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testForInArray() {
         assertEquals("a\nb\nc\n", interpreterOutput(
-                "var arr = [\"a\", \"b\", \"c\"];\n"
-                + "for (var x : arr) { print(x); }"));
+                "let arr = [\"a\", \"b\", \"c\"];\n"
+                + "for (let x : arr) { print(x); }"));
     }
 
     @Test
     public void testForInArrayNumbers() {
         assertEquals("1\n2\n3\n", interpreterOutput(
-                "var arr = [1, 2, 3];\n"
-                + "for (var x : arr) { print(x); }"));
+                "let arr = [1, 2, 3];\n"
+                + "for (let x : arr) { print(x); }"));
     }
 
     // =========================================================================
@@ -201,7 +201,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testFunctionExpression() {
         assertEquals("9\n", interpreterOutput(
-                "var square = function(x) { return x * x; };\n"
+                "let square = function(x) { return x * x; };\n"
                 + "print(square(3));"));
     }
 
@@ -211,18 +211,18 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrowFunctionSingleParam() {
-        assertEquals("6\n", interpreterOutput("var f = x => x * 2; print(f(3));"));
+        assertEquals("6\n", interpreterOutput("let f = x => x * 2; print(f(3));"));
     }
 
     @Test
     public void testArrowFunctionParenthesisedParam() {
-        assertEquals("6\n", interpreterOutput("var f = (x) => x * 2; print(f(3));"));
+        assertEquals("6\n", interpreterOutput("let f = (x) => x * 2; print(f(3));"));
     }
 
     @Test
     public void testArrowFunctionMultipleParams() {
         assertEquals("7\n", interpreterOutput(
-                "var add = (a, b) => a + b; print(add(3, 4));"));
+                "let add = (a, b) => a + b; print(add(3, 4));"));
     }
 
     // =========================================================================
@@ -239,14 +239,14 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testClosureCounter() {
         assertEquals("3\n", interpreterOutput(
-                "var makeCounter = function() {\n"
-                + "  var value = 0;\n"
+                "let makeCounter = function() {\n"
+                + "  let value = 0;\n"
                 + "  return {\n"
                 + "    inc: function() { value = value + 1; },\n"
                 + "    val: function() { return value; }\n"
                 + "  };\n"
                 + "};\n"
-                + "var c = makeCounter();\n"
+                + "let c = makeCounter();\n"
                 + "c.inc(); c.inc(); c.inc();\n"
                 + "print(c.val());"));
     }
@@ -258,8 +258,8 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testBlockScoping() {
         assertEquals("10\n5\n", interpreterOutput(
-                "var x = 5;\n"
-                + "{ var x = 10; print(x); }\n"
+                "let x = 5;\n"
+                + "{ let x = 10; print(x); }\n"
                 + "print(x);"));
     }
 
@@ -270,15 +270,15 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testObjectLiteral() {
         assertEquals("42\n", interpreterOutput(
-                "var obj = { x: 42 };\n"
+                "let obj = { x: 42 };\n"
                 + "print(obj.x);"));
     }
 
     @Test
     public void testPrototypalInheritance() {
         assertEquals("42\n", interpreterOutput(
-                "var proto = { getX: function() { return this.x; } };\n"
-                + "var obj = Object.create(proto);\n"
+                "let proto = { getX: function() { return this.x; } };\n"
+                + "let obj = Object.create(proto);\n"
                 + "obj.x = 42;\n"
                 + "print(obj.getX());"));
     }
@@ -286,7 +286,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testObjectPropertyAssignment() {
         assertEquals("hello\n", interpreterOutput(
-                "var obj = {};\n"
+                "let obj = {};\n"
                 + "obj.name = \"hello\";\n"
                 + "print(obj.name);"));
     }
@@ -298,21 +298,21 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArrayLiteral() {
         assertEquals("1\n", interpreterOutput(
-                "var arr = [1, 2, 3];\n"
+                "let arr = [1, 2, 3];\n"
                 + "print(arr[0]);"));
     }
 
     @Test
     public void testArrayLength() {
         assertEquals("3\n", interpreterOutput(
-                "var arr = [1, 2, 3];\n"
+                "let arr = [1, 2, 3];\n"
                 + "print(arr.length);"));
     }
 
     @Test
     public void testArrayPushPop() {
         assertEquals("4\n3\n", interpreterOutput(
-                "var arr = [1, 2, 3];\n"
+                "let arr = [1, 2, 3];\n"
                 + "arr.push(4);\n"
                 + "print(arr.pop());\n"
                 + "print(arr.length);"));
@@ -321,8 +321,8 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArrayAdditionConcatenates() {
         assertEquals("1,2,3\n3\n1\n", interpreterOutput(
-                "var a = [1];\n"
-                + "var b = a + [2, 3];\n"
+                "let a = [1];\n"
+                + "let b = a + [2, 3];\n"
                 + "print(b.join(\",\"));\n"
                 + "print(b.length);\n"
                 + "print(a.length);"));
@@ -331,7 +331,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArrayAdditionResultIsAnArray() {
         assertEquals("true\ntrue\n", interpreterOutput(
-                "var a = [1] + [2];\n"
+                "let a = [1] + [2];\n"
                 + "print(Array.isArray(a));\n"
                 + "print(Object.getPrototypeOf(a) == Object.getPrototypeOf([]));"));
     }
@@ -373,16 +373,16 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testReturnFromNestedBlockRestoresCallerContext() {
         assertEquals("47\n", interpreterOutput(
-                "function f(x) { if (x > 0) { var y = x; return y; } return 0; }\n"
-                + "function g() { var local = 42; var r = f(5); return local + r; }\n"
+                "function f(x) { if (x > 0) { let y = x; return y; } return 0; }\n"
+                + "function g() { let local = 42; let r = f(5); return local + r; }\n"
                 + "print(g());"));
     }
 
     @Test
     public void testReturnFromLoopRestoresCallerContext() {
         assertEquals("13\n", interpreterOutput(
-                "function find(arr) { for (var x : arr) { if (x > 2) { return x; } } return -1; }\n"
-                + "function g() { var local = 10; var r = find([1, 2, 3]); return local + r; }\n"
+                "function find(arr) { for (let x : arr) { if (x > 2) { return x; } } return -1; }\n"
+                + "function g() { let local = 10; let r = find([1, 2, 3]); return local + r; }\n"
                 + "print(g());"));
     }
 
@@ -390,8 +390,8 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     public void testClosureOverFunctionDeclaration() {
         assertEquals("1\n2\n", interpreterOutput(
                 "function makeGetter(v) { function get() { return v; } return get; }\n"
-                + "var a = makeGetter(1);\n"
-                + "var b = makeGetter(2);\n"
+                + "let a = makeGetter(1);\n"
+                + "let b = makeGetter(2);\n"
                 + "print(a());\n"
                 + "print(b());"));
     }
@@ -403,25 +403,25 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testBreakInNumericFor() {
         assertEquals("1\n2\n", interpreterOutput(
-                "for (var i = 1, 10) { if (i == 3) { break; } print(i); }"));
+                "for (const i : range(1, 11)) { if (i == 3) { break; } print(i); }"));
     }
 
     @Test
     public void testBreakInIterableFor() {
         assertEquals("a\nb\n", interpreterOutput(
-                "for (var s : [\"a\", \"b\", \"stop\", \"c\"]) { if (s == \"stop\") { break; } print(s); }"));
+                "for (let s : [\"a\", \"b\", \"stop\", \"c\"]) { if (s == \"stop\") { break; } print(s); }"));
     }
 
     @Test
     public void testBreakLeavesOnlyInnermostLoop() {
         assertEquals("1-1\n2-1\n", interpreterOutput(
-                "for (var i = 1, 2) { for (var j = 1, 3) { if (j == 2) { break; } print(i + \"-\" + j); } }"));
+                "for (const i : range(1, 3)) { for (const j : range(1, 4)) { if (j == 2) { break; } print(i + \"-\" + j); } }"));
     }
 
     @Test
     public void testBreakInsideFunctionInLoop() {
         assertEquals("1\n2\n", interpreterOutput(
-                "function firstTwo() { var n = 0; for (var i = 1, 10) { n = n + 1; if (n > 2) { break; } print(i); } }\n"
+                "function firstTwo() { let n = 0; for (const i : range(1, 11)) { n = n + 1; if (n > 2) { break; } print(i); } }\n"
                 + "firstTwo();"));
     }
 
@@ -433,7 +433,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testBreakCannotLeaveFunctionBody() {
-        assertRejected("for (var i = 1, 3) { var f = function() { break; }; f(); }");
+        assertRejected("for (const i : range(1, 4)) { let f = function() { break; }; f(); }");
     }
 
     // =========================================================================
@@ -443,7 +443,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testWhileLoop() {
         assertEquals("0\n1\n2\n", interpreterOutput(
-                "var i = 0;\n"
+                "let i = 0;\n"
                 + "while (i < 3) { print(i); i = i + 1; }"));
     }
 
@@ -457,41 +457,41 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testWhileBodyHasItsOwnBlockScope() {
         assertEquals("0\n10\n", interpreterOutput(
-                "var i = 0;\n"
-                + "while (i < 2) { var x = i * 10; print(x); i = i + 1; }"));
+                "let i = 0;\n"
+                + "while (i < 2) { let x = i * 10; print(x); i = i + 1; }"));
     }
 
     @Test
     public void testBreakInWhile() {
         assertEquals("1\n2\n", interpreterOutput(
-                "var i = 0;\n"
+                "let i = 0;\n"
                 + "while (true) { i = i + 1; if (i > 2) { break; } print(i); }"));
     }
 
     @Test
     public void testBreakInWhileLeavesOnlyInnermostLoop() {
         assertEquals("1-0\n2-0\n", interpreterOutput(
-                "for (var i = 1, 2) { var j = 0; while (true) { if (j == 1) { break; } print(i + \"-\" + j); j = j + 1; } }"));
+                "for (const i : range(1, 3)) { let j = 0; while (true) { if (j == 1) { break; } print(i + \"-\" + j); j = j + 1; } }"));
     }
 
     @Test
     public void testReturnFromWhileRestoresCallerContext() {
         assertEquals("15\n", interpreterOutput(
-                "function firstAbove(limit) { var n = 0; while (true) { var next = n + 1; if (next > limit) { return next; } n = next; } }\n"
-                + "function g() { var local = 10; var r = firstAbove(4); return local + r; }\n"
+                "function firstAbove(limit) { let n = 0; while (true) { let next = n + 1; if (next > limit) { return next; } n = next; } }\n"
+                + "function g() { let local = 10; let r = firstAbove(4); return local + r; }\n"
                 + "print(g());"));
     }
 
     @Test
     public void testDuplicateGlobalDeclarationsAreRejected() {
-        assertRejected("var x = 1; var x = 2;");
+        assertRejected("let x = 1; let x = 2;");
         assertRejected("function f() { } function f() { }");
-        assertRejected("var f = 1; function f() { }");
+        assertRejected("let f = 1; function f() { }");
     }
 
     @Test
     public void testBreakCannotLeaveFunctionBodyInWhile() {
-        assertRejected("while (true) { var f = function() { break; }; f(); }");
+        assertRejected("while (true) { let f = function() { break; }; f(); }");
     }
 
     @Test
@@ -538,16 +538,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     // Numeric for: step validation
     // =========================================================================
 
-    @Test
-    public void testNumericForRejectsNonIntegerStep() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "for (var i = 0, 10, 2.5) { print(i); }");
-    }
 
-    @Test
-    @Timeout(value = 10, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
-    public void testNumericForRejectsZeroStep() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "for (var i = 0, 10, 0) { print(i); }");
-    }
 
     // =========================================================================
     // Sandbox: every loop iteration counts against the statement limit
@@ -559,7 +550,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         ResourceLimits limits = new ResourceLimits();
         limits.setMaxStatements(10000);
         assertThrows(TinyscriptResourceLimitViolation.class,
-                () -> interpreterOutput("for (var i = 0, 1000000000000) { }", limits));
+                () -> interpreterOutput("for (const i : range(1000000000001)) { }", limits));
     }
 
     @Test
@@ -568,7 +559,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         ResourceLimits limits = new ResourceLimits();
         limits.setMaxStatements(5);
         assertThrows(TinyscriptResourceLimitViolation.class,
-                () -> interpreterOutput("var a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\nfor (var x : a) { }", limits));
+                () -> interpreterOutput("let a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];\nfor (let x : a) { }", limits));
     }
 
     @Test
@@ -584,7 +575,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         ResourceLimits limits = new ResourceLimits();
         limits.setMaxOutputSize(100);
         TinyscriptResourceLimitViolation e = assertThrows(TinyscriptResourceLimitViolation.class,
-                () -> interpreterOutput("var i = 0;\nwhile (true) {\n  print(\"0123456789\");\n}", limits));
+                () -> interpreterOutput("let i = 0;\nwhile (true) {\n  print(\"0123456789\");\n}", limits));
         assertEquals("Output limit reached", e.getMessage());
         assertEquals(3, e.getAffectedLine());
     }
@@ -595,7 +586,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         ResourceLimits limits = new ResourceLimits();
         limits.setMaxObjectSize(1000);
         TinyscriptResourceLimitViolation e = assertThrows(TinyscriptResourceLimitViolation.class,
-                () -> interpreterOutput("var a = [];\na[2000000000] = 1;", limits));
+                () -> interpreterOutput("let a = [];\na[2000000000] = 1;", limits));
         assertEquals("Object size limit reached", e.getMessage());
         assertEquals(2, e.getAffectedLine());
     }
@@ -606,7 +597,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         ResourceLimits limits = new ResourceLimits();
         limits.setMaxObjectSize(1000);
         TinyscriptResourceLimitViolation e = assertThrows(TinyscriptResourceLimitViolation.class,
-                () -> interpreterOutput("var a = [];\na.length = 2000000000;", limits));
+                () -> interpreterOutput("let a = [];\na.length = 2000000000;", limits));
         assertEquals("Object size limit reached", e.getMessage());
         assertEquals(2, e.getAffectedLine());
     }
@@ -621,7 +612,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
         ResourceLimits limits = new ResourceLimits();
         limits.setMaxStatements(100);
         TinyscriptResourceLimitViolation e = assertThrows(TinyscriptResourceLimitViolation.class,
-                () -> interpreterOutput("var i = 0;\n\nwhile (true) { }", limits));
+                () -> interpreterOutput("let i = 0;\n\nwhile (true) { }", limits));
         assertEquals(3, e.getAffectedLine());
     }
 
@@ -637,7 +628,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testErrorInBuiltinReportsTheLineOfTheCall() {
         TinyscriptRuntimeException e = assertThrows(TinyscriptRuntimeException.class,
-                () -> interpreterOutput("var a = [1];\n\na.push();"));
+                () -> interpreterOutput("let a = [1];\n\na.push();"));
         assertEquals(3, e.getAffectedLine());
     }
 }

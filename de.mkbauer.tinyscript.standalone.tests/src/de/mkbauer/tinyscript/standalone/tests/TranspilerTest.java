@@ -70,14 +70,14 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testClosures() {
         String script =
-                "var makeCounter = function() {\n"
-                + "  var value = 0;\n"
+                "let makeCounter = function() {\n"
+                + "  let value = 0;\n"
                 + "  return {\n"
                 + "    inc: function() { value = value + 1; },\n"
                 + "    val: function() { return value; }\n"
                 + "  };\n"
                 + "};\n"
-                + "var c = makeCounter();\n"
+                + "let c = makeCounter();\n"
                 + "c.inc();\n"
                 + "c.inc();\n"
                 + "c.inc();\n"
@@ -87,16 +87,16 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrowFunctions() {
-        assertSameOutput("var f = (x) => x * 2; print(f(3));");
-        assertSameOutput("var add = (a, b) => a + b; print(add(3, 4));");
+        assertSameOutput("let f = (x) => x * 2; print(f(3));");
+        assertSameOutput("let add = (a, b) => a + b; print(add(3, 4));");
     }
 
     @Test
     public void testClosuresOverFunctionDeclarations() {
         assertSameOutput(
                 "function makeGetter(v) { function get() { return v; } return get; }\n"
-                + "var a = makeGetter(1);\n"
-                + "var b = makeGetter(2);\n"
+                + "let a = makeGetter(1);\n"
+                + "let b = makeGetter(2);\n"
                 + "print(a());\n"
                 + "print(b());");
     }
@@ -104,29 +104,29 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testReturnFromNestedBlocks() {
         assertSameOutput(
-                "function f(x) { if (x > 0) { var y = x; return y; } return 0; }\n"
-                + "function g() { var local = 42; var r = f(5); return local + r; }\n"
+                "function f(x) { if (x > 0) { let y = x; return y; } return 0; }\n"
+                + "function g() { let local = 42; let r = f(5); return local + r; }\n"
                 + "print(g());");
     }
 
     @Test
     public void testBreak() {
-        assertSameOutput("for (var i = 1, 10) { if (i == 3) { break; } print(i); }");
-        assertSameOutput("for (var i = 1, 2) { for (var j = 1, 3) { if (j == 2) { break; } print(i + \"-\" + j); } }");
-        assertSameOutput("for (var s : [\"a\", \"b\", \"stop\", \"c\"]) { if (s == \"stop\") { break; } print(s); }");
+        assertSameOutput("for (const i : range(1, 11)) { if (i == 3) { break; } print(i); }");
+        assertSameOutput("for (const i : range(1, 3)) { for (const j : range(1, 4)) { if (j == 2) { break; } print(i + \"-\" + j); } }");
+        assertSameOutput("for (let s : [\"a\", \"b\", \"stop\", \"c\"]) { if (s == \"stop\") { break; } print(s); }");
     }
 
     @Test
     public void testElseIf() {
         assertSameOutput("function sign(n) { if (n < 0) { return \"negative\"; } else if (n == 0) { return \"zero\"; } else { return \"positive\"; } }"
                 + " print(sign(-1)); print(sign(0)); print(sign(1));");
-        assertSameOutput("for (var x = 1, 4) { if (x == 1) { print(\"a\"); } else if (x == 2) { print(\"b\"); } else if (x == 3) { print(\"c\"); } }");
-        assertSameOutput("for (var i = 1, 5) { if (i == 2) { print(\"two\"); } else if (i == 3) { break; } else { print(i); } }");
+        assertSameOutput("for (const x : range(1, 5)) { if (x == 1) { print(\"a\"); } else if (x == 2) { print(\"b\"); } else if (x == 3) { print(\"c\"); } }");
+        assertSameOutput("for (const i : range(1, 6)) { if (i == 2) { print(\"two\"); } else if (i == 3) { break; } else { print(i); } }");
     }
 
     @Test
     public void testIterableForWithoutVar() {
-        String code = "var x; for (x : [1, 2]) { print(x); } print(x);";
+        String code = "let x; for (x : [1, 2]) { print(x); } print(x);";
         assertEquals("1\n2\n2\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -134,39 +134,31 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testNewWithoutParentheses() {
         String code = "function Foo() { this.x = 1; }\n"
-                + "var o = new Foo;\n"
+                + "let o = new Foo;\n"
                 + "print(o.x); print(o instanceof Foo);\n"
-                + "var a = new Array; print(a.length);";
+                + "let a = new Array; print(a.length);";
         assertEquals("1\ntrue\n0\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testIterableIsEvaluatedOnce() {
-        String code = "function f() { print(\"f\"); return [1, 2]; } for (var x : f()) { print(x); }";
+        String code = "function f() { print(\"f\"); return [1, 2]; } for (let x : f()) { print(x); }";
         assertEquals("f\n1\n2\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testNestedIterableLoops() {
-        String code = "for (var a : [1, 2]) { for (var b : [3, 4]) { print(a + \"-\" + b); } }";
+        String code = "for (let a : [1, 2]) { for (let b : [3, 4]) { print(a + \"-\" + b); } }";
         assertEquals("1-3\n1-4\n2-3\n2-4\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
-    @Test
-    public void testNumericForBoundsAreEvaluatedOnce() {
-        String code = "function n(x) { print(\"n\" + x); return x; }\n"
-                + "for (var i = n(1), n(2)) { print(i); }\n"
-                + "for (var j = n(6), n(2), n(-2)) { print(j); }";
-        assertEquals("n1\nn2\n1\n2\nn6\nn2\nn-2\n6\n4\n2\n", interpreterOutput(code));
-        assertSameOutput(code);
-    }
 
     @Test
     public void testStringKeysInObjectLiterals() {
-        String code = "var o = { \"a b\": 1, c: 2 }; print(o[\"a b\"]); print(o.c);";
+        String code = "let o = { \"a b\": 1, c: 2 }; print(o[\"a b\"]); print(o.c);";
         assertEquals("1\n2\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -176,43 +168,43 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
         String code = "function Foo(x) { this.x = x; }\n"
                 + "Foo.prototype.get = function() { return this.x; };\n"
                 + "print(new Foo(2).x); print(new Foo(3).get());\n"
-                + "var ns = { Bar: function(y) { this.y = y; } }; print(new ns.Bar(4).y);";
+                + "let ns = { Bar: function(y) { this.y = y; } }; print(new ns.Bar(4).y);";
         assertEquals("2\n3\n4\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testArrayGapsAreFilledWithUndefined() {
-        String code = "var a = [1]; a[3] = 4; print(a.length); print(a[2] == null); print(a[3]);";
+        String code = "let a = [1]; a[3] = 4; print(a.length); print(a[2] == null); print(a[3]);";
         assertEquals("4\ntrue\n4\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testSettingArrayLengthTruncates() {
-        String code = "var a = [1, 2, 3]; a.length = 1; print(a.length); print(a[1] == null); print(a.join(\",\"));";
+        String code = "let a = [1, 2, 3]; a.length = 1; print(a.length); print(a[1] == null); print(a.join(\",\"));";
         assertEquals("1\ntrue\n1\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testSettingArrayLengthGrows() {
-        String code = "var a = [1]; a.length = 3; print(a.length); print(a[2] == null); a.push(4); print(a[3]);";
+        String code = "let a = [1]; a.length = 3; print(a.length); print(a[2] == null); a.push(4); print(a[3]);";
         assertEquals("3\ntrue\n4\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testReadingNonIndexKeysOfArraysIsUndefined() {
-        String code = "var a = [1]; print(a[-1] == null); print(a[1.5] == null); print(a.x == null); print(a.length);";
+        String code = "let a = [1]; print(a[-1] == null); print(a[1.5] == null); print(a.x == null); print(a.length);";
         assertEquals("true\ntrue\ntrue\n1\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testArbitraryExpressionsInArrayLiterals() {
-        String code = "var x = 1; var y = 2;\n"
-                + "var a = [x > y, !(x > y), x == 1, f => f * 2];\n"
+        String code = "let x = 1; let y = 2;\n"
+                + "let a = [x > y, !(x > y), x == 1, f => f * 2];\n"
                 + "print(a[0]); print(a[1]); print(a[2]); print(a[3](4));";
         assertEquals("false\ntrue\ntrue\n8\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -220,7 +212,7 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArbitraryExpressionsAsIndex() {
-        String code = "var o = {}; var a = [10, 20]; var i;\n"
+        String code = "let o = {}; let a = [10, 20]; let i;\n"
                 + "o[1 < 2] = \"lt\"; print(o[\"true\"]);\n"
                 + "print(a[i = 1]); print(i);";
         assertEquals("lt\n20\n1\n", interpreterOutput(code));
@@ -229,7 +221,7 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNestedUnaryOperators() {
-        String code = "var x = 3; var b = true; var o = {};\n"
+        String code = "let x = 3; let b = true; let o = {};\n"
                 + "print(!!b); print(!!o); print(!!null); print(- -x); print(-(-x)); print(typeof -x); print(typeof !b);";
         assertEquals("true\ntrue\nfalse\n3\n3\nnumber\nboolean\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -237,7 +229,7 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testEscapesInStringLiterals() {
-        String code = "var s = \"a\\nb\\t\\\"q\\\" \\\\ \\u00e4\";\nprint(s); print(s.length); print('it\\'s');";
+        String code = "let s = \"a\\nb\\t\\\"q\\\" \\\\ \\u00e4\";\nprint(s); print(s.length); print('it\\'s');";
         assertEquals("a\nb\t\"q\" \\ ä\n11\nit's\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -251,9 +243,9 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testWhile() {
-        assertSameOutput("var i = 0; while (i < 3) { print(i); i = i + 1; }");
-        assertSameOutput("var i = 0; while (true) { i = i + 1; if (i > 2) { break; } print(i); }");
-        assertSameOutput("for (var i = 1, 2) { var j = 0; while (j < 5) { if (j == 1) { break; } print(i + \"-\" + j); j = j + 1; } }");
+        assertSameOutput("let i = 0; while (i < 3) { print(i); i = i + 1; }");
+        assertSameOutput("let i = 0; while (true) { i = i + 1; if (i > 2) { break; } print(i); }");
+        assertSameOutput("for (const i : range(1, 3)) { let j = 0; while (j < 5) { if (j == 1) { break; } print(i + \"-\" + j); j = j + 1; } }");
     }
 
     @Test
@@ -263,8 +255,8 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrayAddition() {
-        assertSameOutput("var a = [1]; var b = a + [2, 3]; print(b.join(\",\")); print(b.length); print(a.length);");
-        assertSameOutput("var b = [1] + [2]; print(b.map(x => x * 10).join(\",\"));");
+        assertSameOutput("let a = [1]; let b = a + [2, 3]; print(b.join(\",\")); print(b.length); print(a.length);");
+        assertSameOutput("let b = [1] + [2]; print(b.map(x => x * 10).join(\",\"));");
     }
 
 }

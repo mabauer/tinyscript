@@ -521,12 +521,12 @@ REPL runs with it off.
 Xtext calls `@Check`-annotated methods during parsing and on-save in the IDE.
 Violations become error markers (red squiggles).
 
-| Check method                                          | What it validates                                                        |
-| ----------------------------------------------------- | ------------------------------------------------------------------------ |
-| `checkVariableDoesNotCauseConflictInBlock`            | No two `var` declarations with the same name in the same `Block`         |
-| `checkFunctionDeclarationDoesNotCauseConflictInBlock` | No `function` declaration name conflicts in the same `Block`             |
-| `checkReservedIdentifier`                             | Identifiers must not start with `"__ts"` (reserved for transpiler shims) |
-| `checkReturnInvalidInGlobal`                          | `return` statement not allowed at global (top-level) scope               |
+| Check method                                          | What it validates                                                          |
+| ----------------------------------------------------- | -------------------------------------------------------------------------- |
+| `checkVariableDoesNotCauseConflictInBlock`            | No two `let` / `const` declarations with the same name in the same `Block` |
+| `checkFunctionDeclarationDoesNotCauseConflictInBlock` | No `function` declaration name conflicts in the same `Block`               |
+| `checkReservedIdentifier`                             | Identifiers must not start with `"__ts"` (reserved for transpiler shims)   |
+| `checkReturnInvalidInGlobal`                          | `return` statement not allowed at global (top-level) scope                 |
 
 These checks are compile-time only — the interpreter does not re-run them at
 runtime.
@@ -591,11 +591,11 @@ to preserve Tinyscript's array concatenation semantics.
 
 ### `for` Loop Transpilation
 
-- **Numeric `for (i = start to end)`:** emits
-  `for (var i = start; i <= stop; i = i + 1)` with a bidirectional step
-  condition when a step is specified
-- **Iterable `for (x in array)`:** emits a C-style for loop with an internal
-  `__ts_i` counter, guarded by an `Array.isArray()` check
+- **`for (const x : items)`:** emits a loop over `__ts_iterate(items)` (the only
+  `for` loop; the Lua-style numeric loop was removed in 0.22.1): arrays item by
+  item (seeing items the body appends), the characters of a string, a copy of
+  the entries of a `Map` or `Set`, a range lazily; the loop variable is a
+  block-scoped `let` / `const` per iteration
 
 ### Identifier Shadowing
 

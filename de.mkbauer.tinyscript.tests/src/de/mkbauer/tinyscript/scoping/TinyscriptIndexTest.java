@@ -48,7 +48,7 @@ public class TinyscriptIndexTest {
 	
 	@Test
 	public void testIndexWithFunction() {
-		Tinyscript ast = parseFromString("function f(x) {var local=1; return x;} var global=1; assert (f(global)==1); ");
+		Tinyscript ast = parseFromString("function f(x) {let local=1; return x;} let global=1; assert (f(global)==1); ");
 		// tester.assertNoErrors(ast);
 		Iterable<IEObjectDescription> exported = index.getExportedEObjectDescriptions(ast);
 		assertIterableContainsString("f", exported);
@@ -57,7 +57,7 @@ public class TinyscriptIndexTest {
 		assertIterableContainsString("functionf.local", exported);
 		assertIterableContainsString("global", exported);
 		
-		ast = parseFromString("var f = function (x) {var local=1; return x;} var global=1; assert (f(global)==1); ");
+		ast = parseFromString("let f = function (x) {let local=1; return x;} let global=1; assert (f(global)==1); ");
 		exported = index.getExportedEObjectDescriptions(ast);
 		assertIterableContainsString("f", exported);
 		assertIterableContainsString("function\\d+", exported);
@@ -68,7 +68,7 @@ public class TinyscriptIndexTest {
 	
 	@Test
 	public void testIndexWithBlock() {
-		Tinyscript ast = parseFromString("{ var local=1; } var global = 1; assert (global==1); ");
+		Tinyscript ast = parseFromString("{ let local=1; } let global = 1; assert (global==1); ");
 		// tester.assertNoErrors(ast);
 		Iterable<IEObjectDescription> exported = index.getExportedEObjectDescriptions(ast);
 		assertIterableContainsString("block\\d+", exported);
@@ -78,7 +78,7 @@ public class TinyscriptIndexTest {
 	
 	@Test
 	public void testIndexWithForeach() {
-		Tinyscript ast = parseFromString("var obj = []; var i=0; for (var x: obj) { i=i+1; } assert (i==0); ");
+		Tinyscript ast = parseFromString("let obj = []; let i=0; for (let x: obj) { i=i+1; } assert (i==0); ");
 		// tester.assertNoErrors(ast);
 		Iterable<IEObjectDescription> exported = index.getExportedEObjectDescriptions(ast);
 		assertIterableContainsString("obj", exported);

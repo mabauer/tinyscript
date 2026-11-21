@@ -45,7 +45,6 @@ import de.mkbauer.tinyscript.ts.ArrayInitializer
 import de.mkbauer.tinyscript.ts.ForStatement
 
 import com.google.inject.Inject
-import de.mkbauer.tinyscript.ts.NumericForExpression
 import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
 import de.mkbauer.tinyscript.ts.ArrowExpressionBody
@@ -548,50 +547,7 @@ class TinyscriptGenerator   {
 	'''
 	
 	def dispatch generate(ForStatement stmt) {
-		if (stmt.numericForExpr !== null) {
-			generateNumericForStatement(stmt);
-		}
-		else { 
-			generateIterableForStatement(stmt);
-		}
-	}
-	
-	// Like the interpreter (and Lua), a hidden counter runs the loop; the loop variable gets its
-	// value in each iteration: a block-scoped let, so that closures see the value of their iteration
-	def generateNumericForStatement(ForStatement stmt) {
-		val NumericForExpression expr=stmt.numericForExpr; 
-		val loopVarDefinition = if (stmt.id !== null) declarationKeyword(stmt.kind) + " " + stmt.id.generate else stmt.ref.generate
-		// Like the interpreter, evaluate the bounds once, in the order start, stop, step
-		val preamble = new StringBuilder
-		val start = evaluateOnce(expr.start, "start", preamble)
-		val stop = evaluateOnce(expr.stop, "stop", preamble)
-		val step = if (expr.step !== null) evaluateOnce(expr.step, "step", preamble)
-		val counter = newTempName("n")
-		'''
-		«preamble»
-		«IF (step === null)»
-			for (var «counter» = «start»; «counter» <= «stop»; «counter» = «counter» + 1) {
-				«loopVarDefinition» = «counter»;
-				«stmt.^do.generate»
-			}
-		«ELSE»
-			for (var «counter» = «start»; («step» > 0)?(«counter» <= «stop»):(«counter» >= «stop»); «counter» = «counter» + «step») {
-				«loopVarDefinition» = «counter»;
-				«stmt.^do.generate»
-			}
-		«ENDIF»'''
-	}
-	
-	/**
-	 * Returns the code for an expression that must be evaluated only once: literals
-	 * inline, anything else via a temporary variable declared in the preamble.
-	 */
-	def private String evaluateOnce(Expression expr, String purpose, StringBuilder preamble) {
-		if (expr instanceof NumberLiteral || (expr instanceof Unary && (expr as Unary).expr instanceof NumberLiteral))
-			return expr.generate.toString
-		val name = newTempName(purpose)
-		preamble.append("var " + name + " = " + expr.generate + ";\n")
-		return name
+		generateIterableForStatement(stmt);
 	}
 	
 	def private String newTempName(String purpose) {
