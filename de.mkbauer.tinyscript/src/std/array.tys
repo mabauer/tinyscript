@@ -1,25 +1,46 @@
-// Standard library: array helpers.  import sum, reverse from "std:array";
+// Standard library: helpers for collections.  import sum, reverse from "std:array";
 // (They work on anything the for loop goes through: arrays, ranges, strings, Sets and Maps.)
 
-// The sum of the numbers in arr
-export function sum(arr) {
+// The sum of the numbers in items
+export function sum(items) {
 	let result = 0;
-	for (const x : arr) {
+	for (const x : items) {
 		result = result + x;
 	}
 	return result;
 }
 
-// Whether arr contains an element == x
-export function contains(arr, x) {
-	return arr.indexOf(x) >= 0;
+// Whether items contains an element == x (a string: a single character; use includes for a
+// substring). The elements of a Map are [key, value] pairs, which == never matches: use has(key).
+export function contains(items, x) {
+	if (Array.isArray(items)) {
+		return items.indexOf(x) >= 0;
+	}
+	if (items instanceof Set) {
+		return items.has(x);
+	}
+	for (const item : items) {
+		if (item == x) {
+			return true;
+		}
+	}
+	return false;
 }
 
-// A new array with the elements of arr in reverse order
-export function reverse(arr) {
-	const result = [];
-	for (const x : arr) {
-		result.unshift(x);
+// A new array with the elements of items in reverse order
+export function reverse(items) {
+	let all = items;
+	if (!Array.isArray(items)) {
+		all = [];
+		for (const item : items) {
+			all.push(item);
+		}
+	}
+	// Writing by index is much faster than push (a method call per element)
+	const n = all.length;
+	const result = new Array(n);
+	for (let i = 0, n - 1) {
+		result[n - 1 - i] = all[i];
 	}
 	return result;
 }

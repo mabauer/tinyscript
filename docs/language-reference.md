@@ -1378,9 +1378,12 @@ print(area(2), unit, geo.area(1));
 - **Standard library:** `std:` modules come with tinyscript (written in
   tinyscript, in the core bundle under `/std`):
 
-  - `std:array`: `sum(arr)`, `contains(arr, x)`, `reverse(arr)`; they work on
-    anything the iterable `for` loop goes through (arrays, ranges, strings,
-    `Set`s and `Map`s)
+  - `std:array`: `sum(items)`, `contains(items, x)` (whether an element is
+    `== x`), `reverse(items)` (a new array); they work on anything the iterable
+    `for` loop goes through (arrays, ranges, strings, `Set`s and `Map`s). The
+    elements of a string are its characters, so `contains("abc", "bc")` is
+    `false` (use `"abc".includes("bc")`); the elements of a `Map` are
+    `[key, value]` pairs, which `==` never matches (use `m.has(key)`)
   - `std:string`: `words(text)` (the words separated by any whitespace:
     `words(" 3   4\n")` is `["3", "4"]`; Javascript:
     `text.trim().split(/\s+/)`), `integers(text)` (all integers in a text:

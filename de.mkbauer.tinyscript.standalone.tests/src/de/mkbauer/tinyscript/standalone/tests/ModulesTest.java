@@ -13,6 +13,7 @@ import java.util.List;
 import org.eclipse.emf.common.util.URI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
@@ -184,6 +185,34 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     // =========================================================================
     // Standard library (std:…), loaded from the classpath
     // =========================================================================
+
+    @Test
+    public void testStdArrayWorksOnEverythingTheForLoopGoesThrough() throws IOException {
+        Path main = write("main.tys", "import sum, contains, reverse from \"std:array\";\n"
+                + "const s = new Set([1, 2]); const m = new Map([[\"a\", 1]]); const o = { x: 1 };\n"
+                + "print(contains(range(10), 3), contains(range(10), 10), contains(s, 1), contains(s, \"1\"));\n"
+                + "print(contains(\"abc\", \"b\"), contains(\"abc\", \"bc\"), contains(\"\", \"\"), contains([], 1), contains([o], o), contains([{ x: 1 }], o));\n"
+                + "print(contains(m, \"a\"), contains(m.keys(), \"a\"), contains(m.values(), 1));\n"
+                + "print(reverse(range(4)).join(), reverse(\"abc\").join(\"\"), reverse(s).join(), reverse([]).length, reverse(\"\").length);\n"
+                + "for (const [k, v] : reverse(new Map([[\"a\", 1], [\"b\", 2]]))) { print(k, v); }\n"
+                + "const a = [1, 2, 3]; const r = reverse(a); print(r.join(), a.join(), r == a);");
+        assertEquals("true false true false\n"
+                + "true false false false true false\n"
+                + "false true true\n"
+                + "3,2,1,0 cba 2,1 0 0\n"
+                + "b 2\na 1\n"
+                + "3,2,1 1,2,3 false\n", runModule(main));
+        assertSameOutputModule(main);
+    }
+
+    @Test
+    @Timeout(10)
+    public void testStdArrayReverseIsLinear() throws IOException {
+        // With unshift in a loop, reverse was quadratic: 200,000 elements took 2.2 s, a million about a minute
+        Path main = write("main.tys", "import reverse from \"std:array\";\n"
+                + "const r = reverse(range(1000000).toArray()); print(r.length, r[0], r[999999]);");
+        assertEquals("1000000 999999 0\n", runModule(main));
+    }
 
     @Test
     public void testStandardLibrary() throws IOException {
