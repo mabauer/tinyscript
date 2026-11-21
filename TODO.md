@@ -435,23 +435,17 @@ and differential tests run against node.
       `if (o.child)` (write `node != null`). Open, tendency (2026-11-20): 1
       or 3. Not pursued: (2) a `TypeError` for an object as operand of `&&` /
       `||`.
-  - **Suggested order:** the bugs (fixed: the three `print` bugs, the number
-    format; `toFixed` / `toString(radix)` added); `undefined`; minimal `try` /
-    `catch`; a library batch (`splice`, `reverse`, `Object.values` / `entries`,
-    powers, `Math.trunc`) with `range(…).reverse()`; method shorthand, a more
-    comfortable REPL, standard input.
+  - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
+    `toString(radix)`); `undefined`; minimal `try` / `catch`; a library batch
+    (`splice`, `reverse`, `Object.values` / `entries`, powers, `Math.trunc`)
+    with `range(…).reverse()`; method shorthand, a more comfortable REPL,
+    standard input.
 
 ## Interpreter and code quality
 
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always
   skipped. Either add the GraalJS dependency or remove it (decision deferred).
   Its error handling is minimal.
-
-- **Bugs found by the language review** (2026-11-20):
-  - **Interactive REPL:** an expression needs its `;` (`x * 2` waits for a
-    continuation line), `let x = 5;` answers `undefined`, and syntax errors show
-    up as "TinyscriptRuntimeException: line 2:1: …" instead of the messages a
-    file gets.
 
 ## Build and operations
 

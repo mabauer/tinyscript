@@ -137,6 +137,53 @@ public class TinyscriptReplMainTest {
     }
 
     @Test
+    public void testInteractiveMissingSemicolonIsAnErrorRightAway() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("let x = 21;\nx * 2\nlet y = 1\nlet y = 2;\nprint(\"alive\", y);\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("TinyscriptSyntaxError: Missing ';' at the end of the statement\n    x * 2\n         ^\n"), output);
+        assertTrue(output.contains("    let y = 1\n             ^\n"), output);
+        // The rejected line declared nothing, the session goes on
+        assertTrue(output.contains("alive 2\n"), output);
+        assertTrue(!output.contains("Duplicate"), output);
+    }
+
+    @Test
+    public void testInteractiveIncompleteStatementContinues() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("const o = {\na: 1\n};\nif (o.a == 1) {\nprint(\"one\");\n}\n!quit\n"));
+        assertTrue(out.toString().contains("one\n"), out.toString());
+        assertTrue(!out.toString().contains("Error"), out.toString());
+    }
+
+    @Test
+    public void testInteractiveShowsOnlyTheValuesOfExpressions() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("let x = 5;\nx * 2;\n\"a\" + 1;\nprint(\"p\");\nfor (const i : range(2)) { }\n"
+                        + "function f() { }\nx = 7;\nlet u;\nu;\n[1, \"b\"];\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("10\n"), output);
+        assertTrue(output.contains("'a1'\n"), output);
+        assertTrue(output.contains("p\n"), output);
+        assertTrue(output.contains("7\n"), output);
+        assertTrue(output.contains("[1, 'b']\n"), output);
+        // Only u; shows undefined: not let, print(...), for, function
+        assertEquals(1, output.split("undefined", -1).length - 1, output);
+    }
+
+    @Test
+    public void testInteractiveSyntaxErrorLooksLikeInAFile() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("if (1 === 1) { }\nfunction f() {\nreturn 1 +;\n}\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("TinyscriptSyntaxError: tinyscript has no === and !==: use == and !=, which never convert types\n"
+                + "    if (1 === 1) { }\n            ^\n"), output);
+        assertTrue(output.contains("TinyscriptSyntaxError: Unexpected ';', expected an expression (line 2 of the input)\n"
+                + "    return 1 +;\n              ^\n"), output);
+        assertTrue(!output.contains("TinyscriptRuntimeException"), output);
+    }
+
+    @Test
     public void testImportsRelativeToTheMainFile() throws IOException {
         script("util.tys", "export function twice(x) { return 2 * x; }");
         Path main = script("main.tys", "import twice from \"./util\";\nprint(twice(21));");
