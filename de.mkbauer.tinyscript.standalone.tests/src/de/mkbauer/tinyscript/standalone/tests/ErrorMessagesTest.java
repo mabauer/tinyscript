@@ -211,7 +211,8 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testPropertyOfANumberOrBoolean() {
-        assertRuntimeError("Cannot read 'toFixed' of n: numbers have no properties", "const n = 5;\nprint(n.toFixed(2));");
+        assertRuntimeError("Cannot read 'length' of n: numbers only have the methods toFixed and toString", "const n = 5;\nprint(n.length);");
+        assertRuntimeError("Cannot set 'x' of n: numbers cannot be changed", "const n = 5;\nn.x = 1;");
         assertRuntimeError("Cannot read 'x' of flag: booleans have no properties", "const flag = true;\nprint(flag.x);");
     }
 

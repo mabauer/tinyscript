@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.runtime.number;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.regex.Pattern;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
@@ -7,6 +9,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TSBoolean;
 import de.mkbauer.tinyscript.interpreter.TSNumber;
+import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSString;
 import de.mkbauer.tinyscript.interpreter.TSUndefined;
 import de.mkbauer.tinyscript.interpreter.TSValue;
@@ -15,6 +18,9 @@ import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 /**
  * The explicit conversions to numbers: the global functions Number(value), parseInt(string[, radix])
  * and isNaN(number), and Number.isInteger(value). Number is a function, not a constructor.
+ *
+ * <p>Number.prototype has the methods of numbers, toFixed(digits) and toString(radix); a method call
+ * on a number gets a {@link NumberObject} as its wrapper.
  */
 public final class NumberFunctions {
 
@@ -28,7 +34,65 @@ public final class NumberFunctions {
 	public static BuiltinFunction createNumber(TinyscriptEngine engine) {
 		BuiltinFunction number = engine.defineBuiltinFunction("Number", (self, args) -> toNumber(args[0]), 1);
 		number.defineBuiltinMethod("isInteger", (self, args) -> TSValue.of(args[0].isMathematicalInteger() && Double.isFinite(args[0].asDouble())), 1);
+		TSObject prototype = new TSObject(engine, engine.getDefaultPrototype());
+		prototype.defineDefaultProperty("constructor", number);
+		prototype.defineBuiltinMethod("toFixed", (self, args) -> toFixed(engine, thisNumber(self, "toFixed"), args), 0, 1);
+		prototype.defineBuiltinMethod("toString", (self, args) -> toString(engine, thisNumber(self, "toString"), args), 0, 1);
+		number.defineDefaultProperty("prototype", prototype);
 		return number;
+	}
+
+	/**
+	 * The wrapper of a number for a method call; {@code prototype} is Number.prototype.
+	 */
+	public static NumberObject wrap(TinyscriptEngine engine, TSNumber number, TSObject prototype) {
+		return new NumberObject(engine, number.value(), prototype);
+	}
+
+	private static double thisNumber(TSObject self, String method) {
+		if (!(self instanceof NumberObject number))
+			throw new TinyscriptTypeError(method + "() needs a number as 'this'");
+		return number.getValue();
+	}
+
+	// x.toFixed(digits): like Javascript, rounded half away from zero on the exact binary value,
+	// so (1.005).toFixed(2) is "1.00"; from 1e21 on (and NaN, Infinity) the same as String(x)
+	private static TSValue toFixed(TinyscriptEngine engine, double value, TSValue[] args) {
+		int digits = integerArgument(args, 0, 100, 0, "toFixed() needs a number of digits from 0 to 100");
+		String result;
+		if (!Double.isFinite(value) || Math.abs(value) >= 1e21)
+			result = TSNumber.format(value);
+		else {
+			String abs = new BigDecimal(Math.abs(value)).setScale(digits, RoundingMode.HALF_UP).toPlainString();
+			result = value < 0 ? "-" + abs : abs;
+		}
+		engine.recordStringCreation(result);
+		return TSValue.of(result);
+	}
+
+	// x.toString([radix]): radix 2 to 36, other radixes only for integers
+	private static TSValue toString(TinyscriptEngine engine, double value, TSValue[] args) {
+		int radix = integerArgument(args, 2, 36, 10, "toString() needs a radix from 2 to 36");
+		String result;
+		if (radix == 10)
+			result = TSNumber.format(value);
+		else {
+			if (!Double.isFinite(value) || Math.rint(value) != value)
+				throw new TinyscriptTypeError("toString(" + radix + ") needs an integer, not " + TSNumber.format(value));
+			result = new BigDecimal(value).toBigInteger().toString(radix);
+		}
+		engine.recordStringCreation(result);
+		return TSValue.of(result);
+	}
+
+	// An optional integer argument from min to max
+	private static int integerArgument(TSValue[] args, int min, int max, int missing, String message) {
+		if (args.length == 0 || args[0] instanceof TSUndefined)
+			return missing;
+		TSValue arg = args[0];
+		if (!arg.isMathematicalInteger() || arg.asDouble() < min || arg.asDouble() > max)
+			throw new TinyscriptTypeError(message + ", not " + (arg instanceof TSNumber n ? TSNumber.format(n.value()) : arg.typeOf()));
+		return (int) arg.asDouble();
 	}
 
 	public static BuiltinFunction createParseInt(TinyscriptEngine engine) {
