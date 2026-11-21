@@ -416,6 +416,26 @@ and differential tests run against node.
     - Deliberately not gaps: `switch`, template strings, labels, `do … while`,
       regular expressions, `Date`. The messages for them are good, and the
       language stays small.
+    - **Idea (2026-11-21): regular expressions without regex literals.** If
+      ever, keep `/…/` out of the grammar and make regexes values of the
+      library:
+      1. First, maybe enough for reading input: a `scanf`-like helper in
+         `std:string`, `const [px, py, vx, vy] = scan("p={},{} v={},{}", line);`
+         (readable without regex knowledge, no backtracking).
+      2. Real regexes: `new RegExp("…")` as in Javascript (or `std:regex`),
+         which the generator passes through. Regex objects immutable, only
+         stateless operations (`re.test(s)`, `re.match(s)`, `re.matchAll(s)` as
+         an array; `split` / `replace` / `replaceAll` accept a regex) — no
+         `lastIndex` / `g`-flag trap.
+      3. Against `"\\d+"`: raw strings `r"(\d+)-(\d+)"` (a lexical change only;
+         the generator writes a normal string). Not: keeping unknown escapes
+         like `"\d"`, which would silently differ from Javascript.
+      4. Java and Javascript regexes differ: accept only the common subset
+         (reject e.g. possessive quantifiers, inline flags) so that differential
+         tests hold.
+      5. Sandbox: catastrophic backtracking (`(a+)+$`) cannot be interrupted in
+         `java.util.regex`; wrap the text in a `CharSequence` whose `charAt`
+         checks the limits of the `ResourceMonitor`.
 
   - **Design questions:**
     - **Counting loops.** Three ways side by side: the Lua-style loop (inclusive
