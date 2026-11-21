@@ -448,8 +448,6 @@ and differential tests run against node.
   Its error handling is minimal.
 
 - **Bugs found by the language review** (2026-11-20):
-  - **Language reference is outdated:** section 5 says there is no `else if`
-    (there is).
   - **Interactive REPL:** an expression needs its `;` (`x * 2` waits for a
     continuation line), `let x = 5;` answers `undefined`, and syntax errors show
     up as "TinyscriptRuntimeException: line 2:1: …" instead of the messages a

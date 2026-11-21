@@ -380,17 +380,16 @@ if (condition) {
 }
 ```
 
-There is no `else if` keyword; nest another `if` inside the `else` block:
+Several conditions are chained with `else if`; only the last `else` needs no
+condition:
 
 ```
 if (x < 0) {
     print("negative");
+} else if (x == 0) {
+    print("zero");
 } else {
-    if (x == 0) {
-        print("zero");
-    } else {
-        print("positive");
-    }
+    print("positive");
 }
 ```
 
