@@ -10,8 +10,9 @@ public class GlobalExecutionContext extends ExecutionContext {
 		
 		globalObject = new TSObject(engine, engine.getDefaultPrototype());
 		
-		// TODO(TODO.md: Global this): In strict mode, this should be TSValue.UNDEFINED
-		thisRef = globalObject;
+		// Like a Javascript module (strict mode), `this` is undefined outside a function (null
+		// here); so the global object with the builtins is not reachable from a script
+		thisRef = null;
 
 	}
 	

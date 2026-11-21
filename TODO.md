@@ -317,9 +317,6 @@ and differential tests run against node.
   (read-only). Options: a literal like `null` (then a reserved word) or a
   read-only global like `Infinity` / `NaN`; the generator emits it unchanged.
 
-- **Global `this`.** At top level `this` is the global object. In Javascript's
-  strict mode (which tinyscript otherwise follows) it is `undefined`.
-
 - **More functions in the runtime library.** (`concat` is not needed: `+`
   concatenates arrays.) See the review below for the concrete list.
 

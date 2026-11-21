@@ -174,10 +174,23 @@ not visible outside it.
 
 ### `this`
 
-`this` at global scope refers to the global object. Inside a regular function
-called as a method (`obj.method()`), `this` refers to `obj`. Arrow functions
-inherit `this` from their enclosing lexical scope (see
-[Arrow functions](#arrow-functions)).
+Inside a regular function called as a method (`obj.method()`), `this` refers to
+`obj`; called as a plain function (`f()`), `this` is `undefined`, as in
+Javascript's strict mode. Arrow functions inherit `this` from their enclosing
+lexical scope (see [Arrow functions](#arrow-functions)).
+
+Outside a function, `this` is `undefined`, as in a Javascript module; so the
+compiler reports `this` there as an error, also in an arrow function written
+there:
+
+```
+print(this);                               // error
+const counter = { n: 0, get: () => this.n }; // error: use get: function() { … }
+```
+
+Unlike in a Javascript script, there is no way to reach the global object (with
+`Math`, `print`, …): builtins cannot be replaced, neither by a script nor by a
+module it imports.
 
 ---
 

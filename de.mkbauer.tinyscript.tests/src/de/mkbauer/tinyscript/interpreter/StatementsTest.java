@@ -34,6 +34,15 @@ public class StatementsTest extends TinyscriptInterpreterTestHelper {
 		}
 	}
 	
+	// The validator rejects this outside a function; the engine is safe without it, too:
+	// this is undefined there, so the global object with the builtins is not reachable
+	@Test
+	public void testThisIsUndefinedOutsideAFunction() throws Exception {
+		assertEquals(TSValue.UNDEFINED, execute(getParser().parse("this;")));
+		assertEquals(TSValue.UNDEFINED, execute(getParser().parse("var f = () => this; f();")));
+		assertEquals("ok", execute(getParser().parse("var o = { m: function() { return this; }, s: \"ok\" }; o.m().s;")).asString());
+	}
+
 	@Test
 	public void testIfStatement() {
 		TSValue value = executeScriptFromString("var i=1; if (i==1) { assert(i==1); i=2; assert(i==2);} assert(i==2);");
