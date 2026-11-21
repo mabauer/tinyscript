@@ -7,17 +7,17 @@ for (const str : arr) {
 }
 
 const x = arr.pop();
-print(arr); // ["Tinyscript", "is"]
+print(arr); // ['Tinyscript', 'is']
 print(x); 	// "tiny"
 
 arr.push("great");
-print(arr); // ["Tinyscript", "is", "great"]
+print(arr); // ['Tinyscript', 'is', 'great']
 
 arr.shift();
-print(arr); // ["is", "great"]
+print(arr); // ['is', 'great']
 
 arr.unshift("Programming");
-print(arr); // ["Programming", "is", "great"]
+print(arr); // ['Programming', 'is', 'great']
 
 // Using map, filter with arrow functions
 const numbers = [1, 5, 4, 2, 9, 7];
