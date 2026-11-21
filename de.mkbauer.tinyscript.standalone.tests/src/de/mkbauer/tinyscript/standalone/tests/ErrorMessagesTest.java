@@ -81,6 +81,14 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testMethodOfANumberLiteral() {
+        assertEquals("A method of a number literal needs parentheses, as in Javascript: (5).toFixed(…)",
+                firstError("print(5.toFixed(2));"));
+        assertEquals("A method of a number literal needs parentheses, as in Javascript: (255).toString(…)",
+                firstError("const hex = 255.toString(16);"));
+    }
+
+    @Test
     public void testTemplateString() {
         assertEquals("Template strings (`…`) are not supported: build strings with +, e.g. \"Hello \" + name",
                 firstError("const name = \"x\";\nprint(`Hello ${name}`);"));
