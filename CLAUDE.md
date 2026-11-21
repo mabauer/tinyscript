@@ -194,13 +194,13 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 
 - Semicolons are required after statements; `if`/`else` bodies must be `{ … }`
   blocks (`else if (…) { … }` chains are allowed)
-- Variables are block-scoped (no `var` hoisting); `let` is a synonym of `var`,
-  `const` cannot be assigned again
-- Style for tinyscript code (examples, docs, `std:`): `const` for variables that
-  are never assigned again, otherwise `let`; not `var`
-- Loops: numeric `for (let i = 0, n[, step])`, iterable `for (const x : array)`
-  (values, not keys; also strings, `Set`s, `Map`s and lazy ranges:
-  `for (const i : range(n))` counts 0 … n - 1) and `while (cond) { … }`; `break`
+- Variables are block-scoped and declared with `let`, or `const` if they are
+  never assigned again (style for examples, docs, `std:`: `const` where
+  possible); `var` is a reserved word (syntax error with a hint)
+- Loops: `for (const x : items)` (values, not keys; arrays, strings, `Set`s,
+  `Map`s and lazy ranges: `for (const i : range(n))` counts 0 … n - 1,
+  `range(n).reverse()` n - 1 … 0) and `while (cond) { … }`; there is no counting
+  `for` (the Lua-style `for (let i = 0, n)` was removed in 0.22.1); `break`
   leaves the innermost loop, `continue` goes on with its next iteration. In
   sandboxed mode every loop iteration counts against the statement limit.
 - Only `==` / `!=` (no type coercion, except `null == undefined`; `NaN != NaN`;

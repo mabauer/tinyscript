@@ -194,11 +194,7 @@ ElseStatement:
 ;
 
 ForStatement:
-	'for' '(' ((kind=DeclarationKind (id=Identifier | pattern=Pattern)) | ref=Reference) (numericForExpr=NumericForExpression | iterableForExpr=IterableForExpression) ')' do=Block
-;
-
-NumericForExpression:
-	'=' start=Addition ',' stop=Addition (',' step=Addition )?
+	'for' '(' ((kind=DeclarationKind (id=Identifier | pattern=Pattern)) | ref=Reference) iterableForExpr=IterableForExpression ')' do=Block
 ;
 
 IterableForExpression:
@@ -397,19 +393,20 @@ enum IncrementOperator:
 // can say so (TinyscriptSyntaxErrorMessageProvider); like in Javascript, they are fine as
 // property names (o.class, { case: 1 }).
 ReservedWord:
-	'try' | 'catch' | 'finally' | 'switch' | 'case' | 'class'
+	'try' | 'catch' | 'finally' | 'switch' | 'case' | 'class' | 'var'
 ;
 
 // All keywords of tinyscript: they cannot be names of variables, but like in Javascript, they
 // are fine as property names (range.from, { if: 1 })
 Keyword:
-	ReservedWord | 'var' | 'let' | 'const' | 'function' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
+	ReservedWord | 'let' | 'const' | 'function' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
 	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'undefined' | 'typeof' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
 ;
 
-// var and let are the same (block-scoped, like Javascript's let); const cannot be assigned again
+// let is block-scoped (like Javascript's let); const cannot be assigned again. var is a reserved
+// word: the syntax error says to use let
 DeclarationKind:
-	'var' | 'let' | 'const'
+	'let' | 'const'
 ;
 
 terminal BOOLEAN returns ecore::EBoolean:

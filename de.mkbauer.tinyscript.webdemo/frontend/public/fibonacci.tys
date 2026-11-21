@@ -2,7 +2,7 @@
 
 function fibonacci(n) {
     let h = 1, g = 1, f = 1;
-    for (let i = 2, n) {
+    for (const i : range(2, n + 1)) {
         h = g;
         g = f;
         f = g + h;

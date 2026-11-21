@@ -44,7 +44,7 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrayIncludesFromAnIndex() {
-        String code = "var a = [1, 2, 3, 1]; print(a.includes(1, 1), a.includes(2, 2), a.includes(3, -2), a.includes(2, -1), a.includes(1, 9));";
+        String code = "let a = [1, 2, 3, 1]; print(a.includes(1, 1), a.includes(2, 2), a.includes(3, -2), a.includes(2, -1), a.includes(1, 9));";
         assertEquals("true false true false false\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -80,7 +80,7 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testVariadicBuiltins() {
-        String code = "var a = []; a.push(1, 2, 3); a.unshift(-1, 0); print(a.join()); print(Math.max(1, 2, 3, 4), String.fromCharCode(97, 98, 99));\n"
+        String code = "let a = []; a.push(1, 2, 3); a.unshift(-1, 0); print(a.join()); print(Math.max(1, 2, 3, 4), String.fromCharCode(97, 98, 99));\n"
                 + "function f(x, y) { return x + y; } print(f.call(null, 1, 2), f.apply(null, [3, 4]));";
         assertEquals("-1,0,1,2,3\n4 abc\n3 7\n", interpreterOutput(code));
         assertSameOutput(code);

@@ -28,27 +28,27 @@ public class StdFsTest extends TinyscriptTranspilerTestBase {
     /** A script that imports std:fs and can use the variable dir (the temp directory). */
     private Path script(String code) throws IOException {
         return Files.writeString(dir.resolve("main.tys"),
-                "import * as fs from \"std:fs\";\nvar dir = \"" + dir.toString().replace("\\", "\\\\") + "\";\n" + code);
+                "import * as fs from \"std:fs\";\nlet dir = \"" + dir.toString().replace("\\", "\\\\") + "\";\n" + code);
     }
 
     @Test
     public void testWriteAndReadFile() throws IOException {
-        Path main = script("var p = dir + \"/a.txt\";\n"
+        Path main = script("let p = dir + \"/a.txt\";\n"
                 + "print(fs.exists(p));\n"
                 + "print(fs.writeFile(p, \"héllo €\") == null);\n"
                 + "print(fs.exists(p)); print(fs.readFile(p)); print(fs.readFile(p).length);");
         assertEquals("false\ntrue\ntrue\nhéllo €\n7\n", runModule(main));
         assertEquals("héllo €", Files.readString(dir.resolve("a.txt"), StandardCharsets.UTF_8));
         // The differential test runs the script twice (interpreter, node), so no exists() before writing
-        assertSameOutputModule(script("var p = dir + \"/b.txt\";\n"
+        assertSameOutputModule(script("let p = dir + \"/b.txt\";\n"
                 + "print(fs.writeFile(p, \"héllo €\") == null); print(fs.exists(p)); print(fs.readFile(p));"));
     }
 
     @Test
     public void testWriteLinesAndReadLinesRoundTrip() throws IOException {
-        Path main = script("var p = dir + \"/lines.txt\";\n"
+        Path main = script("let p = dir + \"/lines.txt\";\n"
                 + "fs.writeLines(p, [\"a\", \"b\", \"\"]);\n"
-                + "var lines = fs.readLines(p);\n"
+                + "let lines = fs.readLines(p);\n"
                 + "print(lines.length); print(lines.join(\"|\")); print(fs.readFile(p) == \"a\\nb\\n\\n\");\n"
                 + "fs.writeLines(p, []); print(fs.readLines(p).length);");
         assertEquals("3\na|b|\ntrue\n0\n", runModule(main));
@@ -58,14 +58,14 @@ public class StdFsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testReadLinesSplitsAtCrLfAndWithoutFinalLineBreak() throws IOException {
         Files.writeString(dir.resolve("crlf.txt"), "x\r\ny\r\nz");
-        Path main = script("var lines = fs.readLines(dir + \"/crlf.txt\");\nprint(lines.length); print(lines.join(\"|\"));");
+        Path main = script("let lines = fs.readLines(dir + \"/crlf.txt\");\nprint(lines.length); print(lines.join(\"|\"));");
         assertEquals("3\nx|y|z\n", runModule(main));
         assertSameOutputModule(main);
     }
 
     @Test
     public void testAppendFile() throws IOException {
-        Path main = script("var p = dir + \"/log.txt\";\n"
+        Path main = script("let p = dir + \"/log.txt\";\n"
                 + "fs.writeFile(p, \"\");\n"
                 + "fs.appendFile(p, \"one\\n\"); fs.appendFile(p, \"two\\n\");\n"
                 + "print(fs.readLines(p).join(\",\"));");
@@ -75,7 +75,7 @@ public class StdFsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testAppendFileCreatesTheFile() throws IOException {
-        Path main = script("var p = dir + \"/new.txt\";\nfs.appendFile(p, \"x\");\nprint(fs.readFile(p));");
+        Path main = script("let p = dir + \"/new.txt\";\nfs.appendFile(p, \"x\");\nprint(fs.readFile(p));");
         assertEquals("x\n", runModule(main));
     }
 

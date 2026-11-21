@@ -99,7 +99,7 @@ public class TinyscriptModelUtil {
 	}
 
 	/**
-	 * The variables a var statement declares: var a = 1, b; or the names of a pattern, var [a, b] = pair;
+	 * The variables a let / const statement declares: let a = 1, b; or the names of a pattern, let [a, b] = pair;
 	 */
 	public static List<Identifier> declaredIdentifiers(VariableStatement statement) {
 		List<Identifier> result = new ArrayList<Identifier>();

@@ -1,11 +1,11 @@
 // See http://eloquentjavascript.net/10_modules.html
 
-// var this = {}; // -> ...until this is resolvable
+// let this = {}; // -> ...until this is resolvable
 
-var weekDay;
+let weekDay;
 
 (function(exports) {
-  var names = ["Sunday", "Monday", "Tuesday", "Wednesday",
+  let names = ["Sunday", "Monday", "Tuesday", "Wednesday",
                "Thursday", "Friday", "Saturday"];
 
   exports.name = function(number) {

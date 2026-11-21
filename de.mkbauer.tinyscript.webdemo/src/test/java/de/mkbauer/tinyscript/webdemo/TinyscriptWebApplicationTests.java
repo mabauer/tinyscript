@@ -71,7 +71,7 @@ public class TinyscriptWebApplicationTests {
 	@Test
 	public void testExecute() throws Exception {
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/execute", "var hello = \"hello1234\"; hello;", Map.class);
+		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/execute", "let hello = \"hello1234\"; hello;", Map.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
 		@SuppressWarnings("unchecked")
 		Map<String, Object> body = entity.getBody();
@@ -82,7 +82,7 @@ public class TinyscriptWebApplicationTests {
 	@Test
 	public void testExecuteWithSyntaxError() throws Exception {
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/execute", "var ", Map.class);
+		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/execute", "let ", Map.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
 		@SuppressWarnings("unchecked")
 		Map<String, Object> body = entity.getBody();
@@ -92,7 +92,7 @@ public class TinyscriptWebApplicationTests {
 	@Test
 	public void testXCompile() throws Exception {
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/xcompile", "var hello = \"hello1234\"; hello;", Map.class);
+		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/xcompile", "let hello = \"hello1234\"; hello;", Map.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
 		@SuppressWarnings("unchecked")
 		Map<String, Object> body = entity.getBody();
@@ -102,7 +102,7 @@ public class TinyscriptWebApplicationTests {
 	@Test
 	public void testXCompileWithSyntaxError() throws Exception {
 		@SuppressWarnings("rawtypes")
-		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/xcompile", "var ", Map.class);
+		ResponseEntity<Map> entity = new TestRestTemplate().postForEntity("http://localhost:" + port + "/xcompile", "let ", Map.class);
 		assertEquals(HttpStatus.OK, entity.getStatusCode());
 		@SuppressWarnings("unchecked")
 		Map<String, Object> body = entity.getBody();

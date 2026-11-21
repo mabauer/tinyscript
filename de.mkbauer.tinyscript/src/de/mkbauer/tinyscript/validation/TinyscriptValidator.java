@@ -251,8 +251,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	}
 
 	/**
-	 * Destructuring patterns: each name only once, and in a for loop only over an iterable
-	 * (for (var [key, value] : map)), not in a numeric for loop.
+	 * Destructuring patterns: each name only once (let [a, b] = pair; for (const [key, value] : map)).
 	 */
 	@Check
 	public void checkPattern(Pattern pattern) {
@@ -261,8 +260,6 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 			if (!names.add(name.getName()))
 				error("Duplicate identifier", name, TsPackage.Literals.IDENTIFIER__NAME);
 		}
-		if (pattern.eContainer() instanceof ForStatement loop && loop.getNumericForExpr() != null)
-			error("A numeric for loop needs a single variable", null);
 	}
 
 	/**

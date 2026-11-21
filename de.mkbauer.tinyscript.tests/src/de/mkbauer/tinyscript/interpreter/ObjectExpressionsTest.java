@@ -11,33 +11,33 @@ public class ObjectExpressionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testSimpleObjectExpression() {
-		TSValue value = executeScriptFromString("var o = {}; o.key=1; assert (o.key==1);");
-		value = executeScriptFromString("var o = {}; o[\"key\"]=1; assert (o[\"key\"]==1);");
+		TSValue value = executeScriptFromString("let o = {}; o.key=1; assert (o.key==1);");
+		value = executeScriptFromString("let o = {}; o[\"key\"]=1; assert (o[\"key\"]==1);");
 	}
 	
 	@Test
 	public void testMixedPropertyAccessExpressions() {
-		TSValue value = executeScriptFromString("var o = {}; o.key = \"Test\"; assert (o[\"key\"]==\"Test\");");
+		TSValue value = executeScriptFromString("let o = {}; o.key = \"Test\"; assert (o[\"key\"]==\"Test\");");
 	}
 	
 	@Test
 	public void testObjectInitializers() {
-		TSValue value = executeScriptFromString("var o = { key1: \"Hello\", key2: \"World\" }; assert (o[\"key1\"]==\"Hello\");"); //  && o.key2 == \"World\"
+		TSValue value = executeScriptFromString("let o = { key1: \"Hello\", key2: \"World\" }; assert (o[\"key1\"]==\"Hello\");"); //  && o.key2 == \"World\"
 	}
 	
 	@Test
 	public void testArrayInitializers() {
-		TSValue value = executeScriptFromString("var a = [ \"Hello\", \"Dear\", \"World\", 3, true, \"Markus\" + \"Bauer\" ]; assert (a[0]==\"Hello\"); assert(a[3]==3); assert(a[4]==true); assert(a[5]==\"MarkusBauer\");");
+		TSValue value = executeScriptFromString("let a = [ \"Hello\", \"Dear\", \"World\", 3, true, \"Markus\" + \"Bauer\" ]; assert (a[0]==\"Hello\"); assert(a[3]==3); assert(a[4]==true); assert(a[5]==\"MarkusBauer\");");
 	}
 	
 	@Test
 	public void testNullObject() {
-		TSValue value = executeScriptFromString("var x = null; assert (x == null);");
+		TSValue value = executeScriptFromString("let x = null; assert (x == null);");
 	}
 	
 	@Test
 	public void testArrayLength() {
-		TSValue value = executeScriptFromString("var a = [ \"Hello\", \"Dear\"]; assert (a.length == 2);");
+		TSValue value = executeScriptFromString("let a = [ \"Hello\", \"Dear\"]; assert (a.length == 2);");
 	}
 	
 }

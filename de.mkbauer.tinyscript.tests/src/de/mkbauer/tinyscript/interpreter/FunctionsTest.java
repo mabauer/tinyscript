@@ -20,10 +20,10 @@ public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testSimpleFunctionExpression() {
-		executeScriptFromString("var f = function(x) {return x*x;}; assert (f(2)==4);");
-		executeScriptFromString("var f = function(x) {return x*x;}; var result = f(2); assert (result==4);");
-		executeScriptFromString("var f = function(x) {return x*x;}; var arg = 2; var result = f(arg); assert (result==4);");
-		executeScriptFromString("var f = function(x) {return x*x;}; var arg = 2; var result = f(arg+1); assert (result==9);");
+		executeScriptFromString("let f = function(x) {return x*x;}; assert (f(2)==4);");
+		executeScriptFromString("let f = function(x) {return x*x;}; let result = f(2); assert (result==4);");
+		executeScriptFromString("let f = function(x) {return x*x;}; let arg = 2; let result = f(arg); assert (result==4);");
+		executeScriptFromString("let f = function(x) {return x*x;}; let arg = 2; let result = f(arg+1); assert (result==9);");
 	}
 	
 	@Test
@@ -40,12 +40,12 @@ public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testFunctionExpressionWithoutArgs() {
-		executeScriptFromString("var f = function() {return 4;}; assert (f()==4);");
+		executeScriptFromString("let f = function() {return 4;}; assert (f()==4);");
 	}
 	
 	@Test
 	public void testNamedFunctionExpression() {
-		executeScriptFromString("var f = function square(x) {return x*x;}; assert (f(2)==4);");
+		executeScriptFromString("let f = function square(x) {return x*x;}; assert (f(2)==4);");
 	}
 
 	
@@ -74,7 +74,7 @@ public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testCallToBuiltInFunction() {
-		executeScriptFromString("var x = Math.sqrt(4); assert(x==2);");	
+		executeScriptFromString("let x = Math.sqrt(4); assert(x==2);");	
 		
 	}
 	
@@ -92,11 +92,11 @@ public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testFunctionWithRestParameters() {
-		executeScriptFromString("function f(...rest) { return rest; }; var result = f(1, 2, 3); "
+		executeScriptFromString("function f(...rest) { return rest; }; let result = f(1, 2, 3); "
 				+ "assert(result[0] == 1);"
 				+ "assert(result[1] == 2);"
 				+ "assert(result[2] == 3);");	
-		executeScriptFromString("function f(a, b, ...rest) { return rest; }; var result = f(1, 2, 3, 4); "
+		executeScriptFromString("function f(a, b, ...rest) { return rest; }; let result = f(1, 2, 3, 4); "
 				+ "assert(result[0] == 3);"
 				+ "assert(result[1] == 4);");	
 	}

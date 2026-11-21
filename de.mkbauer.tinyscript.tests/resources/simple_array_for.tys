@@ -1,7 +1,7 @@
-var array = ["This", "is", "a", "test"];
-var result ="";
+let array = ["This", "is", "a", "test"];
+let result ="";
 
-for (var str : array) {
+for (let str : array) {
 	result = result + str;
 }
 

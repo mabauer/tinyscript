@@ -26,7 +26,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         // A C-style for loop used to give 2 syntax errors and 3 unresolved references
         List<String> errors = reportedErrors("let sum = 0;\nfor (let i = 0; i < 10; i++) {\n    sum += i;\n}");
         assertEquals(1, errors.size(), errors.toString());
-        assertEquals("2:15: tinyscript's for loop has no ';': for (const i : range(n)) { … } counts from 0 to n - 1", errors.get(0));
+        assertEquals("2:12: tinyscript's for loop goes through items: for (const i : range(n)) { … } counts from 0 to n - 1, range(a, b) from a to b - 1, range(n).reverse() from n - 1 down to 0", errors.get(0));
     }
 
     @Test
@@ -55,8 +55,25 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testCStyleForLoop() {
-        assertEquals("tinyscript's for loop has no ';': for (const i : range(n)) { … } counts from 0 to n - 1",
+        assertEquals("tinyscript's for loop goes through items: for (const i : range(n)) { … } counts from 0 to n - 1, range(a, b) from a to b - 1, range(n).reverse() from n - 1 down to 0",
                 firstError("let sum = 0;\nfor (let i = 0; i < 10; i++) {\n    sum += i;\n}"));
+    }
+
+    @Test
+    public void testLuaStyleForLoop() {
+        // tinyscript had it until 0.22: for (let i = start, stop[, step]) with an inclusive stop
+        String message = "tinyscript's for loop goes through items: for (const i : range(n)) { … } counts from 0 to n - 1, range(a, b) from a to b - 1, range(n).reverse() from n - 1 down to 0";
+        assertEquals(message, firstError("for (let i = 0, 9) { print(i); }"));
+        assertEquals(message, firstError("for (let i = 10, 1, -1) { print(i); }"));
+        assertEquals(message, firstError("let i = 0;\nfor (i = 1, 3) { print(i); }"));
+    }
+
+    @Test
+    public void testVar() {
+        String message = "tinyscript has no var: use let, or const for a variable that is never assigned again";
+        assertEquals(message, firstError("var x = 1;"));
+        assertEquals(message, firstError("for (var x : [1]) { }"));
+        assertEquals(message, firstError("function f() {\n    var total = 0;\n    return total;\n}"));
     }
 
     @Test

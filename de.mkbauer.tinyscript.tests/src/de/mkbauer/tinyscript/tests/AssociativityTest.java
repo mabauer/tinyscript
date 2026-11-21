@@ -104,7 +104,7 @@ public class AssociativityTest {
 	@Test
 	public void testAssignment() {
 		// Assignments should be right-associative
-		assertStringRepr("var x,y,z; x=y=z", "(x=(y=z))");
+		assertStringRepr("let x,y,z; x=y=z", "(x=(y=z))");
 	}
 
 }

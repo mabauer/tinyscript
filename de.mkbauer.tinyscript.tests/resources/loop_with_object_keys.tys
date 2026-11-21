@@ -1,8 +1,8 @@
 // Loop over Object.keys()
 
-var obj = {christianName: "Markus", name: "Bauer"};
-var result = "";
-for (var key : Object.keys(obj)) {
+let obj = {christianName: "Markus", name: "Bauer"};
+let result = "";
+for (let key : Object.keys(obj)) {
     result = result + (obj[key]);
 }
 

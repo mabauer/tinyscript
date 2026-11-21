@@ -10,7 +10,7 @@ Array.prototype.equals = function(array) {
 		return false;
 	}
 
-	for (var i = 0, this.length-1) {
+	for (const i : range(this.length)) {
 		if (this[i] != array[i]) {
 			// Warning - two different object instances will never be equal:
 			// {x:20} != {x:20}
@@ -21,13 +21,13 @@ Array.prototype.equals = function(array) {
 };
 
 // Test cases
-var str = "test";
-var arr1 = [ "a", "b", "c" ];
-var arr2 = [ 1, 2, 3 ];
+let str = "test";
+let arr1 = [ "a", "b", "c" ];
+let arr2 = [ 1, 2, 3 ];
 
 assert ([ "a", "b", "c", 1, 2, 3 ].equals(arr1 + arr2)) ;
 // Adding a string and an array concatenates strings
-var s1 = str + arr1, s2 = arr1 + str;
+let s1 = str + arr1, s2 = arr1 + str;
 assert (typeof s1 == "string");
 assert (typeof s2 == "string");
 assert ("testhallo" == (str + "hallo"));

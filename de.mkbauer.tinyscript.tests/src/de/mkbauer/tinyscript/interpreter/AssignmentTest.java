@@ -16,8 +16,8 @@ public class AssignmentTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testSimpleAssignment() {
-		TSValue value = executeScriptFromString("var x; x=1; assert (x==1);");
-		value = executeScriptFromString("var x=1; assert (x==1);");
+		TSValue value = executeScriptFromString("let x; x=1; assert (x==1);");
+		value = executeScriptFromString("let x=1; assert (x==1);");
 	}
 }
 

@@ -28,7 +28,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 	@Test
 	def void testGenerateHelloWorld() {
 		val result = generateScriptFromString('''
-			var hello;
+			let hello;
 			hello = "Hello World!"; 
 			assert (hello == "Hello World!");
 		''')
@@ -72,8 +72,8 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		var result = generateScriptFromString("-4;")
 		assertEquals("-4;", result.trim())
 		result = generateScriptFromString('''
-			var x = 2.25;
-			var y = -x;''')
+			let x = 2.25;
+			let y = -x;''')
 		assertEquals('''
 			let x = 2.25;
 			let y = -x;'''.toString, 
@@ -81,8 +81,8 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		result = generateScriptFromString("!false;")
 		assertEquals("!false;", result.trim())
 		result = generateScriptFromString('''
-			var x = (3 == 4);
-			var true_ = !x;''')
+			let x = (3 == 4);
+			let true_ = !x;''')
 		assertEquals('''
 			let x = (__ts_eq(3, 4));
 			let true_ = !x;'''.toString, 
@@ -92,7 +92,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 	@Test
 	def void testgenerateCallOrPropertyAccesses() {
 		val result = generateScriptFromString('''
-			var obj;
+			let obj;
 			obj.key1;
 			obj.key1.key2;
 			obj["key"];
@@ -127,7 +127,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 	@Test
 	def void testgenerateFunctionExpression() {
 		val result = generateScriptFromString('''
-			var f;
+			let f;
 			f = function (p1, p2) {
 				return p1 * p2;
 			};
@@ -143,7 +143,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		@Test
 	def void testgenerateNamedFunctionExpression() {
 		val result = generateScriptFromString('''
-			var f;
+			let f;
 			f = function name(p1, p2) {
 				return p1 * p2;
 			};
@@ -160,7 +160,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 	@Test
 	def void testgenerateIfThenElse() {
 		val result = generateScriptFromString('''
-			var x, y, max;
+			let x, y, max;
 			if (x >= y) {
 				max = x;
 			}
@@ -178,74 +178,27 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			}
 		'''.toString, result)	
 	}
-	
-	@Test
-	def void testGenerateNumericFor() {
-		var result = generateScriptFromString('''
-			var result;
-			for (var i = 1, 10) {
-				result = i;
-			}
-		''')
-		assertEquals('''
-			let result;
-			for (var __ts_n1 = 1; __ts_n1 <= 10; __ts_n1 = __ts_n1 + 1) {
-				let i = __ts_n1;
-				result = i;
-			}
-		'''.toString, result)
-		result = generateScriptFromString('''
-			var result;
-			for (var i = 10, 1, -1) {
-				result = i;
-			}
-		''')
-		assertEquals('''
-			let result;
-			for (var __ts_n1 = 10; (-1 > 0)?(__ts_n1 <= 1):(__ts_n1 >= 1); __ts_n1 = __ts_n1 + -1) {
-				let i = __ts_n1;
-				result = i;
-			}
-		'''.toString, result)
-	}	
+		
 	
 	@Test
 	def void testGenerateNestedBlock() {
 		val result = generateScriptFromString('''
-			var i;
+			let i;
 			{
-				var i;
+				let i;
 				i = 0;
 			}
 		''')
 		assertTrue(matches('''
-			var i;
+			let i;
 			{
-				var block\d*_i;
+				let block\d*_i;
 				block\d*_i = 0.0;
 			}
 		'''.toString, result))
 		
 	}
 	
-	@Test
-	def void testGenerateNumericForWithExistingVariable() {
-		var result = generateScriptFromString('''
-			var result;
-			var i;
-			for (i = 1, 10) {
-				result = i;
-			}
-		''')
-		assertEquals('''
-			let result;
-			let i;
-			for (var __ts_n1 = 1; __ts_n1 <= 10; __ts_n1 = __ts_n1 + 1) {
-				i = __ts_n1;
-				result = i;
-			}
-		'''.toString, result)	
-	}
 	
 	def boolean matches(String expected, String result) {
 		// Ignore all regex special characters. CAVEAT: * and . are NOT quoted.

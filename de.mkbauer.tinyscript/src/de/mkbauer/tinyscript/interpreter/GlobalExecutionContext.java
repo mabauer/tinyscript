@@ -33,7 +33,7 @@ public class GlobalExecutionContext extends ExecutionContext {
 	@Override
 	public void create(String identifier) {
 		// Overwriting an existing global is intended: within a script the validator rejects
-		// duplicate declarations, and in the REPL a later "var x" declares a fresh x
+		// duplicate declarations, and in the REPL a later "let x" declares a fresh x
 		globalObject.put(identifier, TSValue.UNDEFINED);
 	}
 

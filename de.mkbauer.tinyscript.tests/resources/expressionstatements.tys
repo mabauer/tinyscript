@@ -1,18 +1,18 @@
 // Simple assignments
 
-var x = 2;
-var y;
+let x = 2;
+let y;
 y = x * x;
 y = -y;
 
-var z1, z2;
+let z1, z2;
 z1 = z2 = y;
 
 // Locic
 
-var cond1;
-var cond2;
-var cond3;
+let cond1;
+let cond2;
+let cond3;
 
 cond1 == cond2;
 cond1 != cond2;
@@ -26,11 +26,11 @@ cond1 || cond2;
 
 // Initializers
  
-var banana = "banana";
-var obj = {};
-var coordinates = { x : 0.0, y : 0.0 };
-var arr = [];
-var fruit = ["orange", "apple", "banana"]; 
+let banana = "banana";
+let obj = {};
+let coordinates = { x : 0.0, y : 0.0 };
+let arr = [];
+let fruit = ["orange", "apple", "banana"]; 
 
 // Accessing properties
 

@@ -39,7 +39,7 @@ export function reverse(items) {
 	// Writing by index is much faster than push (a method call per element)
 	const n = all.length;
 	const result = new Array(n);
-	for (let i = 0, n - 1) {
+	for (const i : range(n)) {
 		result[n - 1 - i] = all[i];
 	}
 	return result;

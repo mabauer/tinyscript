@@ -55,7 +55,6 @@ import de.mkbauer.tinyscript.ts.NewExpression;
 import de.mkbauer.tinyscript.ts.NullObject;
 import de.mkbauer.tinyscript.ts.UndefinedLiteral;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
-import de.mkbauer.tinyscript.ts.NumericForExpression;
 import de.mkbauer.tinyscript.ts.ObjectInitializer;
 import de.mkbauer.tinyscript.ts.PropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
@@ -577,45 +576,7 @@ public class TinyscriptEngine {
     
     public TSValue caseForStatement(ForStatement forstmt) {
     	recordStatement();
-    	if (forstmt.getNumericForExpr() != null) {
-    		return executeNumericForStatement(forstmt);
-    	}
-    	else {
-    		return executeIterableForStatement(forstmt);
-    	}
-    }
-    
-    public TSValue executeNumericForStatement(ForStatement forstmt) {
-    	NumericForExpression expr = forstmt.getNumericForExpr();
-    	TSValue result = TSValue.UNDEFINED;
-		TSValue startValue = execute(expr.getStart());
-		TSValue stopValue = execute(expr.getStop());    		
-		if (!startValue.isMathematicalInteger())
-			throw new TinyscriptTypeError("for needs an integer value as first bound", expr.getStart());
-		if (!stopValue.isNumber())
-			throw new TinyscriptTypeError("for needs a number value as second bound", expr.getStart());
-		double start = startValue.asDouble();
-		double stop = stopValue.asDouble();
-		double step = 1;
-		if (expr.getStep() != null) {
-			TSValue stepValue =  execute(expr.getStep());
-			if (!stepValue.isMathematicalInteger())
-				throw new TinyscriptTypeError("for needs an integer value as step expression", expr.getStep());
-			step = stepValue.asDouble();
-			if (step == 0)
-				throw new TinyscriptTypeError("for needs a step other than 0", expr.getStep());
-		}
-		if (Double.isInfinite(start) || Double.isInfinite(stop))
-			return result;
-		try {
-			for (double loopValue = start ; (step > 0)?(loopValue <= stop):(loopValue >= stop); loopValue = loopValue + step ) {
-				result = executeLoopIteration(forstmt, TSValue.of(loopValue));
-			}
-		}
-		catch (TSBreak b) {
-			// leave the loop
-		}
-    	return result;
+    	return executeIterableForStatement(forstmt);
     }
 
     public TSValue executeIterableForStatement(ForStatement forstmt) {
@@ -1176,12 +1137,12 @@ public class TinyscriptEngine {
     		return value;
     	}
     	if (left instanceof Identifier identifier) {
-    		// var x = value
+    		// let x = value
     		declare(identifier, value);
     		return value;
     	}
     	if (left instanceof Pattern pattern) {
-    		// var [a, b] = value or var { a, b } = value
+    		// let [a, b] = value or let { a, b } = value
     		declare(pattern, value);
     		return value;
     	}
@@ -1301,7 +1262,7 @@ public class TinyscriptEngine {
 	
 	/**
 	 * Executes a block in a new context; with a variable (an identifier or a pattern, as in
-	 * for (var [key, value] : map)), that is declared in the context with the given value first.
+	 * for (const [key, value] : map)), that is declared in the context with the given value first.
 	 */
 	private TSValue executeInBlockContext(String name, Block block, EObject variable, TSValue value) {
     	LexicalEnvironment env = getLexicalEnvironment(block);

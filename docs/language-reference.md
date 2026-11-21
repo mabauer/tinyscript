@@ -123,9 +123,9 @@ let a = 1, b = 2, c = a + b;   // multiple declarations in one statement
 const limit = 100;             // a constant (see below)
 ```
 
-`let` is a synonym for `var`. Both are block-scoped like Javascript's `let`
-(there is no function-scoped `var` as in Javascript), so `let` is the
-recommended spelling.
+Variables are block-scoped like Javascript's `let`. There is no `var` (in
+Javascript it is function-scoped and hoisted): it is a reserved word, and
+`var x = 1;` is a syntax error that says to use `let`.
 
 `const` declares a constant: it needs a value and cannot be assigned again (with
 `=`, `+=` etc., `++` / `--`, or as the existing variable of a `for` loop). As in
@@ -357,7 +357,6 @@ let name;
 let name = expression;
 let a = 1, b = 2, c = 3;
 const name = expression;
-var name = expression;     // the same as let
 ```
 
 ### Expression statement
@@ -411,41 +410,7 @@ if (x < 0) {
 }
 ```
 
-### `for` — numeric loop
-
-To count from 0 to n - 1, the iterable loop with `range` is usually simpler:
-`for (const i : range(n)) { ... }`, and backwards, from n - 1 to 0,
-`for (const i : range(n).reverse()) { ... }` (see below).
-
-Tinyscript's numeric `for` loop is inspired by Lua. It counts an integer
-variable from `start` to `stop` (inclusive):
-
-```
-for (let i = start, stop) { ... }
-for (let i = start, stop, step) { ... }
-```
-
-- The loop variable is declared with `let` (or `const`, `var`) or can be an
-  existing variable reference.
-- `start`, `stop`, and optional `step` are evaluated once before the loop
-  begins.
-- With a positive `step`, the condition is `i <= stop`. With a negative `step`,
-  the condition is `i >= stop`.
-- The loop variable is incremented by `step` (default `1`) after each iteration.
-
-```
-// Prints 0 1 2 3 4 5
-for (let i = 0, 5) {
-    print(i);
-}
-
-// Count down: prints 10 8 6 4 2
-for (let i = 10, 1, -2) {
-    print(i);
-}
-```
-
-### `for` — iterable loop
+### `for`
 
 Iterates over the elements of an array (values, not indices), the characters of
 a string, the values of a `Set`, the entries `[key, value]` of a `Map` or the
@@ -455,8 +420,17 @@ numbers of a `range`; anything else is a `TypeError`:
 for (const element : array) { ... }
 for (const c : "abc") { ... }
 for (const i : range(n)) { ... }              // 0, 1, …, n - 1
+for (const i : range(1, 11)) { ... }          // 1, 2, …, 10
+for (const i : range(10, 0, -2)) { ... }      // 10, 8, 6, 4, 2
 for (const i : range(array.length)) { ... }   // the indexes of an array
+for (const i : range(array.length).reverse()) { ... }   // … backwards
 ```
+
+There is no counting loop with a condition: `for (let i = 0; i < n; i++)` (and
+the Lua-style `for (let i = 0, n - 1)`, which tinyscript had until 0.22) is a
+syntax error that points to `range`. The loop variable is declared with `const`
+(or `let`, if the body assigns it; it is a new variable in each iteration) or is
+an existing variable: `for (i : items)`.
 
 A loop over an array sees elements that its body appends; a loop over a string,
 `Set` or `Map` goes through the elements it had when the loop started.
@@ -500,7 +474,7 @@ inside a loop of the same function (a function defined inside a loop cannot
 break out of it):
 
 ```
-for (let i = 0, 100) {
+for (const i : range(101)) {
     if (i == 10) {
         break;
     }
@@ -515,7 +489,7 @@ Skips the rest of the current iteration of the innermost enclosing `for` or
 inside a loop of the same function:
 
 ```
-for (let i = 1, 10) {
+for (const i : range(1, 11)) {
     if (i % 2 == 0) {
         continue;
     }
@@ -1318,19 +1292,19 @@ writing code and for knowing its intentional limitations.
 
 ### Things Tinyscript does differently
 
-| Topic                        | JavaScript                                               | Tinyscript                                                                         |
-| ---------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| **Semicolons**               | Optional (ASI)                                           | Required after expression statements, declarations, `return`                       |
-| **Block scope**              | `var` is function-scoped; `let`/`const` are block-scoped | All variables are block-scoped; `var` is a synonym of `let`                        |
-| **Control structure bodies** | Braces optional for single statements                    | Braces always required                                                             |
-| **Numeric `for` loop**       | `for (let i = 0; i < n; i++)`                            | `for (const i : range(n))`, or `for (let i = 0, n - 1)` (Lua-style, inclusive end) |
-| **Iterable `for` loop**      | `for (const x of array)`                                 | `for (const x : array)`                                                            |
-| **`for...in`**               | Iterates over keys                                       | Not supported (use `for...of` style with `:`)                                      |
-| **Array `+`**                | String concatenation                                     | Concatenation of two arrays; an array plus a number etc. is a `TypeError`          |
-| **`==` vs `===`**            | Different (type coercion vs. strict)                     | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`)             |
-| **Relational operators**     | Coerce operands (`1 < "2"`)                              | Only number with number or string with string; otherwise a `TypeError`             |
-| **`var` keyword**            | Function-scoped variable, hoisted                        | Synonym for `let` (block-scoped, not hoisted)                                      |
-| **`++` / `--`**              | Expressions, prefix and postfix                          | Only the statements `i++;` / `i--;`                                                |
+| Topic                        | JavaScript                                               | Tinyscript                                                                 |
+| ---------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Semicolons**               | Optional (ASI)                                           | Required after expression statements, declarations, `return`               |
+| **Block scope**              | `var` is function-scoped; `let`/`const` are block-scoped | All variables are block-scoped; there is no `var` (a reserved word)        |
+| **Control structure bodies** | Braces optional for single statements                    | Braces always required                                                     |
+| **Counting `for` loop**      | `for (let i = 0; i < n; i++)`                            | `for (const i : range(n))`; backwards `for (const i : range(n).reverse())` |
+| **Iterable `for` loop**      | `for (const x of array)`                                 | `for (const x : array)`                                                    |
+| **`for...in`**               | Iterates over keys                                       | Not supported (use `for...of` style with `:`)                              |
+| **Array `+`**                | String concatenation                                     | Concatenation of two arrays; an array plus a number etc. is a `TypeError`  |
+| **`==` vs `===`**            | Different (type coercion vs. strict)                     | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`)     |
+| **Relational operators**     | Coerce operands (`1 < "2"`)                              | Only number with number or string with string; otherwise a `TypeError`     |
+| **`var` keyword**            | Function-scoped variable, hoisted                        | Reserved word; use `let`                                                   |
+| **`++` / `--`**              | Expressions, prefix and postfix                          | Only the statements `i++;` / `i--;`                                        |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
 
@@ -1446,10 +1420,13 @@ print(area(2), unit, geo.area(1));
 ### Keywords
 
 ```
-let  const  var  function  return  if  else  for  while  break  continue  throw
+let  const  function  return  if  else  for  while  break  continue  throw
 new  this  null  undefined  true  false  typeof  instanceof  assert  import  export
 from  as
 ```
+
+Reserved (a syntax error with a hint what to write instead): `var`, `try`,
+`catch`, `finally`, `switch`, `case`, `class`.
 
 ### Literals
 

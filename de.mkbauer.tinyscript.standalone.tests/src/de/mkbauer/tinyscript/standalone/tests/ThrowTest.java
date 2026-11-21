@@ -45,7 +45,7 @@ public class ThrowTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testErrorObjects() {
-        String code = "var e = new Error(\"bad\"); print(e.message, e.name, e.toString(), e instanceof Error);\n"
+        String code = "let e = new Error(\"bad\"); print(e.message, e.name, e.toString(), e instanceof Error);\n"
                 + "print(new Error().message == \"\", Error(\"x\").message, \"\" + new Error(\"y\"));";
         assertEquals("bad Error Error: bad true\ntrue x Error: y\n", interpreterOutput(code));
         assertSameOutput(code);

@@ -13,7 +13,7 @@ public class TypeOfExpressionTest extends TinyscriptInterpreterTestHelper {
 
 	@Test
 	public void testUndefined() {
-		TSValue value = executeScriptFromString("var undef; typeof undef;");
+		TSValue value = executeScriptFromString("let undef; typeof undef;");
 		assertEquals("undefined", value.asString());
 	}
 	
@@ -25,7 +25,7 @@ public class TypeOfExpressionTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testObject() {
-		TSValue value = executeScriptFromString("var obj = {}; typeof obj;");
+		TSValue value = executeScriptFromString("let obj = {}; typeof obj;");
 		assertEquals("object", value.asString());
 	}
 	

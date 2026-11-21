@@ -15,39 +15,39 @@ public class ConversionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testPrimitivesToString() {
-		TSValue primValue = executeScriptFromString("var str = \"String\"; str;");
+		TSValue primValue = executeScriptFromString("let str = \"String\"; str;");
 		assertEquals("String", TSObject.toString(getExecutionVisitor(), primValue));
-		primValue = executeScriptFromString("var i = 8; i;");
+		primValue = executeScriptFromString("let i = 8; i;");
 		assertEquals("8", TSObject.toString(getExecutionVisitor(), primValue));
-		primValue = executeScriptFromString("var x = 2.5; x;");
+		primValue = executeScriptFromString("let x = 2.5; x;");
 		assertEquals("2.5", TSObject.toString(getExecutionVisitor(), primValue));
-		primValue = executeScriptFromString("var b = false; b;");
+		primValue = executeScriptFromString("let b = false; b;");
 		assertEquals("false", TSObject.toString(getExecutionVisitor(), primValue));
-		primValue = executeScriptFromString("var b = true; b;");
+		primValue = executeScriptFromString("let b = true; b;");
 		assertEquals("true", TSObject.toString(getExecutionVisitor(), primValue));
 	}
 	
 	@Test
 	public void testSpecialsToString() {
-		TSValue undefined = executeScriptFromString("var obj; obj;");
+		TSValue undefined = executeScriptFromString("let obj; obj;");
 		assertEquals("[object Undefined]", TSObject.toString(getExecutionVisitor(), undefined));
-		TSValue nullObject = executeScriptFromString("var obj = null; obj;");
+		TSValue nullObject = executeScriptFromString("let obj = null; obj;");
 		assertEquals("[object Null]", TSObject.toString(getExecutionVisitor(), nullObject));
 	}
 	
 	@Test
 	public void testSimpleObjectToString() {
-		TSValue obj = executeScriptFromString("var obj = {}; obj;");
+		TSValue obj = executeScriptFromString("let obj = {}; obj;");
 		assertEquals("[object Object]", TSObject.toString(getExecutionVisitor(), obj));
-		obj = executeScriptFromString("var obj = { name: \"Hugo\" }; obj;");
+		obj = executeScriptFromString("let obj = { name: \"Hugo\" }; obj;");
 		assertEquals("[object Object]", TSObject.toString(getExecutionVisitor(), obj));
 	}
 	
 	@Test
 	public void testArrayToString() {
-		TSValue arr = executeScriptFromString("var arr = []; arr;");
+		TSValue arr = executeScriptFromString("let arr = []; arr;");
 		assertEquals("", TSObject.toString(getExecutionVisitor(), arr));
-		arr = executeScriptFromString("var arr = [\"Hallo\", \"Hugo\"]; arr;");
+		arr = executeScriptFromString("let arr = [\"Hallo\", \"Hugo\"]; arr;");
 		assertEquals("Hallo, Hugo", TSObject.toString(getExecutionVisitor(), arr));
 	}
 	

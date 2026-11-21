@@ -29,7 +29,8 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			"finally", "try / catch is not supported in tinyscript: errors cannot be caught (throw ends the script)",
 			"switch", "switch is not supported in tinyscript: use if / else if",
 			"case", "switch is not supported in tinyscript: use if / else if",
-			"class", "class is not supported in tinyscript: use a constructor function and its prototype");
+			"class", "class is not supported in tinyscript: use a constructor function and its prototype",
+			"var", "tinyscript has no var: use let, or const for a variable that is never assigned again");
 
 	// Where an expression starts, a "/" can only be meant as a regular expression
 	private static final Set<String> BEFORE_EXPRESSION = Set.of("=", "(", ",", "[", ":", "return", "?", "&&", "||", "!");
@@ -80,7 +81,10 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		if (text.equals("=") && (before.equals("==") || before.equals("!=")) && previous.getTokenIndex() == offending.getTokenIndex() - 1)
 			return "tinyscript has no === and !==: use == and !=, which never convert types";
 		if (text.equals(";") && isInForHeader(tokens, index))
-			return "tinyscript's for loop has no ';': for (const i : range(n)) { … } counts from 0 to n - 1";
+			return FOR_WITH_RANGE;
+		// for (let i = 0, n) (the Lua-style loop tinyscript had until 0.22) or for (let i = 0; …)
+		if (text.equals("=") && isInForHeader(tokens, index))
+			return FOR_WITH_RANGE;
 		if ((text.equals("of") || text.equals("in")) && isInForHeader(tokens, index))
 			return "A loop over the elements of an array, string, Map or Set is written for (const x : items) in tinyscript";
 		if (isNumberWithDot(context, previous) && isName(context, offending))
@@ -107,8 +111,12 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		return null;
 	}
 
+	private static final String FOR_WITH_RANGE = "tinyscript's for loop goes through items: "
+			+ "for (const i : range(n)) { … } counts from 0 to n - 1, range(a, b) from a to b - 1, "
+			+ "range(n).reverse() from n - 1 down to 0";
+
 	// Before these, a name can stand (const x, function f, (a, b), let x = y, [a, b], { a })
-	private static final Set<String> NAME_POSITIONS = Set.of("var", "let", "const", "function", "(", ",", "=", "[", "{");
+	private static final Set<String> NAME_POSITIONS = Set.of("let", "const", "function", "(", ",", "=", "[", "{");
 
 	// 5. in 5.toFixed(2): the lexer reads the dot as part of the number
 	private static boolean isNumberWithDot(IParserErrorContext context, Token token) {
@@ -143,7 +151,7 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		int open = openingBracket(tokens, index);
 		String bracket = open >= 0 ? tokens.get(open).getText() : "";
 		Token before = open >= 0 ? previous(tokens, open) : null;
-		boolean inDeclaration = before != null && Set.of("var", "let", "const").contains(before.getText());
+		boolean inDeclaration = before != null && Set.of("let", "const").contains(before.getText());
 		if ((bracket.equals("[") || bracket.equals("{")) && inDeclaration)
 			return "Rest elements (...) in patterns are not supported (for an array, use slice: items.slice(1))";
 		if (bracket.equals("["))

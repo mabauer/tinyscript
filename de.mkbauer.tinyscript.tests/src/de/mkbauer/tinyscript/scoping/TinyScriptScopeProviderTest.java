@@ -32,22 +32,22 @@ public class TinyScriptScopeProviderTest extends TinyscriptInterpreterTestHelper
 	
 	@Test
 	public void testValidSimpleReference() {
-		Tinyscript ast = parseScriptFromString("var x =\"Hello, World!\"; x;");
+		Tinyscript ast = parseScriptFromString("let x =\"Hello, World!\"; x;");
 		getValidator().assertNoErrors(ast);
 	}
 	
 	@Test
 	public void testInvalidSimleReference() {
-		Tinyscript ast = parseScriptFromStringWithoutValidating("x; var x =\"Hello, World!\";");
+		Tinyscript ast = parseScriptFromStringWithoutValidating("x; let x =\"Hello, World!\";");
 		assertFalse(getValidator().validate(ast).isEmpty());
 	}
 		
 	@Test
 	public void testFunctionScope() {
-		Tinyscript ast = parseScriptFromString("var x = 1; var f = function(x) {return x;}; f(x);");
+		Tinyscript ast = parseScriptFromString("let x = 1; let f = function(x) {return x;}; f(x);");
 		getValidator().assertNoErrors(ast);
 
-		// parseFromString("var x =\"Hello, World!\"; var f = function (x) { return x; }; f(x);");
+		// parseFromString("let x =\"Hello, World!\"; let f = function (x) { return x; }; f(x);");
 		List<Identifier> ids = EcoreUtil2.getAllContentsOfType(ast, Identifier.class);
 		Identifier xOuter = ids.get(0);
 		assertEquals(xOuter.getName(), "x");
@@ -65,7 +65,7 @@ public class TinyScriptScopeProviderTest extends TinyscriptInterpreterTestHelper
 	
 	@Test
 	public void testFunctionGlobalVariable() {
-		Tinyscript ast = parseScriptFromString("var f = function() {return global;}; var global;");
+		Tinyscript ast = parseScriptFromString("let f = function() {return global;}; let global;");
 		getValidator().assertNoErrors(ast);
 		// assertFalse(getValidator().validate(ast).isEmpty());
 	}

@@ -41,8 +41,8 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @BeforeEach
     public void writeGeometry() throws IOException {
         write("geometry.tys", "export function area(r) { return 3 * r * r; }\n"
-                + "export var unit = \"cm\";\n"
-                + "var helper = 2;\n");
+                + "export let unit = \"cm\";\n"
+                + "let helper = 2;\n");
     }
 
     // =========================================================================
@@ -98,7 +98,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testRelativeImportsOfNonFilesResolveAgainstTheWorkingDirectory() throws IOException {
         // e.g. a line typed in the interactive REPL, whose resource is not a file
-        Path module = write("m.tys", "export var x = 1;");
+        Path module = write("m.tys", "export let x = 1;");
         Path relative = Path.of("").toAbsolutePath().relativize(module);
         URI resolved = new FileSystemModuleLoader(List.of()).resolve("./" + relative, URI.createURI("__repl0.tys"));
         assertEquals(module.toRealPath().toString(), resolved.toFileString());
@@ -106,7 +106,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testOnlyTysFilesAreModules() throws IOException {
-        write("m.js", "export var x = 1;");
+        write("m.js", "export let x = 1;");
         Path main = write("main.tys", "import x from \"./m.js\";\nprint(x);");
         TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class, () -> runModule(main));
         assertTrue(e.getMessage().contains("not a tinyscript module"), e.getMessage());
@@ -118,7 +118,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testModuleRunsOnceInADiamond() throws IOException {
-        write("m1.tys", "print(\"m1 runs\");\nexport var id1 = {};");
+        write("m1.tys", "print(\"m1 runs\");\nexport let id1 = {};");
         write("m2.tys", "import id1 from \"./m1\";\nexport function same(x) { return x == id1; }");
         Path main = write("main.tys", "import id1 from \"./m1\";\nimport same from \"./m2\";\nprint(same(id1));");
         assertEquals("m1 runs\ntrue\n", runModule(main));
@@ -126,7 +126,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testASymlinkIsTheSameModule() throws IOException {
-        write("m1.tys", "print(\"m1 runs\");\nexport var id1 = {};");
+        write("m1.tys", "print(\"m1 runs\");\nexport let id1 = {};");
         Files.createSymbolicLink(dir.resolve("alias.tys"), dir.resolve("m1.tys"));
         Path main = write("main.tys", "import * as a from \"./m1\";\nimport * as b from \"./alias\";\nprint(a == b);");
         assertEquals("m1 runs\ntrue\n", runModule(main));
@@ -147,7 +147,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testModuleStateViaClosures() throws IOException {
-        write("counter.tys", "var count = 0;\nexport function next() { count = count + 1; return count; }");
+        write("counter.tys", "let count = 0;\nexport function next() { count = count + 1; return count; }");
         Path main = write("main.tys", "import next from \"./counter\";\nnext();\nprint(next());");
         assertEquals("2\n", runModule(main));
     }
@@ -163,14 +163,14 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testModuleSeesOnlyTheBuiltins() throws IOException {
         write("m.tys", "export function f() { return secret; }");
-        Path main = write("main.tys", "import f from \"./m\";\nvar secret = 1;\nprint(f());");
+        Path main = write("main.tys", "import f from \"./m\";\nlet secret = 1;\nprint(f());");
         TinyscriptRuntimeException e = assertThrows(TinyscriptSyntaxError.class, () -> runModule(main));
         assertTrue(e.getMessage().contains("secret"), e.getMessage());
     }
 
     @Test
     public void testSyntaxErrorInAModuleNamesTheModule() throws IOException {
-        write("bad.tys", "print(1);\nvar ;");
+        write("bad.tys", "print(1);\nlet ;");
         Path main = write("main.tys", "import x from \"./bad\";\nprint(x);");
         TinyscriptRuntimeException e = assertThrows(TinyscriptSyntaxError.class, () -> runModule(main));
         assertTrue(e.getMessage().contains("bad.tys:2"), e.getMessage());
@@ -254,14 +254,14 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testTranspiledNamedAndNamespaceImports() throws IOException {
         Path main = write("main.tys", "import area, unit from \"./geometry\";\nimport * as geo from \"./geometry.tys\";\n"
-                + "var helper = \"main\";\nprint(area(2) + unit); print(geo.area(1)); print(geo.helper == null); print(helper);");
+                + "let helper = \"main\";\nprint(area(2) + unit); print(geo.area(1)); print(geo.helper == null); print(helper);");
         assertEquals("12cm\n3\ntrue\nmain\n", runModule(main));
         assertSameOutputModule(main);
     }
 
     @Test
     public void testTranspiledModuleRunsOnceInADiamond() throws IOException {
-        write("m1.tys", "print(\"m1 runs\");\nexport var id1 = {};");
+        write("m1.tys", "print(\"m1 runs\");\nexport let id1 = {};");
         write("m2.tys", "import id1 from \"./m1\";\nexport function same(x) { return x == id1; }");
         Path main = write("main.tys", "import id1 from \"./m1\";\nimport same from \"./m2\";\nprint(same(id1));");
         assertSameOutputModule(main);
@@ -269,7 +269,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testTranspiledModuleStateViaClosures() throws IOException {
-        write("counter.tys", "var count = 0;\nexport function next() { count = count + 1; return count; }");
+        write("counter.tys", "let count = 0;\nexport function next() { count = count + 1; return count; }");
         Path main = write("main.tys", "import next from \"./counter\";\nnext();\nprint(next());");
         assertSameOutputModule(main);
     }
@@ -314,8 +314,8 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testValidImportsAndExportsAreAccepted() {
         // Guards the rejections below: they must come from the rules, not from a syntax error
-        parse("import a, b from \"./m\";\nimport * as m from \"./m2\";\nprint(a, b, m.x);\nvar c = a; c = 2;");
-        parse("export var x = 1, y;\nexport function f() { return x; }\nvar privat = 2;");
+        parse("import a, b from \"./m\";\nimport * as m from \"./m2\";\nprint(a, b, m.x);\nlet c = a; c = 2;");
+        parse("export let x = 1, y;\nexport function f() { return x; }\nlet privat = 2;");
     }
 
     @Test
@@ -331,13 +331,13 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     public void testDuplicateImportedNamesAreRejected() {
         assertRejected("import a from \"./m1\";\nimport a from \"./m2\";");
         assertRejected("import a, a from \"./m\";");
-        assertRejected("import a from \"./m\";\nvar a = 1;");
+        assertRejected("import a from \"./m\";\nlet a = 1;");
         assertRejected("import * as a from \"./m\";\nfunction a() { }");
     }
 
     @Test
     public void testExportOnlyAtTopLevel() {
-        assertRejected("function f() { export var x = 1; }");
+        assertRejected("function f() { export let x = 1; }");
         assertRejected("if (true) { export function g() { } }");
     }
 }

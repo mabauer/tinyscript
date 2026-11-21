@@ -23,14 +23,14 @@ describe('tinyscript-lang tokenizer', () => {
   })
 
   it('keywords tokenize as keyword', () => {
-    for (const kw of ['var', 'let', 'const', 'function', 'if', 'else', 'for', 'while', 'break', 'continue', 'throw', 'return',
+    for (const kw of ['let', 'const', 'function', 'if', 'else', 'for', 'while', 'break', 'continue', 'throw', 'return',
                       'new', 'this', 'typeof', 'instanceof', 'import', 'export', 'from', 'as']) {
       expect(typeOf(kw, kw)).toBe('keyword')
     }
   })
 
   it('words that are not part of tinyscript tokenize as variableName', () => {
-    for (const word of ['delete', 'void', 'switch']) {
+    for (const word of ['delete', 'void', 'switch', 'var']) {
       expect(typeOf(word, word)).toBe('variableName')
     }
   })

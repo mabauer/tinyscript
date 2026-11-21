@@ -41,7 +41,7 @@ function createPerson() {
 
 function createPeople(n) {
 	const people = [];
-	for (let i = 0, n-1) {
+	for (const i : range(n)) {
 		people.push(createPerson());
 	}
     return people;
@@ -49,7 +49,7 @@ function createPeople(n) {
 
 function countBauers(people) {
     let result = 0;
-	for (let i = 0, people.length - 1) {
+	for (const i : range(people.length)) {
         if (people[i].name.indexOf("Bauer") >= 0) {
             result = result +1;
         }
@@ -58,7 +58,7 @@ function countBauers(people) {
 }
 
 function test() {         
-	for (let i = 0, R-1) {
+	for (const i : range(R)) {
 		const people = createPeople(N);
 		print(countBauers(people));
 	}

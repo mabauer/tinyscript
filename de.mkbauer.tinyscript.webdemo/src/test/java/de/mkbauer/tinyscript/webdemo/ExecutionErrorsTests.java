@@ -36,7 +36,7 @@ public class ExecutionErrorsTests {
 	public void testSparseArrayHitsTheObjectSizeLimit() {
 		// Used to fill the heap: the gap was filled with 200 million undefined values
 		TinyscriptExecutionResult result = executionService.executeScriptFromString(
-				"var a = [];\na[200000000] = 1;");
+				"let a = [];\na[200000000] = 1;");
 		assertEquals("TinyscriptResourceLimitViolation: Object size limit reached", result.getErrorMessage());
 		assertEquals(2, result.getErrorLine());
 	}
@@ -69,7 +69,7 @@ public class ExecutionErrorsTests {
 	public void testDoublingAStringHitsTheStringLengthLimit() {
 		// Used to fill the heap: a 1 MB string printed in a loop
 		TinyscriptExecutionResult result = executionService.executeScriptFromString(
-				"var s = \"x\";\nfor (var i = 1, 20) {\n  s = s + s;\n}\nwhile (true) { print(s); }");
+				"let s = \"x\";\nfor (const i : range(1, 21)) {\n  s = s + s;\n}\nwhile (true) { print(s); }");
 		assertEquals("TinyscriptResourceLimitViolation: String length limit reached", result.getErrorMessage());
 		assertEquals(3, result.getErrorLine());
 	}

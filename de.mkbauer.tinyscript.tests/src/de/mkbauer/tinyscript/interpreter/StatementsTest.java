@@ -39,67 +39,67 @@ public class StatementsTest extends TinyscriptInterpreterTestHelper {
 	@Test
 	public void testThisIsUndefinedOutsideAFunction() throws Exception {
 		assertEquals(TSValue.UNDEFINED, execute(getParser().parse("this;")));
-		assertEquals(TSValue.UNDEFINED, execute(getParser().parse("var f = () => this; f();")));
-		assertEquals("ok", execute(getParser().parse("var o = { m: function() { return this; }, s: \"ok\" }; o.m().s;")).asString());
+		assertEquals(TSValue.UNDEFINED, execute(getParser().parse("let f = () => this; f();")));
+		assertEquals("ok", execute(getParser().parse("let o = { m: function() { return this; }, s: \"ok\" }; o.m().s;")).asString());
 	}
 
 	@Test
 	public void testIfStatement() {
-		TSValue value = executeScriptFromString("var i=1; if (i==1) { assert(i==1); i=2; assert(i==2);} assert(i==2);");
+		TSValue value = executeScriptFromString("let i=1; if (i==1) { assert(i==1); i=2; assert(i==2);} assert(i==2);");
 		assertTrue(value.asBoolean());
 	}
 	
 	@Test
 	public void testIfthenElseStatement() {
-		TSValue value = executeScriptFromString("var i=1; if (i==2) {i=2;} else {i=3;} assert(i==3);");
+		TSValue value = executeScriptFromString("let i=1; if (i==2) {i=2;} else {i=3;} assert(i==3);");
 		assertTrue(value.asBoolean());
 	}
 	
 	@Test
 	public void testIfConditionMustBeABooleanNullOrAnObject() {
 		// Numbers are no conditions; this also catches the typo "=" for "=="
-		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("var i=1; if (2) {i=2;} else {i=3;}"));
-		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("var i=1; if (i=0) {i=2;} else {i=3;}"));
-		TSValue value = executeScriptFromString("var i=1; var o={}; if (o) {i=2;} else {i=3;} assert(i==2);");
+		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("let i=1; if (2) {i=2;} else {i=3;}"));
+		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("let i=1; if (i=0) {i=2;} else {i=3;}"));
+		TSValue value = executeScriptFromString("let i=1; let o={}; if (o) {i=2;} else {i=3;} assert(i==2);");
 		assertTrue(value.asBoolean());
-		value = executeScriptFromString("var i=1; if (null) {i=2;} else {i=3;} assert(i==3);");
+		value = executeScriptFromString("let i=1; if (null) {i=2;} else {i=3;} assert(i==3);");
 		assertTrue(value.asBoolean());
 	}
 
 	@Test
 	public void testNestedBlocks() {
-		TSValue value = executeScriptFromString("var i; i=1; { i=2; assert (i==2); } assert (i==2);");
+		TSValue value = executeScriptFromString("let i; i=1; { i=2; assert (i==2); } assert (i==2);");
 	}
 	
 	@Test
 	public void testNestedBlocksShadowing() {
-		TSValue value = executeScriptFromString("var i; i=1; { var i; i=2; assert (i==2); } assert (i==1);");
+		TSValue value = executeScriptFromString("let i; i=1; { let i; i=2; assert (i==2); } assert (i==1);");
 	}
 		
 	@Test
 	public void testSimpleNumericForLoop() {
-		TSValue value = executeScriptFromString("var i=0; for (i = 1,42) { var j = i; } assert(i==42);");
+		TSValue value = executeScriptFromString("let i=0; for (i : range(1, 43)) { let j = i; } assert(i==42);");
 	}
 	
 	@Test
 	public void testSimpleNumericForLoopWithVar() {
-		TSValue value = executeScriptFromString("var result=0; for (var i = 1, 42) { result = i; } assert(result==42);");
+		TSValue value = executeScriptFromString("let result=0; for (const i : range(1, 43)) { result = i; } assert(result==42);");
 	}
 	
 	@Test
 	public void testNumericForLoopStep() {
-		TSValue value = executeScriptFromString("var result=0; for (var i = 42, 0, -2) { result = result + 1; } assert(result==22);");
+		TSValue value = executeScriptFromString("let result=0; for (const i : range(42, -1, -2)) { result = result + 1; } assert(result==22);");
 	}
 	
 	@Test
 	public void testLongNumericForLoop() {
-		TSValue value = executeScriptFromString("var i=0, result=0; function inc(x) {return x+1;}; for (i = 1,25000) { result = inc(result); } assert(result==25000);");
+		TSValue value = executeScriptFromString("let i=0, result=0; function inc(x) {return x+1;}; for (i : range(1, 25001)) { result = inc(result); } assert(result==25000);");
 		
 	}
 	
 	@Test
 	public void testLongNumericForLoopEvenSquares() {
-		TSValue value = executeScriptFromString("var result=0; var iterations = 1000; function mult(x,y) { var result = 0; for (var i = 1,y) { result = result + x; } return result; } function square(x) {var temp = mult(x,x); return temp; }; for (var i = 1,iterations) { if (i % 2 == 0) {result = square(i);} else { result = i; } } assert(result==(iterations*iterations));");
+		TSValue value = executeScriptFromString("let result=0; let iterations = 1000; function mult(x,y) { let result = 0; for (const i : range(1, y + 1)) { result = result + x; } return result; } function square(x) {let temp = mult(x,x); return temp; }; for (const i : range(1, iterations + 1)) { if (i % 2 == 0) {result = square(i);} else { result = i; } } assert(result==(iterations*iterations));");
 		
 	}
 	
