@@ -440,6 +440,18 @@ and differential tests run against node.
 
 ## Interpreter and code quality
 
+- **Generated Javascript prints values like the interpreter** (decided
+  2026-11-21, next PR). Whole arrays and objects differ today: the interpreter
+  prints `['a', 1]`, `{name: 'Markus'}`, `Map {…}`, node `String(x)`: `a,1`,
+  `[object Object]`. So differential tests cannot compare programs that print
+  them; four of the eleven web demo examples (arrays, expressions, modules, oo)
+  only run in the interpreter in `DemoExamplesTest`. Plan: a helper in the
+  generator's prelude (about 40 lines) with the rules of `Display` (strings
+  quoted inside arrays and objects, `[Circular]`, nesting limit, a user-defined
+  `toString`), used by `print`, by `+` with a string (`__ts_add`) and by
+  `String(x)`. Then remove the exception in `DemoExamplesTest` and the note in
+  the language reference (section `print`).
+
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always
   skipped. Either add the GraalJS dependency or remove it (decision deferred).
   Its error handling is minimal.
