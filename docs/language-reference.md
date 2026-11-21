@@ -747,30 +747,38 @@ Javascript, writing any other key is a `TypeError`, including `nums.x = 1`,
 
 ### Array methods
 
-| Method                               | Description                                                                                                                                               |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `arr.at(i)`                          | Element at index `i`; a negative `i` counts from the end (`arr.at(-1)` is the last element); `undefined` if out of range                                  |
-| `arr.indexOf(x[, start])`            | Index of the first element `== x` (tinyscript's `==`), or `-1`; searching from `start` (negative: counts from the end)                                    |
-| `arr.includes(x[, start])`           | `true` if an element `== x`, searching from `start` (negative: counts from the end)                                                                       |
-| `arr.push(x)`                        | Appends `x` to the end; returns new element count                                                                                                         |
-| `arr.pop()`                          | Removes and returns the last element                                                                                                                      |
-| `arr.shift()`                        | Removes and returns the first element                                                                                                                     |
-| `arr.unshift(x)`                     | Prepends `x`; returns new element count                                                                                                                   |
-| `arr.slice([start[, end]])`          | A new array with the elements from `start` (inclusive) to `end` (exclusive); negative indices count from the end; `arr.slice()` copies the array          |
-| `arr.fill(x[, start[, end]])`        | Sets the elements from `start` to `end` to `x`; returns the array                                                                                         |
-| `arr.join([sep])`                    | Returns a string with elements joined by `sep` (default `","`)                                                                                            |
-| `arr.forEach(fn)`                    | Calls `fn(element, index, array)` for each element                                                                                                        |
-| `arr.map(fn)`                        | Returns a new array of the results of `fn(element, index, array)`                                                                                         |
-| `arr.filter(fn)`                     | Returns a new array of the elements for which `fn(element, index, array)` is true                                                                         |
-| `arr.some(fn)` / `arr.every(fn)`     | Whether `fn` is true for some / every element                                                                                                             |
-| `arr.find(fn)` / `arr.findIndex(fn)` | The first element / its index for which `fn` is true, or `undefined` / `-1`                                                                               |
-| `arr.reduce(fn[, initial])`          | Combines the elements with `fn(accumulator, element, index, array)`, starting with `initial` (or the first element; then an empty array is a `TypeError`) |
-| `arr.sort([compare])`                | Sorts the array in place (stable) and returns it; `compare(a, b)` returns a negative number if `a` comes first, a positive one if `b` does, `0` otherwise |
-| `arr.toString()`                     | Returns a string representation                                                                                                                           |
+| Method                                       | Description                                                                                                                                                        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `arr.at(i)`                                  | Element at index `i`; a negative `i` counts from the end (`arr.at(-1)` is the last element); `undefined` if out of range                                           |
+| `arr.indexOf(x[, start])`                    | Index of the first element `== x` (tinyscript's `==`), or `-1`; searching from `start` (negative: counts from the end)                                             |
+| `arr.includes(x[, start])`                   | `true` if an element `== x`, searching from `start` (negative: counts from the end)                                                                                |
+| `arr.push(x)`                                | Appends `x` to the end; returns new element count                                                                                                                  |
+| `arr.pop()`                                  | Removes and returns the last element                                                                                                                               |
+| `arr.shift()`                                | Removes and returns the first element                                                                                                                              |
+| `arr.unshift(x)`                             | Prepends `x`; returns new element count                                                                                                                            |
+| `arr.slice([start[, end]])`                  | A new array with the elements from `start` (inclusive) to `end` (exclusive); negative indices count from the end; `arr.slice()` copies the array                   |
+| `arr.fill(x[, start[, end]])`                | Sets the elements from `start` to `end` to `x`; returns the array                                                                                                  |
+| `arr.join([sep])`                            | Returns a string with elements joined by `sep` (default `","`)                                                                                                     |
+| `arr.forEach(fn)`                            | Calls `fn(element, index, array)` for each element                                                                                                                 |
+| `arr.map(fn)`                                | Returns a new array of the results of `fn(element, index, array)`                                                                                                  |
+| `arr.filter(fn)`                             | Returns a new array of the elements for which `fn(element, index, array)` is true                                                                                  |
+| `arr.some(fn)` / `arr.every(fn)`             | Whether `fn` is true for some / every element                                                                                                                      |
+| `arr.find(fn)` / `arr.findIndex(fn)`         | The first element / its index for which `fn` is true, or `undefined` / `-1`                                                                                        |
+| `arr.reduce(fn[, initial])`                  | Combines the elements with `fn(accumulator, element, index, array)`, starting with `initial` (or the first element; then an empty array is a `TypeError`)          |
+| `arr.sort([compare])`                        | Sorts the array in place (stable) and returns it; `compare(a, b)` returns a negative number if `a` comes first, a positive one if `b` does, `0` otherwise          |
+| `arr.reverse()`                              | Reverses the array in place and returns it                                                                                                                         |
+| `arr.toReversed()`                           | A reversed copy; the array stays as it is                                                                                                                          |
+| `arr.splice(start[, count[, x, ...]])`       | Removes `count` elements from `start` (by default all to the end) and inserts `x, ...` there; returns the removed elements; a negative `start` counts from the end |
+| `arr.lastIndexOf(x[, from])`                 | Index of the last element `== x` at or before `from` (negative: counts from the end), or `-1`                                                                      |
+| `arr.findLast(fn)` / `arr.findLastIndex(fn)` | Like `find` / `findIndex`, searching from the end                                                                                                                  |
+| `arr.flat([depth])`                          | A new array with the elements of nested arrays, `depth` levels deep (default `1`, `Infinity` for all)                                                              |
+| `arr.flatMap(fn)`                            | Like `map`, but an array that `fn` returns adds its elements: `["a b", "c"].flatMap(s => s.split(" "))` is `["a", "b", "c"]`                                       |
+| `arr.toString()`                             | Returns a string representation                                                                                                                                    |
 
 The callbacks must be functions; the results of the callbacks of `filter`,
-`some`, `every`, `find` and `findIndex` are conditions (a boolean, `null` /
-`undefined` or an object, see [Conditions](#conditions)).
+`some`, `every`, `find`, `findIndex`, `findLast` and `findLastIndex` are
+conditions (a boolean, `null` / `undefined` or an object, see
+[Conditions](#conditions)).
 
 Without a comparison function, `sort` only sorts strings; unlike Javascript,
 which would sort numbers as strings (`[10, 9, 1].sort()` gives `[1, 10, 9]`),
@@ -1044,33 +1052,47 @@ like those of arrays. Javascript has no `range`: the transpiler adds one.
 
 ### `Math`
 
-| Member                                        | Description                         |
-| --------------------------------------------- | ----------------------------------- |
-| `Math.PI`                                     | 3.141592653589793                   |
-| `Math.sqrt(x)`                                | Square root of `x`                  |
-| `Math.round(x)`                               | Round to nearest integer            |
-| `Math.random()`                               | Random number in [0, 1)             |
-| `Math.min(a, b, ...)` / `Math.max(a, b, ...)` | Smallest / largest of the arguments |
-| `Math.abs(x)`                                 | Absolute value                      |
-| `Math.floor(x)` / `Math.ceil(x)`              | Round down / up                     |
+| Member                                                                  | Description                                         |
+| ----------------------------------------------------------------------- | --------------------------------------------------- |
+| `Math.PI`                                                               | 3.141592653589793                                   |
+| `Math.sqrt(x)`                                                          | Square root of `x`                                  |
+| `Math.round(x)`                                                         | Round to nearest integer                            |
+| `Math.random()`                                                         | Random number in [0, 1)                             |
+| `Math.min(a, b, ...)` / `Math.max(a, b, ...)`                           | Smallest / largest of the arguments                 |
+| `Math.abs(x)`                                                           | Absolute value                                      |
+| `Math.floor(x)` / `Math.ceil(x)`                                        | Round down / up                                     |
+| `Math.trunc(x)` / `Math.sign(x)`                                        | Integer part (towards zero) / sign (`-1`, `0`, `1`) |
+| `Math.pow(x, y)`                                                        | `x` to the power of `y`                             |
+| `Math.exp(x)`, `Math.log(x)`, `Math.log2(x)`, `Math.log10(x)`           | e to the power of `x`; logarithms                   |
+| `Math.cbrt(x)`, `Math.hypot(a, b, ...)`                                 | Cube root; square root of the sum of squares        |
+| `Math.sin(x)`, `cos`, `tan`, `asin`, `acos`, `atan`, `Math.atan2(y, x)` | Trigonometry (radians)                              |
+| `Math.E`                                                                | 2.718281828459045                                   |
 
 ```
 print(Math.sqrt(2));    // 1.4142135623730951
 print(Math.round(2.7)); // 3
 print(Math.PI);         // 3.141592653589793
+print(Math.pow(2, 10), Math.log2(1024), Math.hypot(3, 4));   // 1024 10 5
 ```
+
+The arguments must be numbers. `Math.round` rounds halves up, as in Javascript
+(`Math.round(-2.5)` is `-2`). The results agree with node, the transcendental
+functions (`sin`, `exp`, `pow` …) in rare cases only to the last digit but one.
 
 ### `Number`, `parseInt`, `isNaN`
 
 Conversions to numbers are explicit (no operator or builtin converts silently):
 
-| Function                 | Description                                                                                                                                                                                                                                                                                              |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Number(x)`              | A string read as a whole number literal (surrounding whitespace is ignored; decimal, `1e3`, `Infinity`, `0x1f`, `0o17`, `0b101`), otherwise `NaN`; unlike Javascript, `""` and blank strings are `NaN`, not `0`. A number stays as it is, `true` / `false` are `1` / `0`; anything else is a `TypeError` |
-| `parseInt(str[, radix])` | The integer at the start of `str`, ignoring the rest (`"42abc"` → `42`), or `NaN`; leading whitespace and a sign are allowed, `0x` means radix 16. `radix` must be an integer from 2 to 36                                                                                                               |
-| `isNaN(x)`               | `true` if the number `x` is `NaN`; `x` must be a number                                                                                                                                                                                                                                                  |
-| `Number.isInteger(x)`    | `true` if `x` is a finite number without fraction; `false` for anything else                                                                                                                                                                                                                             |
-| `Infinity`, `NaN`        | The numbers infinity and "not a number", as in Javascript                                                                                                                                                                                                                                                |
+| Function                                             | Description                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Number(x)`                                          | A string read as a whole number literal (surrounding whitespace is ignored; decimal, `1e3`, `Infinity`, `0x1f`, `0o17`, `0b101`), otherwise `NaN`; unlike Javascript, `""` and blank strings are `NaN`, not `0`. A number stays as it is, `true` / `false` are `1` / `0`; anything else is a `TypeError` |
+| `parseFloat(str)`                                    | The decimal number at the start of `str`, ignoring the rest (`"3.5kg"` → `3.5`), or `NaN`; `str` must be a string                                                                                                                                                                                        |
+| `parseInt(str[, radix])`                             | The integer at the start of `str`, ignoring the rest (`"42abc"` → `42`), or `NaN`; leading whitespace and a sign are allowed, `0x` means radix 16. `radix` must be an integer from 2 to 36                                                                                                               |
+| `isNaN(x)`                                           | `true` if the number `x` is `NaN`; `x` must be a number                                                                                                                                                                                                                                                  |
+| `Number.isInteger(x)`                                | `true` if `x` is a finite number without fraction; `false` for anything else                                                                                                                                                                                                                             |
+| `Number.isFinite(x)`                                 | `true` if `x` is a number other than `Infinity`, `-Infinity` and `NaN`; `false` for anything else                                                                                                                                                                                                        |
+| `Number.MAX_SAFE_INTEGER`, `Number.MIN_SAFE_INTEGER` | 2^53 - 1 and -(2^53 - 1), the integers that numbers represent exactly                                                                                                                                                                                                                                    |
+| `Infinity`, `NaN`                                    | The numbers infinity and "not a number", as in Javascript                                                                                                                                                                                                                                                |
 
 ```
 print(Number(" 3.5 ") + 1);   // 4.5
@@ -1113,15 +1135,18 @@ array or object is noticed at once.
 
 ### `Object`
 
-| Method                                      | Description                                        |
-| ------------------------------------------- | -------------------------------------------------- |
-| `Object.create(proto)`                      | New object with given prototype                    |
-| `Object.keys(obj)`                          | Array of own enumerable property keys              |
-| `Object.getPrototypeOf(obj)`                | Returns `obj`'s prototype                          |
-| `Object.defineProperty(obj, key, desc)`     | Define a property with a descriptor                |
-| `Object.getOwnPropertyDescriptor(obj, key)` | Returns a property descriptor                      |
-| `Object.getOwnPropertyNames(obj)`           | Array of all own property names                    |
-| `obj.hasOwnProperty(key)`                   | `true` if `key` is an own (non-inherited) property |
+| Method                                       | Description                                                                       |
+| -------------------------------------------- | --------------------------------------------------------------------------------- |
+| `Object.create(proto)`                       | New object with given prototype                                                   |
+| `Object.keys(obj)`                           | Array of own enumerable property keys                                             |
+| `Object.values(obj)` / `Object.entries(obj)` | Array of their values / of `[key, value]` pairs                                   |
+| `Object.fromEntries(pairs)`                  | New object from `[key, value]` pairs (an array of them or a `Map`)                |
+| `Object.assign(target, source, ...)`         | Copies the own enumerable properties of the sources to `target`; returns `target` |
+| `Object.getPrototypeOf(obj)`                 | Returns `obj`'s prototype                                                         |
+| `Object.defineProperty(obj, key, desc)`      | Define a property with a descriptor                                               |
+| `Object.getOwnPropertyDescriptor(obj, key)`  | Returns a property descriptor                                                     |
+| `Object.getOwnPropertyNames(obj)`            | Array of all own property names                                                   |
+| `obj.hasOwnProperty(key)`                    | `true` if `key` is an own (non-inherited) property                                |
 
 ```
 const proto = { greet: function() { print("hi"); } };
@@ -1154,6 +1179,8 @@ String methods:
 | `str.substring(start, end)`                                  | Substring from `start` (inclusive) to `end` (exclusive)                                                                                                              |
 | `str.slice(start[, end])`                                    | Like `substring`, but negative indices count from the end, and `start > end` gives `""`                                                                              |
 | `str.split(sep[, limit])`                                    | Array of the parts between occurrences of `sep` (at most `limit` of them); `""` splits into characters. To split at any whitespace, use `words(str)` of `std:string` |
+| `str.trimStart()` / `str.trimEnd()`                          | Without leading / trailing whitespace                                                                                                                                |
+| `str.codePointAt(i)`                                         | Unicode code point at index `i` (both halves of an emoji), or `undefined`                                                                                            |
 | `str.trim()`                                                 | Without leading and trailing whitespace                                                                                                                              |
 | `str.replace(search, repl)` / `str.replaceAll(search, repl)` | Replaces the first / every occurrence of `search`; `repl` may contain `$&` (the match), `` $` `` / `$'` (the text before / after it) and `$$`                        |
 | `str.repeat(n)`                                              | `str` repeated `n` times                                                                                                                                             |

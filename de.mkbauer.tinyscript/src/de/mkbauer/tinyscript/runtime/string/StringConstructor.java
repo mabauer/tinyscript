@@ -34,6 +34,9 @@ public class StringConstructor extends BuiltinConstructor {
 		stringPrototype.defineBuiltinMethod("slice", this::slice, 0, 2);
 		stringPrototype.defineBuiltinMethod("split", this::split, 1, 2);
 		stringPrototype.defineBuiltinMethod("trim", this::trim, 0);
+		stringPrototype.defineBuiltinMethod("trimStart", (self, args) -> TSValue.of(trimStart(thisString(self, "trimStart"))), 0);
+		stringPrototype.defineBuiltinMethod("trimEnd", (self, args) -> TSValue.of(trimEnd(thisString(self, "trimEnd"))), 0);
+		stringPrototype.defineBuiltinMethod("codePointAt", this::codePointAt, 1);
 		stringPrototype.defineBuiltinMethod("replace", this::replace, 2);
 		stringPrototype.defineBuiltinMethod("replaceAll", this::replaceAll, 2);
 		stringPrototype.defineBuiltinMethod("repeat", this::repeat, 1);
@@ -216,6 +219,20 @@ public class StringConstructor extends BuiltinConstructor {
 	 * Removes leading and trailing whitespace, as Javascript's String.prototype.trim (Java's
 	 * String.strip misses the no-break spaces and the byte order mark).
 	 */
+	public static String trimStart(String str) {
+		int start = 0;
+		while (start < str.length() && isWhitespace(str.charAt(start)))
+			start++;
+		return str.substring(start);
+	}
+
+	public static String trimEnd(String str) {
+		int end = str.length();
+		while (end > 0 && isWhitespace(str.charAt(end - 1)))
+			end--;
+		return str.substring(0, end);
+	}
+
 	public static String trim(String str) {
 		int start = 0;
 		int end = str.length();
@@ -323,6 +340,14 @@ public class StringConstructor extends BuiltinConstructor {
 		String str = thisString(self, "charCodeAt");
 		int index = integer(args[0], "charCodeAt");
 		return TSValue.of(index >= 0 && index < str.length() ? str.charAt(index) : Double.NaN);
+	}
+
+	// str.codePointAt(index): the Unicode code point at index (both UTF-16 units of an emoji),
+	// undefined outside the string
+	private TSValue codePointAt(TSObject self, TSValue[] args) {
+		String str = thisString(self, "codePointAt");
+		int index = integer(args[0], "codePointAt");
+		return index >= 0 && index < str.length() ? TSValue.of(str.codePointAt(index)) : TSValue.UNDEFINED;
 	}
 
 	// String.fromCharCode(code, ...): the string of the given UTF-16 codes

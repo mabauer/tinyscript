@@ -15,6 +15,7 @@ import de.mkbauer.tinyscript.interpreter.TSPropertyDescriptor;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
+import de.mkbauer.tinyscript.runtime.collection.MapObject;
 
 
 public class ObjectConstructor extends BuiltinConstructor {
@@ -56,6 +57,10 @@ public class ObjectConstructor extends BuiltinConstructor {
 		defineBuiltinMethod("getOwnPropertyNames", this::getOwnPropertyNames, 1);
 		defineBuiltinMethod("getOwnPropertyDescriptor", this::getOwnPropertyDescriptor, 2);
 		defineBuiltinMethod("keys", this::keys, 1);
+		defineBuiltinMethod("values", this::values, 1);
+		defineBuiltinMethod("entries", this::entries, 1);
+		defineBuiltinMethod("fromEntries", this::fromEntries, 1);
+		defineBuiltinMethod("assign", this::assign, 1, BuiltinFunction.VARIADIC);
 
 		// Now, that we have the prototype of all functions, we can safely add functions to the prototype of all objects
 		TSObject defaultPrototype = engine.getDefaultPrototype();
@@ -122,6 +127,77 @@ public class ObjectConstructor extends BuiltinConstructor {
 
 	private TSValue keys(TSObject self, TSValue[] args) {
 		return stringArray(args[0] instanceof TSObject object ? object.getKeys() : List.of());
+	}
+
+	// Object.values(obj), Object.entries(obj): the values / the [key, value] pairs of the own
+	// enumerable properties, in the order of Object.keys
+	private TSValue values(TSObject self, TSValue[] args) {
+		TSObject object = object(args[0], "values");
+		ArrayObject result = newArray();
+		for (String key : object.getKeys())
+			result.push(object.get(key));
+		return result;
+	}
+
+	private TSValue entries(TSObject self, TSValue[] args) {
+		TSObject object = object(args[0], "entries");
+		ArrayObject result = newArray();
+		for (String key : object.getKeys()) {
+			ArrayObject pair = newArray();
+			pair.push(TSValue.of(key));
+			pair.push(object.get(key));
+			result.push(pair);
+		}
+		return result;
+	}
+
+	// Object.fromEntries(pairs): an object from [key, value] pairs, an array of them or a Map;
+	// the keys must be strings or numbers
+	private TSValue fromEntries(TSObject self, TSValue[] args) {
+		TSObject result = new TSObject(engine, engine.getDefaultPrototype());
+		if (args[0] instanceof MapObject map) {
+			for (var entry : map.getEntries().entrySet())
+				result.put(propertyKey(entry.getKey()), entry.getValue());
+			return result;
+		}
+		if (!(args[0] instanceof ArrayObject pairs))
+			throw new TinyscriptTypeError("fromEntries() needs an array of [key, value] pairs or a Map, not " + args[0].typeOf());
+		for (TSValue item : pairs.getItems()) {
+			if (!(item instanceof ArrayObject pair) || pair.getLength() < 2)
+				throw new TinyscriptTypeError("fromEntries() needs [key, value] pairs");
+			result.put(propertyKey(pair.item(0)), pair.item(1));
+		}
+		return result;
+	}
+
+	private static String propertyKey(TSValue key) {
+		if (!(key.isString() || key.isNumber()))
+			throw new TinyscriptTypeError("A property key must be a string or a number, not " + key.typeOf());
+		return key.asString();
+	}
+
+	// Object.assign(target, source, ...): copies the own enumerable properties of the sources to
+	// target and returns it
+	private TSValue assign(TSObject self, TSValue[] args) {
+		TSObject target = object(args[0], "assign");
+		for (int i = 1; i < args.length; i++) {
+			if (args[i] == TSValue.NULL || args[i] == TSValue.UNDEFINED)
+				continue;
+			TSObject source = object(args[i], "assign");
+			for (String key : source.getKeys())
+				target.put(key, source.get(key));
+		}
+		return target;
+	}
+
+	private static TSObject object(TSValue value, String function) {
+		if (!(value instanceof TSObject object))
+			throw new TinyscriptTypeError(function + "() needs an object, not " + value.typeOf());
+		return object;
+	}
+
+	private ArrayObject newArray() {
+		return (ArrayObject) engine.getConstructor(ArrayConstructor.NAME).createObject();
 	}
 
 	private TSValue stringArray(List<String> strings) {

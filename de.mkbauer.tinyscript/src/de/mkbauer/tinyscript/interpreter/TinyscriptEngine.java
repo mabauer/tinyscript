@@ -177,6 +177,7 @@ public class TinyscriptEngine {
 		numberPrototype = (TSObject) number.get("prototype");
 		addToGlobalObject("Number", number);
 		addToGlobalObject("parseInt", NumberFunctions.createParseInt(this));
+		addToGlobalObject("parseFloat", NumberFunctions.createParseFloat(this));
 		addToGlobalObject("isNaN", NumberFunctions.createIsNaN(this));
 		addToGlobalObject("Math", new MathObject(this));
 		addToGlobalObject("range", RangeFunction.create(this));

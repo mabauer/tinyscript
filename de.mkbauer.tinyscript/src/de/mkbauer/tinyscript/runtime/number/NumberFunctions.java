@@ -34,6 +34,9 @@ public final class NumberFunctions {
 	public static BuiltinFunction createNumber(TinyscriptEngine engine) {
 		BuiltinFunction number = engine.defineBuiltinFunction("Number", (self, args) -> toNumber(args[0]), 1);
 		number.defineBuiltinMethod("isInteger", (self, args) -> TSValue.of(args[0].isMathematicalInteger() && Double.isFinite(args[0].asDouble())), 1);
+		number.defineBuiltinMethod("isFinite", (self, args) -> TSValue.of(args[0] instanceof TSNumber n && Double.isFinite(n.value())), 1);
+		number.defineDefaultProperty("MAX_SAFE_INTEGER", 9007199254740991.0);
+		number.defineDefaultProperty("MIN_SAFE_INTEGER", -9007199254740991.0);
 		TSObject prototype = new TSObject(engine, engine.getDefaultPrototype());
 		prototype.defineDefaultProperty("constructor", number);
 		prototype.defineBuiltinMethod("toFixed", (self, args) -> toFixed(engine, thisNumber(self, "toFixed"), args), 0, 1);
@@ -97,6 +100,23 @@ public final class NumberFunctions {
 
 	public static BuiltinFunction createParseInt(TinyscriptEngine engine) {
 		return engine.defineBuiltinFunction("parseInt", (self, args) -> parseInt(args), 1, 2);
+	}
+
+	public static BuiltinFunction createParseFloat(TinyscriptEngine engine) {
+		return engine.defineBuiltinFunction("parseFloat", (self, args) -> parseFloat(args[0]), 1);
+	}
+
+	// A decimal number at the start of a string, as parseFloat reads it
+	private static final Pattern DECIMAL_PREFIX = Pattern.compile("[+-]?(Infinity|(\\d+\\.?\\d*|\\.\\d+)([eE][+-]?\\d+)?)");
+
+	// parseFloat(string): like Javascript, reads the leading decimal number and ignores the rest,
+	// e.g. "3.5kg" is 3.5; NaN if there is none. Unlike Javascript, only strings are accepted.
+	private static TSValue parseFloat(TSValue value) {
+		if (!(value instanceof TSString string))
+			throw new TinyscriptTypeError("parseFloat() needs a string, not " + value.typeOf());
+		String str = StringConstructor.trim(string.value());
+		var matcher = DECIMAL_PREFIX.matcher(str);
+		return TSValue.of(matcher.lookingAt() ? Double.parseDouble(matcher.group()) : Double.NaN);
 	}
 
 	public static BuiltinFunction createIsNaN(TinyscriptEngine engine) {
