@@ -32,10 +32,16 @@ import de.mkbauer.tinyscript.TinyscriptDiagnostics;
 import de.mkbauer.tinyscript.validation.TinyscriptSyntaxErrorMessageProvider;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
+import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
+import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
+import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.CallSuffix;
+import de.mkbauer.tinyscript.ts.ExpressionStatement;
+import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
 /**
@@ -77,7 +83,8 @@ class TinyscriptReplMain  {
 			""";
 
 	private static final String INTERACTIVE_HELP = """
-			Enter tinyscript statements; an incomplete statement continues on the next line.
+			Enter tinyscript statements, each ending with ';' as in a file; an incomplete
+			statement continues on the next line. The value of an expression is shown.
 			  !help          show this help
 			  !quit, !bye    leave (or Ctrl-D)
 			""";
@@ -303,7 +310,8 @@ class TinyscriptReplMain  {
 					Tinyscript ast = parse(script + line, multiline);
 					if (ast != null) {
 						TSValue result = sessionEngine.execute(ast);
-						device.println(result.asString());
+						if (showsResult(ast, result))
+							device.println(result.toString());
 						multiline = false;
 						script = "";
 					}
@@ -311,6 +319,15 @@ class TinyscriptReplMain  {
 						multiline = true;
 						script = script + line + "\n";
 					}
+				}
+				catch (TinyscriptSyntaxError e) {
+					// As for a file; the line is counted from the first line of the statement
+					String input = script + line;
+					device.println("TinyscriptSyntaxError: " + e.getMessage()
+							+ (input.contains("\n") ? " (line " + e.getAffectedLine() + " of the input)" : ""));
+					device.print(TinyscriptDiagnostics.excerpt(input, e.getAffectedLine(), e.getAffectedColumn()));
+					multiline = false;
+					script = "";
 				}
 				catch (TinyscriptRuntimeException e) {
 					device.println(e.getClass().getSimpleName() + ": " + e.getMessage());
@@ -338,7 +355,28 @@ class TinyscriptReplMain  {
 	}
 
 	/**
-	 * Parses a statement typed in the interactive session. Returns null if it is incomplete.
+	 * Whether the session shows the result: only for an expression statement (x * 2; or
+	 * x = 5;), not for declarations or loops, and not the undefined of a call like print(x);.
+	 */
+	private static boolean showsResult(Tinyscript ast, TSValue result) {
+		List<Statement> statements = ast.getGlobal().getStatements();
+		if (statements.isEmpty() || !(statements.get(statements.size() - 1) instanceof ExpressionStatement statement))
+			return false;
+		if (statement.getIncrement() != null)
+			return false;
+		return result != TSValue.UNDEFINED || !isCall(statement);
+	}
+
+	private static boolean isCall(ExpressionStatement statement) {
+		return statement.getExpr() instanceof CallOrPropertyAccess access
+				&& (access.getSuffix() instanceof CallSuffix
+					|| access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix && suffix.getCall() != null);
+	}
+
+	/**
+	 * Parses a statement typed in the interactive session. Returns null if it is incomplete;
+	 * a syntax error is a TinyscriptSyntaxError. As in a file, a statement needs its ';': if
+	 * only that is missing at the end, that is an error (instead of waiting for the next line).
 	 */
 	private Tinyscript parse(String script, boolean reuseResource) {
 		if (!reuseResource || currentResource == null) {
@@ -346,9 +384,29 @@ class TinyscriptReplMain  {
 			// The lines of a session see each other's top-level names
 			SharedGlobals.share(currentResource);
 		}
-		else {
-			currentResource.unload();
+		List<Issue> errors = errors(script);
+		if (!errors.isEmpty()) {
+			Issue issue = errors.get(0);
+			TinyscriptSyntaxError error = new TinyscriptSyntaxError(issue.getMessage(), null, issue.getLineNumber(), TinyscriptDiagnostics.column(issue));
+			if (issue.getMessage().startsWith(TinyscriptSyntaxErrorMessageProvider.UNEXPECTED_END)) {
+				// The statement is not complete yet: continue on the next line
+				if (!errors(script + ";").isEmpty())
+					return null;
+				// Complete but for the final ';' (x * 2): say so instead of waiting for more
+				error = missingSemicolon(script);
+			}
+			// A rejected line must not leave its declarations behind for later lines
+			sessionResourceSet.getResources().remove(currentResource);
+			currentResource = null;
+			throw error;
 		}
+		return currentResource.getContents().isEmpty() ? null : (Tinyscript) currentResource.getContents().get(0);
+	}
+
+	// The errors of the script, loaded into the current resource
+	private List<Issue> errors(String script) {
+		if (currentResource.isLoaded())
+			currentResource.unload();
 		try {
 			currentResource.load(new StringInputStream(script), null);
 		}
@@ -356,18 +414,14 @@ class TinyscriptReplMain  {
 			throw new WrappedException(e);
 		}
 		List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
-		List<Issue> errors = TinyscriptDiagnostics.relevantErrors(issues);
-		if (!errors.isEmpty()) {
-			Issue issue = errors.get(0);
-			// The statement is not complete yet: continue on the next line
-			if (issue.getMessage().startsWith(TinyscriptSyntaxErrorMessageProvider.UNEXPECTED_END))
-				return null;
-			// A rejected line must not leave its declarations behind for later lines
-			sessionResourceSet.getResources().remove(currentResource);
-			currentResource = null;
-			throw new TinyscriptRuntimeException("line " + issue.getLineNumber() + ":" + TinyscriptDiagnostics.column(issue) + ": " + issue.getMessage());
-		}
-		return currentResource.getContents().isEmpty() ? null : (Tinyscript) currentResource.getContents().get(0);
+		return TinyscriptDiagnostics.relevantErrors(issues);
+	}
+
+	// Marks the place right after the end of the statement
+	private static TinyscriptSyntaxError missingSemicolon(String script) {
+		String[] lines = script.stripTrailing().split("\n", -1);
+		String last = lines[lines.length - 1];
+		return new TinyscriptSyntaxError("Missing ';' at the end of the statement", null, lines.length, last.length() + 1);
 	}
 
 	private FileHistory loadHistory(ConsoleReader device) {

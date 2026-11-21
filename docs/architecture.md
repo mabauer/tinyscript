@@ -654,12 +654,17 @@ own `out` / `err` streams, so the command line is unit tested
 (`TinyscriptReplMainTest`).
 
 The interactive session uses JLine for readline-style input; the history is kept
-in `~/.tinyscript_history`. Incomplete statements continue on the next line
-(`...` prompt); `!help` and `!quit` / `!bye` are commands. Sandboxing is **off**
-(scripts can import `std:fs`). Each input line is evaluated in a persistent
-`ExecutionContext` so variable state accumulates across lines; the line
-resources are marked with `SharedGlobals.share`, so later lines also _see_ the
-earlier declarations.
+in `~/.tinyscript_history`. As in a file, every statement ends with `;`:
+incomplete statements continue on the next line (`...` prompt), but a statement
+that only lacks its final `;` (`x * 2`) is reported right away (`parse` tries
+the input with a `;` appended). Syntax errors look as for a file
+(`TinyscriptSyntaxError` with the source line and a marker). Only the value of
+an expression statement is shown (strings quoted, `TSValue.toString()`), not the
+`undefined` of a declaration, a loop or a call like `print(x);`. `!help` and
+`!quit` / `!bye` are commands. Sandboxing is **off** (scripts can import
+`std:fs`). Each input line is evaluated in a persistent `ExecutionContext` so
+variable state accumulates across lines; the line resources are marked with
+`SharedGlobals.share`, so later lines also _see_ the earlier declarations.
 
 The helper script `de.mkbauer.tinyscript.repl/tinyscript` follows symlinks (so
 it can be linked into `~/bin`), uses `JAVA_HOME` or the `java` on the `PATH`,
