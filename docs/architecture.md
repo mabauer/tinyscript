@@ -592,7 +592,7 @@ to preserve Tinyscript's array concatenation semantics.
 ### `for` Loop Transpilation
 
 - **`for (const x : items)`:** emits a loop over `__ts_iterate(items)` (the only
-  `for` loop; the Lua-style numeric loop was removed in 0.22.1): arrays item by
+  `for` loop; the Lua-style numeric loop was removed in 0.23.0): arrays item by
   item (seeing items the body appends), the characters of a string, a copy of
   the entries of a `Map` or `Set`, a range lazily; the loop variable is a
   block-scoped `let` / `const` per iteration

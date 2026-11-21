@@ -82,7 +82,7 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			return "tinyscript has no === and !==: use == and !=, which never convert types";
 		if (text.equals(";") && isInForHeader(tokens, index))
 			return FOR_WITH_RANGE;
-		// for (let i = 0, n) (the Lua-style loop tinyscript had until 0.22) or for (let i = 0; …)
+		// for (let i = 0, n) (the Lua-style loop tinyscript had until 0.22.0) or for (let i = 0; …)
 		if (text.equals("=") && isInForHeader(tokens, index))
 			return FOR_WITH_RANGE;
 		if ((text.equals("of") || text.equals("in")) && isInForHeader(tokens, index))
