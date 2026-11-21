@@ -64,14 +64,19 @@ internal shims and must not be used in user code.
 
 Tinyscript has six types:
 
-| Type        | Examples                        | Notes                                              |
-| ----------- | ------------------------------- | -------------------------------------------------- |
-| `number`    | `0`, `3.14`, `1e6`, `-Infinity` | All numbers are 64-bit IEEE 754 doubles            |
-| `string`    | `"hello"`, `'world'`            | Single or double quotes; standard escape sequences |
-| `boolean`   | `true`, `false`                 |                                                    |
-| `null`      | `null`                          | Intentional absence of a value                     |
-| `undefined` | (unassigned variables)          | Default value of uninitialized variables           |
-| `object`    | `{ }`, `[ ]`, functions         | All objects and arrays; functions are objects      |
+| Type        | Examples                        | Notes                                                                          |
+| ----------- | ------------------------------- | ------------------------------------------------------------------------------ |
+| `number`    | `0`, `3.14`, `1e6`, `-Infinity` | All numbers are 64-bit IEEE 754 doubles                                        |
+| `string`    | `"hello"`, `'world'`            | Single or double quotes; standard escape sequences                             |
+| `boolean`   | `true`, `false`                 |                                                                                |
+| `null`      | `null`                          | Intentional absence of a value                                                 |
+| `undefined` | `undefined`                     | Value of uninitialized variables and missing properties; a literal like `null` |
+| `object`    | `{ }`, `[ ]`, functions         | All objects and arrays; functions are objects                                  |
+
+Unlike Javascript, where `undefined` is a global variable (which a function can
+even redeclare), `undefined` is a literal like `null`: it cannot be declared,
+assigned or shadowed (`let undefined = 1;` is an error). To check for "no
+value", `x == null` is the usual test: it is also `true` for `undefined`.
 
 ### Conditions
 
@@ -1439,7 +1444,8 @@ print(area(2), unit, geo.area(1));
 
 ```
 let  const  var  function  return  if  else  for  while  break  continue  throw
-new  this  null  true  false  typeof  instanceof  assert  import  export  from  as
+new  this  null  undefined  true  false  typeof  instanceof  assert  import  export
+from  as
 ```
 
 ### Literals
@@ -1448,7 +1454,7 @@ new  this  null  true  false  typeof  instanceof  assert  import  export  from  
 42        3.14      1e6       // numbers
 "hello"   'world'             // strings
 true      false               // booleans
-null                          // null
+null      undefined           // null, undefined
 [1, 2, 3]                    // array
 { key: value }               // object
 function(x) { ... }          // function expression

@@ -12,7 +12,7 @@ const KEYWORDS = new Set([
 ])
 
 const ATOMS = new Set([
-  'assert', 'true', 'false', 'null',
+  'assert', 'true', 'false', 'null', 'undefined',
 ])
 
 /**

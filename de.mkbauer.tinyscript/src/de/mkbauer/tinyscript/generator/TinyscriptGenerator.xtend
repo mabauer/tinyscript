@@ -50,6 +50,7 @@ import de.mkbauer.tinyscript.ts.IterableForExpression
 import de.mkbauer.tinyscript.ts.ArrowFunction
 import de.mkbauer.tinyscript.ts.ArrowExpressionBody
 import de.mkbauer.tinyscript.ts.NullObject
+import de.mkbauer.tinyscript.ts.UndefinedLiteral
 import de.mkbauer.tinyscript.interpreter.ModuleLoader
 import de.mkbauer.tinyscript.interpreter.Modules
 import de.mkbauer.tinyscript.interpreter.TSNumber
@@ -739,6 +740,8 @@ class TinyscriptGenerator   {
 	}
 
 	def dispatch generate(NullObject expr) '''null'''
+
+	def dispatch generate(UndefinedLiteral expr) '''undefined'''
 	
 	def String getName(Identifier id) {
 		var String name = null;

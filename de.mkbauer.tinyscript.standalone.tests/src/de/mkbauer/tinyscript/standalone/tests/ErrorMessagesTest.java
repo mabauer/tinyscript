@@ -89,6 +89,13 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testUndefinedCannotBeDeclaredOrAssigned() {
+        assertEquals("'undefined' is a reserved word in tinyscript and cannot be used as a name", firstError("let undefined = 1;"));
+        assertEquals("'undefined' is a reserved word in tinyscript and cannot be used as a name", firstError("function f(undefined) { }"));
+        assertEquals(1, reportedErrors("undefined = 1;").size());
+    }
+
+    @Test
     public void testThisOutsideAFunction() {
         String message = "'this' is undefined outside a function (an arrow function takes 'this' from where it is written)";
         assertEquals(message, firstError("print(this);"));
