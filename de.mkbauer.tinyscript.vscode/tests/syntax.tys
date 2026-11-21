@@ -1,0 +1,69 @@
+// SYNTAX TEST "source.tinyscript" "tinyscript highlighting"
+
+const x = 1.5e3;
+// <---- storage.type.tinyscript
+//        ^^^^^ constant.numeric.decimal.tinyscript
+//             ^ punctuation.terminator.statement.tinyscript
+
+let s = "say \"hi\"\n";
+//      ^ string.quoted.double.tinyscript
+//           ^^ constant.character.escape.tinyscript
+//                 ^^ constant.character.escape.tinyscript
+
+let t = 'it\'s';
+//      ^^^^^^^ string.quoted.single.tinyscript
+
+function area(r) { return Math.PI * r * r; }
+// <------- storage.type.function.tinyscript
+//       ^^^^ entity.name.function.tinyscript
+//                 ^^^^^^ keyword.control.tinyscript
+//                        ^^^^ support.class.builtin.tinyscript
+//                            ^ punctuation.accessor.tinyscript
+//                             ^^ variable.other.property.tinyscript
+
+if (x == 1 && !done) { print(x); } else if (x != 2) { throw new Error("no"); }
+// <- keyword.control.tinyscript
+//    ^^ keyword.operator.comparison.tinyscript
+//         ^^ keyword.operator.logical.tinyscript
+//                     ^^^^^ support.function.builtin.tinyscript
+//                                 ^^^^ keyword.control.tinyscript
+//                                                    ^^^^^ keyword.control.tinyscript
+//                                                          ^^^ keyword.operator.expression.tinyscript
+//                                                              ^^^^^ support.class.builtin.tinyscript
+
+for (const i : range(n)) { continue; }
+// <-- keyword.control.tinyscript
+//             ^^^^^ support.function.builtin.tinyscript
+//                         ^^^^^^^^ keyword.control.tinyscript
+
+import area, unit from "./geometry";
+// <----- keyword.control.import.tinyscript
+//                ^^^^ keyword.control.import.tinyscript
+
+const r = range.from + o.if;
+//              ^^^^ variable.other.property.tinyscript
+//                       ^^ variable.other.property.tinyscript
+
+const f = (a, ...rest) => a ?? null;
+//            ^^^ keyword.operator.spread.tinyscript
+//                     ^^ storage.type.function.arrow.tinyscript
+//                          ^^ keyword.operator.logical.tinyscript
+//                             ^^^^ constant.language.null.tinyscript
+
+flags &= ~mask << 2; i++;
+//    ^^ keyword.operator.assignment.compound.tinyscript
+//       ^ keyword.operator.bitwise.tinyscript
+//             ^^ keyword.operator.bitwise.tinyscript
+//                    ^^ keyword.operator.increment.tinyscript
+
+try { x = this ? true : undefined; } /* block */
+// <-- invalid.illegal.reserved.tinyscript
+//        ^^^^ variable.language.this.tinyscript
+//               ^^^^ constant.language.boolean.tinyscript
+//                      ^^^^^^^^^ constant.language.tinyscript
+//                                   ^^^^^^^^^^^ comment.block.tinyscript
+
+assert typeof x == "number" && x instanceof Object;
+// <----- keyword.other.assert.tinyscript
+//     ^^^^^^ keyword.operator.expression.tinyscript
+//                               ^^^^^^^^^^ keyword.operator.expression.tinyscript

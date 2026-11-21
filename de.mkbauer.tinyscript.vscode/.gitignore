@@ -1,0 +1,4 @@
+node_modules/
+*.vsix
+# Copied from ../COPYING.md by npm run package
+LICENSE.md

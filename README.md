@@ -92,7 +92,10 @@ interpreter for it in Java for a couple of reasons:
   mentioned above when introducing _tinyscript_'s language features.
 
 - With _Xtext_ it's easy to provide an editor plugin for _Eclipse_ (project
-  [`de.mkbauer.tinyscript.ui`](de.mkbauer.tinyscript.ui)).
+  [`de.mkbauer.tinyscript.ui`](de.mkbauer.tinyscript.ui)). For _Visual Studio
+  Code_ there is a small extension with syntax highlighting
+  ([`de.mkbauer.tinyscript.vscode`](de.mkbauer.tinyscript.vscode), see its
+  README for how to install it).
 
 - Implementation of a very rudimentary code generator to generate valid
   Javascript code from _tinyscript_'s AST (package `tinyscript.generator`). This
