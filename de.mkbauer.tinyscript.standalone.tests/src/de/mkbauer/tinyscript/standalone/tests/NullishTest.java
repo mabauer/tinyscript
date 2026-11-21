@@ -18,8 +18,8 @@ public class NullishTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testNullishCoalescing() {
         String code = "var u; var m = new Map(); m.set(\"a\", 0);\n"
-                + "print(u ?? 1, \" \", null ?? 2, \" \", 0 ?? 3, \" \", \"\" ?? 4, \" \", false ?? 5);\n"
-                + "print(m.get(\"a\") ?? 9, \" \", m.get(\"b\") ?? 9, \" \", u ?? null ?? \"last\");";
+                + "print(u ?? 1, null ?? 2, 0 ?? 3, \"\" ?? 4, false ?? 5);\n"
+                + "print(m.get(\"a\") ?? 9, m.get(\"b\") ?? 9, u ?? null ?? \"last\");";
         assertEquals("1 2 0  false\n0 9 last\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -54,8 +54,8 @@ public class NullishTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testOptionalChaining() {
         String code = "var u; var o = { a: { b: 1 }, f: function() { return 2; }, arr: [5] };\n"
-                + "print(o?.a?.b, \" \", o.x?.b, \" \", u?.b, \" \", o?.[\"a\"].b, \" \", u?.[0], \" \", o.arr?.[0]);\n"
-                + "print(o.f?.call(o), \" \", o?.f(), \" \", u?.f(), \" \", \"abc\"?.length);";
+                + "print(o?.a?.b, o.x?.b, u?.b, o?.[\"a\"].b, u?.[0], o.arr?.[0]);\n"
+                + "print(o.f?.call(o), o?.f(), u?.f(), \"abc\"?.length);";
         assertEquals("1 undefined undefined 1 undefined 5\n2 2 undefined 3\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -64,7 +64,7 @@ public class NullishTest extends TinyscriptTranspilerTestBase {
     public void testOptionalChainingShortCircuitsTheWholeChain() {
         // Like Javascript: u?.a.b.c is undefined, not a TypeError for .b; f() is not called
         String code = "var u; var calls = 0; function f() { calls++; return 1; }\n"
-                + "print(u?.a.b.c, \" \", u?.a[f()], \" \", u?.a.m(f()), \" \", calls);\n"
+                + "print(u?.a.b.c, u?.a[f()], u?.a.m(f()), calls);\n"
                 + "var list = { value: 1, next: { value: 2, next: null } }; print(list.next?.next?.value ?? \"end\");";
         assertEquals("undefined undefined undefined 0\nend\n", interpreterOutput(code));
         assertSameOutput(code);

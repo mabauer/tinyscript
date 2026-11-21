@@ -12,8 +12,8 @@ public class ObjectShorthandTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testShorthandProperties() {
         String code = "const row = 3; const col = 5; const p = { row, col };\n"
-                + "print(p.row * 10 + p.col, \" \", Object.keys(p).join());\n"
-                + "const q = { row, label: \"start\", col }; print(Object.keys(q).join(), \" \", q.label);";
+                + "print(p.row * 10 + p.col, Object.keys(p).join());\n"
+                + "const q = { row, label: \"start\", col }; print(Object.keys(q).join(), q.label);";
         assertEquals("35 row,col\nrow,label,col start\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -21,7 +21,7 @@ public class ObjectShorthandTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testShorthandAndPatternsFitTogether() {
         String code = "function neighbor(position) { const { row, col } = position; return { row: row + 1, col }; }\n"
-                + "const n = neighbor({ row: 1, col: 2 }); print(n.row, \" \", n.col);";
+                + "const n = neighbor({ row: 1, col: 2 }); print(n.row, n.col);";
         assertEquals("2 2\n", interpreterOutput(code));
         assertSameOutput(code);
     }

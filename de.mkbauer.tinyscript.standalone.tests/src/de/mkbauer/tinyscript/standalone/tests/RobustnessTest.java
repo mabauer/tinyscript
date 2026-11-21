@@ -108,7 +108,7 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testObjectsKnowTheirConstructor() {
         String code = "function Car() { } var c = new Car();\n"
-                + "print(c.constructor == Car, \" \", Object.keys(Car.prototype).length, \" \", Car.prototype.constructor == Car, \" \", {}.constructor == Object);\n"
+                + "print(c.constructor == Car, Object.keys(Car.prototype).length, Car.prototype.constructor == Car, {}.constructor == Object);\n"
                 + "print(c.toString());";
         assertEquals("true 0 true true\n[object Object]\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -133,7 +133,7 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testSystemArgsIsEmptyByDefault() {
-        String code = "print(System.args.length, \" \", Array.isArray(System.args));";
+        String code = "print(System.args.length, Array.isArray(System.args));";
         assertEquals("0 true\n", interpreterOutput(code));
         assertSameOutput(code);
     }

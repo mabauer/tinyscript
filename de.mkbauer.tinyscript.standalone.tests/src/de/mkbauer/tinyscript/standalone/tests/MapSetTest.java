@@ -22,8 +22,8 @@ public class MapSetTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testMapBasics() {
         String code = "var m = new Map(); m.set(\"a\", 1).set(\"b\", 2); m.set(\"a\", 3);\n"
-                + "print(m.get(\"a\"), \" \", m.get(\"x\"), \" \", m.has(\"b\"), \" \", m.has(\"x\"), \" \", m.size);\n"
-                + "print(m.delete(\"b\"), \" \", m.delete(\"b\"), \" \", m.size); m.clear(); print(m.size);";
+                + "print(m.get(\"a\"), m.get(\"x\"), m.has(\"b\"), m.has(\"x\"), m.size);\n"
+                + "print(m.delete(\"b\"), m.delete(\"b\"), m.size); m.clear(); print(m.size);";
         assertEquals("3 undefined true false 2\ntrue false 1\n0\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -32,7 +32,7 @@ public class MapSetTest extends TinyscriptTranspilerTestBase {
     public void testMapKeysOfAnyType() {
         String code = "var m = new Map(); var o = {}; var p = {};\n"
                 + "m.set(1, \"number\"); m.set(\"1\", \"string\"); m.set(true, \"boolean\"); m.set(null, \"null\"); m.set(o, \"o\");\n"
-                + "print(m.get(1), \" \", m.get(\"1\"), \" \", m.get(true), \" \", m.get(null), \" \", m.get(o), \" \", m.get(p), \" \", m.size);\n"
+                + "print(m.get(1), m.get(\"1\"), m.get(true), m.get(null), m.get(o), m.get(p), m.size);\n"
                 + "m.set(0 / 0, \"nan\"); print(m.get(0 / 0)); m.set(-0, \"zero\"); print(m.get(0));";
         assertEquals("number string boolean null o undefined 5\nnan\nzero\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -42,7 +42,7 @@ public class MapSetTest extends TinyscriptTranspilerTestBase {
     public void testMapKeysValuesEntriesAreArraysInInsertionOrder() {
         String code = "var m = new Map([[\"b\", 2], [\"a\", 1]]); m.set(\"c\", 3); m.set(\"b\", 20);\n"
                 + "print(m.keys().join(\",\")); print(m.values().join(\",\")); print(m.entries().map(e => e[0] + \"=\" + e[1]).join(\",\"));\n"
-                + "print(m.keys().length, \" \", m.values().reduce((s, x) => s + x, 0));";
+                + "print(m.keys().length, m.values().reduce((s, x) => s + x, 0));";
         assertEquals("b,a,c\n20,1,3\nb=20,a=1,c=3\n3 24\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -73,7 +73,7 @@ public class MapSetTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testSetBasics() {
         String code = "var s = new Set([1, 2, 2, 3]); s.add(4).add(1);\n"
-                + "print(s.size, \" \", s.has(2), \" \", s.has(\"2\"), \" \", s.delete(2), \" \", s.has(2), \" \", s.size);\n"
+                + "print(s.size, s.has(2), s.has(\"2\"), s.delete(2), s.has(2), s.size);\n"
                 + "print(s.values().join(\",\")); s.clear(); print(s.size); print(new Set().size);";
         assertEquals("4 true false true false 3\n1,3,4\n0\n0\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -95,7 +95,7 @@ public class MapSetTest extends TinyscriptTranspilerTestBase {
         // A common pattern: a set of visited positions as "x,y" strings
         String code = "var visited = new Set(); var x = 0; var y = 0;\n"
                 + "for (var d : \"RRUL\".split(\"\")) { if (d == \"R\") { x++; } else if (d == \"L\") { x--; } else { y++; } visited.add(x + \",\" + y); }\n"
-                + "print(visited.size, \" \", visited.has(\"1,1\"));";
+                + "print(visited.size, visited.has(\"1,1\"));";
         assertEquals("4 true\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -137,7 +137,7 @@ public class MapSetTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testTypeofAndInstanceof() {
         String code = "var m = new Map(); var s = new Set();\n"
-                + "print(typeof m, \" \", m instanceof Map, \" \", s instanceof Set, \" \", s instanceof Map, \" \", Array.isArray(m.keys()));";
+                + "print(typeof m, m instanceof Map, s instanceof Set, s instanceof Map, Array.isArray(m.keys()));";
         assertEquals("object true true false true\n", interpreterOutput(code));
         assertSameOutput(code);
     }

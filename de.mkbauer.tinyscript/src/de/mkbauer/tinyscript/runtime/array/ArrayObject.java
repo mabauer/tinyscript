@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
+import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TSValue;
@@ -129,9 +130,9 @@ public class ArrayObject extends BuiltinType {
 	}
 	
 	@Override
-	public String toString() {
+	protected String display(Display display) {
 		return items.stream()
-				.map(item->item.toString())
+				.map(display::format)
 				.collect(Collectors.joining(", ", "[", "]"));
 	}
 	

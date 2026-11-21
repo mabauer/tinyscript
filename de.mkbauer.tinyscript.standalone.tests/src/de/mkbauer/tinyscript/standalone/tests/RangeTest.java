@@ -56,11 +56,11 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testRangeMethods() {
-        String code = "print(range(4).toArray().join(), \" \", range(4).map(i => i * i).join(), \" \", range(1, 10, 3).length, \" \", range(5, 1).length);\n"
+        String code = "print(range(4).toArray().join(), range(4).map(i => i * i).join(), range(1, 10, 3).length, range(5, 1).length);\n"
                 + "let sum = 0; range(5).forEach(i => { sum += i; }); print(sum);\n"
                 + "const grid = range(2).map(() => range(3).map(() => \".\")); print(grid.map(row => row.join(\"\")).join(\"/\"));\n"
-                + "print(range(3), \" \", range(1, 9, 2));\n"
-                + "print(new Set(range(3)).size, \" \", typeof range(1));";
+                + "print(range(3), range(1, 9, 2));\n"
+                + "print(new Set(range(3)).size, typeof range(1));";
         assertEquals("0,1,2,3 0,1,4,9 3 0\n10\n.../...\nrange(0, 3) range(1, 9, 2)\n3 object\n", interpreterOutput(code));
         assertSameOutput(code);
     }

@@ -2,6 +2,7 @@ package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -354,8 +355,45 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    public void testPrintConcatenatesItsArguments() {
-        assertEquals("a1true\n", interpreterOutput("print(\"a\", 1, true);"));
+    public void testPrintSeparatesItsArgumentsWithSpaces() {
+        assertEquals("a 1 true\n", interpreterOutput("print(\"a\", 1, true);"));
+    }
+
+    @Test
+    public void testPrintShowsCyclesAsCircular() {
+        String code = "const o = { a: 1 }; o.self = o; print(o);\n"
+                + "const a = [1]; a.push(a); print(a);\n"
+                + "const m = new Map(); m.set(\"me\", m); print(m);\n"
+                + "const s = new Set(); s.add(s); print(s);\n"
+                + "print(\"o = \" + o);";
+        assertEquals("{a: 1, self: [Circular]}\n[1, [Circular]]\nMap {'me' => [Circular]}\nSet {[Circular]}\no = {a: 1, self: [Circular]}\n",
+                interpreterOutput(code));
+    }
+
+    @Test
+    public void testPrintShowsSharedObjectsEachTime() {
+        assertEquals("[{x: 1}, {x: 1}]\n", interpreterOutput("const s = { x: 1 }; print([s, s]);"));
+    }
+
+    @Test
+    public void testPrintLimitsTheNestingDepth() {
+        String out = interpreterOutput("let l = null; for (let i = 1, 1000) { l = { next: l }; } print(l); print([[[1]]]);");
+        assertTrue(out.contains("{next: [Object]}"), out);
+        assertTrue(out.endsWith("[[[1]]]\n"), out);
+    }
+
+    @Test
+    public void testPrintUsesAUserDefinedToString() {
+        String code = "const Point = { toString: function() { return \"(\" + this.x + \",\" + this.y + \")\"; } };\n"
+                + "const p = Object.create(Point); p.x = 1; p.y = 2;\n"
+                + "print(p); print(\"p = \" + p); print([p, \"s\"]); print({ at: p }); print(String(p), p);";
+        assertEquals("(1,2)\np = (1,2)\n[(1,2), 's']\n{at: (1,2)}\n(1,2) (1,2)\n", interpreterOutput(code));
+    }
+
+    @Test
+    public void testPrintWithAUserDefinedToStringLikeNode() {
+        assertSameOutput("const p = { x: 1, toString: function() { return \"P\" + this.x; } };\n"
+                + "print(p); print(p, \"and\", 2); print(\"\" + p);");
     }
 
     // =========================================================================

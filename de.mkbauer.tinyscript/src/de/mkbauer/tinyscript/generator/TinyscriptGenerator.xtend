@@ -87,11 +87,11 @@ class TinyscriptGenerator   {
 		System.args = typeof process !== "undefined" ? process.argv.slice(2) : [];
 		
 		if (typeof print !== "function") {
-			// Like the interpreter: all arguments, concatenated, on one line
+			// Like the interpreter: all arguments, separated by spaces, on one line
 			print = function() {
 				var line = "";
 				for (var i = 0; i < arguments.length; i++) {
-					line = line + String(arguments[i]);
+					line = line + (i > 0 ? " " : "") + String(arguments[i]);
 				}
 				console.log(line);
 			};

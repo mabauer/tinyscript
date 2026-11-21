@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
+import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TSValue;
@@ -69,8 +70,8 @@ public class SetObject extends BuiltinType {
 	}
 
 	@Override
-	public String toString() {
-		return values.stream().map(TSValue::toString).collect(Collectors.joining(", ", "Set {", "}"));
+	protected String display(Display display) {
+		return values.stream().map(display::format).collect(Collectors.joining(", ", "Set {", "}"));
 	}
 
 }

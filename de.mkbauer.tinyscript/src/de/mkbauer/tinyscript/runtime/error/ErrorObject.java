@@ -1,5 +1,6 @@
 package de.mkbauer.tinyscript.runtime.error;
 
+import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
 
@@ -18,7 +19,7 @@ public class ErrorObject extends TSObject {
 
 	// Like Javascript's Error.prototype.toString: "Error: message", or "Error" without a message
 	@Override
-	public String toString() {
+	protected String display(Display display) {
 		String name = get("name").asString();
 		return getMessage().isEmpty() ? name : name + ": " + getMessage();
 	}

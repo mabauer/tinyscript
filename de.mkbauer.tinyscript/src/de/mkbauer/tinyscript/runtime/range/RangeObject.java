@@ -1,6 +1,7 @@
 package de.mkbauer.tinyscript.runtime.range;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
+import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -65,7 +66,7 @@ public class RangeObject extends BuiltinType {
 
 	// range(0, 3) or range(1, 9, 2)
 	@Override
-	public String toString() {
+	protected String display(Display display) {
 		return "range(" + TSValue.of(start).asString() + ", " + TSValue.of(end).asString()
 				+ (step != 1 ? ", " + TSValue.of(step).asString() : "") + ")";
 	}

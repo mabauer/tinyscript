@@ -17,14 +17,14 @@ public class BitwiseTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testBitwiseOperators() {
-        String code = "print(12 & 10, \" \", 12 | 10, \" \", 12 ^ 10, \" \", ~5, \" \", 1 << 4, \" \", 100 >> 2);";
+        String code = "print(12 & 10, 12 | 10, 12 ^ 10, ~5, 1 << 4, 100 >> 2);";
         assertEquals("8 14 6 -6 16 25\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testNegativeNumbersInTwosComplement() {
-        String code = "print(-1 & 255, \" \", -8 >> 1, \" \", -1 ^ 5, \" \", ~-1, \" \", -16 | 3);";
+        String code = "print(-1 & 255, -8 >> 1, -1 ^ 5, ~-1, -16 | 3);";
         assertEquals("255 -4 -6 0 -13\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -33,14 +33,14 @@ public class BitwiseTest extends TinyscriptTranspilerTestBase {
     public void testMoreThan32Bits() {
         // Javascript's operators would cut these numbers off at 32 bits
         String code = "const big = 1099511627776; // 2^40\n"
-                + "print(big ^ 1, \" \", (big + 5) & 7, \" \", big | 3, \" \", big >> 20, \" \", 1 << 52, \" \", 8796093022207 ^ 4398046511104);";
+                + "print(big ^ 1, (big + 5) & 7, big | 3, big >> 20, 1 << 52, 8796093022207 ^ 4398046511104);";
         assertEquals("1099511627777 5 1099511627779 1048576 4503599627370496 4398046511103\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testPrecedenceAsInJavascript() {
-        String code = "print(1 + 2 << 1, \" \", 6 & 3 | 8, \" \", 1 | 2 ^ 3 & 4, \" \", 16 >> 1 + 1, \" \", (5 & 1) == 1, \" \", 1 << 2 < 5);";
+        String code = "print(1 + 2 << 1, 6 & 3 | 8, 1 | 2 ^ 3 & 4, 16 >> 1 + 1, (5 & 1) == 1, 1 << 2 < 5);";
         assertEquals("6 10 3 4 true true\n", interpreterOutput(code));
         assertSameOutput(code);
     }

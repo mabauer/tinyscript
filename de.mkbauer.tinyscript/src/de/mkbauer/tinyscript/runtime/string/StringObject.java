@@ -1,6 +1,7 @@
 package de.mkbauer.tinyscript.runtime.string;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
+import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
@@ -40,7 +41,8 @@ public class StringObject extends BuiltinType {
 		this.value = value;
 	}
 	
-	public String toString() {
+	@Override
+	protected String display(Display display) {
 		return value;
 	}
 	

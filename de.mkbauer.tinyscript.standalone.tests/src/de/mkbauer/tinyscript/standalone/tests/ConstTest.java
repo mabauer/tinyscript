@@ -51,7 +51,7 @@ public class ConstTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testShadowingAConstantIsFine() {
-        String code = "const x = 1; { let x = 2; x = 3; print(x); } function f(x) { x = 5; return x; } print(f(0), \" \", x);";
+        String code = "const x = 1; { let x = 2; x = 3; print(x); } function f(x) { x = 5; return x; } print(f(0), x);";
         assertEquals("3\n5 1\n", interpreterOutput(code));
         assertSameOutput(code);
     }

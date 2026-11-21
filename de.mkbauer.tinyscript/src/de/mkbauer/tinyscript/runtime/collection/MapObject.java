@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import de.mkbauer.tinyscript.interpreter.BuiltinType;
+import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TSValue;
@@ -74,9 +75,9 @@ public class MapObject extends BuiltinType {
 	}
 
 	@Override
-	public String toString() {
+	protected String display(Display display) {
 		return entries.entrySet().stream()
-				.map(entry -> entry.getKey().toString() + " => " + entry.getValue().toString())
+				.map(entry -> display.format(entry.getKey()) + " => " + display.format(entry.getValue()))
 				.collect(Collectors.joining(", ", "Map {", "}"));
 	}
 
