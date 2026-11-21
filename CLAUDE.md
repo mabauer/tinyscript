@@ -200,7 +200,7 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - Loops: `for (const x : items)` (values, not keys; arrays, strings, `Set`s,
   `Map`s and lazy ranges: `for (const i : range(n))` counts 0 … n - 1,
   `range(n).reverse()` n - 1 … 0) and `while (cond) { … }`; there is no counting
-  `for` (the Lua-style `for (let i = 0, n)` was removed in 0.22.1); `break`
+  `for` (the Lua-style `for (let i = 0, n)` was removed in 0.23.0); `break`
   leaves the innermost loop, `continue` goes on with its next iteration. In
   sandboxed mode every loop iteration counts against the statement limit.
 - Only `==` / `!=` (no type coercion, except `null == undefined`; `NaN != NaN`;

@@ -360,11 +360,13 @@ and differential tests run against node.
        `parseFloat`, `Number.isFinite`, `MAX_SAFE_INTEGER` / `MIN_SAFE_INTEGER`;
        `Math.round` fixed (large numbers, `NaN`). `log2` and `cbrt` are ports of
        FreeBSD's msun, as V8 uses them (bit-exact with node); the others use
-       `StrictMath` (in rare cases one unit in the last digit off). Open for
-       discussion: the operator `**` and spread in calls
-       (`Math.max(...values)`). Formatting is done: `toFixed` and
-       `toString(radix)` (2026-11-21; not now: `toPrecision`, `toExponential`;
-       not at all: `toLocaleString`, `printf`-like format strings).
+       `StrictMath` (in rare cases one unit in the last digit off). Deferred
+       (2026-11-21): the operator `**` (rather not: `Math.pow` and `1 << n` do
+       it, and it brings its own precedence rules) and spread in calls
+       (`Math.max(...values)`; `f.apply(null, values)` does it). Formatting is
+       done: `toFixed` and `toString(radix)` (2026-11-21; not now:
+       `toPrecision`, `toExponential`; not at all: `toLocaleString`,
+       `printf`-like format strings).
     6. **Objects with methods are verbose.** The mechanics are complete
        (`Object.create`, `prototype`, `instanceof`); what is missing is a
        comfortable spelling. Tendency (2026-11-20): **no inheritance for now**,

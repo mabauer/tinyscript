@@ -427,7 +427,7 @@ for (const i : range(array.length).reverse()) { ... }   // … backwards
 ```
 
 There is no counting loop with a condition: `for (let i = 0; i < n; i++)` (and
-the Lua-style `for (let i = 0, n - 1)`, which tinyscript had until 0.22) is a
+the Lua-style `for (let i = 0, n - 1)`, which tinyscript had until 0.22.0) is a
 syntax error that points to `range`. The loop variable is declared with `const`
 (or `let`, if the body assigns it; it is a new variable in each iteration) or is
 an existing variable: `for (i : items)`.
