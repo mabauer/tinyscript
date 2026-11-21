@@ -41,6 +41,14 @@ public class StringObject extends BuiltinType {
 		this.value = value;
 	}
 	
+	// The length of the current value (new String("abc") sets the value after construction)
+	@Override
+	public TSValue get(String key) {
+		if (key.equals("length"))
+			return TSValue.of(getLength());
+		return super.get(key);
+	}
+
 	@Override
 	protected String display(Display display) {
 		return value;

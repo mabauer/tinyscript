@@ -276,7 +276,7 @@ items of `join()`), `toObject()` (the object for a property access; strings get
 a wrapper), `toRelativeIndex()`.
 
 **Display form:** `interpreter/Display.java` turns a value into the text `print`
-shows (`{x: 1, s: 'a'}`, `[1, 2]`, `Map {'k' => 1}`). Each object type overrides
+shows (`{x: 1, s: "a"}`, `[1, 2]`, `Map {"k" => 1}`). Each object type overrides
 `display(Display)` (not `toString()`, which is final and delegates to `Display`)
 and formats the values it contains with `display.format(value)`. `Display` keeps
 the path of objects being shown, so a cycle appears as `[Circular]`, and stops
@@ -284,6 +284,11 @@ at 50 levels of nesting (`[Object]` / `[Array]`). `stringify` uses
 `new Display(true)`, which calls a user-defined `toString` (an
 `InterpretedFunction`) at every level; `TSObject.toString()` uses
 `new Display(false)` and never runs script code (REPL echo, error messages).
+Strings inside values are string literals in double quotes, escaped exactly as
+by Javascript's `JSON.stringify` (`TSString.quote`). The generated Javascript
+has the same rules in its prelude (`__ts_display` / `__ts_str`, used by `print`,
+by `+` with a string and by a wrapped `String`), so differential tests can
+compare programs that print whole values.
 
 **Memory estimation:** `estimateMemory()` returns `properties.size() * 8` bytes
 (TSVALUE_SIZE = 8). Used by the resource monitor.

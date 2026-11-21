@@ -24,14 +24,14 @@ print(result); // false
 // Arrays
 const fruits = ["Banana", "Apple", "Strawberry"];
 result = fruits + ["Cherry"];   // + concatenates two arrays
-print(result); // ['Banana', 'Apple', 'Strawberry', 'Cherry']
+print(result); // ["Banana", "Apple", "Strawberry", "Cherry"]
 
 const mixed = ["Banana", 3, true, 1.5];
-print(mixed);  // ['Banana', 3, true, 1.5]
+print(mixed);  // ["Banana", 3, true, 1.5]
 
 // Simple Objects
 const person = { name: "Markus", age: 42 };
-print(person);      // {name: 'Markus', age: 42}
+print(person);      // {name: "Markus", age: 42}
 print(person.name); // Markus
 print(person.age);  // 42
 person.age = 43;

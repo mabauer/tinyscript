@@ -207,7 +207,7 @@ public non-sealed class TSObject implements TSValue {
 	}
 
 	/**
-	 * This object's display form: {x: 1, y: 'a'}. The values inside go through {@code display.format}.
+	 * This object's display form: {x: 1, y: "a"}. The values inside go through {@code display.format}.
 	 */
 	protected String display(Display display) {
 		return properties.keySet().stream()
