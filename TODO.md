@@ -119,7 +119,10 @@ and differential tests run against node.
        that stay name-based (a small array of names and values with linear
        search instead of a `HashMap` per block / iteration; expected 5–15 %,
        only `ExecutionContext` changes). Compiling the tree to closures only as
-       a deliberate architecture decision.
+       a deliberate architecture decision. Measured 2026-11-21 (fixing `reverse`
+       of `std:array`): a call of a builtin method such as `push` costs about
+       1.2 µs, ten times an index access (`a[i]`, `r[i] = x`, about 0.13 µs);
+       worth a look before the contexts if method calls dominate a profile.
    - Days 7–10 (2026-11-21): all four ran correctly on the first attempt.
      Findings:
      - Fixed: the generator crashed on a `for` loop with a pattern or over an
@@ -445,9 +448,6 @@ and differential tests run against node.
   Its error handling is minimal.
 
 - **Bugs found by the language review** (2026-11-20):
-  - **`contains` of `std:array` fails on a `Set`** ("Set has no method
-    'indexOf'"), although the module is documented for anything the `for` loop
-    goes through; `reverse` there is quadratic (`unshift` in a loop).
   - **Language reference is outdated:** section 5 says there is no `else if`
     (there is).
   - **Interactive REPL:** an expression needs its `;` (`x * 2` waits for a
