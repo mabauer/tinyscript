@@ -87,20 +87,94 @@ class TinyscriptGenerator   {
 		// Like the interpreter: the arguments of the script
 		System.args = typeof process !== "undefined" ? process.argv.slice(2) : [];
 		
-		if (typeof print !== "function") {
-			// Like the interpreter: all arguments, separated by spaces, on one line
-			print = function() {
-				var line = "";
-				for (var i = 0; i < arguments.length; i++) {
-					line = line + (i > 0 ? " " : "") + String(arguments[i]);
+		// Like the interpreter (Display): the text of a value for print, + with a string and String(x).
+		// A string stays as it is; inside arrays and objects, strings are quoted as by JSON.stringify,
+		// a cycle is [Circular], nesting deeper than 50 levels [Object] / [Array], and an object with
+		// a toString of its own shows what it returns.
+		const __ts_JsString = globalThis.String;
+		const __ts_builtinToStrings = new globalThis.Set([Object.prototype.toString, Array.prototype.toString,
+			Function.prototype.toString, Error.prototype.toString, __ts_JsString.prototype.toString]);
+
+		function __ts_str(value) {
+			if (typeof value === "string") {
+				return value;
+			}
+			return __ts_display(value, []);
+		}
+
+		function __ts_display(value, path) {
+			if (typeof value === "string") {
+				return JSON.stringify(value);
+			}
+			if (value === null || (typeof value !== "object" && typeof value !== "function")) {
+				return __ts_JsString(value);
+			}
+			if (path.includes(value)) {
+				return "[Circular]";
+			}
+			const toString = value.toString;
+			if (typeof toString === "function" && !__ts_builtinToStrings.has(toString) && !(value instanceof __ts_Range)) {
+				const text = toString.call(value);
+				if (typeof text === "string") {
+					return text;
 				}
-				console.log(line);
+			}
+			if (path.length >= 50) {
+				return Array.isArray(value) ? "[Array]" : "[Object]";
+			}
+			path.push(value);
+			try {
+				const show = item => __ts_display(item, path);
+				if (Array.isArray(value)) {
+					return "[" + Array.from(value, show).join(", ") + "]";
+				}
+				if (value instanceof globalThis.Map) {
+					return "Map {" + Array.from(value, ([k, v]) => show(k) + " => " + show(v)).join(", ") + "}";
+				}
+				if (value instanceof globalThis.Set) {
+					return "Set {" + Array.from(value, show).join(", ") + "}";
+				}
+				if (value instanceof __ts_Range || value instanceof Error) {
+					return value.toString();
+				}
+				if (value instanceof __ts_JsString) {
+					return value.valueOf();
+				}
+				const properties = Object.keys(value).map(key => key + ": " + show(value[key]));
+				if (typeof value === "function") {
+					const name = "[Function" + (value.name ? ": " + value.name : "") + "]";
+					return properties.length > 0 ? "{ " + name + " " + properties.join(", ") + " }" : name;
+				}
+				return "{" + properties.join(", ") + "}";
+			}
+			finally {
+				path.pop();
+			}
+		}
+
+		// Like the interpreter: String(x) converts as print does
+		var String = (function (JsString) {
+			const S = function String(value) {
+				const text = arguments.length === 0 ? "" : __ts_str(value);
+				return new.target ? new JsString(text) : text;
 			};
-		} 
-		
+			S.prototype = JsString.prototype;
+			S.fromCharCode = JsString.fromCharCode;
+			return S;
+		})(__ts_JsString);
+
+		if (typeof print !== "function") {
+			// Like the interpreter: all arguments, separated by spaces, on one line. Node's console
+			// itself, since a script may declare its own console (the webdemo's oo.tys does)
+			const __ts_console = globalThis.console;
+			print = function(...args) {
+				__ts_console.log(args.map(__ts_str).join(" "));
+			};
+		}
+
 		function __ts_add(obj1, obj2) {
 			if (typeof obj1 === "string" || typeof obj2 === "string") {
-				return obj1 + obj2;
+				return __ts_str(obj1) + __ts_str(obj2);
 			}
 			if (Array.isArray(obj1) || Array.isArray(obj2)) {
 				if (!(Array.isArray(obj1) && Array.isArray(obj2))) {

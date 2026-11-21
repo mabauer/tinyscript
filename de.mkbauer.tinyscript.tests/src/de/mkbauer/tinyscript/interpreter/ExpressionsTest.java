@@ -110,7 +110,7 @@ public class ExpressionsTest extends TinyscriptInterpreterTestHelper {
 		assertEquals("Hello, 2 Worlds!", value.asString());
 		value = executeScriptFromString("var s = \"Hello \"; var a = [ \"Markus\", \"Bauer\" ]; var result = s + a; result;");
 		assertTrue(value.isString());
-		assertEquals("Hello ['Markus', 'Bauer']", value.asString());
+		assertEquals("Hello [\"Markus\", \"Bauer\"]", value.asString());
 	}
 	
 	@Test

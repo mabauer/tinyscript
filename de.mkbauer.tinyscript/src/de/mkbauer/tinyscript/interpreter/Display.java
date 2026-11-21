@@ -7,7 +7,7 @@ import java.util.Set;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 
 /**
- * Converts a value into the form print and string conversion show: {@code {x: 1, s: 'a'}},
+ * Converts a value into the form print and string conversion show: {@code {x: 1, s: "a"}},
  * {@code [1, 2]}, {@code Map {...}}. Each object type contributes its own form via
  * {@link TSObject#display(Display)} and formats the values it contains with {@link #format(TSValue)}.
  *

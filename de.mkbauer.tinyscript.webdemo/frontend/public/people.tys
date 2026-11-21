@@ -12,15 +12,15 @@ function randomInt(min, max) {
     return Math.round(Math.random() * (max - min -1)) + min;
 }
 
-const CHRISTIAN_NAMES = ['Anna', 'Emilia', 'Emma', 'Hannah', 'Lea', 'Lena', 'Leonie', 
-	'Marie', 'Mia', 'Sophia', 'Ben', 'Elias', 'Fynn', 'Jonas', 'Leon', 'Louis', 
-	'Luca', 'Lukas', 'Noah', 'Paul'];
-const NAMES = ['Mueller', 'Schmidt', 'Schneider', 'Fischer', 'Meyer', 'Weber', 'Hofmann', 
-	'Wagner', 'Becker', 'Schulz', 'Schaefer', 'Koch', 'Bauer', 'Richter', 'Klein', 
-	'Schroeder', 'Wolf', 'Neumann', 'Schwarz'];
-const CITIES = ['Hambug', 'Karlsruhe', 'Muenchen', 'Stuttgart', 'New-York', 
-	'Konstanz', 'Paris', 'Madrid', 'Rom', 'Mailand', 'Genua', 'Stockholm', 
-	'Kopenhagen', 'Washington', 'Moskau', 'Schenkenzell'];
+const CHRISTIAN_NAMES = ["Anna", "Emilia", "Emma", "Hannah", "Lea", "Lena", "Leonie", 
+	"Marie", "Mia", "Sophia", "Ben", "Elias", "Fynn", "Jonas", "Leon", "Louis", 
+	"Luca", "Lukas", "Noah", "Paul"];
+const NAMES = ["Mueller", "Schmidt", "Schneider", "Fischer", "Meyer", "Weber", "Hofmann", 
+	"Wagner", "Becker", "Schulz", "Schaefer", "Koch", "Bauer", "Richter", "Klein", 
+	"Schroeder", "Wolf", "Neumann", "Schwarz"];
+const CITIES = ["Hamburg", "Karlsruhe", "Muenchen", "Stuttgart", "New-York", 
+	"Konstanz", "Paris", "Madrid", "Rom", "Mailand", "Genua", "Stockholm", 
+	"Kopenhagen", "Washington", "Moskau", "Schenkenzell"];
 
 function Person() {}
 

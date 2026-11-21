@@ -25,10 +25,6 @@ public class DemoExamplesTest extends TinyscriptTranspilerTestBase {
     /** Examples whose output differs on each run (Math.random): they only have to run. */
     private static final Set<String> RANDOM_OUTPUT = Set.of("people.tys");
 
-    // TODO(TODO.md: Generated Javascript prints values like the interpreter): these examples
-    // print whole arrays or objects, which node prints differently; they only have to run
-    private static final Set<String> PRINT_WHOLE_OBJECTS = Set.of("arrays.tys", "expressions.tys", "modules.tys", "oo.tys");
-
     static List<String> examples() throws IOException {
         try (Stream<Path> files = Files.list(DIRECTORY)) {
             return files.map(file -> file.getFileName().toString())
@@ -42,7 +38,7 @@ public class DemoExamplesTest extends TinyscriptTranspilerTestBase {
     @MethodSource("examples")
     public void testExample(String example) {
         Path file = DIRECTORY.resolve(example);
-        if (RANDOM_OUTPUT.contains(example) || PRINT_WHOLE_OBJECTS.contains(example))
+        if (RANDOM_OUTPUT.contains(example))
             assertFalse(runModule(file).isEmpty(), example + " printed nothing");
         else
             assertSameOutputModule(file);

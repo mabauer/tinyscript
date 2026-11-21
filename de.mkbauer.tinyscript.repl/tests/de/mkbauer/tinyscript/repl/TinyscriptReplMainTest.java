@@ -163,10 +163,10 @@ public class TinyscriptReplMainTest {
                         + "function f() { }\nx = 7;\nlet u;\nu;\n[1, \"b\"];\n!quit\n"));
         String output = out.toString();
         assertTrue(output.contains("10\n"), output);
-        assertTrue(output.contains("'a1'\n"), output);
+        assertTrue(output.contains("\"a1\"\n"), output);
         assertTrue(output.contains("p\n"), output);
         assertTrue(output.contains("7\n"), output);
-        assertTrue(output.contains("[1, 'b']\n"), output);
+        assertTrue(output.contains("[1, \"b\"]\n"), output);
         // Only u; shows undefined: not let, print(...), for, function
         assertEquals(1, output.split("undefined", -1).length - 1, output);
     }

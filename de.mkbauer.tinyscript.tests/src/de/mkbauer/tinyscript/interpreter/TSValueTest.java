@@ -40,7 +40,7 @@ public class TSValueTest {
 		TSValue s = TSValue.of("Hello!");
 		assert s.isString();
 		assertEquals("Hello!", s.asString());
-		assertEquals("'Hello!'", s.toString());
+		assertEquals("\"Hello!\"", s.toString());
 	}
 	
 	@Test

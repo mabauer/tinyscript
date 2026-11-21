@@ -46,16 +46,13 @@ public class StringConstructor extends BuiltinConstructor {
 
 	@Override
 	public TSValue apply(TSObject self, TSValue[] args) {
-		if (args.length > 0) {
-			String str = TSObject.stringify(args[0]);
-			if (self instanceof StringObject) {
-				((StringObject) self).setValue(str);
-			}
-			else {
-				return TSValue.of(str);
-			}
+		// Like Javascript, String() is the empty string
+		String str = args.length > 0 ? TSObject.stringify(args[0]) : "";
+		if (self instanceof StringObject string) {
+			string.setValue(str);
+			return self;
 		}
-		return self;
+		return TSValue.of(str);
 	}
 
 	@Override

@@ -366,8 +366,31 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
                 + "const m = new Map(); m.set(\"me\", m); print(m);\n"
                 + "const s = new Set(); s.add(s); print(s);\n"
                 + "print(\"o = \" + o);";
-        assertEquals("{a: 1, self: [Circular]}\n[1, [Circular]]\nMap {'me' => [Circular]}\nSet {[Circular]}\no = {a: 1, self: [Circular]}\n",
+        assertEquals("{a: 1, self: [Circular]}\n[1, [Circular]]\nMap {\"me\" => [Circular]}\nSet {[Circular]}\no = {a: 1, self: [Circular]}\n",
                 interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testPrintShowsValuesLikeNode() {
+        // The generated Javascript prints values as the interpreter does (strings quoted as by JSON.stringify)
+        String code = "print([\"Banana\", 3, true, 1.5, null, [], {}], { name: \"Markus\", tags: [\"a\", \"b\"], nested: { x: 1 } });\n"
+                + "let u; print([u, new Array(2), 0.1 + 0.2, -0, 1e21]);\n"
+                + "print([\"say \\\"hi\\\"\", \"it's\", \"a\\nb\", \"tab\\t\", \"back\\\\slash\", \"\\u0001\", \"äöü €\"]);\n"
+                + "const m = new Map(); m.set(\"k\", [1]); m.set(2, { v: \"x\" }); print(m, new Set([1, \"1\"]), new Map(), new Set());\n"
+                + "print(range(3), [range(1, 9, 2)], new Error(\"boom\"), [new Error(\"\")]);\n"
+                + "function named() { } const f = function() { }; print(named, [Math.max]);\n"
+                + "print(\"\" + [1, \"a\"], \"x\" + { a: [2] }, String([null]), String({}), String(\"s\"), String(7), String());\n"
+                + "print(\"top\", [\"inner\"], typeof String(1), new String(\"wrapped\").length);";
+        assertEquals("[\"Banana\", 3, true, 1.5, null, [], {}] {name: \"Markus\", tags: [\"a\", \"b\"], nested: {x: 1}}\n"
+                + "[undefined, [undefined, undefined], 0.30000000000000004, 0, 1e+21]\n"
+                + "[\"say \\\"hi\\\"\", \"it's\", \"a\\nb\", \"tab\\t\", \"back\\\\slash\", \"\\u0001\", \"äöü €\"]\n"
+                + "Map {\"k\" => [1], 2 => {v: \"x\"}} Set {1, \"1\"} Map {} Set {}\n"
+                + "range(0, 3) [range(1, 9, 2)] Error: boom [Error]\n"
+                + "[Function: named] [[Function: max]]\n"
+                + "[1, \"a\"] x{a: [2]} [null] {} s 7 \n"
+                + "top [\"inner\"] string 7\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     @Test
@@ -387,7 +410,8 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
         String code = "const Point = { toString: function() { return \"(\" + this.x + \",\" + this.y + \")\"; } };\n"
                 + "const p = Object.create(Point); p.x = 1; p.y = 2;\n"
                 + "print(p); print(\"p = \" + p); print([p, \"s\"]); print({ at: p }); print(String(p), p);";
-        assertEquals("(1,2)\np = (1,2)\n[(1,2), 's']\n{at: (1,2)}\n(1,2) (1,2)\n", interpreterOutput(code));
+        assertEquals("(1,2)\np = (1,2)\n[(1,2), \"s\"]\n{at: (1,2)}\n(1,2) (1,2)\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     @Test
