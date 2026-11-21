@@ -52,6 +52,7 @@ import de.mkbauer.tinyscript.ts.ArrowExpressionBody
 import de.mkbauer.tinyscript.ts.NullObject
 import de.mkbauer.tinyscript.interpreter.ModuleLoader
 import de.mkbauer.tinyscript.interpreter.Modules
+import de.mkbauer.tinyscript.interpreter.TSNumber
 import de.mkbauer.tinyscript.interpreter.TinyscriptReferenceError
 import de.mkbauer.tinyscript.TinyscriptRuntimeException
 import de.mkbauer.tinyscript.ts.ImportStatement
@@ -654,10 +655,9 @@ class TinyscriptGenerator   {
 		result.append("\"").toString
 	}
 	
+	// The same digits as the interpreter prints (1e+300, not 301 digits)
 	def dispatch generate(NumberLiteral expr) {
-		if (Math.rint(expr.value)==expr.value)
-			return String.format("%.0f", expr.value);
-		return String.valueOf(expr.value);	
+		TSNumber.format(expr.value)
 	}
 	
 	def dispatch generate(BooleanLiteral expr) {

@@ -951,6 +951,15 @@ print(parseInt("12px"));      // 12
 print(parseInt("ff", 16));    // 255
 ```
 
+Numbers print (and convert to strings) as in Javascript: with the shortest digits that identify the number, written out from 10^-7 up to 10^21, otherwise with an exponent; `-0` prints as `0`.
+
+```
+print(0.1 + 0.2);      // 0.30000000000000004
+print(12345678.5);     // 12345678.5
+print(1e21, 1e-7);     // 1e+21 1e-7
+print(2 / 3);          // 0.6666666666666666
+```
+
 ### `Object`
 
 | Method | Description |
