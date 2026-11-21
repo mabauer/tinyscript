@@ -31,6 +31,13 @@ public class ModuleExports extends TSObject {
 	}
 
 	@Override
+	public void delete(String key) {
+		if (frozen)
+			throw new TinyscriptTypeError("Cannot change the exports of module " + moduleName);
+		super.delete(key);
+	}
+
+	@Override
 	public void setOwnPropertyDescriptor(String key, TSPropertyDescriptor desc) {
 		if (frozen)
 			throw new TinyscriptTypeError("Cannot change the exports of module " + moduleName);

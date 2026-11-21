@@ -710,8 +710,23 @@ typeof person.missing           // "undefined" — missing property
 
 ### Deleting properties
 
-Property deletion is not directly supported. Setting a property to `undefined`
-effectively removes its meaningful value.
+`delete` removes a property of an object, as in Javascript; it gives `true`, and
+deleting a missing property is fine:
+
+```
+delete person.job;
+delete person[key];
+```
+
+Only properties of objects can be deleted, so `delete` is stricter than in
+Javascript:
+
+- The operand must be a property: `delete x` (a variable) or `delete o?.x` is a
+  compile-time error.
+- Arrays are lists without gaps: `delete a[i]` is a `TypeError`; remove an
+  element with `a.splice(i, 1)`. For `Map`s and `Set`s use their method
+  `delete(…)`; strings and ranges cannot be changed.
+- Built-in properties (`Math.PI`, `f.prototype` …) cannot be deleted.
 
 ---
 
@@ -1448,8 +1463,8 @@ print(area(2), unit, geo.area(1));
 
 ```
 let  const  function  return  if  else  for  while  break  continue  throw
-new  this  null  undefined  true  false  typeof  instanceof  assert  import  export
-from  as
+new  this  null  undefined  true  false  typeof  instanceof  delete  assert  import
+export  from  as
 ```
 
 Reserved (a syntax error with a hint what to write instead): `var`, `try`,

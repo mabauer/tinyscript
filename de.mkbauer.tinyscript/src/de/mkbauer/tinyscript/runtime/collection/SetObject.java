@@ -59,6 +59,11 @@ public class SetObject extends BuiltinType {
 	}
 
 	@Override
+	public void delete(String key) {
+		throw new TinyscriptTypeError("Sets have no properties: use s.delete(value)");
+	}
+
+	@Override
 	public TSValue valueOf() {
 		return TSValue.UNDEFINED;
 	}

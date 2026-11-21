@@ -64,6 +64,11 @@ public class StringObject extends BuiltinType {
 	}
 
 	@Override
+	public void delete(String key) {
+		throw new TinyscriptTypeError("Strings cannot be changed");
+	}
+
+	@Override
 	public TSValue valueOf() {
 		return TSValue.of(value);
 	}

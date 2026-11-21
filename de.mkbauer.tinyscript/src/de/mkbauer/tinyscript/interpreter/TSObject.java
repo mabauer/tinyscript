@@ -102,6 +102,21 @@ public non-sealed class TSObject implements TSValue {
 		setOwnPropertyDescriptor(key, desc);
 	}
 	
+	/**
+	 * delete o.key: removes an own property; like Javascript, a missing one is fine. Built-in
+	 * properties (Math.PI, f.prototype, …), which are not enumerable, cannot be deleted.
+	 * Arrays, Maps, Sets and strings refuse (see their overrides).
+	 */
+	public void delete(String key) {
+		TSPropertyDescriptor desc = properties.get(key);
+		if (desc == null)
+			return;
+		if (!desc.isEnumerable() || !desc.isConfigurable())
+			throw new TinyscriptTypeError("Cannot delete '" + key + "': it is a built-in (not enumerable) property");
+		properties.remove(key);
+		update();
+	}
+
 	public TSPropertyDescriptor getOwnPropertyDescriptor(String key) {
 		return properties.get(key);
 	}

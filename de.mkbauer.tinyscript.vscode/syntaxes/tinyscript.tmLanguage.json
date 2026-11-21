@@ -87,7 +87,7 @@
         },
         {
           "name": "keyword.operator.expression.tinyscript",
-          "match": "(?<!\\.)\\b(new|typeof|instanceof)\\b"
+          "match": "(?<!\\.)\\b(new|typeof|instanceof|delete)\\b"
         },
         {
           "name": "keyword.other.assert.tinyscript",

@@ -381,7 +381,7 @@ enum MultiplicativeOperator returns BinaryOperator:
 ;
 
 enum UnaryOperator:
-	NEGATE='-' | NOT='!' | BIT_NOT='~' | TYPEOF='typeof'
+	NEGATE='-' | NOT='!' | BIT_NOT='~' | TYPEOF='typeof' | DELETE='delete'
 ;
 
 // i++; and i--; (only statements)
@@ -400,7 +400,7 @@ ReservedWord:
 // are fine as property names (range.from, { if: 1 })
 Keyword:
 	ReservedWord | 'let' | 'const' | 'function' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
-	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'undefined' | 'typeof' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
+	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'undefined' | 'typeof' | 'delete' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
 ;
 
 // let is block-scoped (like Javascript's let); const cannot be assigned again. var is a reserved
