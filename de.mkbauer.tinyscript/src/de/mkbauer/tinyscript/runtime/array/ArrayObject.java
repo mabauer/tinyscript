@@ -119,6 +119,23 @@ public class ArrayObject extends BuiltinType {
 		update();
 	}
 	
+	/**
+	 * Removes count items from start and inserts the given ones there; returns the removed items.
+	 */
+	public List<TSValue> splice(int start, int count, List<TSValue> insert) {
+		engine.checkObjectSize(items.size() - count + insert.size() + properties.size());
+		List<TSValue> range = items.subList(start, start + count);
+		List<TSValue> removed = new ArrayList<>(range);
+		range.clear();
+		items.addAll(start, insert);
+		update();
+		return removed;
+	}
+
+	public void reverse() {
+		java.util.Collections.reverse(items);
+	}
+
 	public TSValue shift() {
 		if (items.size() == 0)
 			return TSValue.UNDEFINED;

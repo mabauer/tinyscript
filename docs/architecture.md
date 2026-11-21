@@ -416,16 +416,16 @@ Built-ins are registered in `TinyscriptEngine.initialize()` and also declared in
 a synthetic `__builtins.tys` Xtext resource (so the IDE scope provider can
 resolve them for auto-complete).
 
-| Object     | Class                               | Key methods                                                                                                               |
-| ---------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `Array`    | `ArrayConstructor`, `ArrayObject`   | `push`, `pop`, `shift`, `unshift`, `map`, `filter`, `join`, `concat`, `toString`, `Array.isArray()`                       |
-| `String`   | `StringConstructor`, `StringObject` | `charAt`, `indexOf`, `substring`, `toString`                                                                              |
-| `Number`   | `NumberFunctions`, `NumberObject`   | `Number()`, `parseInt`, `isNaN`, `Number.isInteger`; `Number.prototype`: `toFixed`, `toString(radix)`                     |
-| `Math`     | `MathObject`                        | `PI`, `sqrt`, `round`, `random`, `min`, `max`, `abs`, `floor`, `ceil`                                                     |
-| `Object`   | `ObjectConstructor`                 | `create`, `keys`, `getPrototypeOf`, `defineProperty`, `getOwnPropertyDescriptor`, `getOwnPropertyNames`, `hasOwnProperty` |
-| `Function` | `FunctionConstructor`               | `call`, `apply`, `toString`                                                                                               |
-| `System`   | `SystemObject`                      | `currentTimeMillis`                                                                                                       |
-| `print`    | `Print`                             | global function                                                                                                           |
+| Object     | Class                               | Key methods                                                                                                                             |
+| ---------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `Array`    | `ArrayConstructor`, `ArrayObject`   | `push`, `pop`, `splice`, `map`, `filter`, `reduce`, `sort`, `reverse`, `flat`, … (see the language reference), `Array.isArray()`        |
+| `String`   | `StringConstructor`, `StringObject` | `charAt`, `indexOf`, `split`, `trim`, `replace`, `padStart`, … (see the language reference)                                             |
+| `Number`   | `NumberFunctions`, `NumberObject`   | `Number()`, `parseInt`, `parseFloat`, `isNaN`, `Number.isInteger`, `Number.isFinite`; `Number.prototype`: `toFixed`, `toString(radix)`  |
+| `Math`     | `MathObject`, `FreeBsdMath`         | `PI`, `E`, `sqrt`, `pow`, `round`, `trunc`, `floor`, `ceil`, `exp`, `log`, `log2`, `sin`, … (`FreeBsdMath`: `log2` and `cbrt` as in V8) |
+| `Object`   | `ObjectConstructor`                 | `create`, `keys`, `values`, `entries`, `fromEntries`, `assign`, `getPrototypeOf`, `defineProperty`, `hasOwnProperty`, …                 |
+| `Function` | `FunctionConstructor`               | `call`, `apply`, `toString`                                                                                                             |
+| `System`   | `SystemObject`                      | `currentTimeMillis`                                                                                                                     |
+| `print`    | `Print`                             | global function                                                                                                                         |
 
 Each method is a `BuiltinFunction` whose `implementation` field is a Java
 lambda. Array and String prototype methods are attached to the shared prototype

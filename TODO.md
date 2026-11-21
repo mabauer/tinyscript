@@ -350,14 +350,21 @@ and differential tests run against node.
     3. **No input.** Only files and `System.args`; nothing reads standard input,
        so interactive scripts are not possible. Candidate: `readLine()` in a
        `std:` module (not sandboxed).
-    4. **Arrays and objects cannot shrink.** Arrays: no `splice` (insert /
-       remove in the middle), no `reverse` method (only `std:array`). Objects:
-       no `delete`, no `Object.values` / `Object.entries`.
-    5. **Numbers.** `Math` has nine members: powers (`**` or `Math.pow`),
-       `trunc`, `sign`, `log`, the trigonometric functions are missing;
-       formatting is done: `toFixed` and `toString(radix)` (2026-11-21; not now:
-       `toPrecision`, `toExponential`; not at all: `toLocaleString`,
-       `printf`-like format strings).
+    4. **Arrays and objects cannot shrink.** Done 2026-11-21 except `delete`:
+       `splice`, `reverse` / `toReversed`, `lastIndexOf`, `findLast` /
+       `findLastIndex`, `flat`, `flatMap`; `Object.values`, `entries`,
+       `fromEntries`, `assign`. Next: `delete obj.key` for objects only (decided
+       2026-11-21; on an array a `TypeError` that points to `splice`).
+    5. **Numbers.** Done 2026-11-21: `Math.pow`, `trunc`, `sign`, `exp`, `log`,
+       `log2`, `log10`, `cbrt`, `hypot`, the trigonometric functions, `Math.E`;
+       `parseFloat`, `Number.isFinite`, `MAX_SAFE_INTEGER` / `MIN_SAFE_INTEGER`;
+       `Math.round` fixed (large numbers, `NaN`). `log2` and `cbrt` are ports of
+       FreeBSD's msun, as V8 uses them (bit-exact with node); the others use
+       `StrictMath` (in rare cases one unit in the last digit off). Open for
+       discussion: the operator `**` and spread in calls
+       (`Math.max(...values)`). Formatting is done: `toFixed` and
+       `toString(radix)` (2026-11-21; not now: `toPrecision`, `toExponential`;
+       not at all: `toLocaleString`, `printf`-like format strings).
     6. **Objects with methods are verbose.** The mechanics are complete
        (`Object.create`, `prototype`, `instanceof`); what is missing is a
        comfortable spelling. Tendency (2026-11-20): **no inheritance for now**,
@@ -432,9 +439,8 @@ and differential tests run against node.
       `||`.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
     `toString(radix)`); ~~`undefined`~~ (done); minimal `try` / `catch`; a
-    library batch (`splice`, `reverse`, `Object.values` / `entries`, powers,
-    `Math.trunc`; `range(…).reverse()` is done); method shorthand, a more
-    comfortable REPL, standard input.
+    ~~library batch~~ (done, also `range(…).reverse()`; `delete` next); method
+    shorthand, a more comfortable REPL, standard input.
 
 ## Interpreter and code quality
 

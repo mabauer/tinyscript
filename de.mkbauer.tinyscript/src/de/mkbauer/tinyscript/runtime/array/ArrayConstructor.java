@@ -43,6 +43,14 @@ public class ArrayConstructor extends BuiltinConstructor {
 		arrayPrototype.defineBuiltinMethod("slice", this::slice, 0, 2);
 		arrayPrototype.defineBuiltinMethod("fill", this::fill, 1, 3);
 		arrayPrototype.defineBuiltinMethod("sort", this::sort, 0, 1);
+		arrayPrototype.defineBuiltinMethod("reverse", this::reverse, 0);
+		arrayPrototype.defineBuiltinMethod("toReversed", this::toReversed, 0);
+		arrayPrototype.defineBuiltinMethod("splice", this::splice, 0, BuiltinFunction.VARIADIC);
+		arrayPrototype.defineBuiltinMethod("lastIndexOf", this::lastIndexOf, 1, 2);
+		arrayPrototype.defineBuiltinMethod("findLast", this::findLast, 1);
+		arrayPrototype.defineBuiltinMethod("findLastIndex", this::findLastIndex, 1);
+		arrayPrototype.defineBuiltinMethod("flat", this::flat, 0, 1);
+		arrayPrototype.defineBuiltinMethod("flatMap", this::flatMap, 1);
 	}
 
 	// new Array(length) or new Array(item, ...); like Javascript, Array(...) without new works the same
@@ -262,6 +270,122 @@ public class ArrayConstructor extends BuiltinConstructor {
 		for (int i = 0; i < sorted.size(); i++)
 			arr.setItem(i, sorted.get(i));
 		return arr;
+	}
+
+	// Array.prototype.reverse(): reverses the array in place and returns it, as in Javascript
+	private TSValue reverse(TSObject self, TSValue[] args) {
+		ArrayObject arr = thisArray(self, "reverse");
+		arr.reverse();
+		return arr;
+	}
+
+	// Array.prototype.toReversed(): a reversed copy; the array stays as it is
+	private TSValue toReversed(TSObject self, TSValue[] args) {
+		ArrayObject result = copy(thisArray(self, "toReversed").getItems());
+		result.reverse();
+		return result;
+	}
+
+	// Array.prototype.splice(start[, deleteCount[, item, ...]]): removes deleteCount items from
+	// start (by default all to the end) and inserts the items there; returns the removed items.
+	// A negative start counts from the end; unlike Javascript, the numbers must be integers.
+	private TSValue splice(TSObject self, TSValue[] args) {
+		ArrayObject arr = thisArray(self, "splice");
+		int length = arr.getLength();
+		int start = args.length > 0 ? sliceIndex(args[0], length, "splice") : length;
+		int count = length - start;
+		if (args.length > 1) {
+			if (!args[1].isMathematicalInteger())
+				throw new TinyscriptTypeError("splice() needs an integer count, not " + (args[1].isNumber() ? args[1].asString() : args[1].typeOf()));
+			count = (int) Math.max(0, Math.min(args[1].asDouble(), length - start));
+		}
+		List<TSValue> insert = args.length > 2 ? List.of(args).subList(2, args.length) : List.of();
+		return copy(arr.splice(start, count, insert));
+	}
+
+	// Array.prototype.lastIndexOf(value[, from]): the last index of an item == value at or before
+	// from (by default the last item), or -1; a negative from counts from the end
+	private TSValue lastIndexOf(TSObject self, TSValue[] args) {
+		List<TSValue> items = thisArray(self, "lastIndexOf").getItems();
+		int from = items.size() - 1;
+		if (args.length > 1) {
+			if (!args[1].isMathematicalInteger())
+				throw new TinyscriptTypeError("lastIndexOf() needs an integer index, not " + (args[1].isNumber() ? args[1].asString() : args[1].typeOf()));
+			double index = args[1].asDouble();
+			from = (int) (index < 0 ? Math.max(-1, items.size() + index) : Math.min(index, items.size() - 1));
+		}
+		for (int i = from; i >= 0; i--) {
+			if (items.get(i).tinyscriptEquals(args[0]))
+				return TSValue.of(i);
+		}
+		return TSValue.of(-1);
+	}
+
+	// Array.prototype.findLast(f) / findLastIndex(f): like find / findIndex, from the end
+	private TSValue findLast(TSObject self, TSValue[] args) {
+		ArrayObject arr = thisArray(self, "findLast");
+		int index = findLastIndex(arr, callback(args[0], "findLast"));
+		return index >= 0 ? arr.item(index) : TSValue.UNDEFINED;
+	}
+
+	private TSValue findLastIndex(TSObject self, TSValue[] args) {
+		return TSValue.of(findLastIndex(thisArray(self, "findLastIndex"), callback(args[0], "findLastIndex")));
+	}
+
+	private static int findLastIndex(ArrayObject arr, Function function) {
+		for (int i = arr.getLength() - 1; i >= 0; i--) {
+			if (i < arr.getLength() && call(function, arr, i).asCondition())
+				return i;
+		}
+		return -1;
+	}
+
+	// Array.prototype.flat([depth]): a new array with the items of nested arrays, down to depth
+	// levels (1 by default, Infinity for all)
+	private TSValue flat(TSObject self, TSValue[] args) {
+		ArrayObject arr = thisArray(self, "flat");
+		double depth = 1;
+		if (args.length > 0 && args[0] != TSValue.UNDEFINED) {
+			if (!(args[0] instanceof TSNumber number) || number.value() < 0
+					|| !(args[0].isMathematicalInteger() || number.value() == Double.POSITIVE_INFINITY))
+				throw new TinyscriptTypeError("flat() needs a depth of 0 or more, not " + (args[0].isNumber() ? args[0].asString() : args[0].typeOf()));
+			depth = number.value();
+		}
+		ArrayObject result = (ArrayObject) createObject();
+		flatten(arr.getItems(), depth, result);
+		return result;
+	}
+
+	private static void flatten(List<TSValue> items, double depth, ArrayObject result) {
+		for (TSValue item : items) {
+			if (depth > 0 && item instanceof ArrayObject inner)
+				flatten(inner.getItems(), depth - 1, result);
+			else
+				result.push(item);
+		}
+	}
+
+	// Array.prototype.flatMap(f): like map, but an array that f returns adds its items
+	private TSValue flatMap(TSObject self, TSValue[] args) {
+		ArrayObject arr = thisArray(self, "flatMap");
+		Function function = callback(args[0], "flatMap");
+		ArrayObject result = (ArrayObject) createObject();
+		for (int i = 0, n = arr.getLength(); i < n; i++) {
+			TSValue mapped = call(function, arr, i);
+			if (mapped instanceof ArrayObject inner)
+				for (TSValue item : inner.getItems())
+					result.push(item);
+			else
+				result.push(mapped);
+		}
+		return result;
+	}
+
+	private ArrayObject copy(List<TSValue> items) {
+		ArrayObject result = (ArrayObject) createObject();
+		for (TSValue item : items)
+			result.push(item);
+		return result;
 	}
 
 	// Array.prototype.join([separator]): like Javascript, the separator is "," by default
