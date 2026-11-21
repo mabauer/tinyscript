@@ -16,7 +16,7 @@ const designs = lines.slice(1);
 function countWays(design) {
     const ways = new Array(design.length + 1).fill(0);
     ways[design.length] = 1;   // the empty rest: one way, no towel
-    for (let start = design.length - 1, 0, -1) {
+    for (const start : range(design.length).reverse()) {
         for (const towel : towels) {
             if (design.startsWith(towel, start)) {
                 ways[start] += ways[start + towel.length];

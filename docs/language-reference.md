@@ -414,7 +414,8 @@ if (x < 0) {
 ### `for` — numeric loop
 
 To count from 0 to n - 1, the iterable loop with `range` is usually simpler:
-`for (const i : range(n)) { ... }` (see below).
+`for (const i : range(n)) { ... }`, and backwards, from n - 1 to 0,
+`for (const i : range(n).reverse()) { ... }` (see below).
 
 Tinyscript's numeric `for` loop is inspired by Lua. It counts an integer
 variable from `start` to `stop` (inclusive):
@@ -1052,14 +1053,16 @@ goes through it.
 for (const i : range(5)) { ... }         // 0, 1, 2, 3, 4
 for (const i : range(2, 6)) { ... }      // 2, 3, 4, 5
 for (const i : range(10, 0, -3)) { ... } // 10, 7, 4, 1
+for (const i : range(5).reverse()) { ... } // 4, 3, 2, 1, 0
 ```
 
-| Member         | Description                                                                       |
-| -------------- | --------------------------------------------------------------------------------- |
-| `r.length`     | The number of integers                                                            |
-| `r.toArray()`  | An array of the integers: `range(3).toArray()` is `[0, 1, 2]`                     |
-| `r.map(f)`     | An array of `f(i)` for each integer: `range(4).map(i => i * i)` is `[0, 1, 4, 9]` |
-| `r.forEach(f)` | Calls `f(i)` for each integer                                                     |
+| Member         | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `r.length`     | The number of integers                                                                      |
+| `r.toArray()`  | An array of the integers: `range(3).toArray()` is `[0, 1, 2]`                               |
+| `r.map(f)`     | An array of `f(i)` for each integer: `range(4).map(i => i * i)` is `[0, 1, 4, 9]`           |
+| `r.forEach(f)` | Calls `f(i)` for each integer                                                               |
+| `r.reverse()`  | The same integers backwards, again a lazy range: `range(5).reverse()` is `range(4, -1, -1)` |
 
 The arguments must be integers, the step must not be `0`; anything else is a
 `TypeError`. A range cannot be changed. The callbacks get `(i, index, range)`,

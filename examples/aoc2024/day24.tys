@@ -34,7 +34,7 @@ function valueOf(wire) {
 // Part 1: the number on the wires z00, z01, ... (z00 is the lowest bit)
 const zWires = gates.map(gate => gate.output).filter(wire => wire.startsWith("z")).sort();
 let number = 0;
-for (let i = zWires.length - 1, 0, -1) {
+for (const i : range(zWires.length).reverse()) {
     number = number * 2 + valueOf(zWires[i]);
 }
 print("Part 1: " + number);

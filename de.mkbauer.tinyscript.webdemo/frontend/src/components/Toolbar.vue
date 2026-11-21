@@ -9,6 +9,7 @@ const examples: Example[] = [
   { file: 'expressions.tys',          label: 'Basic Expressions' },
   { file: 'strings.tys',              label: 'Strings' },
   { file: 'primes.tys',               label: 'Control flow: for and if Statements' },
+  { file: 'loops.tys',                label: 'Loops: for … : items, range and while' },
   { file: 'fibonacci.tys',            label: 'Functions' },
   { file: 'fibonacci_recursive.tys',  label: 'Functions: recursion' },
   { file: 'arrays.tys',               label: 'Working with Arrays' },

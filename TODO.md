@@ -414,9 +414,10 @@ and differential tests run against node.
       `let`. Favoured (2026-11-20): a lazy `reverse()` on ranges, so that
       counting backwards over indexes reads
       `for (const i : range(a.length).reverse())` instead of
-      `range(a.length - 1, -1, -1)`. Once it exists, decide whether the
-      Lua-style loop (today the readable way to count down:
-      `for (let i = a.length - 1, 0, -1)`) and `var` are phased out.
+      `range(a.length - 1, -1, -1)`. Done 2026-11-21: `range(…).reverse()`; the
+      four backward loops of the AoC solutions use it, so they have no Lua-style
+      loop left, and the web demo has a loops example without one. Still to
+      decide: whether the Lua-style loop and `var` are phased out.
     - **Half truthiness.** In conditions `null` / `undefined` are false and
       objects are true (`if (node)`, `while (node)`), but `&&` and `||` always
       give a boolean. So the Javascript habit `const cfg = options || {};`
@@ -430,7 +431,7 @@ and differential tests run against node.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
     `toString(radix)`); ~~`undefined`~~ (done); minimal `try` / `catch`; a
     library batch (`splice`, `reverse`, `Object.values` / `entries`, powers,
-    `Math.trunc`) with `range(…).reverse()`; method shorthand, a more
+    `Math.trunc`; `range(…).reverse()` is done); method shorthand, a more
     comfortable REPL, standard input.
 
 ## Interpreter and code quality

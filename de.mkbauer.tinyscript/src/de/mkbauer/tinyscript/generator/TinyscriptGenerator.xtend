@@ -228,6 +228,11 @@ class TinyscriptGenerator   {
 					f(value, index++, this);
 				}
 			}
+			// Like the interpreter: the same integers backwards, again a lazy range
+			reverse() {
+				const last = this.start + (this.length - 1) * this.step;
+				return new __ts_Range(last, this.start - this.step, -this.step);
+			}
 			toString() {
 				return "range(" + this.start + ", " + this.end + (this.step !== 1 ? ", " + this.step : "") + ")";
 			}

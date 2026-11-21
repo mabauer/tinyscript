@@ -51,7 +51,7 @@ function compactFiles() {
         }
         position += length;
     }
-    for (let i = files.length - 1, 0, -1) {
+    for (const i : range(files.length).reverse()) {
         const file = files[i];
         const span = spans.find(span => span.start < file.start && span.length >= file.length);
         if (span != null) {

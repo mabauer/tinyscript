@@ -3,10 +3,10 @@ import { mount } from '@vue/test-utils'
 import Toolbar from '../Toolbar.vue'
 
 describe('Toolbar.vue', () => {
-  it('renders all 11 example menu items', () => {
+  it('renders all 12 example menu items', () => {
     const wrapper = mount(Toolbar, { props: { executing: false } })
     const items = wrapper.findAll('.dropdown-item')
-    expect(items).toHaveLength(11)
+    expect(items).toHaveLength(12)
   })
 
   it('clicking a menu item emits load-script with the correct filename', async () => {

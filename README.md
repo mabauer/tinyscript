@@ -35,6 +35,10 @@ _tinyscript_ offers quite a complete set of interesting language features:
 - [Control-flow structures](de.mkbauer.tinyscript.webdemo/frontend/public/primes.tys):
   `for`, `while` and `if` statements, `break`
 
+- [Loops](de.mkbauer.tinyscript.webdemo/frontend/public/loops.tys) over arrays,
+  strings, `Map`s and `Set`s, and counting with lazy ranges:
+  `for (const i : range(a.length).reverse())`
+
 - [Functions](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci.tys),
   including
   [recursion](de.mkbauer.tinyscript.webdemo/frontend/public/fibonacci_recursive.tys)

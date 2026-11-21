@@ -46,6 +46,35 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testReverse() {
+        String code = "let s = \"\";\n"
+                + "for (const i : range(5).reverse()) { s += i; } s += \" \";\n"
+                + "for (const i : range(2, 6).reverse()) { s += i; } s += \" \";\n"
+                + "for (const i : range(1, 10, 3).reverse()) { s += i + \",\"; } s += \" \";\n"
+                + "for (const i : range(10, 0, -3).reverse()) { s += i + \",\"; } s += \" \";\n"
+                + "for (const i : range(0).reverse()) { s += \"never\"; }\n"
+                + "for (const i : range(3, 3).reverse()) { s += \"never\"; }\n"
+                + "print(s);\n"
+                + "print(range(5).reverse(), range(1, 10, 3).reverse(), range(5).reverse().length, range(0).reverse().length);\n"
+                + "print(range(4).reverse().toArray(), range(3).reverse().reverse(), range(4).reverse().map(i => i * i));\n"
+                + "const a = [\"x\", \"y\", \"z\"]; const back = []; for (const i : range(a.length).reverse()) { back.push(a[i]); } print(back);";
+        assertEquals("43210 5432 7,4,1, 1,4,7,10, \n"
+                + "range(4, -1, -1) range(7, -2, -3) 5 0\n"
+                + "[3, 2, 1, 0] range(0, 3) [9, 4, 1, 0]\n"
+                + "[\"z\", \"y\", \"x\"]\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    @Timeout(5)
+    public void testReverseIsLazy() {
+        // A trillion integers: only lazy is this fast
+        String code = "for (const i : range(1000000000000).reverse()) { print(i); break; } print(range(1000000000000).reverse().length);";
+        assertEquals("999999999999\n1000000000000\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testRangeIsLazy() {
         // A range does not create its numbers: a huge one costs nothing until it is used
         String code = "const huge = range(1000000000000); print(huge.length);\n"
