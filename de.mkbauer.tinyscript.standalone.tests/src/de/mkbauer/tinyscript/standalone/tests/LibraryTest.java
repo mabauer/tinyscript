@@ -133,4 +133,29 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
         assertEquals("[a b  ] [  a b] [a b]\n65 128512 2 undefined 98\n", interpreterOutput(code));
         assertSameOutput(code);
     }
+
+    @Test
+    public void testDelete() {
+        String code = "const o = { a: 1, b: 2, c: 3 }; const key = \"c\";\n"
+                + "print(delete o.a, o, Object.keys(o), o.a);\n"
+                + "delete o[key]; delete o.missing; print(o);\n"
+                + "const m = new Map([[\"k\", 1]]); print(m.delete(\"k\"), m.size);\n"
+                + "function Car() { this.wheels = 4; } const car = new Car(); delete car.wheels; print(car.wheels, typeof Car.prototype);";
+        assertEquals("true {b: 2, c: 3} [\"b\", \"c\"] undefined\n"
+                + "{b: 2}\n"
+                + "true 0\n"
+                + "undefined object\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testDeleteOnlyRemovesPropertiesOfObjects() {
+        assertInterpreterThrows(TinyscriptTypeError.class, "const a = [1, 2]; delete a[0];");
+        assertInterpreterThrows(TinyscriptTypeError.class, "const m = new Map(); delete m.size;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "const s = \"abc\"; delete s.length;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "delete Math.PI;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "function f() { } delete f.prototype;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "let u; delete u.x;");
+        assertInterpreterThrows(TinyscriptTypeError.class, "const n = 5; delete n.x;");
+    }
 }

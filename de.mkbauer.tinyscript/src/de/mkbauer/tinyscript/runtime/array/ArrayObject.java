@@ -158,6 +158,11 @@ public class ArrayObject extends BuiltinType {
 	}
 
 	@Override
+	public void delete(String key) {
+		throw new TinyscriptTypeError("Arrays are lists without gaps: delete cannot remove an element, use splice: a.splice(index, 1)");
+	}
+
+	@Override
 	public TSValue valueOf() {
 		return TSValue.UNDEFINED;
 	}

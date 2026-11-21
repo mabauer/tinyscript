@@ -113,6 +113,15 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testDeleteNeedsAProperty() {
+        String message = "delete needs a property: delete o.key or delete o[key]";
+        assertEquals(message, firstError("let x = 1;\ndelete x;"));
+        assertEquals(message, firstError("const o = {};\ndelete o?.x;"));
+        assertEquals(message, firstError("function f() { return {}; }\ndelete f();"));
+        assertEquals("'delete' is a reserved word in tinyscript and cannot be used as a name", firstError("let delete = 1;"));
+    }
+
+    @Test
     public void testThisOutsideAFunction() {
         String message = "'this' is undefined outside a function (an arrow function takes 'this' from where it is written)";
         assertEquals(message, firstError("print(this);"));

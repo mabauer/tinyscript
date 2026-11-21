@@ -64,6 +64,11 @@ public class MapObject extends BuiltinType {
 	}
 
 	@Override
+	public void delete(String key) {
+		throw new TinyscriptTypeError("Maps have no properties: use m.delete(key)");
+	}
+
+	@Override
 	public TSValue valueOf() {
 		return TSValue.UNDEFINED;
 	}

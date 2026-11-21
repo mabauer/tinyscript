@@ -350,11 +350,11 @@ and differential tests run against node.
     3. **No input.** Only files and `System.args`; nothing reads standard input,
        so interactive scripts are not possible. Candidate: `readLine()` in a
        `std:` module (not sandboxed).
-    4. **Arrays and objects cannot shrink.** Done 2026-11-21 except `delete`:
-       `splice`, `reverse` / `toReversed`, `lastIndexOf`, `findLast` /
-       `findLastIndex`, `flat`, `flatMap`; `Object.values`, `entries`,
-       `fromEntries`, `assign`. Next: `delete obj.key` for objects only (decided
-       2026-11-21; on an array a `TypeError` that points to `splice`).
+    4. **Arrays and objects cannot shrink.** Done 2026-11-21: `splice`,
+       `reverse` / `toReversed`, `lastIndexOf`, `findLast` / `findLastIndex`,
+       `flat`, `flatMap`; `Object.values`, `entries`, `fromEntries`, `assign`;
+       `delete obj.key` for objects only (on an array a `TypeError` that points
+       to `splice`).
     5. **Numbers.** Done 2026-11-21: `Math.pow`, `trunc`, `sign`, `exp`, `log`,
        `log2`, `log10`, `cbrt`, `hypot`, the trigonometric functions, `Math.E`;
        `parseFloat`, `Number.isFinite`, `MAX_SAFE_INTEGER` / `MIN_SAFE_INTEGER`;
@@ -439,7 +439,7 @@ and differential tests run against node.
       `||`.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
     `toString(radix)`); ~~`undefined`~~ (done); minimal `try` / `catch`; a
-    ~~library batch~~ (done, also `range(…).reverse()`; `delete` next); method
+    ~~library batch~~ (done, also `range(…).reverse()` and `delete`); method
     shorthand, a more comfortable REPL, standard input.
 
 ## Interpreter and code quality

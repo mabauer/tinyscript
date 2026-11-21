@@ -26,6 +26,8 @@ import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
+import de.mkbauer.tinyscript.ts.Unary;
+import de.mkbauer.tinyscript.ts.UnaryOperator;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.WhileStatement;
 
@@ -230,6 +232,24 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 				return;
 		}
 		error("'this' is undefined outside a function (an arrow function takes 'this' from where it is written)", null);
+	}
+
+	/**
+	 * delete only removes a property: delete o.key or delete o[key] (not a variable, not a?.b).
+	 */
+	@Check
+	public void checkDeleteOperand(Unary unary) {
+		if (unary.getOp() != UnaryOperator.DELETE)
+			return;
+		if (!(unary.getExpr() instanceof CallOrPropertyAccess access)
+				|| !(access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix) || suffix.getCall() != null
+				|| isOptional(suffix))
+			error("delete needs a property: delete o.key or delete o[key]", null);
+	}
+
+	private static boolean isOptional(CallOrPropertyAccessSuffix suffix) {
+		return suffix.getProperty() instanceof DotPropertyAccessSuffix dot && dot.isOptional()
+				|| suffix.getProperty() instanceof ComputedPropertyAccessSuffix computed && computed.isOptional();
 	}
 
 	@Check

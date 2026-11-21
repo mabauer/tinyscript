@@ -70,3 +70,7 @@ assert typeof x == "number" && x instanceof Object;
 
 var old = 1;
 // <--- invalid.illegal.reserved.tinyscript
+
+delete o.key; m.delete(k);
+// <------ keyword.operator.expression.tinyscript
+//              ^^^^^^ variable.other.property.tinyscript

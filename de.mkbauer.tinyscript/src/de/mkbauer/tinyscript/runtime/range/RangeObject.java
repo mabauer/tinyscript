@@ -60,6 +60,11 @@ public class RangeObject extends BuiltinType {
 	}
 
 	@Override
+	public void delete(String key) {
+		throw new TinyscriptTypeError("Ranges cannot be changed");
+	}
+
+	@Override
 	public TSValue valueOf() {
 		return TSValue.UNDEFINED;
 	}

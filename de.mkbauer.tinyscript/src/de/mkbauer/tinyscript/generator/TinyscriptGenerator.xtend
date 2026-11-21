@@ -300,6 +300,18 @@ class TinyscriptGenerator   {
 			return number;
 		}
 
+		// Like the interpreter: delete removes a property of an object, not an element of an array
+		function __ts_delete(object, key) {
+			if (Array.isArray(object)) {
+				throw new TypeError("Arrays are lists without gaps: delete cannot remove an element, use splice: a.splice(index, 1)");
+			}
+			if (object instanceof globalThis.Map || object instanceof globalThis.Set) {
+				throw new TypeError("Maps and Sets have no properties: use delete(…)");
+			}
+			delete object[key];
+			return true;
+		}
+
 		// Like the interpreter: an array pattern [a, b] needs an array with at least as many elements
 		function __ts_pattern(value, count) {
 			if (!Array.isArray(value) || value.length < count) {
@@ -583,6 +595,18 @@ class TinyscriptGenerator   {
 
 	// x += y adds like tinyscript's + (e.g. arrays), x ^= y etc. use the 53-bit bitwise operators
 	// (helper is the start of the call, e.g. '__ts_add('); a property target is evaluated only once
+	// delete o.key: like the interpreter, __ts_delete refuses arrays, Maps and Sets
+	def generateDelete(Unary expr) {
+		val access = expr.expr as CallOrPropertyAccess
+		val property = (access.suffix as CallOrPropertyAccessSuffix).property
+		val key = switch property {
+			DotPropertyAccessSuffix case property.key.name !== null: '"' + property.key.name + '"'
+			DotPropertyAccessSuffix: property.key.expr.generate.toString
+			ComputedPropertyAccessSuffix: property.key.generate.toString
+		}
+		'''__ts_delete(«access.expr.generate», «key»)'''
+	}
+
 	def generateHelperAssignment(BinaryExpression expr, String helper) {
 		val left = expr.left
 		if (left instanceof CallOrPropertyAccess) {
@@ -617,7 +641,7 @@ class TinyscriptGenerator   {
 
 	// Nested unary operators get parentheses: "- -x" must not become the decrement "--x"
 	def dispatch generate(Unary expr)
-		'''«IF expr.op == UnaryOperator.BIT_NOT»__ts_bitwise("~", «expr.expr.generate»)«ELSEIF expr.op == UnaryOperator.TYPEOF || expr.expr instanceof Unary»«expr.op.literal»(«expr.expr.generate»)«ELSE»«expr.op.literal»«expr.expr.generate»«ENDIF»'''
+		'''«IF expr.op == UnaryOperator.DELETE»«expr.generateDelete»«ELSEIF expr.op == UnaryOperator.BIT_NOT»__ts_bitwise("~", «expr.expr.generate»)«ELSEIF expr.op == UnaryOperator.TYPEOF || expr.expr instanceof Unary»«expr.op.literal»(«expr.expr.generate»)«ELSE»«expr.op.literal»«expr.expr.generate»«ENDIF»'''
 		
 	def dispatch generate(NewExpression expr)
 		'''new «expr.expr.generate»'''

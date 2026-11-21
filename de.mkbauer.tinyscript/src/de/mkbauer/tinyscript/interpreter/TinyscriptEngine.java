@@ -869,6 +869,8 @@ public class TinyscriptEngine {
     public TSValue caseUnary(Unary expr) {
     	if (expr.getOp() == UnaryOperator.NOT)
     		return TSValue.of(!condition(expr.getExpr()));
+    	if (expr.getOp() == UnaryOperator.DELETE)
+    		return delete(expr);
     	TSValue value = execute(expr.getExpr());
     	return switch (expr.getOp()) {
     		case NEGATE -> {
@@ -879,7 +881,20 @@ public class TinyscriptEngine {
     		case BIT_NOT -> TSValue.of((double) ~bitwiseOperand("~", expr.getExpr(), value, expr));
     		case TYPEOF -> TSValue.of(value.typeOf());
     		case NOT -> TSValue.of(!value.asCondition());
+    		case DELETE -> throw new IllegalStateException("handled above");
     	};
+    }
+
+    // delete o.key or delete o[key]: removes the property and gives true, as in Javascript
+    // (the validator checks that the operand is a property)
+    private TSValue delete(Unary expr) {
+    	if (!(expr.getExpr() instanceof CallOrPropertyAccess access)
+    			|| !(access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix) || suffix.getCall() != null)
+    		throw new TinyscriptTypeError("delete needs a property: delete o.key or delete o[key]", expr);
+    	TSValue base = execute(access.getExpr());
+    	TSValue key = evaluatePropertyKey(suffix.getProperty());
+    	toObjectForPropertyAccess(base, "delete", suffix.getProperty(), key, access).delete(key.asString());
+    	return TSValue.of(true);
     }
 
     public TSValue caseGroupingExpression(GroupingExpression expr) {
