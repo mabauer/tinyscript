@@ -960,6 +960,23 @@ print(1e21, 1e-7);     // 1e+21 1e-7
 print(2 / 3);          // 0.6666666666666666
 ```
 
+For another format, numbers have two methods, as in Javascript:
+
+| Method | Description |
+|---|---|
+| `x.toFixed([digits])` | A string with `digits` decimal places (an integer from 0 to 100, default 0), rounded half away from zero on the exact binary value of `x`, as in Javascript (`(1.005).toFixed(2)` is `"1.00"`, because 1.005 is stored as 1.00499…). From 10^21 on, and for `NaN` and `Infinity`, the same as `String(x)` |
+| `x.toString([radix])` | `x` in base `radix` (an integer from 2 to 36, default 10); other bases than 10 only for integers |
+
+```
+const price = 1234.5;
+print(price.toFixed(2));                  // 1234.50
+print((2 / 3).toFixed(3));                // 0.667
+print(price.toFixed(2).padStart(10));     // "   1234.50": columns for tables
+print((255).toString(16), (5).toString(2).padStart(8, "0"));   // ff 00000101
+```
+
+A number literal needs parentheses, as in Javascript: `(5).toFixed(2)`. Wrong arguments (`toFixed(1.5)`, `toFixed("2")`, `toString(37)`, `(1.5).toString(2)`) are a `TypeError`. Unlike Javascript, numbers have no other properties: `n.length` or `n.x = 1` is a `TypeError`, so that mixing up a number and an array or object is noticed at once.
+
 ### `Object`
 
 | Method | Description |
@@ -984,7 +1001,7 @@ obj.greet();                         // "hi" (inherited)
 
 ### `String`
 
-String primitives have methods available via auto-boxing. Numbers and booleans have no wrapper objects: a property access on them (`(5).toString()`, `n.x`) is a `TypeError`; convert with `String(n)` or `"" + n`.
+String primitives have methods available via auto-boxing. Numbers only have `toFixed` and `toString` (see [`Number`](#number-parseint-isnan)); booleans have no properties at all: `flag.x` is a `TypeError`. Convert with `String(x)` or `"" + x`.
 
 String methods:
 

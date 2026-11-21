@@ -95,7 +95,7 @@ public class TinyscriptReplMainTest {
     public void testRuntimeErrorExitsWithOne() throws IOException {
         Path file = script("error.tys", "var n = 1;\nprint(n.x);");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run(file.toString()));
-        assertTrue(err.toString().contains("TinyscriptTypeError: Cannot read 'x' of n: numbers have no properties"), err.toString());
+        assertTrue(err.toString().contains("TinyscriptTypeError: Cannot read 'x' of n: numbers only have the methods toFixed and toString"), err.toString());
         assertTrue(err.toString().contains("error.tys:2"), err.toString());
     }
 

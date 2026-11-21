@@ -81,6 +81,14 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testMethodOfANumberLiteral() {
+        assertEquals("A method of a number literal needs parentheses, as in Javascript: (5).toFixed(…)",
+                firstError("print(5.toFixed(2));"));
+        assertEquals("A method of a number literal needs parentheses, as in Javascript: (255).toString(…)",
+                firstError("const hex = 255.toString(16);"));
+    }
+
+    @Test
     public void testTemplateString() {
         assertEquals("Template strings (`…`) are not supported: build strings with +, e.g. \"Hello \" + name",
                 firstError("const name = \"x\";\nprint(`Hello ${name}`);"));
@@ -211,7 +219,8 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testPropertyOfANumberOrBoolean() {
-        assertRuntimeError("Cannot read 'toFixed' of n: numbers have no properties", "const n = 5;\nprint(n.toFixed(2));");
+        assertRuntimeError("Cannot read 'length' of n: numbers only have the methods toFixed and toString", "const n = 5;\nprint(n.length);");
+        assertRuntimeError("Cannot set 'x' of n: numbers cannot be changed", "const n = 5;\nn.x = 1;");
         assertRuntimeError("Cannot read 'x' of flag: booleans have no properties", "const flag = true;\nprint(flag.x);");
     }
 

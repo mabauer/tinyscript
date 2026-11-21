@@ -111,6 +111,8 @@ public class TinyscriptEngine {
 	private Map<Block, LexicalEnvironment> lexicalEnvironments;
 	
 	private TSObject objectPrototype;
+	// Number.prototype: the methods of numbers (toFixed, toString)
+	private TSObject numberPrototype;
 	
 	private OutputStream stdOut; 
 	
@@ -170,7 +172,9 @@ public class TinyscriptEngine {
 		addToGlobalObject("Set", new SetConstructor(this));
 		addToGlobalObject("Error", new ErrorConstructor(this));
 
-		addToGlobalObject("Number", NumberFunctions.createNumber(this));
+		BuiltinFunction number = NumberFunctions.createNumber(this);
+		numberPrototype = (TSObject) number.get("prototype");
+		addToGlobalObject("Number", number);
 		addToGlobalObject("parseInt", NumberFunctions.createParseInt(this));
 		addToGlobalObject("isNaN", NumberFunctions.createIsNaN(this));
 		addToGlobalObject("Math", new MathObject(this));
@@ -1012,17 +1016,21 @@ public class TinyscriptEngine {
     }
 
     /**
-     * Property access on a primitive value (e.g. a string) uses its wrapper object.
+     * Property access on a primitive value (e.g. a string) uses its wrapper object. A number only
+     * gives access to its methods (x.toFixed(2)); unlike Javascript, other properties are an error,
+     * so that n.length for an array n does not silently give undefined.
      */
     private TSObject toObjectForPropertyAccess(TSValue base, String action, PropertyAccessSuffix property, TSValue key, CallOrPropertyAccess expr) {
     	if (base instanceof TSObject object)
     		return object;
     	if (base instanceof TSString)
     		return TSObject.toObject(this, base);
+    	if (base instanceof TSNumber number && action.equals("read") && numberPrototype.hasOwnProperty(key.asString()) && !key.asString().equals("constructor"))
+    		return NumberFunctions.wrap(this, number, numberPrototype);
     	// e.g. "Cannot read 'length' of o.lst: it is undefined"
     	String access = "Cannot " + action + " " + keyText(property, key) + " of " + TinyscriptModelUtil.sourceText(expr.getExpr()) + ": ";
     	throw new TinyscriptTypeError(access + switch (base) {
-    		case TSNumber n -> "numbers have no properties";
+    		case TSNumber n -> action.equals("read") ? "numbers only have the methods toFixed and toString" : "numbers cannot be changed";
     		case TSBoolean b -> "booleans have no properties";
     		default -> "it is " + base.asString();
     	}, expr);

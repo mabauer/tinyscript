@@ -83,6 +83,9 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			return "tinyscript's for loop has no ';': for (const i : range(n)) { … } counts from 0 to n - 1";
 		if ((text.equals("of") || text.equals("in")) && isInForHeader(tokens, index))
 			return "A loop over the elements of an array, string, Map or Set is written for (const x : items) in tinyscript";
+		if (isNumberWithDot(context, previous) && isName(context, offending))
+			return "A method of a number literal needs parentheses, as in Javascript: ("
+					+ before.substring(0, before.length() - 1) + ")." + text + "(…)";
 		if (text.equals("`"))
 			return "Template strings (`…`) are not supported: build strings with +, e.g. \"Hello \" + name";
 		if (text.equals("=") && context.getCurrentContext() instanceof FunctionDefinition && isInParentheses(tokens, index)) {
@@ -106,6 +109,20 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 
 	// Before these, a name can stand (const x, function f, (a, b), let x = y, [a, b], { a })
 	private static final Set<String> NAME_POSITIONS = Set.of("var", "let", "const", "function", "(", ",", "=", "[", "{");
+
+	// 5. in 5.toFixed(2): the lexer reads the dot as part of the number
+	private static boolean isNumberWithDot(IParserErrorContext context, Token token) {
+		return token != null && "RULE_DOUBLE".equals(tokenName(context, token)) && token.getText().endsWith(".");
+	}
+
+	private static boolean isName(IParserErrorContext context, Token token) {
+		return "RULE_ID".equals(tokenName(context, token));
+	}
+
+	private static String tokenName(IParserErrorContext context, Token token) {
+		String[] names = context.getTokenNames();
+		return token.getType() >= 0 && token.getType() < names.length ? names[token.getType()] : null;
+	}
 
 	private static String reservedWord(String word) {
 		return "'" + word + "' is a reserved word in tinyscript and cannot be used as a name";

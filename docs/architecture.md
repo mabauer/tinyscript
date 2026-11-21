@@ -218,7 +218,7 @@ setPrototype(TSObject proto)
 ```
 This stores the proto reference both in the `proto` field and as a regular `"__proto__"` property, so prototype inspection works from script code.
 
-**Static utility methods on `TSObject`:** `stringify(value)` (string conversion for `print`, `+` with a string and `String(x)`), `toString(engine, value)` (the items of `join()`), `toObject()` (the object for a property access; only strings get a wrapper), `toRelativeIndex()`.
+**Static utility methods on `TSObject`:** `stringify(value)` (string conversion for `print`, `+` with a string and `String(x)`), `toString(engine, value)` (the items of `join()`), `toObject()` (the object for a property access; strings get a wrapper), `toRelativeIndex()`.
 
 **Display form:** `interpreter/Display.java` turns a value into the text `print` shows (`{x: 1, s: 'a'}`, `[1, 2]`, `Map {'k' => 1}`). Each object type overrides `display(Display)` (not `toString()`, which is final and delegates to `Display`) and formats the values it contains with `display.format(value)`. `Display` keeps the path of objects being shown, so a cycle appears as `[Circular]`, and stops at 50 levels of nesting (`[Object]` / `[Array]`). `stringify` uses `new Display(true)`, which calls a user-defined `toString` (an `InterpretedFunction`) at every level; `TSObject.toString()` uses `new Display(false)` and never runs script code (REPL echo, error messages).
 
@@ -327,13 +327,14 @@ Built-ins are registered in `TinyscriptEngine.initialize()` and also declared in
 |---|---|---|
 | `Array` | `ArrayConstructor`, `ArrayObject` | `push`, `pop`, `shift`, `unshift`, `map`, `filter`, `join`, `concat`, `toString`, `Array.isArray()` |
 | `String` | `StringConstructor`, `StringObject` | `charAt`, `indexOf`, `substring`, `toString` |
+| `Number` | `NumberFunctions`, `NumberObject` | `Number()`, `parseInt`, `isNaN`, `Number.isInteger`; `Number.prototype`: `toFixed`, `toString(radix)` |
 | `Math` | `MathObject` | `PI`, `sqrt`, `round`, `random`, `min`, `max`, `abs`, `floor`, `ceil` |
 | `Object` | `ObjectConstructor` | `create`, `keys`, `getPrototypeOf`, `defineProperty`, `getOwnPropertyDescriptor`, `getOwnPropertyNames`, `hasOwnProperty` |
 | `Function` | `FunctionConstructor` | `call`, `apply`, `toString` |
 | `System` | `SystemObject` | `currentTimeMillis` |
 | `print` | `Print` | global function |
 
-Each method is a `BuiltinFunction` whose `implementation` field is a Java lambda. Array and String prototype methods are attached to the shared prototype object of their constructor, so all instances inherit them via the prototype chain.
+Each method is a `BuiltinFunction` whose `implementation` field is a Java lambda. Array and String prototype methods are attached to the shared prototype object of their constructor, so all instances inherit them via the prototype chain. A method call on a primitive gets a short-lived wrapper: a `StringObject` for a string, a `NumberObject` for a number; for numbers, `TinyscriptEngine.toObjectForPropertyAccess` only allows the methods of `Number.prototype` (any other property is a `TypeError`).
 
 ---
 

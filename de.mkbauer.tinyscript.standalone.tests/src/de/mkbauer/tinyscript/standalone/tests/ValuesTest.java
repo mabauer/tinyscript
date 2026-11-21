@@ -116,8 +116,9 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    public void testNumbersAndBooleansHaveNoProperties() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "print((5).toString());");
+    public void testNumbersOnlyHaveMethodsAndBooleansNoProperties() {
+        // Numbers have toFixed and toString (see NumberMethodsTest), nothing else
+        assertInterpreterThrows(TinyscriptTypeError.class, "print((5).hasOwnProperty(\"x\"));");
         assertInterpreterThrows(TinyscriptTypeError.class, "print(true.toString());");
         assertInterpreterThrows(TinyscriptTypeError.class, "var n = 5; print(n.x);");
         assertInterpreterThrows(TinyscriptTypeError.class, "var n = 5; n.x = 1;");
