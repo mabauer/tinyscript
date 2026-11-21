@@ -438,12 +438,6 @@ and differential tests run against node.
 
 ## Interpreter and code quality
 
-- **A slow REPL test** (found 2026-11-21): `testEndlessRecursionIsAnError` takes
-  about 65 s when the whole `TinyscriptReplMainTest` runs, but 6 s alone (on
-  `master` as well; the REPL runs the same script in 5 s). Probably the deep
-  stack (about 500,000 calls) after earlier tests in the same JVM; find out why
-  before it slows down CI further.
-
 - **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always
   skipped. Either add the GraalJS dependency or remove it (decision deferred).
   Its error handling is minimal.
