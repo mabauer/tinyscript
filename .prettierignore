@@ -1,0 +1,7 @@
+# Only the Markdown documentation is formatted with Prettier (see CLAUDE.md)
+COPYING.md
+**/target/
+**/src-gen/
+**/xtend-gen/
+de.mkbauer.tinyscript.webdemo/frontend/node/
+de.mkbauer.tinyscript.webdemo/src/main/resources/public/
