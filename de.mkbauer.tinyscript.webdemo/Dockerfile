@@ -19,7 +19,6 @@ EXPOSE 8080
 
 # Run the app using the /dev/urandom-hack to prevent long start-up times
 # see: http://www.thezonemanager.com/2015/07/whats-so-special-about-devurandom.html
-# -XX:-UseBASE64Intrinsics mitigates CVE-2026-114938 ("Java4Shell"): heap overflow
-# in the AVX-512 VBMI Base64 decoder intrinsic (x86-64). Remove once the base
-# image ships a fixed JRE (25.0.5.1 or later).
-ENTRYPOINT ["java","-XX:-UseBASE64Intrinsics","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+# (CVE-2026-114938, "Java4Shell", is fixed in the base image's JRE 25.0.5.1, so
+# the workaround -XX:-UseBASE64Intrinsics is no longer needed.)
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
