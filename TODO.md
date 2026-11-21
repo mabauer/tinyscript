@@ -421,7 +421,36 @@ and differential tests run against node.
       library:
       1. First, maybe enough for reading input: a `scanf`-like helper in
          `std:string`, `const [px, py, vx, vy] = scan("p={},{} v={},{}", line);`
-         (readable without regex knowledge, no backtracking).
+         (readable without regex knowledge, no backtracking). Worked out:
+         - Placeholders: `{}` an integer with an optional sign (a number), `{n}`
+           a decimal number (`3.5`, `-1e3`; a number), `{w}` a word up to the
+           next whitespace (a string), `{s}` any text up to the next literal
+           part or the end (a string); `{{` / `}}` literal braces. Typed
+           placeholders instead of guessing: no silent conversion.
+         - `scan(pattern, text)` must cover the whole text (trailing whitespace
+           allowed) and gives an array of the values, or `null` if the text does
+           not fit, so formats can be tried: `scan(A, line) ?? scan(B, line)`.
+           `scanAll(pattern, text)` gives all matches in a longer text:
+           `for (const [a, b] : scanAll("mul({},{})", memory))` (AoC day 3).
+         - A space in the pattern matches one or more spaces / tabs, other
+           characters only themselves. Placeholders take from left to right as
+           much as their type allows, `{s}` up to the first occurrence of the
+           next literal part: no backtracking, linear time, safe in the sandbox.
+           An unknown placeholder (`{x}`) is a `TypeError`.
+         - AoC 2024 examples: `scan("{}|{}", "47|53")` (day 5),
+           `scan("Button A: X+{}, Y+{}", line)` (day 13),
+           `scan("{}: {s}", line)` then `integers(rest)` (day 7),
+           `scan("{w} {w} {w} -> {w}", "x00 AND y00 -> z00")` (day 24).
+         - Compared with `integers(text)`: that takes all numbers anywhere and
+           checks no format; `scan` checks the structure and also gives words.
+         - Implementation: in tinyscript itself, in `std:string.tys` like
+           `words` and `integers`, so it runs the same in the interpreter and in
+           node and is covered by differential tests; the pattern is split into
+           parts once, then one pass over the text. About half a day with tests
+           and docs.
+         - Open: the name (`scan` or `parse`); `null` or an error for a text
+           that does not fit (`null` favoured); `{}` only integers (favoured) or
+           also decimals; groups in `scanAll` (`({},{})`; not at first).
       2. Real regexes: `new RegExp("…")` as in Javascript (or `std:regex`),
          which the generator passes through. Regex objects immutable, only
          stateless operations (`re.test(s)`, `re.match(s)`, `re.matchAll(s)` as
