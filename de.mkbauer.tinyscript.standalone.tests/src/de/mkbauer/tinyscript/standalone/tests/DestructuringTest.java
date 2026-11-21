@@ -20,7 +20,7 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
         String code = "var [a, b] = [1, 2]; print(a + b);\n"
                 + "var [first, second] = \"x,y,z\".split(\",\"); print(first + second);\n"
                 + "var [x, y] = [3, 4], z = 5; print(x * y * z);\n"
-                + "function divide(n, d) { return [Math.floor(n / d), n % d]; } var [q, r] = divide(17, 5); print(q, \" \", r);";
+                + "function divide(n, d) { return [Math.floor(n / d), n % d]; } var [q, r] = divide(17, 5); print(q, r);";
         assertEquals("3\nxy\n60\n3 2\n", interpreterOutput(code));
         assertSameOutput(code);
     }

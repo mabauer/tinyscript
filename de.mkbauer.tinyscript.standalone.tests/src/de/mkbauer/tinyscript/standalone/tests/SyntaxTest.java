@@ -53,7 +53,7 @@ public class SyntaxTest extends TinyscriptTranspilerTestBase {
                 + "var max = (a, b) => a > b ? a : b; print(max(3, 7));\n"
                 + "var y = true ? \"yes\" : \"no\"; print(y); print([1, 2, 3].map(x => x % 2 == 0 ? \"e\" : \"o\").join(\"\"));\n"
                 + "print(\"n=\" + (1 < 2 ? \"a\" : \"b\"));";
-        assertEquals("1-10\n7\nyes\noeo\nn=a\n", interpreterOutput(code));
+        assertEquals("1 -1 0\n7\nyes\noeo\nn=a\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 

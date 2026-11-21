@@ -876,15 +876,24 @@ To share functions and values between files, use modules (see [Modules](#13-modu
 
 ## 11. Built-in Objects and Functions
 
-### `print(value)`
+### `print(value, ...)`
 
-Writes `value` to standard output followed by a newline. The value is converted to a string.
+Writes its arguments to standard output, separated by spaces and followed by a newline, as Javascript's `console.log` does. Strings appear as they are; other values are converted as in `"" + value`: an object with its own `toString` method shows what that method returns, also inside arrays and other objects; otherwise arrays, objects, `Map`s and `Set`s show their contents.
 
 ```
 print("hello");
-print(42);
-print([1, 2, 3]);   // [1, 2, 3]
+print("x =", 42);           // x = 42
+print([1, "a"]);            // [1, 'a']
+print({ x: 1, y: [2] });    // {x: 1, y: [2]}
+
+const p = { x: 1, toString: function() { return "P" + this.x; } };
+print(p, [p]);              // P1 [P1]
+
+const o = { name: "o" }; o.self = o;
+print(o);                   // {name: 'o', self: [Circular]}
 ```
+
+A reference back to an object that is still being printed shows as `[Circular]`; nesting deeper than 50 levels shows as `[Object]` / `[Array]`. Unlike `console.log`, which shows objects in its own format, the generated Javascript prints them with `String(value)`; programs that print whole objects therefore differ between the interpreter and node.
 
 ### `range`
 

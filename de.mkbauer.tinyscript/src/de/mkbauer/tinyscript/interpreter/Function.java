@@ -50,7 +50,8 @@ public abstract class Function extends TSObject {
 		return super.get(key);
 	}
 
-	public String toString() {
+	@Override
+	protected String display(Display display) {
 		String result = "";
 		if (hasEnumerableProperties())
 			result = result + "{ ";
@@ -61,7 +62,7 @@ public abstract class Function extends TSObject {
 		if (hasEnumerableProperties())
 			result = result + " " + properties.keySet().stream()
 				.filter(key->properties.get(key).isEnumerable())
-				.map(key->key+": "+properties.get(key).toString())
+				.map(key -> key + ": " + display.format(properties.get(key).getValue()))
 				.collect(Collectors.joining(", ")) + " }";
 		return result;
 	}

@@ -51,7 +51,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testNamedImports() throws IOException {
         Path main = write("main.tys", "import area, unit from \"./geometry\";\nprint(area(2), unit);");
-        assertEquals("12cm\n", runModule(main));
+        assertEquals("12 cm\n", runModule(main));
     }
 
     @Test

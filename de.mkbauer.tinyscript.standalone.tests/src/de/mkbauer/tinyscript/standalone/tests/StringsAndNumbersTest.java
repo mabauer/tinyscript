@@ -30,7 +30,7 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testSearching() {
-        String code = "print(\"abc\".startsWith(\"ab\"), \" \", \"abc\".endsWith(\"bc\"), \" \", \"abc\".includes(\"x\"), \" \", \"abc\".includes(\"\"));\n"
+        String code = "print(\"abc\".startsWith(\"ab\"), \"abc\".endsWith(\"bc\"), \"abc\".includes(\"x\"), \"abc\".includes(\"\"));\n"
                 + "print(\"abcabc\".lastIndexOf(\"b\")); print(\"abc\".lastIndexOf(\"x\"));";
         assertEquals("true true false true\n4\n-1\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -128,7 +128,7 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testIsNaNAndIsInteger() {
-        String code = "print(isNaN(0 / 0), \" \", isNaN(1)); print(Number.isInteger(5), \" \", Number.isInteger(5.5), \" \", Number.isInteger(\"5\"), \" \", Number.isInteger(1 / 0));";
+        String code = "print(isNaN(0 / 0), isNaN(1)); print(Number.isInteger(5), Number.isInteger(5.5), Number.isInteger(\"5\"), Number.isInteger(1 / 0));";
         assertEquals("true false\ntrue false false false\n", interpreterOutput(code));
         assertSameOutput(code);
     }

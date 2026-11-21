@@ -227,7 +227,7 @@ public class TinyscriptReplMainTest {
 
     @Test
     public void testScriptArgumentsAfterDoubleDash() throws IOException {
-        Path file = script("args.tys", "print(System.args.length, \" \", System.args.join(\"|\"));");
+        Path file = script("args.tys", "print(System.args.length, System.args.join(\"|\"));");
         assertEquals(TinyscriptReplMain.EXIT_OK, run(file.toString(), "--", "input.txt", "-v", "x.tys"));
         assertEquals("3 input.txt|-v|x.tys\n", out.toString());
     }

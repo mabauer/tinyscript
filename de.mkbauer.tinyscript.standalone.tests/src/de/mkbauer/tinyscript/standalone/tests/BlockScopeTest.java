@@ -55,7 +55,7 @@ public class BlockScopeTest extends TinyscriptTranspilerTestBase {
         // The generator checks the loop variables of the enclosing loops for shadowing
         String code = "let sum = 0; let j = 0;\n"
                 + "for (const [a, b] : [[1, 2], [3, 4]]) { for (let i = a, b) { for (j = 1, 2) { const x = i * j; sum += x; } } }\n"
-                + "print(sum, \" \", j);";
+                + "print(sum, j);";
         assertEquals("30 2\n", interpreterOutput(code));
         assertSameOutput(code);
     }

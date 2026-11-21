@@ -28,9 +28,9 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testStringSearchWithAPosition() {
-        String code = "print(\"abc\".startsWith(\"b\", 1), \" \", \"abc\".startsWith(\"a\", 1), \" \", \"abc\".startsWith(\"a\", -5), \" \", \"abc\".startsWith(\"\", 9));\n"
-                + "print(\"abc\".endsWith(\"b\", 2), \" \", \"abc\".endsWith(\"c\", 2), \" \", \"abc\".endsWith(\"c\", 9), \" \", \"abc\".endsWith(\"\", -1));\n"
-                + "print(\"abca\".includes(\"a\", 1), \" \", \"abc\".includes(\"a\", 1), \" \", \"abc\".includes(\"a\", -1));";
+        String code = "print(\"abc\".startsWith(\"b\", 1), \"abc\".startsWith(\"a\", 1), \"abc\".startsWith(\"a\", -5), \"abc\".startsWith(\"\", 9));\n"
+                + "print(\"abc\".endsWith(\"b\", 2), \"abc\".endsWith(\"c\", 2), \"abc\".endsWith(\"c\", 9), \"abc\".endsWith(\"\", -1));\n"
+                + "print(\"abca\".includes(\"a\", 1), \"abc\".includes(\"a\", 1), \"abc\".includes(\"a\", -1));";
         assertEquals("true false true true\ntrue false true true\ntrue false true\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -44,16 +44,16 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrayIncludesFromAnIndex() {
-        String code = "var a = [1, 2, 3, 1]; print(a.includes(1, 1), \" \", a.includes(2, 2), \" \", a.includes(3, -2), \" \", a.includes(2, -1), \" \", a.includes(1, 9));";
+        String code = "var a = [1, 2, 3, 1]; print(a.includes(1, 1), a.includes(2, 2), a.includes(3, -2), a.includes(2, -1), a.includes(1, 9));";
         assertEquals("true false true false false\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
     @Test
     public void testOptionalArgumentsThatWereAlreadySupported() {
-        String code = "print(\"abcabc\".indexOf(\"b\", 2), \" \", \"abcabc\".lastIndexOf(\"b\", 3), \" \", \"hello\".slice(), \" \", \"7\".padStart(3, \"0\"), \" \", \"7\".padEnd(3, \"-\"));\n"
-                + "print([1, 2, 1].indexOf(1, 1), \" \", [1, 2, 3].slice(1).join(), \" \", [1, 2].join(\"+\"), \" \", [1, 2].reduce((s, x) => s + x, 10), \" \", [0, 0, 0].fill(1, 1, 2).join());\n"
-                + "print(Math.max(), \" \", Math.min(), \" \", Math.max(1, 5, 3), \" \", parseInt(\"ff\", 16), \" \", String.fromCharCode());";
+        String code = "print(\"abcabc\".indexOf(\"b\", 2), \"abcabc\".lastIndexOf(\"b\", 3), \"hello\".slice(), \"7\".padStart(3, \"0\"), \"7\".padEnd(3, \"-\"));\n"
+                + "print([1, 2, 1].indexOf(1, 1), [1, 2, 3].slice(1).join(), [1, 2].join(\"+\"), [1, 2].reduce((s, x) => s + x, 10), [0, 0, 0].fill(1, 1, 2).join());\n"
+                + "print(Math.max(), Math.min(), Math.max(1, 5, 3), parseInt(\"ff\", 16), String.fromCharCode());";
         assertEquals("4 1 hello 007 7--\n2 2,3 1+2 13 0,1,0\n-Infinity Infinity 5 255 \n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -81,8 +81,8 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testVariadicBuiltins() {
         String code = "var a = []; a.push(1, 2, 3); a.unshift(-1, 0); print(a.join()); print(Math.max(1, 2, 3, 4), String.fromCharCode(97, 98, 99));\n"
-                + "function f(x, y) { return x + y; } print(f.call(null, 1, 2), \" \", f.apply(null, [3, 4]));";
-        assertEquals("-1,0,1,2,3\n4abc\n3 7\n", interpreterOutput(code));
+                + "function f(x, y) { return x + y; } print(f.call(null, 1, 2), f.apply(null, [3, 4]));";
+        assertEquals("-1,0,1,2,3\n4 abc\n3 7\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
@@ -121,7 +121,7 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
     public void testWords() throws IOException {
         Path main = write("main.tys", "import words, isWhitespace, isDigit from \"std:string\";\n"
                 + "print(words(\"  3   4\\t5\\n\").join(\"|\")); print(words(\"\").length); print(words(\"   \").length); print(words(\"one\").join(\"|\"));\n"
-                + "print(isWhitespace(\" \"), \" \", isWhitespace(\"x\"), \" \", isDigit(\"7\"), \" \", isDigit(\"x\"), \" \", isDigit(\"a\"[5]));");
+                + "print(isWhitespace(\" \"), isWhitespace(\"x\"), isDigit(\"7\"), isDigit(\"x\"), isDigit(\"a\"[5]));");
         assertEquals("3|4|5\n0\n0\none\ntrue false true false false\n", runModule(main));
         assertSameOutputModule(main);
     }

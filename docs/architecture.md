@@ -218,7 +218,9 @@ setPrototype(TSObject proto)
 ```
 This stores the proto reference both in the `proto` field and as a regular `"__proto__"` property, so prototype inspection works from script code.
 
-**Static utility methods on `TSObject`:** `toString()`, `toObject()`, `toPrimitive()`, `toNumber()`, `toInteger()` — these implement the ECMAScript abstract coercion operations.
+**Static utility methods on `TSObject`:** `stringify(value)` (string conversion for `print`, `+` with a string and `String(x)`), `toString(engine, value)` (the items of `join()`), `toObject()` (the object for a property access; only strings get a wrapper), `toRelativeIndex()`.
+
+**Display form:** `interpreter/Display.java` turns a value into the text `print` shows (`{x: 1, s: 'a'}`, `[1, 2]`, `Map {'k' => 1}`). Each object type overrides `display(Display)` (not `toString()`, which is final and delegates to `Display`) and formats the values it contains with `display.format(value)`. `Display` keeps the path of objects being shown, so a cycle appears as `[Circular]`, and stops at 50 levels of nesting (`[Object]` / `[Array]`). `stringify` uses `new Display(true)`, which calls a user-defined `toString` (an `InterpretedFunction`) at every level; `TSObject.toString()` uses `new Display(false)` and never runs script code (REPL echo, error messages).
 
 **Memory estimation:** `estimateMemory()` returns `properties.size() * 8` bytes (TSVALUE_SIZE = 8). Used by the resource monitor.
 

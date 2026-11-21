@@ -31,16 +31,12 @@ public non-sealed class TSObject implements TSValue {
 	}
 	
 	/**
-	 * String conversion for string concatenation and String(x): calls a user-defined
-	 * toString (a function written in tinyscript); otherwise the value's own string form.
+	 * String conversion for print, string concatenation and String(x): a string stays as it is,
+	 * anything else gets its display form (see {@link Display}), which uses a user-defined
+	 * toString (a function written in tinyscript), also for the objects inside arrays and objects.
 	 */
 	public static String stringify(TSValue value) {
-		if (value instanceof TSObject object && object.get("toString") instanceof InterpretedFunction toString) {
-			TSValue result = toString.apply(object, new TSValue[0]);
-			if (result.isString())
-				return result.asString();
-		}
-		return value.asString();
+		return value instanceof TSString s ? s.value() : new Display(true).format(value);
 	}
 
 	public static String toString(TinyscriptEngine engine, TSValue value) {
@@ -201,10 +197,22 @@ public non-sealed class TSObject implements TSValue {
 				.collect(Collectors.toList()));
 	}
 	
-	public String toString() {
+	/**
+	 * The display form without user-defined toString methods (REPL, error messages).
+	 * Subclasses override {@link #display(Display)}, not this method.
+	 */
+	@Override
+	public final String toString() {
+		return new Display(false).format(this);
+	}
+
+	/**
+	 * This object's display form: {x: 1, y: 'a'}. The values inside go through {@code display.format}.
+	 */
+	protected String display(Display display) {
 		return properties.keySet().stream()
 				.filter(key -> properties.get(key).isEnumerable())
-				.map(key -> key + ": " + properties.get(key).getValue().toString())
+				.map(key -> key + ": " + display.format(properties.get(key).getValue()))
 				.collect(Collectors.joining(", ", "{", "}"));
 	}
 	

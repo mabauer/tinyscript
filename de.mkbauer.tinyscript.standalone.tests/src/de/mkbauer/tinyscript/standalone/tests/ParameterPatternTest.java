@@ -70,7 +70,7 @@ public class ParameterPatternTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testInfinity() {
-        String code = "print(Infinity, \" \", -Infinity, \" \", Infinity > 1e300, \" \", 1 / 0 == Infinity, \" \", Math.min(Infinity, 3));";
+        String code = "print(Infinity, -Infinity, Infinity > 1e300, 1 / 0 == Infinity, Math.min(Infinity, 3));";
         assertEquals("Infinity -Infinity true true 3\n", interpreterOutput(code));
         assertSameOutput(code);
     }

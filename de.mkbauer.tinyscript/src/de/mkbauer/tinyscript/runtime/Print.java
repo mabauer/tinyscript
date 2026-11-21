@@ -7,11 +7,13 @@ import java.io.OutputStreamWriter;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
+import de.mkbauer.tinyscript.interpreter.TSObject;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 
 /**
- * The global print(...) function: writes its arguments, followed by a line separator,
- * to the engine's stdout.
+ * The global print(...) function: writes its arguments, separated by spaces and followed by
+ * a line separator, to the engine's stdout. Strings appear as they are, other values in their
+ * display form (see {@link TSObject#stringify(TSValue)}).
  */
 public final class Print {
 
@@ -25,8 +27,10 @@ public final class Print {
 	private static TSValue print(TinyscriptEngine engine, TSValue[] args) {
 		OutputStream os = engine.getStdOut();
 		StringBuilder line = new StringBuilder();
-		for (TSValue arg: args) {
-			line.append(arg.asString());
+		for (int i = 0; i < args.length; i++) {
+			if (i > 0)
+				line.append(' ');
+			line.append(TSObject.stringify(args[i]));
 		}
 		line.append(System.lineSeparator());
 		// Check the output limit before writing, so a script cannot flood the output

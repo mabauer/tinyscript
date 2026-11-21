@@ -145,7 +145,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     public void testKeywordsAreFineAsPropertyNames() {
         // Like Javascript: only names of variables are reserved, not names of properties
         String code = "const range = { from: 1, to: 5, as: \"x\", import: true, if: 2 };\n"
-                + "print(range.from + range.to, \" \", range.as, \" \", range.import, \" \", range.if);";
+                + "print(range.from + range.to, range.as, range.import, range.if);";
         assertEquals("6 x true 2\n", interpreterOutput(code));
         assertSameOutput(code);
     }

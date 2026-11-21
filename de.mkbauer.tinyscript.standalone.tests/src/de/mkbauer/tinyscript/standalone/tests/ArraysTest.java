@@ -66,8 +66,8 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testSomeEveryFindFindIndex() {
         String code = "var a = [1, 5, 8];\n"
-                + "print(a.some(x => x > 6), \" \", a.some(x => x > 9), \" \", a.every(x => x > 0), \" \", a.every(x => x > 1));\n"
-                + "print([].some(x => true), \" \", [].every(x => false));\n"
+                + "print(a.some(x => x > 6), a.some(x => x > 9), a.every(x => x > 0), a.every(x => x > 1));\n"
+                + "print([].some(x => true), [].every(x => false));\n"
                 + "print(a.find(x => x > 2)); print(a.find(x => x > 9)); print(a.findIndex(x => x > 2)); print(a.findIndex(x => x > 9));";
         assertEquals("true false true false\nfalse true\n5\nundefined\n1\n-1\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -89,7 +89,7 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testIncludes() {
-        String code = "print([1, 2, 3].includes(2), \" \", [1, 2].includes(\"2\"), \" \", [\"a\"].includes(\"a\"), \" \", [null].includes(null));";
+        String code = "print([1, 2, 3].includes(2), [1, 2].includes(\"2\"), [\"a\"].includes(\"a\"), [null].includes(null));";
         assertEquals("true false true true\n", interpreterOutput(code));
         assertSameOutput(code);
     }

@@ -244,8 +244,8 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testPrintWithSeveralArguments() {
-        String code = "print(\"a\", 1, true); print(1, 2); print(\"x\" + 1, \"y\"); print(); print(2.5, \" \", -1);";
-        assertEquals("a1true\n12\nx1y\n\n2.5 -1\n", interpreterOutput(code));
+        String code = "print(\"a\", 1, true); print(1, 2); print(\"x\" + 1, \"y\"); print(); print(2.5, -1);";
+        assertEquals("a 1 true\n1 2\nx1 y\n\n2.5 -1\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 
