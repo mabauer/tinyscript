@@ -62,7 +62,7 @@ print("Part 1: " + run(program, registers).join(","));
 // output matches the end of the program, and try the eight next digits for each of them.
 function lowestSelfReproducingA() {
     let candidates = [0];
-    for (let i = program.length - 1, 0, -1) {
+    for (const i : range(program.length).reverse()) {
         const expected = program.slice(i).join(",");
         const next = [];
         for (const candidate : candidates) {

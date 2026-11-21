@@ -366,7 +366,7 @@ frontend/
 ├── vite.config.ts
 ├── tsconfig.json
 ├── package.json
-├── public/           ← 11 example .tys scripts (served as static files)
+├── public/           ← 12 example .tys scripts (served as static files)
 └── src/
     ├── main.ts
     ├── style.css

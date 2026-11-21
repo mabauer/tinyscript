@@ -708,7 +708,7 @@ serves as static files. Key components:
 | `frontend/src/components/tinyscript-lang.ts` | CM6 `StreamLanguage` tokenizer for Tinyscript syntax                           |
 | `frontend/src/components/Output.vue`         | Spinner, success/error alerts, formatted statistics                            |
 | `frontend/src/types.ts`                      | TypeScript interfaces: `ExecutionResult`, `Statistics`                         |
-| `frontend/public/*.tys`                      | 11 example scripts served as static files                                      |
+| `frontend/public/*.tys`                      | 12 example scripts served as static files                                      |
 
 Frontend unit tests (Vitest) cover `Output`, `Toolbar`, and the
 `tinyscript-lang` tokenizer. They run as part of the Maven build before the

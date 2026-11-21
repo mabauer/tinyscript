@@ -1,0 +1,76 @@
+// Loops: for (const x : items) goes through the elements of anything that has them.
+
+// An array: its values (not its indexes, as Javascript's for … in would)
+const fruits = ["Apple", "Banana", "Cherry"];
+for (const fruit : fruits) {
+    print("I like " + fruit);
+}
+
+// A string: its characters
+let vowels = 0;
+for (const c : "tinyscript") {
+    if ("aeiou".includes(c)) {
+        vowels++;
+    }
+}
+print("vowels:", vowels);                 // vowels: 2
+
+// A Map: its [key, value] pairs, taken apart right in the loop
+const ages = new Map([["Ann", 31], ["Bob", 25]]);
+for (const [name, age] : ages) {
+    print(name + " is " + age);
+}
+
+// A Set: its values, each once
+for (const color : new Set(["red", "green", "red"])) {
+    print(color);                         // red, then green
+}
+
+// Counting: range(n) is 0, 1, …, n - 1. A range is lazy: it does not
+// build an array, so range(1000000000) costs nothing until it is used.
+let sum = 0;
+for (const i : range(1, 101)) {
+    sum += i;
+}
+print("1 + 2 + … + 100 =", sum);         // 5050
+
+for (const i : range(0, 20, 5)) {
+    print(i);                             // 0, 5, 10, 15
+}
+
+// The indexes of an array, forwards and backwards
+for (const i : range(fruits.length)) {
+    print(i + ": " + fruits[i]);
+}
+const backwards = [];
+for (const i : range(fruits.length).reverse()) {
+    backwards.push(fruits[i]);
+}
+print(backwards);                         // ["Cherry", "Banana", "Apple"]
+
+// A countdown
+let countdown = "";
+for (const i : range(10).reverse()) {
+    countdown += i + " ";
+}
+print(countdown + "liftoff!");
+
+// break leaves the loop, continue goes on with the next element
+for (const n : range(2, 100)) {
+    if (n % 2 == 0) {
+        continue;                         // skip even numbers
+    }
+    if (n * n > 50) {
+        print("first odd number whose square is above 50:", n);   // 9
+        break;
+    }
+}
+
+// while repeats as long as its condition holds
+let n = 27;
+let steps = 0;
+while (n != 1) {
+    n = n % 2 == 0 ? n / 2 : 3 * n + 1;
+    steps++;
+}
+print("Collatz: 27 needs", steps, "steps");   // 111

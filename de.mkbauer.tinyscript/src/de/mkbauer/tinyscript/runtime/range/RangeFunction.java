@@ -12,7 +12,8 @@ import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 /**
  * The global function range(end) / range(start, end[, step]) (decided 2026-11-20): like
  * Python's range, a lazy range of integers with an exclusive end, e.g. for counting in the
- * iterable for loop, for (const i : range(n)). Its methods: length, toArray(), map(f), forEach(f).
+ * iterable for loop, for (const i : range(n)). Its methods: length, toArray(), map(f), forEach(f),
+ * reverse() (lazy as well: for (const i : range(n).reverse()) counts down from n - 1 to 0).
  */
 public final class RangeFunction {
 
@@ -24,6 +25,7 @@ public final class RangeFunction {
 		prototype.defineBuiltinMethod("toArray", (self, args) -> toArray(engine, thisRange(self, "toArray")), 0);
 		prototype.defineBuiltinMethod("map", (self, args) -> map(engine, thisRange(self, "map"), callback(args[0], "map")), 1);
 		prototype.defineBuiltinMethod("forEach", (self, args) -> forEach(thisRange(self, "forEach"), callback(args[0], "forEach")), 1);
+		prototype.defineBuiltinMethod("reverse", (self, args) -> reverse(engine, prototype, thisRange(self, "reverse")), 0);
 		BuiltinFunction range = engine.defineBuiltinFunction("range", (self, args) -> range(engine, prototype, args), 1, 3);
 		// So that error messages name the type: "range has no method 'join'"
 		prototype.defineDefaultProperty("constructor", range);
@@ -41,6 +43,13 @@ public final class RangeFunction {
 		if (step == 0)
 			throw new TinyscriptTypeError("range() needs a step other than 0");
 		return new RangeObject(engine, prototype, start, end, step);
+	}
+
+	// The same integers from the last one back to start, again lazy: range(5).reverse() is
+	// range(4, -1, -1), range(1, 10, 3).reverse() is range(7, -2, -3); an empty range stays empty
+	private static RangeObject reverse(TinyscriptEngine engine, TSObject prototype, RangeObject range) {
+		double last = range.getStart() + (range.length() - 1) * range.getStep();
+		return new RangeObject(engine, prototype, last, range.getStart() - range.getStep(), -range.getStep());
 	}
 
 	private static ArrayObject toArray(TinyscriptEngine engine, RangeObject range) {
