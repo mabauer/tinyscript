@@ -152,4 +152,17 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
         assertEquals(TSValue.UNDEFINED.hashCode(), TSValue.UNDEFINED.hashCode());
         assertEquals(TSValue.NULL.hashCode(), TSValue.NULL.hashCode());
     }
+
+    @Test
+    public void testUndefinedLiteral() {
+        String code = "let x; const o = { undefined: 1 };\n"
+                + "print(x == undefined, undefined == null, undefined != 0, typeof undefined, o.missing == undefined);\n"
+                + "function f(a) { if (a == undefined) { return undefined; } return a; }\n"
+                + "print(f(), f(undefined), f(2), [undefined, null], undefined ?? \"default\", (2.5).toFixed(undefined), o.undefined);\n"
+                + "print(\"x\" + undefined, String(undefined));";
+        assertEquals("true true true undefined true\n"
+                + "undefined undefined 2 [undefined, null] default 3 1\n"
+                + "xundefined undefined\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
 }

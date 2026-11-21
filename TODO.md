@@ -312,11 +312,6 @@ and differential tests run against node.
     6. Optional, IDE: the validator checks while typing that the imported file
        exists and exports the names (fits the VS Code language server).
 
-- **`undefined` as a name.** `x * undefined` or `return undefined;` fail with
-  "Unknown name 'undefined'" (found 2026-11-20); in Javascript it is a global
-  (read-only). Options: a literal like `null` (then a reserved word) or a
-  read-only global like `Infinity` / `NaN`; the generator emits it unchanged.
-
 - **More functions in the runtime library.** (`concat` is not needed: `+`
   concatenates arrays.) See the review below for the concrete list.
 
@@ -351,7 +346,7 @@ and differential tests run against node.
          simplest: always an `Error` with `name` and `message`, any other thrown
          value as it is; _sandbox_ — resource limit violations and the stack
          overflow must never be catchable.
-    2. **`undefined` as a name** (see above).
+    2. ~~**`undefined` as a name**~~ (done 2026-11-21: a literal like `null`).
     3. **No input.** Only files and `System.args`; nothing reads standard input,
        so interactive scripts are not possible. Candidate: `readLine()` in a
        `std:` module (not sandboxed).
@@ -433,10 +428,10 @@ and differential tests run against node.
       or 3. Not pursued: (2) a `TypeError` for an object as operand of `&&` /
       `||`.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
-    `toString(radix)`); `undefined`; minimal `try` / `catch`; a library batch
-    (`splice`, `reverse`, `Object.values` / `entries`, powers, `Math.trunc`)
-    with `range(…).reverse()`; method shorthand, a more comfortable REPL,
-    standard input.
+    `toString(radix)`); ~~`undefined`~~ (done); minimal `try` / `catch`; a
+    library batch (`splice`, `reverse`, `Object.values` / `entries`, powers,
+    `Math.trunc`) with `range(…).reverse()`; method shorthand, a more
+    comfortable REPL, standard input.
 
 ## Interpreter and code quality
 

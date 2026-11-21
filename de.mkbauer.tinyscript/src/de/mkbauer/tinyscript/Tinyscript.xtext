@@ -147,6 +147,7 @@ Unary:
 Primary returns Expression:
 	((Atomic  | NewExpression | GroupingExpression ) ({CallOrPropertyAccess.expr=current} suffix=(CallOrPropertyAccessSuffix|CallSuffix))* )
 	| NullObject
+	| UndefinedLiteral
 ;
 
 GroupingExpression:
@@ -306,6 +307,13 @@ NullObject returns Expression:
 	'null'
 ;
 
+// Unlike Javascript, where undefined is a global variable, a literal like null: it cannot
+// be declared, assigned or shadowed
+UndefinedLiteral returns Expression:
+	{UndefinedLiteral}
+	'undefined'
+;
+
 StringLiteral:
 	value=STRING
 ;
@@ -396,7 +404,7 @@ ReservedWord:
 // are fine as property names (range.from, { if: 1 })
 Keyword:
 	ReservedWord | 'var' | 'let' | 'const' | 'function' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
-	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'typeof' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
+	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'undefined' | 'typeof' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
 ;
 
 // var and let are the same (block-scoped, like Javascript's let); const cannot be assigned again

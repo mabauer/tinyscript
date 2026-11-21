@@ -53,6 +53,7 @@ import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.IterableForExpression;
 import de.mkbauer.tinyscript.ts.NewExpression;
 import de.mkbauer.tinyscript.ts.NullObject;
+import de.mkbauer.tinyscript.ts.UndefinedLiteral;
 import de.mkbauer.tinyscript.ts.NumberLiteral;
 import de.mkbauer.tinyscript.ts.NumericForExpression;
 import de.mkbauer.tinyscript.ts.ObjectInitializer;
@@ -363,6 +364,8 @@ public class TinyscriptEngine {
     		return caseNewExpression((NewExpression) object);
 		case TsPackage.NULL_OBJECT:
     		return caseNullObject((NullObject) object); 		
+		case TsPackage.UNDEFINED_LITERAL:
+    		return TSValue.UNDEFINED;
 		case TsPackage.OBJECT_INITIALIZER:
     		return caseObjectInitializer((ObjectInitializer) object);
 		case TsPackage.ARRAY_INITIALIZER:
