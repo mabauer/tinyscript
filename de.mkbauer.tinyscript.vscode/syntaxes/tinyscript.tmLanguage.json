@@ -1,0 +1,142 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "tinyscript",
+  "scopeName": "source.tinyscript",
+  "comment": "Follows de.mkbauer.tinyscript/src/de/mkbauer/tinyscript/Tinyscript.xtext (keywords, terminals) and the builtins of TinyscriptGlobalScopeProvider.",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#function-declaration" },
+    { "include": "#keywords" },
+    { "include": "#constants" },
+    { "include": "#builtins" },
+    { "include": "#property" },
+    { "include": "#operators" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.tinyscript",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.tinyscript" } },
+          "endCaptures": { "0": { "name": "punctuation.definition.comment.tinyscript" } }
+        },
+        {
+          "name": "comment.line.double-slash.tinyscript",
+          "begin": "//",
+          "end": "$",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.tinyscript" } }
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.tinyscript",
+          "begin": "\"",
+          "end": "\"|$",
+          "patterns": [{ "include": "#escapes" }]
+        },
+        {
+          "name": "string.quoted.single.tinyscript",
+          "begin": "'",
+          "end": "'|$",
+          "patterns": [{ "include": "#escapes" }]
+        }
+      ]
+    },
+    "escapes": {
+      "patterns": [
+        { "name": "constant.character.escape.tinyscript", "match": "\\\\(u[0-9A-Fa-f]{4}|[btnfr\"'\\\\])" },
+        { "name": "invalid.illegal.escape.tinyscript", "match": "\\\\." }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.decimal.tinyscript",
+      "match": "(?<![\\w.])(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?"
+    },
+    "function-declaration": {
+      "match": "\\b(function)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "storage.type.function.tinyscript" },
+        "2": { "name": "entity.name.function.tinyscript" }
+      }
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "comment": "Reserved, but not supported: the compiler reports them with a hint",
+          "name": "invalid.illegal.reserved.tinyscript",
+          "match": "(?<!\\.)\\b(try|catch|finally|switch|case|class)\\b"
+        },
+        {
+          "name": "keyword.control.tinyscript",
+          "match": "(?<!\\.)\\b(if|else|for|while|break|continue|return|throw)\\b"
+        },
+        {
+          "name": "keyword.control.import.tinyscript",
+          "match": "(?<!\\.)\\b(import|export|from|as)\\b"
+        },
+        {
+          "name": "storage.type.tinyscript",
+          "match": "(?<!\\.)\\b(var|let|const|function)\\b"
+        },
+        {
+          "name": "keyword.operator.expression.tinyscript",
+          "match": "(?<!\\.)\\b(new|typeof|instanceof)\\b"
+        },
+        {
+          "name": "keyword.other.assert.tinyscript",
+          "match": "(?<!\\.)\\bassert\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        { "name": "constant.language.boolean.tinyscript", "match": "(?<!\\.)\\b(true|false)\\b" },
+        { "name": "constant.language.null.tinyscript", "match": "(?<!\\.)\\bnull\\b" },
+        { "name": "constant.language.tinyscript", "match": "(?<!\\.)\\b(undefined|Infinity|NaN)\\b" },
+        { "name": "variable.language.this.tinyscript", "match": "(?<!\\.)\\bthis\\b" }
+      ]
+    },
+    "builtins": {
+      "patterns": [
+        { "name": "support.class.builtin.tinyscript", "match": "(?<!\\.)\\b(Object|Function|Array|Map|Set|Error|String|Number|Math|System)\\b" },
+        { "name": "support.function.builtin.tinyscript", "match": "(?<!\\.)\\b(print|range|parseInt|isNaN)\\b" }
+      ]
+    },
+    "property": {
+      "comment": "A name after a dot is a property, also if it is a keyword (range.from)",
+      "match": "(\\??\\.)\\s*([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "punctuation.accessor.tinyscript" },
+        "2": { "name": "variable.other.property.tinyscript" }
+      }
+    },
+    "operators": {
+      "patterns": [
+        { "name": "storage.type.function.arrow.tinyscript", "match": "=>" },
+        { "name": "keyword.operator.spread.tinyscript", "match": "\\.\\.\\." },
+        { "name": "keyword.operator.assignment.compound.tinyscript", "match": "(?:<<|>>|[-+*/%&|^])=" },
+        { "name": "keyword.operator.bitwise.tinyscript", "match": "<<|>>" },
+        { "name": "keyword.operator.comparison.tinyscript", "match": "==|!=|<=|>=|<|>" },
+        { "name": "keyword.operator.logical.tinyscript", "match": "&&|\\|\\||\\?\\?|!" },
+        { "name": "keyword.operator.bitwise.tinyscript", "match": "[&|^~]" },
+        { "name": "keyword.operator.increment.tinyscript", "match": "\\+\\+|--" },
+        { "name": "keyword.operator.arithmetic.tinyscript", "match": "[-+*/%]" },
+        { "name": "keyword.operator.assignment.tinyscript", "match": "=" },
+        { "name": "keyword.operator.ternary.tinyscript", "match": "[?:]" }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        { "name": "punctuation.terminator.statement.tinyscript", "match": ";" },
+        { "name": "punctuation.separator.comma.tinyscript", "match": "," }
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "name": "tinyscript",
+  "displayName": "tinyscript",
+  "description": "Syntax highlighting for tinyscript (.tys), a small Javascript-like language",
+  "version": "0.1.0",
+  "publisher": "mkbauer",
+  "license": "GPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mabauer/tinyscript"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "tinyscript",
+        "aliases": [
+          "tinyscript",
+          "Tinyscript"
+        ],
+        "extensions": [
+          ".tys"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "tinyscript",
+        "scopeName": "source.tinyscript",
+        "path": "./syntaxes/tinyscript.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "test": "vscode-tmgrammar-test \"tests/**/*.tys\"",
+    "package": "cp ../COPYING.md LICENSE.md && vsce package; rm -f LICENSE.md"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^4.1.1",
+    "vscode-tmgrammar-test": "^0.1.3"
+  }
+}

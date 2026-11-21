@@ -146,6 +146,7 @@ Test helper base class `TinyscriptInterpreterTestHelper` provides:
 | `de.mkbauer.tinyscript.repl`             | Standalone REPL app                                                         |
 | `de.mkbauer.tinyscript.webdemo`          | Spring Boot web sandbox demo                                                |
 | `de.mkbauer.tinyscript.target`           | Eclipse target platform definition                                          |
+| `de.mkbauer.tinyscript.vscode`           | VS Code extension: syntax highlighting (npm, not Maven; `npm test`)         |
 
 ### Execution Pipeline
 

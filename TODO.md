@@ -456,10 +456,12 @@ and differential tests run against node.
   update that makes it possible is done).
   - File extension: decided and done, tinyscript files use `.tys` (`.ts` belongs
     to TypeScript in VS Code).
-  - Stage 1, syntax highlighting only (about half a day): an extension with
-    `package.json`, a TextMate grammar (keywords as in the webdemo's
-    `tinyscript-lang.ts`) and `language-configuration.json` (comments,
-    brackets); optionally a "Run tinyscript" task that calls the REPL jar.
+  - ~~Stage 1, syntax highlighting only~~ (done 2026-11-21:
+    `de.mkbauer.tinyscript.vscode`, a TextMate grammar following the Xtext
+    grammar, `language-configuration.json`, grammar tests with
+    `vscode-tmgrammar-test` and the `.vsix` package in CI). Not done: a "Run
+    tinyscript" task (would need extension code; the REPL in a terminal does
+    it).
   - Stage 2, language server (about 1–2 days): validation while typing,
     completion, go to definition, references, rename, outline come from Xtext.
     Build a fat jar from core + `de.mkbauer.tinyscript.ide` with
@@ -468,8 +470,8 @@ and differential tests run against node.
     extension starts it via `vscode-languageclient`
     (`java -jar tinyscript-ls.jar`, Java 25 required, path configurable).
     Package with `vsce` as `.vsix`; later optionally Marketplace / Open VSX.
-  - CI: build the server jar and the `.vsix`; a smoke test that starts the
-    server and validates a file with an error.
+  - CI: build the server jar (the `.vsix` is already built); a smoke test that
+    starts the server and validates a file with an error.
 
 ## Not planned for now
 

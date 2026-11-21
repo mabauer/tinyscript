@@ -35,6 +35,10 @@ jobs:
       - name: Build and test web demo
         run: ./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
 
+      - name: Test and package the VS Code extension
+        working-directory: de.mkbauer.tinyscript.vscode
+        run: npm ci && npm test && npm run package
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
