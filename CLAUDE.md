@@ -1,16 +1,25 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
 
 ## Project Overview
 
-Tinyscript is a proof-of-concept JavaScript-like scripting language built on Eclipse Xtext. It supports dynamic typing, prototypal inheritance, closures, and sandboxed execution. The project targets multiple deployment targets: Eclipse IDE plugin, standalone REPL, Spring Boot web app, and JVM ScriptEngine.
+Tinyscript is a proof-of-concept JavaScript-like scripting language built on
+Eclipse Xtext. It supports dynamic typing, prototypal inheritance, closures, and
+sandboxed execution. The project targets multiple deployment targets: Eclipse
+IDE plugin, standalone REPL, Spring Boot web app, and JVM ScriptEngine.
 
 ## Build Commands
 
-This is a Maven multi-module project using Eclipse Tycho for OSGi/Eclipse plugin builds.
+This is a Maven multi-module project using Eclipse Tycho for OSGi/Eclipse plugin
+builds.
 
-Always build with the Maven wrapper (`./mvnw`), which pins Maven 3.9.16. Maven 3.10+ fails on the core module with `Invalid Collect Request: null` because its resolver rejects the `system`-scoped p2 dependencies that Tycho 5.0.x injects (verified with Tycho 5.0.2; not re-tested with 5.0.4). `JAVA_HOME` must point to a JDK 25.
+Always build with the Maven wrapper (`./mvnw`), which pins Maven 3.9.16. Maven
+3.10+ fails on the core module with `Invalid Collect Request: null` because its
+resolver rejects the `system`-scoped p2 dependencies that Tycho 5.0.x injects
+(verified with Tycho 5.0.2; not re-tested with 5.0.4). `JAVA_HOME` must point to
+a JDK 25.
 
 ```bash
 # Build everything (runs from repo root)
@@ -30,28 +39,43 @@ Always build with the Maven wrapper (`./mvnw`), which pins Maven 3.9.16. Maven 3
 
 ### After any code change — always run the standalone tests first
 
-After changing anything in the interpreter (`TinyscriptEngine`) or the generator (`TinyscriptGenerator`), always run:
+After changing anything in the interpreter (`TinyscriptEngine`) or the generator
+(`TinyscriptGenerator`), always run:
 
 ```bash
 ./mvnw test -pl de.mkbauer.tinyscript.standalone.tests
 ```
 
-This is the fastest feedback loop (< 5 s, no OSGi startup) and catches both interpreter regressions and transpiler/interpreter divergence. If node.js is not on PATH the differential tests skip cleanly; the interpreter reference tests always run.
+This is the fastest feedback loop (< 5 s, no OSGi startup) and catches both
+interpreter regressions and transpiler/interpreter divergence. If node.js is not
+on PATH the differential tests skip cleanly; the interpreter reference tests
+always run.
 
 ### Test modules
 
-**`de.mkbauer.tinyscript.standalone.tests`** — plain Maven/JUnit 6 (Jupiter) module, no OSGi:
+**`de.mkbauer.tinyscript.standalone.tests`** — plain Maven/JUnit 6 (Jupiter)
+module, no OSGi:
 
 Tests run in this order (alphabetical class order enforced by Surefire):
 
-1. `InterpreterReferenceTest` — 29 `assertEquals(expected, interpreterOutput(tsCode))` tests; one per language feature; failure shows the exact wrong value produced by the interpreter.
-2. `TranspilerTest` — differential tests; `assertSameOutput(tsCode)` runs each snippet through both the interpreter and `node`, diffs stdout; generated JS is shown on failure so it can be pasted into `node` directly.
-3. `TranspilerVerifyTest` — integration tests; `assertTranspilerCorrectFromFile(filename)` runs complete `.tys` programs through both interpreter (must not throw) and node (must exit 0).
+1. `InterpreterReferenceTest` — 29
+   `assertEquals(expected, interpreterOutput(tsCode))` tests; one per language
+   feature; failure shows the exact wrong value produced by the interpreter.
+2. `TranspilerTest` — differential tests; `assertSameOutput(tsCode)` runs each
+   snippet through both the interpreter and `node`, diffs stdout; generated JS
+   is shown on failure so it can be pasted into `node` directly.
+3. `TranspilerVerifyTest` — integration tests;
+   `assertTranspilerCorrectFromFile(filename)` runs complete `.tys` programs
+   through both interpreter (must not throw) and node (must exit 0).
 
 Base class `TinyscriptTranspilerTestBase` provides:
-- `interpreterOutput(String tsCode)` — runs snippet through a fresh `TinyscriptEngine`, returns captured stdout; use with JUnit's `assertEquals` for targeted interpreter tests
+
+- `interpreterOutput(String tsCode)` — runs snippet through a fresh
+  `TinyscriptEngine`, returns captured stdout; use with JUnit's `assertEquals`
+  for targeted interpreter tests
 - `assertSameOutput(String tsCode)` — Level 1 differential assertion
-- `assertTranspilerCorrect(String)` / `assertTranspilerCorrectFromFile(String)` — Level 2 integration assertions
+- `assertTranspilerCorrect(String)` / `assertTranspilerCorrectFromFile(String)`
+  — Level 2 integration assertions
 - `assertInterpreterThrows(Class, String)` — expected-exception helper
 
 ```bash
@@ -65,11 +89,16 @@ Base class `TinyscriptTranspilerTestBase` provides:
 ./mvnw test -pl de.mkbauer.tinyscript.standalone.tests -Dtest=InterpreterReferenceTest#testRecursiveFibonacci
 ```
 
-**`de.mkbauer.tinyscript.tests`** — OSGi/Eclipse plugin tests via `tycho-surefire-plugin`:
+**`de.mkbauer.tinyscript.tests`** — OSGi/Eclipse plugin tests via
+`tycho-surefire-plugin`:
 
-Tests the interpreter and language features via JUnit 6 (Jupiter) with Xtext's `InjectionExtension` / `@InjectWith`. Slower (requires OSGi container startup). Run after confirming the standalone tests pass.
+Tests the interpreter and language features via JUnit 6 (Jupiter) with Xtext's
+`InjectionExtension` / `@InjectWith`. Slower (requires OSGi container startup).
+Run after confirming the standalone tests pass.
 
-`tycho-surefire-plugin` runs in the `integration-test` phase, so these tests need `verify` (or `install`) — `./mvnw test` builds the module but runs no tests.
+`tycho-surefire-plugin` runs in the `integration-test` phase, so these tests
+need `verify` (or `install`) — `./mvnw test` builds the module but runs no
+tests.
 
 ```bash
 # Run all OSGi tests
@@ -83,7 +112,9 @@ Tests the interpreter and language features via JUnit 6 (Jupiter) with Xtext's `
 ```
 
 Test helper base class `TinyscriptInterpreterTestHelper` provides:
-- `evaluateSimpleExpression(String expr)` — evaluates a single expression, returns `TSValue`
+
+- `evaluateSimpleExpression(String expr)` — evaluates a single expression,
+  returns `TSValue`
 - `executeScriptFromString(String script)` — executes inline script
 - `executeScriptFromFile(String filename)` — loads `.tys` file from `resources/`
 - `engine` — direct access to `TinyscriptEngine`
@@ -98,16 +129,16 @@ Test helper base class `TinyscriptInterpreterTestHelper` provides:
 
 ### Module Layout
 
-| Module | Purpose |
-|---|---|
-| `de.mkbauer.tinyscript` | Core: grammar, interpreter, runtime, validation, scoping |
-| `de.mkbauer.tinyscript.tests` | OSGi/Eclipse plugin tests (JUnit 6, `InjectionExtension`) |
+| Module                                   | Purpose                                                                     |
+| ---------------------------------------- | --------------------------------------------------------------------------- |
+| `de.mkbauer.tinyscript`                  | Core: grammar, interpreter, runtime, validation, scoping                    |
+| `de.mkbauer.tinyscript.tests`            | OSGi/Eclipse plugin tests (JUnit 6, `InjectionExtension`)                   |
 | `de.mkbauer.tinyscript.standalone.tests` | Standalone (no-OSGi) tests: interpreter reference + transpiler differential |
-| `de.mkbauer.tinyscript.ide` | Language server / IDE support (generated by Xtext) |
-| `de.mkbauer.tinyscript.ui` | Eclipse editor UI plugin |
-| `de.mkbauer.tinyscript.repl` | Standalone REPL app |
-| `de.mkbauer.tinyscript.webdemo` | Spring Boot web sandbox demo |
-| `de.mkbauer.tinyscript.target` | Eclipse target platform definition |
+| `de.mkbauer.tinyscript.ide`              | Language server / IDE support (generated by Xtext)                          |
+| `de.mkbauer.tinyscript.ui`               | Eclipse editor UI plugin                                                    |
+| `de.mkbauer.tinyscript.repl`             | Standalone REPL app                                                         |
+| `de.mkbauer.tinyscript.webdemo`          | Spring Boot web sandbox demo                                                |
+| `de.mkbauer.tinyscript.target`           | Eclipse target platform definition                                          |
 
 ### Execution Pipeline
 
@@ -123,40 +154,92 @@ Source text
 ### Key Classes in `de.mkbauer.tinyscript`
 
 **Interpreter:**
-- `interpreter/TinyscriptEngine.java` — main tree-walking evaluator; handles all AST node types via visitor-style `switch`/`instanceof` dispatch
-- `interpreter/ExecutionContext.java` — per-call-frame variable scope; forms a chain for closure lookup
-- `interpreter/GlobalExecutionContext.java` — global scope; initializes built-in objects at startup
-- `interpreter/TSValue.java` — sealed interface for all runtime values: `TSUndefined`, `TSNull`, records `TSBoolean` / `TSNumber` / `TSString`, and `TSObject` (objects, arrays, functions); create primitives with `TSValue.of(…)`
-- `interpreter/TSObject.java` — property map + prototype reference; backing store for all objects and functions
-- `interpreter/ResourceMonitor.java` — sandboxing: enforces limits on wall time, CPU time, statement count, call depth, memory, string length and output size
 
-**Runtime built-ins** (`runtime/` subdirectories): `array/`, `string/`, `math/`, `object/`, `function/`, `system/`; `fs/` holds the native module `std:fs` (`FileSystemModule`)
+- `interpreter/TinyscriptEngine.java` — main tree-walking evaluator; handles all
+  AST node types via visitor-style `switch`/`instanceof` dispatch
+- `interpreter/ExecutionContext.java` — per-call-frame variable scope; forms a
+  chain for closure lookup
+- `interpreter/GlobalExecutionContext.java` — global scope; initializes built-in
+  objects at startup
+- `interpreter/TSValue.java` — sealed interface for all runtime values:
+  `TSUndefined`, `TSNull`, records `TSBoolean` / `TSNumber` / `TSString`, and
+  `TSObject` (objects, arrays, functions); create primitives with
+  `TSValue.of(…)`
+- `interpreter/TSObject.java` — property map + prototype reference; backing
+  store for all objects and functions
+- `interpreter/ResourceMonitor.java` — sandboxing: enforces limits on wall time,
+  CPU time, statement count, call depth, memory, string length and output size
 
-**Scoping:** a script sees its own declarations and the global scope (`TinyscriptGlobalScopeProvider`), which contains only resources marked with `SharedGlobals`: the builtins and the lines of an interactive REPL session. Files never see each other's top-level names.
+**Runtime built-ins** (`runtime/` subdirectories): `array/`, `string/`, `math/`,
+`object/`, `function/`, `system/`; `fs/` holds the native module `std:fs`
+(`FileSystemModule`)
 
-**Grammar:** `Tinyscript.xtext` — Xtext grammar defining the full language syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
+**Scoping:** a script sees its own declarations and the global scope
+(`TinyscriptGlobalScopeProvider`), which contains only resources marked with
+`SharedGlobals`: the builtins and the lines of an interactive REPL session.
+Files never see each other's top-level names.
+
+**Grammar:** `Tinyscript.xtext` — Xtext grammar defining the full language
+syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 
 ### Language Differences from JavaScript
 
-- Semicolons are required after statements; `if`/`else` bodies must be `{ … }` blocks (`else if (…) { … }` chains are allowed)
-- Variables are block-scoped (no `var` hoisting); `let` is a synonym of `var`, `const` cannot be assigned again
-- Style for tinyscript code (examples, docs, `std:`): `const` for variables that are never assigned again, otherwise `let`; not `var`
-- Loops: numeric `for (let i = 0, n[, step])`, iterable `for (const x : array)` (values, not keys; also strings, `Set`s, `Map`s and lazy ranges: `for (const i : range(n))` counts 0 … n - 1) and `while (cond) { … }`; `break` leaves the innermost loop, `continue` goes on with its next iteration. In sandboxed mode every loop iteration counts against the statement limit.
-- Only `==` / `!=` (no type coercion, except `null == undefined`; `NaN != NaN`; there is no `===` / `!==`)
-- No silent conversions: arithmetic needs numbers, `+` adds numbers, arrays, or a string and a value; builtins check their argument types and count (JavaScript's optional arguments are supported, more is a `TypeError`). Conditions accept booleans, `null` / `undefined` (false) and objects (true), not numbers or strings; `<`, `<=`, `>`, `>=` compare number with number or string with string, anything else is a `TypeError`
-- `+` concatenates two arrays; with a string on either side it concatenates strings; an array plus anything else is a `TypeError`
-- `++` / `--` only as statements (`i++;`); compound assignments `+=` … `%=` and `cond ? a : b` as in JavaScript
+- Semicolons are required after statements; `if`/`else` bodies must be `{ … }`
+  blocks (`else if (…) { … }` chains are allowed)
+- Variables are block-scoped (no `var` hoisting); `let` is a synonym of `var`,
+  `const` cannot be assigned again
+- Style for tinyscript code (examples, docs, `std:`): `const` for variables that
+  are never assigned again, otherwise `let`; not `var`
+- Loops: numeric `for (let i = 0, n[, step])`, iterable `for (const x : array)`
+  (values, not keys; also strings, `Set`s, `Map`s and lazy ranges:
+  `for (const i : range(n))` counts 0 … n - 1) and `while (cond) { … }`; `break`
+  leaves the innermost loop, `continue` goes on with its next iteration. In
+  sandboxed mode every loop iteration counts against the statement limit.
+- Only `==` / `!=` (no type coercion, except `null == undefined`; `NaN != NaN`;
+  there is no `===` / `!==`)
+- No silent conversions: arithmetic needs numbers, `+` adds numbers, arrays, or
+  a string and a value; builtins check their argument types and count
+  (JavaScript's optional arguments are supported, more is a `TypeError`).
+  Conditions accept booleans, `null` / `undefined` (false) and objects (true),
+  not numbers or strings; `<`, `<=`, `>`, `>=` compare number with number or
+  string with string, anything else is a `TypeError`
+- `+` concatenates two arrays; with a string on either side it concatenates
+  strings; an array plus anything else is a `TypeError`
+- `++` / `--` only as statements (`i++;`); compound assignments `+=` … `%=` and
+  `cond ? a : b` as in JavaScript
 - Arrow functions use `=>` syntax
-- Modules: `export` top-level functions / variables; `import a, b from "./m";` or `import * as m from "./m";`. Each module runs once; imported names are read-only; files share names only via imports (see `docs/language-reference.md`, section 13)
+- Modules: `export` top-level functions / variables; `import a, b from "./m";`
+  or `import * as m from "./m";`. Each module runs once; imported names are
+  read-only; files share names only via imports (see
+  `docs/language-reference.md`, section 13)
 - No `this` binding differences — follows prototypal model
 
 ### TODO markers in the code
 
-`TODO.md` is the single list of open work. A `TODO` / `FIXME` comment in the code is only allowed with a reference to an entry there, e.g. `// TODO(TODO.md: Number objects): …`. Otherwise fix it right away or delete the comment.
+`TODO.md` is the single list of open work. A `TODO` / `FIXME` comment in the
+code is only allowed with a reference to an entry there, e.g.
+`// TODO(TODO.md: Number objects): …`. Otherwise fix it right away or delete the
+comment.
 
 ### Dependency Injection
 
-The core module uses Google Guice (wired by Xtext). Bindings are configured in `TinyscriptRuntimeModule`. Tests use `@Inject` via `@ExtendWith(InjectionExtension.class)` + `@InjectWith(TinyscriptInjectorProvider.class)`.
+The core module uses Google Guice (wired by Xtext). Bindings are configured in
+`TinyscriptRuntimeModule`. Tests use `@Inject` via
+`@ExtendWith(InjectionExtension.class)` +
+`@InjectWith(TinyscriptInjectorProvider.class)`.
+
+### Markdown formatting
+
+All Markdown files (except `COPYING.md`) are formatted with Prettier and wrap
+prose at 80 columns (`.prettierrc.json`, `.prettierignore`). After editing a
+`.md` file, run:
+
+```bash
+npx prettier@3.3.3 --write "**/*.md"
+```
+
+Prettier also writes `_emphasis_`, `-` list items and `#` headings; tables and
+code blocks are not wrapped.
 
 ## Running the Applications
 
@@ -174,11 +257,15 @@ docker build -t tinyscript-webdemo .
 docker run -p 8080:8080 tinyscript-webdemo
 ```
 
-The deployed webdemo is monitored by checkmk via `GET /test` (runs a fixed sample script). Keep this endpoint; `TinyscriptWebApplicationTests.testHealthCheckEndpoint` guards it.
+The deployed webdemo is monitored by checkmk via `GET /test` (runs a fixed
+sample script). Keep this endpoint;
+`TinyscriptWebApplicationTests.testHealthCheckEndpoint` guards it.
 
 ## Releasing
 
-See `Release-HOWTO.md` for the full procedure. Every non-trivial release gets release notes (incompatible changes first, then new features and fixes), published as a GitHub release for the tag. Key commands:
+See `Release-HOWTO.md` for the full procedure. Every non-trivial release gets
+release notes (incompatible changes first, then new features and fixes),
+published as a GitHub release for the tag. Key commands:
 
 ```bash
 # 1. Bump version in OSGi modules (pom.xml + MANIFEST.MF + feature.xml)
@@ -203,30 +290,46 @@ git tag vX.Y.Z && git push && git push --tags
 
 Two GitHub Actions workflows in `.github/workflows/`:
 
-- **`ci.yml`** — runs on every push/PR to `master`: full Tycho build + all tests + REPL + webdemo (Vitest + Spring Boot tests), then builds the Docker image (not pushed) and scans it with Trivy
-- **`docker.yml`** — runs on `vX.Y.Z` tags: builds webdemo JAR and image, scans it with Trivy, and only then pushes `mkbauer/tinyscript:X.Y.Z` + `:latest` to Docker Hub
+- **`ci.yml`** — runs on every push/PR to `master`: full Tycho build + all
+  tests + REPL + webdemo (Vitest + Spring Boot tests), then builds the Docker
+  image (not pushed) and scans it with Trivy
+- **`docker.yml`** — runs on `vX.Y.Z` tags: builds webdemo JAR and image, scans
+  it with Trivy, and only then pushes `mkbauer/tinyscript:X.Y.Z` + `:latest` to
+  Docker Hub
 
-Both Trivy scans fail on fixable HIGH/CRITICAL vulnerabilities (`ignore-unfixed: true`). `.github/dependabot.yml` covers Maven (plain modules only, not the Tycho reactor), npm, the Docker base image and GitHub Actions.
+Both Trivy scans fail on fixable HIGH/CRITICAL vulnerabilities
+(`ignore-unfixed: true`). `.github/dependabot.yml` covers Maven (plain modules
+only, not the Tycho reactor), npm, the Docker base image and GitHub Actions.
 
 Requires GitHub repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
 
 ## Technology Stack
 
-- **Java 25** — all modules compile for Java 25 (BREE `JavaSE-25`); required for builds and IDE runs. The webdemo and REPL mains set `guice_bytecode_gen_option=DISABLED` so Guice 7 does not call `sun.misc.Unsafe` (deprecation warning on Java 24+)
+- **Java 25** — all modules compile for Java 25 (BREE `JavaSE-25`); required for
+  builds and IDE runs. The webdemo and REPL mains set
+  `guice_bytecode_gen_option=DISABLED` so Guice 7 does not call
+  `sun.misc.Unsafe` (deprecation warning on Java 24+)
 - **Xtext 2.44.0** — language engineering framework
 - **Maven + Tycho 5.0.4** — build system for Eclipse plugins
-- **Spring Boot 4.1** — web demo backend (no Actuator; version info via `/api/version`)
+- **Spring Boot 4.1** — web demo backend (no Actuator; version info via
+  `/api/version`)
 - **Vue 3 + Vite + TypeScript** — web demo frontend
 - **Bootstrap 5 + Bootstrap Icons** — web demo UI
 - **CodeMirror 6** — web demo editor (with custom Tinyscript StreamLanguage)
 - **Vitest + @vue/test-utils** — frontend unit tests
 - **JUnit 6 (Jupiter)** — test framework for both OSGi and standalone tests
-- **Apache Commons Exec 1.4** — used by `NodeJsRunner` to invoke `node` in standalone tests
-- **eclipse-temurin:25-jre-noble** — Docker base image (Ubuntu 24.04; the plain `25-jre` tag moved to Ubuntu 26.04, whose image ships `pebble` with a vulnerable Go runtime)
+- **Apache Commons Exec 1.4** — used by `NodeJsRunner` to invoke `node` in
+  standalone tests
+- **eclipse-temurin:25-jre-noble** — Docker base image (Ubuntu 24.04; the plain
+  `25-jre` tag moved to Ubuntu 26.04, whose image ships `pebble` with a
+  vulnerable Go runtime)
 
 ## Frontend Development (web demo)
 
-The frontend lives in `de.mkbauer.tinyscript.webdemo/frontend/`. The Maven build runs `npm install`, `npm test`, and `npm build` automatically via `frontend-maven-plugin` during the `generate-resources` phase, so a normal `./mvnw package` requires no extra steps.
+The frontend lives in `de.mkbauer.tinyscript.webdemo/frontend/`. The Maven build
+runs `npm install`, `npm test`, and `npm build` automatically via
+`frontend-maven-plugin` during the `generate-resources` phase, so a normal
+`./mvnw package` requires no extra steps.
 
 For iterative frontend work, run the Vite toolchain directly:
 
@@ -238,7 +341,9 @@ npm run test       # Vitest unit tests (Output, Toolbar, tinyscript-lang)
 npm run build      # rebuild → ../src/main/resources/public/
 ```
 
-After `npm run build`, trigger an Eclipse project refresh (**F5**) so the updated files are copied from `src/main/resources/public/` to `target/classes/public/`, then refresh the browser. Alternatively:
+After `npm run build`, trigger an Eclipse project refresh (**F5**) so the
+updated files are copied from `src/main/resources/public/` to
+`target/classes/public/`, then refresh the browser. Alternatively:
 
 ```bash
 npm run build && ./mvnw resources:resources -f de.mkbauer.tinyscript.webdemo/pom.xml
@@ -266,4 +371,6 @@ frontend/
         └── __tests__/           ← Vitest specs
 ```
 
-The Vite build outputs to `src/main/resources/public/` (Spring Boot's static resource directory). The built assets are committed to the repository so the app can be started directly from the JAR without running npm.
+The Vite build outputs to `src/main/resources/public/` (Spring Boot's static
+resource directory). The built assets are committed to the repository so the app
+can be started directly from the JAR without running npm.

@@ -1,31 +1,38 @@
 # Build System
 
-This document explains how the Tinyscript build works end-to-end: the two-tier Maven structure, what each module produces, and how the frontend fits into the pipeline.
+This document explains how the Tinyscript build works end-to-end: the two-tier
+Maven structure, what each module produces, and how the frontend fits into the
+pipeline.
 
 ---
 
 ## 1. Two-Tier Build Structure
 
-Tinyscript has two distinct kinds of Maven modules that cannot be mixed in a single reactor run:
+Tinyscript has two distinct kinds of Maven modules that cannot be mixed in a
+single reactor run:
 
-| Tier | Modules | Build tool | POM parent |
-|---|---|---|---|
-| **OSGi / Eclipse plugins** | `de.mkbauer.tinyscript`, `.ide`, `.ui`, `.tests`, `.sdk`, `.updatesite`, `.target`, `.standalone.tests` | Tycho 5 | Root `pom.xml` |
-| **Plain Maven JARs** | `de.mkbauer.tinyscript.repl`, `de.mkbauer.tinyscript.webdemo` | Standard Maven | `spring-boot-starter-parent` / own parent |
+| Tier                       | Modules                                                                                                 | Build tool     | POM parent                                |
+| -------------------------- | ------------------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------- |
+| **OSGi / Eclipse plugins** | `de.mkbauer.tinyscript`, `.ide`, `.ui`, `.tests`, `.sdk`, `.updatesite`, `.target`, `.standalone.tests` | Tycho 5        | Root `pom.xml`                            |
+| **Plain Maven JARs**       | `de.mkbauer.tinyscript.repl`, `de.mkbauer.tinyscript.webdemo`                                           | Standard Maven | `spring-boot-starter-parent` / own parent |
 
-The root `pom.xml` is the **Tycho reactor**. It lists the OSGi modules (including `standalone.tests`) but intentionally **excludes** `repl` and `webdemo` — those are standalone Spring Boot / fat-JAR projects that inherit from different parents and must be built separately.
+The root `pom.xml` is the **Tycho reactor**. It lists the OSGi modules
+(including `standalone.tests`) but intentionally **excludes** `repl` and
+`webdemo` — those are standalone Spring Boot / fat-JAR projects that inherit
+from different parents and must be built separately.
 
 ---
 
 ## 2. Prerequisites
 
-| Tool | Required version | Notes |
-|---|---|---|
-| Java | 25 | All modules compile for Java 25 (BREE `JavaSE-25`); Tycho 5 itself needs at least 21 |
-| Maven | via `./mvnw` (3.9.16) | Use the wrapper; Maven < 3.9.9 and 3.10+ are incompatible with Tycho 5.0.x |
+| Tool    | Required version        | Notes                                                                                        |
+| ------- | ----------------------- | -------------------------------------------------------------------------------------------- |
+| Java    | 25                      | All modules compile for Java 25 (BREE `JavaSE-25`); Tycho 5 itself needs at least 21         |
+| Maven   | via `./mvnw` (3.9.16)   | Use the wrapper; Maven < 3.9.9 and 3.10+ are incompatible with Tycho 5.0.x                   |
 | Node.js | Installed automatically | `frontend-maven-plugin` downloads Node v24.22.3 into `frontend/node/` on first webdemo build |
 
 Check your environment:
+
 ```bash
 java -version    # must be 25
 ./mvnw --version  # wrapper pins Maven 3.9.16; Maven 3.10+ breaks the Tycho build
@@ -60,16 +67,23 @@ tinyscript/                          ← Tycho reactor root
 
 Runs the Tycho reactor over all 8 OSGi modules in dependency order:
 
-1. `target` — resolves the Eclipse target platform (downloads p2 artifacts on first run; cached in `~/.m2`)
-2. `de.mkbauer.tinyscript` — compiles the core plugin; installs the OSGi bundle into the local Maven repository
+1. `target` — resolves the Eclipse target platform (downloads p2 artifacts on
+   first run; cached in `~/.m2`)
+2. `de.mkbauer.tinyscript` — compiles the core plugin; installs the OSGi bundle
+   into the local Maven repository
 3. `ide`, `ui` — generated/derived plugins
-4. `tests` — OSGi test suite (tycho-surefire, requires OSGi container startup; ~30–60 s)
-5. `standalone.tests` — plain JUnit tests; no OSGi; fast (< 5 s); runs `InterpreterReferenceTest`, `TranspilerTest`, `TranspilerVerifyTest`
+4. `tests` — OSGi test suite (tycho-surefire, requires OSGi container startup;
+   ~30–60 s)
+5. `standalone.tests` — plain JUnit tests; no OSGi; fast (< 5 s); runs
+   `InterpreterReferenceTest`, `TranspilerTest`, `TranspilerVerifyTest`
 6. `sdk`, `updatesite` — Eclipse feature + p2 site artifacts
 
-**Why `install` and not `package`?** The `repl` and `webdemo` modules depend on `de.mkbauer.tinyscript` as a plain Maven artifact. `install` puts it into the local `~/.m2` repository so the downstream builds can find it.
+**Why `install` and not `package`?** The `repl` and `webdemo` modules depend on
+`de.mkbauer.tinyscript` as a plain Maven artifact. `install` puts it into the
+local `~/.m2` repository so the downstream builds can find it.
 
 Skip tests:
+
 ```bash
 ./mvnw clean install -DskipTests
 ```
@@ -82,11 +96,14 @@ Skip tests:
 ./mvnw clean package -f de.mkbauer.tinyscript.repl/pom.xml
 ```
 
-Requires the core module to already be installed (i.e., `./mvnw install` from the root first).
+Requires the core module to already be installed (i.e., `./mvnw install` from
+the root first).
 
-Output: `de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar` (fixed name, version in the manifest)
+Output: `de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar` (fixed name,
+version in the manifest)
 
 Run, via the helper script (follows symlinks, checks for Java 25) or directly:
+
 ```bash
 de.mkbauer.tinyscript.repl/tinyscript                 # interactive session
 de.mkbauer.tinyscript.repl/tinyscript example.tys     # run a file
@@ -94,7 +111,8 @@ de.mkbauer.tinyscript.repl/tinyscript --help
 java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar example.tys
 ```
 
-Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage (unknown option, missing file, not a `.tys` file).
+Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage (unknown option,
+missing file, not a `.tys` file).
 
 ---
 
@@ -104,22 +122,29 @@ Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage (unknown option,
 ./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
 ```
 
-This is the most complex build because it runs three sequential stages inside a single Maven lifecycle before the Java compilation:
+This is the most complex build because it runs three sequential stages inside a
+single Maven lifecycle before the Java compilation:
 
 ### Stage 1 — Frontend (generate-resources phase)
 
 The `frontend-maven-plugin` runs four goals in order:
 
-| Goal | What it does |
-|---|---|
-| `install-node-and-npm` | Downloads Node.js v24.22.3 into `frontend/node/` (first run only; cached) |
-| `npm` (install) | Runs `npm install` in `frontend/`; populates `frontend/node_modules/` |
-| `npm` (test) | Runs `npm run test` — Vitest unit tests for `Output`, `Toolbar`, `tinyscript-lang` |
-| `npm` (build) | Runs `npm run build` — Vite bundles the Vue 3 app into `src/main/resources/public/` |
+| Goal                   | What it does                                                                        |
+| ---------------------- | ----------------------------------------------------------------------------------- |
+| `install-node-and-npm` | Downloads Node.js v24.22.3 into `frontend/node/` (first run only; cached)           |
+| `npm` (install)        | Runs `npm install` in `frontend/`; populates `frontend/node_modules/`               |
+| `npm` (test)           | Runs `npm run test` — Vitest unit tests for `Output`, `Toolbar`, `tinyscript-lang`  |
+| `npm` (build)          | Runs `npm run build` — Vite bundles the Vue 3 app into `src/main/resources/public/` |
 
-**The build fails here if any Vitest test fails.** Frontend tests run before Java compilation and before the Spring Boot integration tests.
+**The build fails here if any Vitest test fails.** Frontend tests run before
+Java compilation and before the Spring Boot integration tests.
 
-**After changing `<nodeVersion>`, delete `frontend/node/`** (`rm -rf de.mkbauer.tinyscript.webdemo/frontend/node`). `mvn clean` does not remove it, and the plugin unpacks the new npm over the old one. The leftover modules break `npm install` with `Class extends value undefined is not a constructor or null`. CI is not affected, because its Node cache key contains the version.
+**After changing `<nodeVersion>`, delete `frontend/node/`**
+(`rm -rf de.mkbauer.tinyscript.webdemo/frontend/node`). `mvn clean` does not
+remove it, and the plugin unpacks the new npm over the old one. The leftover
+modules break `npm install` with
+`Class extends value undefined is not a constructor or null`. CI is not
+affected, because its Node cache key contains the version.
 
 ### Stage 2 — Java compilation
 
@@ -127,18 +152,25 @@ Standard Maven compilation of the Spring Boot application classes.
 
 ### Stage 3 — Spring Boot integration tests (test phase)
 
-`ExamplesTests` and `TinyscriptWebApplicationTests` start a Spring Boot test context and exercise the REST endpoints with the real interpreter. These run after the frontend is built, so the full application (backend + frontend assets) is tested together.
+`ExamplesTests` and `TinyscriptWebApplicationTests` start a Spring Boot test
+context and exercise the REST endpoints with the real interpreter. These run
+after the frontend is built, so the full application (backend + frontend assets)
+is tested together.
 
-Output: `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar`
-(fixed name via `<finalName>` — no version suffix, works for both SNAPSHOT and release builds)
+Output: `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar` (fixed
+name via `<finalName>` — no version suffix, works for both SNAPSHOT and release
+builds)
 
 Run:
+
 ```bash
 java -jar de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar
 # open http://localhost:8080
 ```
 
-Skip Java tests (`-DskipTests` skips Surefire/Failsafe but **not** the Vitest run, which is in the `generate-resources` phase):
+Skip Java tests (`-DskipTests` skips Surefire/Failsafe but **not** the Vitest
+run, which is in the `generate-resources` phase):
+
 ```bash
 ./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml -DskipTests
 ```
@@ -157,14 +189,20 @@ npm run test         # Vitest unit tests (~0.6 s)
 npm run build        # Vite → ../src/main/resources/public/
 ```
 
-After `npm run build`, the updated static files are in `src/main/resources/public/`. If the Spring Boot app is running from the IDE, you also need to trigger an Eclipse project refresh (**F5**) so the files are copied to `target/classes/public/`, then refresh the browser.
+After `npm run build`, the updated static files are in
+`src/main/resources/public/`. If the Spring Boot app is running from the IDE,
+you also need to trigger an Eclipse project refresh (**F5**) so the files are
+copied to `target/classes/public/`, then refresh the browser.
 
 Alternatively, skip Eclipse and copy directly with Maven:
+
 ```bash
 npm run build && ./mvnw resources:resources -f de.mkbauer.tinyscript.webdemo/pom.xml
 ```
 
-The `frontend/node/` directory (Node.js runtime) and `frontend/node_modules/` are gitignored. The built output in `src/main/resources/public/` is committed so the app can be started from the fat JAR without running npm.
+The `frontend/node/` directory (Node.js runtime) and `frontend/node_modules/`
+are gitignored. The built output in `src/main/resources/public/` is committed so
+the app can be started from the fat JAR without running npm.
 
 ---
 
@@ -176,20 +214,22 @@ After changing the interpreter or transpiler, the fastest feedback loop is:
 ./mvnw test -pl de.mkbauer.tinyscript.standalone.tests
 ```
 
-This module is in the Tycho reactor but is a plain Maven/JUnit module — no OSGi container startup, no p2 resolution. Runs in < 5 s. See `docs/architecture.md` → *Test Architecture* for details.
+This module is in the Tycho reactor but is a plain Maven/JUnit module — no OSGi
+container startup, no p2 resolution. Runs in < 5 s. See `docs/architecture.md` →
+_Test Architecture_ for details.
 
 ---
 
 ## 9. Build Outputs Summary
 
-| What | Where |
-|---|---|
-| Core OSGi bundle | `de.mkbauer.tinyscript/target/de.mkbauer.tinyscript-*.jar` |
-| REPL fat JAR | `de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar` |
-| Web demo fat JAR | `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar` |
-| Frontend static assets | `de.mkbauer.tinyscript.webdemo/src/main/resources/public/` |
-| Eclipse update site | `de.mkbauer.tinyscript.updatesite/target/repository/` |
-| Local Maven cache | `~/.m2/repository/de/mkbauer/tinyscript/` |
+| What                   | Where                                                         |
+| ---------------------- | ------------------------------------------------------------- |
+| Core OSGi bundle       | `de.mkbauer.tinyscript/target/de.mkbauer.tinyscript-*.jar`    |
+| REPL fat JAR           | `de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar`       |
+| Web demo fat JAR       | `de.mkbauer.tinyscript.webdemo/target/tinyscript-webdemo.jar` |
+| Frontend static assets | `de.mkbauer.tinyscript.webdemo/src/main/resources/public/`    |
+| Eclipse update site    | `de.mkbauer.tinyscript.updatesite/target/repository/`         |
+| Local Maven cache      | `~/.m2/repository/de/mkbauer/tinyscript/`                     |
 
 ---
 
@@ -201,7 +241,8 @@ docker build -t tinyscript-webdemo .
 docker run -p 8080:8080 tinyscript-webdemo
 ```
 
-The Dockerfile uses `eclipse-temurin:25-jre-noble` (Ubuntu 24.04). The fat JAR must be built first (`./mvnw package`).
+The Dockerfile uses `eclipse-temurin:25-jre-noble` (Ubuntu 24.04). The fat JAR
+must be built first (`./mvnw package`).
 
 ---
 
@@ -209,13 +250,15 @@ The Dockerfile uses `eclipse-temurin:25-jre-noble` (Ubuntu 24.04). The fat JAR m
 
 Two workflows live in `.github/workflows/`:
 
-| Workflow | Trigger | What it does |
-|---|---|---|
-| `ci.yml` | Push / PR to `master` | Full build + all tests (Tycho reactor, REPL, webdemo incl. Vitest + Spring Boot) |
-| `docker.yml` | Push of `vX.Y.Z` tag | Builds webdemo JAR, pushes `mkbauer/tinyscript:X.Y.Z` and `:latest` to Docker Hub |
+| Workflow     | Trigger               | What it does                                                                      |
+| ------------ | --------------------- | --------------------------------------------------------------------------------- |
+| `ci.yml`     | Push / PR to `master` | Full build + all tests (Tycho reactor, REPL, webdemo incl. Vitest + Spring Boot)  |
+| `docker.yml` | Push of `vX.Y.Z` tag  | Builds webdemo JAR, pushes `mkbauer/tinyscript:X.Y.Z` and `:latest` to Docker Hub |
 
-Both workflows cache `~/.m2/repository` (Maven/Tycho artifacts) and the Node.js v24.22.3 runtime across runs.
+Both workflows cache `~/.m2/repository` (Maven/Tycho artifacts) and the Node.js
+v24.22.3 runtime across runs.
 
-The Docker workflow requires two GitHub repository secrets: `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN`.
+The Docker workflow requires two GitHub repository secrets: `DOCKERHUB_USERNAME`
+and `DOCKERHUB_TOKEN`.
 
 For the full release procedure, see [`Release-HOWTO.md`](../Release-HOWTO.md).
