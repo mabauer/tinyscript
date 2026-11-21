@@ -143,4 +143,20 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
         assertInterpreterThrows(TinyscriptTypeError.class, "parseInt(\"1\", 37);");
         assertInterpreterThrows(TinyscriptTypeError.class, "isNaN(\"x\");");
     }
+
+    @Test
+    public void testNumbersPrintLikeJavascript() {
+        String code = "print(3, -3, 0.1, 0.5, -2.25, 0.1 + 0.2, 1 / 3, 2 / 3);\n"
+                + "print(12345678.5, 123456789012.25, 9007199254740992, 1e20, 1e21, 1.5e21, 123e20);\n"
+                + "print(0.0001, 0.000001, 0.0000001, 1.5e-7, 1.5e-10, 5e-324, 1.5e300, 1.7976931348623157e308);\n"
+                + "print(-0, 0 * -1, -1e-7, -1e21, 1 / 0, -1 / 0, 0 / 0);\n"
+                + "print(\"\" + 12345678.5, String(1e-7), [1, 2.5].join());";
+        assertEquals("3 -3 0.1 0.5 -2.25 0.30000000000000004 0.3333333333333333 0.6666666666666666\n"
+                + "12345678.5 123456789012.25 9007199254740992 100000000000000000000 1e+21 1.5e+21 1.23e+22\n"
+                + "0.0001 0.000001 1e-7 1.5e-7 1.5e-10 5e-324 1.5e+300 1.7976931348623157e+308\n"
+                + "0 0 -1e-7 -1e+21 Infinity -Infinity NaN\n"
+                + "12345678.5 1e-7 1,2.5\n", interpreterOutput(code));
+        assertSameOutput(code);
+        assertEquals("[0.0001, 1e+21]\n", interpreterOutput("print([0.0001, 1e21]);"));
+    }
 }
