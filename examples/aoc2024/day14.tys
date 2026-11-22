@@ -5,14 +5,14 @@
 // (the room is 101 x 103 tiles; the example in the puzzle uses 11 x 7)
 
 import inputLines from "./aoc";
-import integers from "std:string";
+import parse from "std:string";
 
 const width = System.args.length > 2 ? Number(System.args[1]) : 101;
 const height = System.args.length > 2 ? Number(System.args[2]) : 103;
 
 // Each robot has a position and a velocity: "p=0,4 v=3,-3"
 const robots = inputLines().map(line => {
-    const [x, y, vx, vy] = integers(line);
+    const [x, y, vx, vy] = parse("p={:d},{:d} v={:d},{:d}", line);
     return { x, y, vx, vy };
 });
 

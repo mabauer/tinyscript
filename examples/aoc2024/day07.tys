@@ -4,11 +4,12 @@
 // Usage: tinyscript day07.tys -- input.txt
 
 import inputLines, numbers from "./aoc";
+import parse from "std:string";
 
 // Each line is an equation like "190: 10 19": a test value and the numbers to combine
 const equations = inputLines().map(line => {
-    const [testValue, rest] = line.split(": ");
-    return { testValue: Number(testValue), numbers: numbers(rest) };
+    const [testValue, rest] = parse("{:d}: {}", line);
+    return { testValue, numbers: numbers(rest) };
 });
 
 // 12 || 345 is 12345
