@@ -98,6 +98,7 @@ class TinyscriptReplMain  {
 			statement continues on the next line. The value of an expression is shown.
 			  !help          show this help
 			  !quit, !bye    leave (or Ctrl-D)
+			Ctrl-C stops a running statement, or clears the input at the prompt.
 			""";
 
 	private final InputStream in;
