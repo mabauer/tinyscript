@@ -609,14 +609,14 @@ and differential tests run against node.
        ending the JVM: an endless loop costs the whole session today. The engine
        checks a flag (as the resource monitor does); at the prompt Ctrl-C clears
        the input.
-    2. **`!load file.tys`:** runs a file in the session, so its functions,
-       classes and variables can be tried out interactively (today each file
-       runs with a fresh engine).
+    2. ~~**`!load file.tys`:**~~ (done) runs a file in the session, so its
+       functions, classes and variables can be tried out interactively (today
+       each file runs with a fresh engine).
     3. ~~**Runtime errors with their place:**~~ the source excerpt with a `^`
        marker, as for syntax errors and when running a file (today only the
        message).
-    4. **`!reset`** (a new session) and **`!names`** (the names the session has
-       defined).
+    4. ~~**`!reset`** (a new session) and **`!names`**~~ (done) (the names the
+       session has defined).
     5. ~~**jline 3**~~ (done, 3.30.17; needed for 1: jline 2 lets Ctrl-C end the
        JVM while a statement runs) instead of jline 2: the base for 6 and 7,
        maintained.

@@ -4,18 +4,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
@@ -40,6 +43,7 @@ import org.eclipse.xtext.validation.Issue;
 import com.google.inject.Injector;
 
 import de.mkbauer.tinyscript.TinyscriptDiagnostics;
+import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.validation.TinyscriptSyntaxErrorMessageProvider;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
@@ -52,6 +56,8 @@ import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
 import de.mkbauer.tinyscript.ts.ExpressionStatement;
+import de.mkbauer.tinyscript.ts.FunctionDeclaration;
+import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
@@ -96,6 +102,10 @@ class TinyscriptReplMain  {
 	private static final String INTERACTIVE_HELP = """
 			Enter tinyscript statements, each ending with ';' as in a file; an incomplete
 			statement continues on the next line. The value of an expression is shown.
+			  !load file.tys run a file in the session: its functions, classes and
+			                 variables can then be used (again after a change)
+			  !names         the names the session has defined, with their values
+			  !reset         start a new session (forgets all names)
 			  !help          show this help
 			  !quit, !bye    leave (or Ctrl-D)
 			Ctrl-C stops a running statement, or clears the input at the prompt.
@@ -127,6 +137,9 @@ class TinyscriptReplMain  {
 	private XtextResourceSet sessionResourceSet;
 
 	private Resource currentResource;
+
+	/** The inputs and files the session has run, for !names. */
+	private final List<Tinyscript> sessionScripts = new ArrayList<>();
 
 	public static void main(String[] args) {
 		// Guice's bytecode generation (AOP, unused by Xtext) calls sun.misc.Unsafe,
@@ -263,16 +276,10 @@ class TinyscriptReplMain  {
 		List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
 		List<Issue> errors = TinyscriptDiagnostics.relevantErrors(issues);
 		if (!errors.isEmpty()) {
-			String source = readSource(file);
-			for (Issue error : errors) {
-				int column = TinyscriptDiagnostics.column(error);
-				err.println("TinyscriptSyntaxError: " + error.getMessage() + " in " + file + ":" + error.getLineNumber() + ":" + column);
-				err.print(TinyscriptDiagnostics.excerpt(source, error.getLineNumber(), column));
-			}
+			err.print(describeSyntaxErrors(errors, file));
 			return EXIT_ERROR;
 		}
-		for (String warning : TinyscriptDiagnostics.warnings(issues))
-			err.println(warning.replaceFirst("\\(line (\\d+)\\)$", "in " + java.util.regex.Matcher.quoteReplacement(file.toString()) + ":$1"));
+		err.print(describeWarnings(issues, file));
 		try {
 			engine.execute((Tinyscript) resource.getContents().get(0));
 		}
@@ -285,6 +292,30 @@ class TinyscriptReplMain  {
 		return EXIT_OK;
 	}
 
+	/**
+	 * The syntax errors of a file, each with its place and the source line with a marker.
+	 */
+	private static String describeSyntaxErrors(List<Issue> errors, Path file) {
+		String source = readSource(file);
+		StringBuilder result = new StringBuilder();
+		for (Issue error : errors) {
+			int column = TinyscriptDiagnostics.column(error);
+			result.append("TinyscriptSyntaxError: " + error.getMessage() + " in " + file + ":" + error.getLineNumber() + ":" + column + System.lineSeparator());
+			result.append(TinyscriptDiagnostics.excerpt(source, error.getLineNumber(), column));
+		}
+		return result.toString();
+	}
+
+	/**
+	 * The warnings of a file, one per line, each with its place.
+	 */
+	private static String describeWarnings(List<Issue> issues, Path file) {
+		StringBuilder result = new StringBuilder();
+		for (String warning : TinyscriptDiagnostics.warnings(issues))
+			result.append(warning.replaceFirst("\\(line (\\d+)\\)$", "in " + Matcher.quoteReplacement(file.toString()) + ":$1") + System.lineSeparator());
+		return result.toString();
+	}
+
 	private static String readSource(Path file) {
 		try {
 			return Files.readString(file);
@@ -294,9 +325,18 @@ class TinyscriptReplMain  {
 		}
 	}
 
-	private int interactive() {
+	/**
+	 * Starts a new interactive session: an engine without any names of its own.
+	 */
+	private void newSession() {
 		sessionResourceSet = injector.getInstance(XtextResourceSet.class);
 		sessionEngine = newEngine(sessionResourceSet, Path.of("").toAbsolutePath());
+		currentResource = null;
+		sessionScripts.clear();
+	}
+
+	private int interactive() {
+		newSession();
 		Terminal terminal;
 		try {
 			terminal = newTerminal();
@@ -335,18 +375,23 @@ class TinyscriptReplMain  {
 				catch (EndOfFileException e) {
 					break;
 				}
-				if (line.trim().equals("!quit") || line.trim().equals("!bye"))
+				Matcher command = COMMAND.matcher(line.trim());
+				if (command.matches() && (command.group(1).equals("quit") || command.group(1).equals("bye")))
 					break;
-				if (line.trim().equals("!help")) {
-					console.print(INTERACTIVE_HELP);
-					continue;
-				}
 				try {
+					if (command.matches()) {
+						// A command ends an unfinished statement
+						multiline = false;
+						script = "";
+						runCommand(command.group(1), command.group(2).trim(), console);
+						continue;
+					}
 					Tinyscript ast = parse(script + line, multiline);
 					if (ast != null) {
 						for (String warning : lastWarnings)
 							console.println(warning.replaceFirst(" \\(line \\d+\\)$", ""));
 						console.flush();
+						sessionScripts.add(ast);
 						TSValue result = sessionEngine.execute(ast);
 						out.flush();
 						if (showsResult(ast, result))
@@ -389,6 +434,126 @@ class TinyscriptReplMain  {
 			closeQuietly(terminal);
 		}
 		return EXIT_OK;
+	}
+
+	/**
+	 * A command of the interactive session: ! and a word, maybe with an argument; not a
+	 * statement such as !done; (which ends with ';').
+	 */
+	private static final Pattern COMMAND = Pattern.compile("!([a-z]+)(\\s+[^;]*|)");
+
+	/**
+	 * The longest value !names shows; longer ones are cut.
+	 */
+	private static final int MAX_VALUE_LENGTH = 70;
+
+	private void runCommand(String name, String argument, PrintWriter console) {
+		switch (name) {
+			case "help" -> console.print(INTERACTIVE_HELP);
+			case "load" -> {
+				if (argument.isEmpty())
+					console.println("!load needs a file: !load file.tys");
+				else
+					load(Path.of(unquote(argument)), console);
+			}
+			case "names" -> {
+				if (sessionNames().isEmpty())
+					console.println("No names yet: the session has not defined any");
+				for (String sessionName : sessionNames())
+					console.println(sessionName + " = " + shorten(sessionEngine.getGlobalContext().lookup(sessionName).toString()));
+			}
+			case "reset" -> {
+				newSession();
+				console.println("A new session: all names are forgotten");
+			}
+			default -> console.println("Unknown command !" + name + " (!help lists the commands)");
+		}
+	}
+
+	/**
+	 * Runs a file in the session: later inputs see its top-level names. Loading it again (after
+	 * a change) replaces them.
+	 */
+	private void load(Path file, PrintWriter console) {
+		if (!Files.isReadable(file)) {
+			console.println("File not found: " + file);
+			return;
+		}
+		if (!file.getFileName().toString().endsWith("." + FILE_EXTENSION)) {
+			console.println("Not a tinyscript file (expected ." + FILE_EXTENSION + "): " + file);
+			return;
+		}
+		URI uri = URI.createFileURI(file.toAbsolutePath().normalize().toString());
+		Resource previous = sessionResourceSet.getResource(uri, false);
+		if (previous != null)
+			sessionResourceSet.getResources().remove(previous);
+		Resource resource = sessionResourceSet.createResource(uri);
+		SharedGlobals.share(resource);
+		try {
+			resource.load(null);
+		}
+		catch (IOException e) {
+			sessionResourceSet.getResources().remove(resource);
+			console.println("Cannot read " + file + ": " + e.getMessage());
+			return;
+		}
+		List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+		List<Issue> errors = TinyscriptDiagnostics.relevantErrors(issues);
+		if (!errors.isEmpty()) {
+			// A file with errors must not leave its declarations behind for later inputs
+			sessionResourceSet.getResources().remove(resource);
+			console.print(describeSyntaxErrors(errors, file));
+			return;
+		}
+		console.print(describeWarnings(issues, file));
+		console.flush();
+		Tinyscript script = (Tinyscript) resource.getContents().get(0);
+		sessionScripts.add(script);
+		sessionEngine.execute(script);
+		out.flush();
+		List<String> names = namesOf(script);
+		console.println("Loaded " + file + (names.isEmpty() ? "" : ": " + String.join(", ", names)));
+	}
+
+	private static String unquote(String argument) {
+		boolean quoted = argument.length() >= 2
+				&& (argument.startsWith("\"") && argument.endsWith("\"") || argument.startsWith("'") && argument.endsWith("'"));
+		return quoted ? argument.substring(1, argument.length() - 1) : argument;
+	}
+
+	private static String shorten(String text) {
+		String line = text.replace("\n", " ");
+		return line.length() <= MAX_VALUE_LENGTH ? line : line.substring(0, MAX_VALUE_LENGTH - 3) + "...";
+	}
+
+	/**
+	 * The names the session has defined so far (in the order of their first definition), as far
+	 * as their declarations have run.
+	 */
+	private List<String> sessionNames() {
+		Set<String> names = new LinkedHashSet<>();
+		for (Tinyscript script : sessionScripts)
+			names.addAll(namesOf(script));
+		return names.stream().filter(name -> sessionEngine.getGlobalContext().isDeclared(name)).toList();
+	}
+
+	/**
+	 * The top-level names a script declares: imports, functions, classes, let and const.
+	 */
+	private static List<String> namesOf(Tinyscript script) {
+		Set<String> names = new LinkedHashSet<>();
+		for (Identifier name : TinyscriptModelUtil.importedIdentifiers(script))
+			names.add(name.getName());
+		if (script.getGlobal() != null) {
+			for (Statement statement : script.getGlobal().getStatements()) {
+				if (statement instanceof FunctionDeclaration function && function.getId() != null)
+					names.add(function.getId().getName());
+				for (Identifier name : TinyscriptModelUtil.declaredIdentifiers(statement))
+					names.add(name.getName());
+			}
+		}
+		names.remove(null);
+		return List.copyOf(names);
 	}
 
 	/**

@@ -678,11 +678,16 @@ the input with a `;` appended). Syntax and runtime errors look as for a file
 function also the calls, with the inputs of the session called `REPL1`, `REPL2`,
 … as in node). Only the value of an expression statement is shown (strings
 quoted, `TSValue.toString()`), not the `undefined` of a declaration, a loop or a
-call like `print(x);`. `!help` and `!quit` / `!bye` are commands. Sandboxing is
-**off** (scripts can import `std:fs`). Each input line is evaluated in a
-persistent `ExecutionContext` so variable state accumulates across lines; the
-line resources are marked with `SharedGlobals.share`, so later lines also _see_
-the earlier declarations.
+call like `print(x);`. Commands start with `!` (a line that ends with `;` is a
+statement, e.g. `!done;`): `!load file.tys` runs a file in the session (its
+resource is shared like the input lines, so later inputs see its top-level
+names; loading it again replaces the resource), `!names` lists the top-level
+names of the inputs and loaded files that have been declared, with their values,
+`!reset` starts a new engine and resource set, `!help`, `!quit` / `!bye`.
+Sandboxing is **off** (scripts can import `std:fs`). Each input line is
+evaluated in a persistent `ExecutionContext` so variable state accumulates
+across lines; the line resources are marked with `SharedGlobals.share`, so later
+lines also _see_ the earlier declarations.
 
 The helper script `de.mkbauer.tinyscript.repl/tinyscript` follows symlinks (so
 it can be linked into `~/bin`), uses `JAVA_HOME` or the `java` on the `PATH`,

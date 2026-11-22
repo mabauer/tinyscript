@@ -284,8 +284,9 @@ To run:
 - The interpreter: `de.mkbauer.tinyscript.repl/tinyscript example.tys` runs a
   file, without arguments it starts an interactive session (`--help` shows the
   options), which shows the value of each expression; statements end with `;`
-  there as well, and Ctrl-C stops a statement that runs too long. Arguments
-  after `--` are the script's `System.args`
+  there as well, and Ctrl-C stops a statement that runs too long;
+  `!load file.tys` runs a file in the session to try out its functions, `!help`
+  lists the other commands. Arguments after `--` are the script's `System.args`
   (`tinyscript day1.tys -- input.txt`). The script finds Java 25 via `JAVA_HOME`
   or the `PATH` and can be linked into a directory on your `PATH`:
 
