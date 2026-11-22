@@ -37,18 +37,19 @@ public class ConversionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testSimpleObjectToString() {
+		// The same text as print (Javascript: "[object Object]")
 		TSValue obj = executeScriptFromString("let obj = {}; obj;");
-		assertEquals("[object Object]", TSObject.toString(getExecutionVisitor(), obj));
+		assertEquals("{}", TSObject.toString(getExecutionVisitor(), obj));
 		obj = executeScriptFromString("let obj = { name: \"Hugo\" }; obj;");
-		assertEquals("[object Object]", TSObject.toString(getExecutionVisitor(), obj));
+		assertEquals("{name: \"Hugo\"}", TSObject.toString(getExecutionVisitor(), obj));
 	}
 	
 	@Test
 	public void testArrayToString() {
 		TSValue arr = executeScriptFromString("let arr = []; arr;");
-		assertEquals("", TSObject.toString(getExecutionVisitor(), arr));
+		assertEquals("[]", TSObject.toString(getExecutionVisitor(), arr));
 		arr = executeScriptFromString("let arr = [\"Hallo\", \"Hugo\"]; arr;");
-		assertEquals("Hallo, Hugo", TSObject.toString(getExecutionVisitor(), arr));
+		assertEquals("[\"Hallo\", \"Hugo\"]", TSObject.toString(getExecutionVisitor(), arr));
 	}
 	
 	@Test

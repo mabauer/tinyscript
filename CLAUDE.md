@@ -70,11 +70,10 @@ Tests run in this order (alphabetical class order enforced by Surefire):
    through both interpreter (must not throw) and node (must exit 0).
 
 Whole programs: `AdventOfCode2024Test` (examples/aoc2024), `OoExamplesTest`
-(examples/oo: classes before `class`, and programs written with the planned
-`interface`, their tests disabled for now, next to the same with prototypes) and
-`DemoExamplesTest` (every example of the web demo, from
-`de.mkbauer.tinyscript.webdemo/frontend/public`) compare the interpreter with
-node. The webdemo's `ExamplesTests` run every example as the demo does
+(examples/oo: classes before `class`, and programs written with `class` next to
+the same with prototypes) and `DemoExamplesTest` (every example of the web demo,
+from `de.mkbauer.tinyscript.webdemo/frontend/public`) compare the interpreter
+with node. The webdemo's `ExamplesTests` run every example as the demo does
 (sandboxed) and check that `Toolbar.vue` lists exactly the example files; a new
 example needs no new test.
 
@@ -218,6 +217,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   `TypeError`
 - `+` concatenates two arrays; with a string on either side it concatenates
   strings; an array plus anything else is a `TypeError`
+- One text form: `x.toString()`, `String(x)`, `"" + x` and `print` agree
+  (`{x: 1}`, `[1, 2]`, `Point {x: 1}`); the generator replaces
+  `Object.prototype.toString` / `Array.prototype.toString` so node does too
 - `++` / `--` only as statements (`i++;`); compound assignments `+=` … `%=` and
   `cond ? a : b` as in JavaScript
 - Arrow functions use `=>` syntax

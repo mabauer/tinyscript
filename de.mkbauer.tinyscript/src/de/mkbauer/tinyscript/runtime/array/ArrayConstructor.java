@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.Function;
@@ -90,10 +91,9 @@ public class ArrayConstructor extends BuiltinConstructor {
 
 	// Array.prototype methods
 
+	// The same text as print and String(a): [1, "a"] (Javascript: "1,a")
 	private TSValue arrayToString(TSObject self, TSValue[] args) {
-		String result = thisArray(self, "toString").getItems().stream()
-				.map(item -> TSObject.toString(engine, item))
-				.collect(Collectors.joining(", "));
+		String result = new Display(true).own(thisArray(self, "toString"));
 		engine.recordStringCreation(result);
 		return TSValue.of(result);
 	}

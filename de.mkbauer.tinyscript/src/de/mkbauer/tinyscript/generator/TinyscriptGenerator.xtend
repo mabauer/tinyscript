@@ -112,6 +112,14 @@ class TinyscriptGenerator   {
 		// a cycle is [Circular], nesting deeper than 50 levels [Object] / [Array], and an object with
 		// a toString of its own shows what it returns.
 		const __ts_JsString = globalThis.String;
+		// Like the interpreter: o.toString() and a.toString() give the same text as print
+		// (Javascript: "[object Object]", "1,2"); also join uses it for the elements
+		for (const prototype of [Object.prototype, Array.prototype]) {
+			Object.defineProperty(prototype, "toString", {
+				value: function toString() { return __ts_display(this, [], true); },
+				writable: true, configurable: true, enumerable: false
+			});
+		}
 		const __ts_builtinToStrings = new globalThis.Set([Object.prototype.toString, Array.prototype.toString,
 			Function.prototype.toString, Error.prototype.toString, __ts_JsString.prototype.toString]);
 
@@ -127,7 +135,8 @@ class TinyscriptGenerator   {
 			return typeof f === "function" && /^class[\s{]/.test(Function.prototype.toString.call(f));
 		}
 
-		function __ts_display(value, path) {
+		// own: the value itself, without its toString (for Object.prototype.toString)
+		function __ts_display(value, path, own) {
 			if (typeof value === "string") {
 				return JSON.stringify(value);
 			}
@@ -138,7 +147,7 @@ class TinyscriptGenerator   {
 				return "[Circular]";
 			}
 			const toString = value.toString;
-			if (typeof toString === "function" && !__ts_builtinToStrings.has(toString) && !(value instanceof __ts_Range)) {
+			if (!own && typeof toString === "function" && !__ts_builtinToStrings.has(toString) && !(value instanceof __ts_Range)) {
 				const text = toString.call(value);
 				if (typeof text === "string") {
 					return text;

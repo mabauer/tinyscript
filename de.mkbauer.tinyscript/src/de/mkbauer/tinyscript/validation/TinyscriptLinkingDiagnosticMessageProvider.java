@@ -48,7 +48,8 @@ public class TinyscriptLinkingDiagnosticMessageProvider extends LinkingDiagnosti
 		for (Block block = TinyscriptModelUtil.containingBlock(reference); block != null;
 				block = TinyscriptModelUtil.containingBlock(block.eContainer())) {
 			for (Identifier id : TinyscriptModelUtil.declaredVariablesInBlock(block)) {
-				if (id.getName().equals(name))
+				// After a syntax error, a declaration can lack its name
+				if (name.equals(id.getName()))
 					return id;
 			}
 		}

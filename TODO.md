@@ -515,9 +515,9 @@ and differential tests run against node.
     7. Smaller: spread in calls (`Math.max(...values)`), renaming in imports
        (`import a as x from …`), assignment with a pattern (`[a, b] = [b, a];`).
 
-    - Deliberately not gaps: `switch`, template strings, labels, `do … while`,
-      regular expressions, `Date`. The messages for them are good, and the
-      language stays small.
+    - Deliberately not gaps: `switch`, template strings (reconsidered, see
+      "Review after class"), labels, `do … while`, regular expressions, `Date`.
+      The messages for them are good, and the language stays small.
     - **Idea (2026-11-21): regular expressions without regex literals.** If
       ever, keep `/…/` out of the grammar and make regexes values of the
       library:
@@ -600,6 +600,61 @@ and differential tests run against node.
     (done); a ~~library batch~~ (done, also `range(…).reverse()` and `delete`);
     ~~method shorthand~~ (done), ~~`class`~~ (done; `interface` parked, see 6.),
     a more comfortable REPL, standard input.
+
+- **Review after `class`** (2026-11-22; language reference, TODO.md, the OO
+  examples and about 60 probe scripts against the REPL). Verdict: the line holds
+  ("Javascript in strict mode without its traps; everything added stays
+  Javascript-compatible"); `class` without `extends` fits it, parking
+  `interface` was right. The biggest inconsistency: the strictness ends at the
+  script's own objects and functions.
+  - Done: ~~a crash~~ (`print(Math.PI); const Q = class { };` crashed the
+    validation with a `NullPointerException`; now the message says that a class
+    is declared as a statement); ~~one text form per object~~ (see below);
+    ~~outdated passages in the language reference~~ (quick reference, common
+    patterns, `?? 0` for `Map` counts, `for...in`, block scope); ~~`min` / `max`
+    in `std:array`~~ (they remove the main reason for spread in calls,
+    `Math.max(...values)`).
+  - **One text form** (point 2): `p.toString()` gave `[object Object]`, but
+    `String(p)`, `"" + p` and `print` gave `Point {x: 3, y: 4}`; for arrays
+    `1,2` against `[1, 2]`.
+  - Open, to decide:
+    1. **Strictness for the script's own code.** Builtins check type and number
+       of their arguments, the script's own classes and functions nothing:
+       `new Point(1, 2, 3)` and `p.len(1, 2, 3)` run, `new Point(1)` gives
+       `Point {x: 1, y: undefined}`, `p.len = 5` replaces the method on the
+       object, `this.m = 1` in a constructor silently hides the method `m`.
+       Classes and function declarations are known before the run, so the
+       validator could cheaply reject: too many arguments for `new Class(…)` and
+       for calls of declared functions, and a field set in a constructor with
+       the name of a method. Both only reject, the generator stays as it is. Not
+       intended: too few arguments, `undefined` for missing properties.
+    2. **Own kinds of errors.** `throw` takes only `Error`s and a class cannot
+       extend `Error`, so `throw new MyError(…)` is a `TypeError`. The way that
+       works is not documented:
+       `const e = new Error("bad"); e.name = "ParseError"; throw e;` and in the
+       `catch`: `if (e.name != "ParseError") { throw e; }`. Proposal: document
+       this pattern; no special rule `extends Error`.
+    3. **The message about inheritance.** `class` has no inheritance, but
+       chapter 9 of the language reference is called "Prototypal Inheritance",
+       starts with `__proto__` and shows three old inheritance patterns on more
+       space than `class`. Five ways to an object (literal, closure factory,
+       `class`, constructor function with `prototype`, `Proto.extend`) are too
+       many for a small language. Proposal: keep the mechanics, but settle the
+       message: literal, closure, `class`, and composition instead of
+       inheritance; prototypes move to a section "under the hood".
+       `examples/oo/expressions.tys` shows that it works without `extends`; the
+       price is the same four-line constructor three times.
+    4. **Interfaces:** look at them again only when validation across files (a
+       language server) exists anyway (see 6. above).
+    5. **Missing:** building strings. `"" + x` occurs 18 times in the 3,000
+       lines of examples, e.g. `("" + (i + 1)).padStart(4)`. Template strings
+       would be the most everyday addition and Javascript-compatible; the lexer
+       for `${…}` is real work in Xtext. At least `String(x)` / `x.toString()`
+       should be the style of the examples. Standard input (`readLine`, see 3.
+       above).
+    6. **Not needed** (by the review): getters, `static` (`Point.origin = …`
+       works anyway), value semantics (string keys such as `a + "," + b` occur
+       only once in the examples), `finally`.
 
 ## Interpreter and code quality
 

@@ -47,6 +47,15 @@ public final class Display {
 		}
 		if (path.size() >= MAX_DEPTH)
 			return object instanceof ArrayObject ? "[Array]" : "[Object]";
+		return own(object);
+	}
+
+	/**
+	 * The display form of an object itself, without its toString: what o.toString() and
+	 * arr.toString() give (Object.prototype.toString, Array.prototype.toString), so that
+	 * they agree with print and String(o).
+	 */
+	public String own(TSObject object) {
 		path.add(object);
 		try {
 			return object.display(this);
