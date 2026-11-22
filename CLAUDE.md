@@ -224,7 +224,8 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - `class` without inheritance (only at the top level; a `constructor` and
   methods, no `extends` / `static` / getters / field declarations); a class
   needs `new`, and its instances print with the class name (`Point {x: 1}`);
-  object literals have the method shorthand `{ area() { … } }`
+  object literals have the method shorthand `{ area() { … } }`. No interfaces
+  (`interface` / `implements` are reserved words; parked, see `TODO.md`)
 - Modules: `export` top-level functions / variables / classes;
   `import a, b from "./m";` or `import * as m from "./m";`. Each module runs
   once; imported names are read-only; files share names only via imports (see

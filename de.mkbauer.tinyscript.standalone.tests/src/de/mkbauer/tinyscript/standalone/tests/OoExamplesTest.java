@@ -2,13 +2,12 @@ package de.mkbauer.tinyscript.standalone.tests;
 
 import java.nio.file.Path;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
  * The examples in examples/oo, in the interpreter and in node: classes before class
- * (car, prototypes_as_classes), and programs written with class / interface (planned) and
- * with what tinyscript has today.
+ * (car, prototypes_as_classes), and two programs written with class and with constructor
+ * functions and prototypes (_today), which must print the same.
  */
 public class OoExamplesTest extends TinyscriptTranspilerTestBase {
 
@@ -85,7 +84,6 @@ public class OoExamplesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    @Disabled("class and interface are not implemented yet (TODO.md: Objects with methods are verbose)")
     public void testExpressions() {
         assertProgramOutput(EXPRESSIONS_OUTPUT, DIRECTORY.resolve("expressions.tys"));
     }
@@ -96,7 +94,6 @@ public class OoExamplesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    @Disabled("class and interface are not implemented yet (TODO.md: Objects with methods are verbose)")
     public void testOrders() {
         assertProgramOutput(ORDERS_OUTPUT, DIRECTORY.resolve("orders.tys"));
     }

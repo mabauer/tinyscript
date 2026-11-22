@@ -48,7 +48,7 @@ _tinyscript_ offers quite a complete set of interesting language features:
 
 - [Closures](de.mkbauer.tinyscript.webdemo/frontend/public/closures.tys)
 
-- [Objects and Prototypes](de.mkbauer.tinyscript.webdemo/frontend/public/oo.tys)
+- [Objects and Classes](de.mkbauer.tinyscript.webdemo/frontend/public/oo.tys)
 
 - [Modules](de.mkbauer.tinyscript.webdemo/frontend/public/modules.tys):
   `import area, unit from "./geometry";`, and a small standard library

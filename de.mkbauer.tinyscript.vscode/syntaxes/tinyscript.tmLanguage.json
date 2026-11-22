@@ -79,7 +79,7 @@
         {
           "comment": "Reserved, but not supported: the compiler reports them with a hint",
           "name": "invalid.illegal.reserved.tinyscript",
-          "match": "(?<!\\.)\\b(finally|switch|case|var)\\b"
+          "match": "(?<!\\.)\\b(finally|switch|case|var|interface|implements)\\b"
         },
         {
           "name": "keyword.control.tinyscript",

@@ -75,6 +75,15 @@ public class ExecutionContext {
 	public boolean contains(String identifier) {
 		return values.containsKey(identifier); 
 	}
+
+	/**
+	 * Whether a variable of this name exists here or in an outer context (also with the
+	 * value undefined): a let / const / class that does not exist yet is used before its
+	 * statement has run.
+	 */
+	public boolean isDeclared(String identifier) {
+		return values.containsKey(identifier) || (outer != null && outer.isDeclared(identifier));
+	}
 	
 	public TSObject getThisRef() {
 		return thisRef;

@@ -1,71 +1,77 @@
-// Object Oriented Programming
-// see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Introduction_to_Object-Oriented_JavaScript
+// Objects and classes.
 
-// Helper function, because Object.create(proto) is not yet implemented
-function createObject(proto) {
-    function ctor() { }
-    ctor.prototype = proto;
-    return new ctor();
+// An object literal with properties and methods (greet() { ... } is short for
+// greet: function() { ... }); this is the object the method is called on
+const alice = {
+    name: "Alice",
+    greet(other) {
+        return "Hello " + other + ", I'm " + this.name;
+    }
+};
+print(alice.greet("Bob"));
+
+// A class: the constructor gives each new object its fields, the methods are
+// shared by all objects of the class
+class Account {
+    constructor(owner, balance) {
+        this.owner = owner;
+        this.balance = balance;
+    }
+
+    deposit(amount) {
+        this.balance += amount;
+        return this;
+    }
+
+    withdraw(amount) {
+        if (amount > this.balance) {
+            throw new Error("only " + this.balance + " left");
+        }
+        this.balance -= amount;
+        return this;
+    }
 }
 
-// Helper function because console.log(s) is not yet implemented
-const console = {};
-console.log = function(s) {
-    print(s);
-};
-
-// Define the Person constructor
-const Person = function(firstName) {
-	this.firstName = firstName;
-};
-
-// Add a couple of methods to Person.prototype
-Person.prototype.walk = function() {
-	console.log("I am walking!");
-};
-
-Person.prototype.sayHello = function() {
-	console.log("Hello, I'm " + this.firstName);
-};
-
-// Define the Student constructor
-function Student(firstName, subject) {
-	// Call the parent constructor, making sure (using Function#call)
-	// that "this" is set correctly during the call
-	Person.call(this, firstName);
-
-	// Initialize our Student-specific properties
-	this.subject = subject;
+const account = new Account("Alice", 100);
+account.deposit(50).withdraw(30);
+print(account);                     // print shows the class and the fields
+try {
+    account.withdraw(500);
+}
+catch (e) {
+    print("Refused:", e.message);
 }
 
-// Create a Student.prototype object that inherits from Person.prototype.
-// Note: A common error here is to use "new Person()" to create the
-// Student.prototype. That's incorrect for several reasons, not least 
-// that we don't have anything to give Person for the "firstName" 
-// argument. The correct place to call Person is above, where we call 
-// it from Student.
-Student.prototype = createObject(Person.prototype); // Object.create(Person.prototype)
+// Objects of different classes with the same methods can be used alike
+class Circle {
+    constructor(radius) {
+        this.radius = radius;
+    }
+    area() { return Math.PI * this.radius * this.radius; }
+    toString() { return "circle with radius " + this.radius; }
+}
 
-// Set the "constructor" property to refer to Student
-// Student.prototype.constructor = Student;
+class Square {
+    constructor(side) {
+        this.side = side;
+    }
+    area() { return this.side * this.side; }
+    toString() { return "square with side " + this.side; }
+}
 
-// Replace the "sayHello" method
-Student.prototype.sayHello = function() {
-	console.log("Hello, I'm " + this.firstName + ". I'm studying "
-			+ this.subject + ".");
+for (const shape : [new Circle(1), new Square(2)]) {
+    print(shape + ": area " + shape.area().toFixed(2));
+}
+
+// A class is a constructor function with the methods on its prototype; there
+// is no inheritance (extends). Without class, an object can inherit directly
+// from another one with Object.create:
+const animal = {
+    describe() { return this.name + " says " + this.sound(); },
+    sound() { return "..."; }
 };
-
-// Add a "sayGoodBye" method
-Student.prototype.sayGoodBye = function() {
-	console.log("Goodbye!");
-};
-
-// Example usage:
-const student1 = new Student("Janet", "Applied Physics");
-student1.sayHello(); // "Hello, I'm Janet. I'm studying Applied Physics."
-student1.walk(); // "I am walking!"
-student1.sayGoodBye(); // "Goodbye!"
-
-// Check that instanceof works correctly
-console.log(student1 instanceof Person); // true 
-console.log(student1 instanceof Student); // true
+const dog = Object.create(animal);
+dog.name = "Rex";
+dog.sound = function() { return "woof"; };
+print(dog.describe(), Object.getPrototypeOf(dog) == animal, Object.keys(dog));
+print(typeof Account, account instanceof Account, Object.keys(account));

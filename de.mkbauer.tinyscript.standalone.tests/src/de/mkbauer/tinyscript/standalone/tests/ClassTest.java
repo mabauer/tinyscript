@@ -155,6 +155,16 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testUsedBeforeItsDeclarationAlsoForVariables() {
         assertEquals(List.of("1:7: limit is used before its declaration (line 2)"), reportedErrors("print(limit);\nconst limit = 3;"));
+        // At runtime, as in Javascript: a function that runs before the statement
+        TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class,
+                () -> interpreterOutput("function f() { return limit; }\nprint(f());\nconst limit = 3;"));
+        assertEquals("limit is used before its declaration (line 3)", e.getMessage());
+        assertInterpreterThrows(TinyscriptReferenceError.class,
+                "function g() {\n  const read = () => [a, b];\n  const r = read();\n  let [a, b] = [1, 2];\n  return r;\n}\ng();");
+        // Declared, but without a value, is fine; and so is a function that runs after the statement
+        String code = "function h() { let x; return x; }\nfunction later() { return limit * 2; }\nconst limit = 3;\nprint(h(), later());";
+        assertEquals("undefined 6\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     @Test
@@ -167,6 +177,10 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
                 onlyError("class A {\n  get area() { return 1; }\n}"));
         assertEquals("A class has no field declarations: fields get their values in the constructor, this.count = …;",
                 onlyError("class A {\n  count = 0;\n}"));
+        String noInterfaces = "interface and implements are not supported in tinyscript: "
+                + "describe the methods in a comment; a missing method is reported when it is called";
+        assertEquals(noInterfaces, onlyError("interface Shape {\n  area();\n}"));
+        assertEquals(noInterfaces, onlyError("class Circle implements Shape { }"));
     }
 
     @Test

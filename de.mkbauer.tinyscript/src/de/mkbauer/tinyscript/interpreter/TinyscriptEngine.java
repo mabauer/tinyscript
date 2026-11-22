@@ -1045,8 +1045,11 @@ public class TinyscriptEngine {
      * The name of an object's type for error messages: the name of its constructor,
      * e.g. String, Array, Map or a constructor function written in tinyscript.
      */
+    // The name of the object's constructor (Point, Array), if it really made the object: not a
+    // method that is only called constructor, as in { constructor() { … } }
     private static String typeName(TSObject object) {
-    	if (object.get("constructor") instanceof Function constructor && constructor.getName() != null && !constructor.getName().isEmpty())
+    	if (object.get("constructor") instanceof Function constructor && constructor.getName() != null && !constructor.getName().isEmpty()
+    			&& constructor.get("prototype") == object.getPrototype())
     		return constructor.getName();
     	return "Object";
     }
@@ -1158,11 +1161,13 @@ public class TinyscriptEngine {
 			TSObject thisRef = currentContext.getThisRef();
 			return (thisRef != null) ? thisRef : TSValue.UNDEFINED;
 		}
-		TSValue value = currentContext.lookup(expr.getId().getName());
-		// A function that runs before the class statement (the validator rejects the other uses)
-		if (value == TSValue.UNDEFINED && expr.getId().eContainer() instanceof ClassDeclaration declaration)
-			throw new TinyscriptReferenceError(declaration.getId().getName() + " is used before its declaration (line "
-					+ TinyscriptModelUtil.getLineOfASTNode(declaration) + ")", expr);
+		String name = expr.getId().getName();
+		TSValue value = currentContext.lookup(name);
+		// A function that runs before the let / const / class statement has run (as in Javascript;
+		// the validator rejects the other uses)
+		if (value == TSValue.UNDEFINED && TinyscriptModelUtil.isLexicalDeclaration(expr.getId()) && !currentContext.isDeclared(name))
+			throw new TinyscriptReferenceError(name + " is used before its declaration (line "
+					+ TinyscriptModelUtil.getLineOfASTNode(expr.getId()) + ")", expr);
 		return value;
     }
     
