@@ -600,11 +600,12 @@ and differential tests run against node.
     `toString(radix)`); ~~`undefined`~~ (done); ~~minimal `try` / `catch`~~
     (done); a ~~library batch~~ (done, also `range(…).reverse()` and `delete`);
     ~~method shorthand~~ (done), ~~`class`~~ (done; `interface` parked, see 6.),
-    a more comfortable REPL (plan below), standard input.
-  - **A more comfortable REPL** (plan 2026-11-22). Today: line editing and a
-    history file (`~/.tinyscript_history`, jline 2.14.6 from 2018, no longer
-    maintained), statements over several lines (`...` prompt), `!help`, `!quit`;
-    the value of an expression statement is shown. Steps, by benefit:
+    ~~a more comfortable REPL~~ (done, plan below), standard input.
+  - ~~**A more comfortable REPL**~~ (plan 2026-11-22, all steps done the same
+    day). Today: line editing and a history file (`~/.tinyscript_history`, jline
+    2.14.6 from 2018, no longer maintained), statements over several lines
+    (`...` prompt), `!help`, `!quit`; the value of an expression statement is
+    shown. Steps, by benefit:
     1. ~~**Ctrl-C stops a running script**~~ (done, with 3 and 5) instead of
        ending the JVM: an endless loop costs the whole session today. The engine
        checks a flag (as the resource monitor does); at the prompt Ctrl-C clears
@@ -620,10 +621,10 @@ and differential tests run against node.
     5. ~~**jline 3**~~ (done, 3.30.17; needed for 1: jline 2 lets Ctrl-C end the
        JVM while a statement runs) instead of jline 2: the base for 6 and 7,
        maintained.
-    6. **Tab completion:** the session's names, the builtins, and the properties
-       of an object after a dot (`Math.` → `max`, `min`, …).
-    7. **Syntax highlighting** of the input and editing a statement over several
-       lines as a whole.
+    6. ~~**Tab completion:**~~ (done) the session's names, the builtins, and the
+       properties of an object after a dot (`Math.` → `max`, `min`, …).
+    7. ~~**Syntax highlighting**~~ (done) of the input and editing a statement
+       over several lines as a whole.
     - PRs: 1, 3 and 5 (jline 3 is needed for Ctrl-C); then 2 and 4; then 6
       and 7.
 

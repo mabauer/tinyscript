@@ -108,6 +108,8 @@ class TinyscriptReplMain  {
 			  !reset         start a new session (forgets all names)
 			  !help          show this help
 			  !quit, !bye    leave (or Ctrl-D)
+			Tab completes names (after a dot: the properties of the object); a statement
+			with an open bracket goes on in the next line and is edited as a whole.
 			Ctrl-C stops a running statement, or clears the input at the prompt.
 			""";
 
@@ -348,8 +350,13 @@ class TinyscriptReplMain  {
 		LineReaderBuilder builder = LineReaderBuilder.builder()
 				.terminal(terminal)
 				.option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
-				// One statement per line, as the history of jline 2 had it
-				.option(LineReader.Option.HISTORY_TIMESTAMPED, false);
+				// Plain lines, as the history of jline 2 had them
+				.option(LineReader.Option.HISTORY_TIMESTAMPED, false)
+				// An open statement goes on in the next line of the same input
+				.parser(new TinyscriptLineParser())
+				.variable(LineReader.SECONDARY_PROMPT_PATTERN, "... ")
+				.completer(new TinyscriptCompleter(() -> sessionEngine))
+				.highlighter(new TinyscriptHighlighter());
 		if (historyFile != null)
 			builder.variable(LineReader.HISTORY_FILE, historyFile);
 		LineReader reader = builder.build();
