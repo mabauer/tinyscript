@@ -6,9 +6,9 @@
 // the same. Besides what expressions.tys uses, this example tries:
 //
 // - a class that implements several interfaces (Inventory, Accounting, AuditLog)
-// - class names after parameters, checked when the function is called:
-//   subscribe(listener: EventListener) is a TypeError for anything that is not
-//   an EventListener, as a builtin rejects a wrong argument
+// - instanceof with an interface: subscribe checks that a listener is an
+//   EventListener (with the optional class names after parameters, this would
+//   be subscribe(listener: EventListener))
 import parse from "std:string";
 
 interface EventListener {
@@ -47,7 +47,7 @@ function money(cents) {
 // --- Events ---
 
 class OrderPlaced {
-    constructor(order: Order) {
+    constructor(order) {
         this.order = order;
     }
     toString() {
@@ -96,7 +96,10 @@ class EventBus {
         this.dispatching = false;
     }
 
-    subscribe(listener: EventListener) {
+    subscribe(listener) {
+        if (!(listener instanceof EventListener)) {
+            throw new Error("subscribe: a listener must be an EventListener");
+        }
         this.listeners.push(listener);
     }
 
@@ -122,7 +125,7 @@ class EventBus {
 
 // Reserves the products of an order, or cancels it
 class Inventory implements EventListener, Reporting {
-    constructor(bus: EventBus, stock) {
+    constructor(bus, stock) {
         this.bus = bus;
         this.stock = stock;
     }
@@ -150,7 +153,7 @@ class Inventory implements EventListener, Reporting {
 
 // Keeps track of what is still to be paid, and of payments that cannot be used
 class Accounting implements EventListener, Reporting {
-    constructor(bus: EventBus) {
+    constructor(bus) {
         this.bus = bus;
         this.open = new Map();       // order id -> amount in cents
         this.refunds = [];
@@ -192,7 +195,7 @@ class Accounting implements EventListener, Reporting {
 
 // Ships an order once it is paid
 class Shipping implements EventListener {
-    constructor(bus: EventBus) {
+    constructor(bus) {
         this.bus = bus;
         this.orders = new Map();     // order id -> order, until shipped
     }
@@ -269,7 +272,7 @@ const accounting = new Accounting(bus);
 for (const listener : [audit, inventory, accounting, new Shipping(bus)]) {
     bus.subscribe(listener);
 }
-// bus.subscribe({ onEvent(event) { print(event); } }) would be a TypeError: an
+// bus.subscribe({ onEvent(event) { print(event); } }) would be an error: an
 // object literal is not an EventListener, even with the right method
 
 const input = [

@@ -417,7 +417,8 @@ and differential tests run against node.
        4. **`x instanceof Shape` at runtime** (the class remembers its
           interfaces; in the generated Javascript an interface becomes an object
           with `Symbol.hasInstance`, so `instanceof` works in node too).
-       5. **Class names after parameters** (tendency 2026-11-22):
+       5. Optional (2026-11-22; the examples do not need it, `orders.tys` checks
+          with `instanceof`): **class names after parameters**:
           `subscribe(listener: EventListener)`, also in constructors
           (`constructor(order: Order)`). Checked when the function is called,
           like the arguments of a builtin: anything else, also `null`, is a
