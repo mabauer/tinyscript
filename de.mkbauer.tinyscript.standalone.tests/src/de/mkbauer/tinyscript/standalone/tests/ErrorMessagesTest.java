@@ -163,6 +163,23 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testAndOrAsDefaultValue() {
+        String or = "'||' gives true or false, not one of its operands: for a default value use ?? (e.g. options ?? {})";
+        String and = "'&&' gives true or false, not one of its operands: to read a property of an object that may be null use ?. (e.g. user?.name)";
+        assertEquals(or, firstError("function f(options) {\n    const cfg = options || {};\n    return cfg;\n}"));
+        assertEquals(or, firstError("const list = null;\nconst items = list || [];"));
+        assertEquals(or, firstError("const m = null;\nconst cache = m || new Map();"));
+        assertEquals(or, firstError("const n = null;\nconst count = n || 0;"));
+        assertEquals(or, firstError("const s = null;\nconst name = s || (\"anonymous\");"));
+        assertEquals(or, firstError("const x = null;\nconst y = x || -1;"));
+        assertEquals(or, firstError("const f = null;\nconst g = f || (x => x);"));
+        assertEquals(and, firstError("const user = null;\nconst label = user && \"name\";"));
+        assertEquals(and, firstError("const ok = {} && true;"));
+        // Conditions and booleans are fine
+        assertEquals(0, reportedErrors("const a = null; const b = true;\nif (a || b) { print(1); }\nconst c = a && b || !b;\nconst d = (a ?? {}) || b;").size());
+    }
+
+    @Test
     public void testUnsupportedKeywords() {
         assertEquals("finally is not supported in tinyscript: there is only try { ... } catch (e) { ... }",
                 firstError("try {\n    print(1);\n} catch (e) {\n    print(e);\n} finally {\n    print(2);\n}"));

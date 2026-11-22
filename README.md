@@ -164,7 +164,8 @@ of primitive datatypes in Javascript is a mine-field on its own.
   `TypeError`, since `0`, `""` and `NaN` being false is a classic trap: write
   `count > 0`. `&&` and `||` short-circuit and return `true` or `false`; for a
   default value use `??` (`counts.get(key) ?? 0`), for null checks in a chain
-  `?.` (`node.next?.value`).
+  `?.` (`node.next?.value`). The Javascript idiom `options || {}` (always `true`
+  here) is a compile-time error that points to `??`.
 - **No silent conversions:** operators and builtins do not convert their
   operands; `1 + true`, `1 - "a"`, `Math.sqrt("4")` are `TypeError`s instead of
   `NaN`. Convert explicitly with `Number(s)`, `parseInt(s)` or `String(x)`;

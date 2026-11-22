@@ -110,7 +110,7 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
                 + "let u; let node = { next: null };\n"
                 + "print(t(true) + t(false) + t(null) + t(u) + t({}) + t([]) + t(t));\n"
                 + "let n = 0; while (node) { n = n + 1; node = node.next; } print(n);\n"
-                + "print(!null); print(!{}); print(null || true); print({} && false);";
+                + "const o = {}; print(!null); print(!o); print(null || true); print(o && false);";
         assertEquals("tfffttt\n1\ntrue\nfalse\ntrue\nfalse\n", interpreterOutput(code));
         assertSameOutput(code);
     }
@@ -121,8 +121,8 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
         assertInterpreterThrows(TinyscriptTypeError.class, "if (\"\") { print(1); }");
         assertInterpreterThrows(TinyscriptTypeError.class, "let a = [1]; while (a.length) { a.pop(); }");
         assertInterpreterThrows(TinyscriptTypeError.class, "print(!0);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "print(true && 1);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "print(\"a\" || true);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "const one = 1; print(true && one);");
+        assertInterpreterThrows(TinyscriptTypeError.class, "const a = \"a\"; print(a || true);");
         assertInterpreterThrows(TinyscriptTypeError.class, "assert(1);");
         assertInterpreterThrows(TinyscriptTypeError.class, "print([1, 2].filter(x => x - 1).length);");
         TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("let count = 0;\nif (count) { print(1); }"));
@@ -132,7 +132,8 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testLogicalOperatorsShortCircuit() {
-        // The right operand is not evaluated, so it is not checked either
-        assertEquals("false\ntrue\n", interpreterOutput("print(false && 1); print(true || \"x\");"));
+        // The right operand is not evaluated, so it is not checked either (as a literal, 1 or "x"
+        // would be a compile-time error, see ErrorMessagesTest)
+        assertEquals("false\ntrue\n", interpreterOutput("const one = 1; const x = \"x\"; print(false && one); print(true || x);"));
     }
 }

@@ -472,16 +472,18 @@ and differential tests run against node.
       done 2026-11-21: the Lua-style loop and `var` are removed (no deprecation,
       there are no other users); `var` stays a reserved word, and both get a
       syntax error that says what to write instead.
-    - **Half truthiness.** In conditions `null` / `undefined` are false and
-      objects are true (`if (node)`, `while (node)`), but `&&` and `||` always
-      give a boolean. So the Javascript habit `const cfg = options || {};`
-      silently yields `true`; numbers and strings are caught by a `TypeError`,
-      objects are not. Options: (1) keep it and name the trap in the language
-      reference (`??` is the way: `options ?? {}`), or (3) conditions accept
-      only booleans, which is the most uniform but costs `while (node)` and
-      `if (o.child)` (write `node != null`). Open, tendency (2026-11-20): 1
-      or 3. Not pursued: (2) a `TypeError` for an object as operand of `&&` /
-      `||`.
+    - ~~**Half truthiness.**~~ (decided and done 2026-11-22: option 1, plus a
+      compile-time error for an operand of `&&` / `||` that can never be a
+      condition, so `options || {}` says to use `??`.) In conditions `null` /
+      `undefined` are false and objects are true (`if (node)`, `while (node)`),
+      but `&&` and `||` always give a boolean. So the Javascript habit
+      `const cfg = options || {};` silently yields `true`; numbers and strings
+      are caught by a `TypeError`, objects are not. Options: (1) keep it and
+      name the trap in the language reference (`??` is the way:
+      `options ?? {}`), or (3) conditions accept only booleans, which is the
+      most uniform but costs `while (node)` and `if (o.child)` (write
+      `node != null`). Open, tendency (2026-11-20): 1 or 3. Not pursued: (2) a
+      `TypeError` for an object as operand of `&&` / `||`.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
     `toString(radix)`); ~~`undefined`~~ (done); ~~minimal `try` / `catch`~~
     (done); a ~~library batch~~ (done, also `range(…).reverse()` and `delete`);
