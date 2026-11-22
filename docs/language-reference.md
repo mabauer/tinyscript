@@ -708,17 +708,38 @@ an array.
 const person = {
     name: "Alice",
     age: 30,
-    greet: function() {
+    greet() {
         print("Hello, I'm " + this.name);
     }
 };
 ```
 
 Property keys can be identifiers or string literals. Values can be any
-expression. As in Javascript, `{ row, col }` is short for
-`{ row: row, col: col }` (the counterpart of the object pattern
-`const { row, col } = position;`), and the properties keep the order in which
-they were added (`Object.keys`).
+expression. As in Javascript, there are two short forms:
+
+- `greet() { … }` is short for `greet: function() { … }`, with the same
+  parameters (also `...rest` and patterns) and the same `this`. In a stack trace
+  the function is named after its key, as is `greet: function() { … }`.
+- `{ row, col }` is short for `{ row: row, col: col }` (the counterpart of the
+  object pattern `const { row, col } = position;`).
+
+The properties keep the order in which they were added (`Object.keys`).
+
+Methods in a literal that a function returns keep private state in a closure,
+without `this`:
+
+```
+function counter() {
+    let n = 0;
+    return {
+        inc() { n++; },
+        get() { return n; }
+    };
+}
+const c = counter();
+c.inc(); c.inc();
+print(c.get(), c.n);   // 2 undefined
+```
 
 ### Property access
 
