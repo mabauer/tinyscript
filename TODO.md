@@ -410,9 +410,12 @@ and differential tests run against node.
     - **Idea (2026-11-21): regular expressions without regex literals.** If
       ever, keep `/…/` out of the grammar and make regexes values of the
       library:
-      1. First, maybe enough for reading input: a `scanf`-like helper in
-         `std:string`, `const [px, py, vx, vy] = scan("p={},{} v={},{}", line);`
-         (readable without regex knowledge, no backtracking). Worked out:
+      1. ~~First, maybe enough for reading input: a `scanf`-like helper in
+         `std:string`~~ (done 2026-11-22 as `parse` / `findAll`, with the fields
+         of Python's `parse` library: `{}`, `{:d}`, `{:f}`, `{:g}`, `{:w}`,
+         `{:l}`, `{:S}`; the draft below used other placeholders),
+         `const [px, py, vx, vy] = scan("p={},{} v={},{}", line);` (readable
+         without regex knowledge, no backtracking). Worked out:
          - Placeholders: `{}` an integer with an optional sign (a number), `{n}`
            a decimal number (`3.5`, `-1e3`; a number), `{w}` a word up to the
            next whitespace (a string), `{s}` any text up to the next literal

@@ -98,7 +98,7 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		if (text.equals("..."))
 			return spreadOrRest(tokens, index);
 		if (text.equals("/") && (previous == null || BEFORE_EXPRESSION.contains(before)))
-			return "Regular expressions are not supported (std:string has words, integers and isDigit)";
+			return "Regular expressions are not supported (std:string has parse, findAll, words and integers)";
 		// The ';' is missing at the end of the previous line (the error is reported at the next token)
 		if (context.getDefaultMessage().startsWith("missing ';'") && previous != null && previous.getLine() < offending.getLine())
 			return "Missing ';' at the end of line " + previous.getLine();

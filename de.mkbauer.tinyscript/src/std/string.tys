@@ -48,3 +48,233 @@ export function integers(text) {
 	}
 	return result;
 }
+
+// parse and findAll read structured text with a format, as Python's parse library does:
+// parse("p={:d},{:d}", "p=3,-4") is [3, -4]. Fields: {} text, {:d} an integer, {:f} a decimal
+// number with a point, {:g} any number (also 1e3), {:w} a word (letters, digits, _), {:l}
+// letters, {:S} anything but whitespace; {{ and }} are literal braces. A space matches one or
+// more spaces or tabs. Fields take as much as their type allows, {} up to the first occurrence
+// of the text after it: no backtracking, so the time is linear.
+
+const FIELD_TYPES = ["d", "f", "g", "w", "l", "S"];
+const NUMBER_TYPES = ["d", "f", "g"];
+
+// The parts of a format: strings (literal text) and fields ({ type: "" for {}, or "d", ... })
+function compileFormat(format, caller, textAtTheEnd) {
+	if (typeof format != "string") {
+		throw new Error(caller + ": the format must be a string, not " + typeof format);
+	}
+	const parts = [];
+	let literal = "";
+	let i = 0;
+	while (i < format.length) {
+		const c = format[i];
+		if ((c == "{" || c == "}") && format[i + 1] == c) {
+			literal += c;
+			i += 2;
+		}
+		else if (c == "{") {
+			const end = format.indexOf("}", i);
+			const spec = end < 0 ? format.slice(i + 1) : format.slice(i + 1, end);
+			let type = null;
+			if (spec == "") {
+				type = "";
+			}
+			else if (spec.length == 2 && spec[0] == ":" && FIELD_TYPES.includes(spec[1])) {
+				type = spec[1];
+			}
+			if (end < 0 || type == null) {
+				throw new Error(caller + ": unknown field {" + spec + (end < 0 ? "" : "}")
+					+ " in \"" + format + "\" (fields: {}, {:d}, {:f}, {:g}, {:w}, {:l}, {:S}; {{ and }} for braces)");
+			}
+			if (literal != "") {
+				parts.push(literal);
+				literal = "";
+			}
+			parts.push({ type });
+			i = end + 1;
+		}
+		else if (c == "}") {
+			throw new Error(caller + ": a single } in \"" + format + "\" (write }} for a brace)");
+		}
+		else {
+			literal += c;
+			i++;
+		}
+	}
+	if (literal != "") {
+		parts.push(literal);
+	}
+	if (parts.length == 0) {
+		throw new Error(caller + ": the format is empty");
+	}
+	// {} ends where the text after it starts, so it needs some (parse: or the end of the text)
+	for (const k : range(parts.length)) {
+		const next = parts[k + 1];
+		if (typeof parts[k] == "object" && parts[k].type == "" && typeof next != "string" && (next != null || !textAtTheEnd)) {
+			throw new Error(caller + ": {} needs text after it in \"" + format + "\", to know where it ends");
+		}
+	}
+	return parts;
+}
+
+function isSpaceOrTab(c) {
+	return c == " " || c == "\t";
+}
+
+// Matches the literal text at pos (a space: one or more spaces / tabs): the position after it, or -1
+function matchLiteral(literal, text, pos) {
+	for (const i : range(literal.length)) {
+		const c = literal[i];
+		if (c == " ") {
+			if (i == 0 || literal[i - 1] != " ") {
+				if (!isSpaceOrTab(text[pos])) {
+					return -1;
+				}
+				while (isSpaceOrTab(text[pos])) {
+					pos++;
+				}
+			}
+		}
+		else if (text[pos] == c) {
+			pos++;
+		}
+		else {
+			return -1;
+		}
+	}
+	return pos;
+}
+
+function isLetter(c) {
+	return c != null && c.toLowerCase() != c.toUpperCase();
+}
+
+function isWordCharacter(c) {
+	return isLetter(c) || isDigit(c) || c == "_";
+}
+
+function digitsEnd(text, pos) {
+	while (isDigit(text[pos])) {
+		pos++;
+	}
+	return pos;
+}
+
+// The end of a number of the type ("d", "f" or "g") at pos, or -1
+function numberEnd(type, text, pos) {
+	const start = text[pos] == "-" || text[pos] == "+" ? pos + 1 : pos;
+	let end = digitsEnd(text, start);
+	if (type == "d") {
+		return end > start ? end : -1;
+	}
+	const point = text[end] == "." && isDigit(text[end + 1]);
+	if (point) {
+		end = digitsEnd(text, end + 1);
+	}
+	if (type == "f") {
+		return point ? end : -1;
+	}
+	if (end == start) {
+		return -1;
+	}
+	if (text[end] == "e" || text[end] == "E") {
+		const exponent = text[end + 1] == "-" || text[end + 1] == "+" ? end + 2 : end + 1;
+		const exponentEnd = digitsEnd(text, exponent);
+		if (exponentEnd > exponent) {
+			end = exponentEnd;
+		}
+	}
+	return end;
+}
+
+// The end of the field at pos (next: the literal text after it, or null), or -1
+function fieldEnd(type, text, pos, next) {
+	if (type == "") {
+		if (next == null) {
+			return text.length > pos ? text.length : -1;
+		}
+		for (const end : range(Math.min(pos + 1, text.length), text.length)) {
+			if (matchLiteral(next, text, end) >= 0) {
+				return end;
+			}
+		}
+		return -1;
+	}
+	if (NUMBER_TYPES.includes(type)) {
+		return numberEnd(type, text, pos);
+	}
+	let end = pos;
+	while (text[end] != null && (type == "w" ? isWordCharacter(text[end]) : type == "l" ? isLetter(text[end]) : !isWhitespace(text[end]))) {
+		end++;
+	}
+	return end > pos ? end : -1;
+}
+
+// Matches the parts at pos: { values, end }, or null
+function matchAt(parts, text, pos) {
+	const values = [];
+	for (const k : range(parts.length)) {
+		const part = parts[k];
+		if (typeof part == "string") {
+			pos = matchLiteral(part, text, pos);
+			if (pos < 0) {
+				return null;
+			}
+		}
+		else {
+			const end = fieldEnd(part.type, text, pos, parts[k + 1] ?? null);
+			if (end < 0) {
+				return null;
+			}
+			const value = text.slice(pos, end);
+			values.push(NUMBER_TYPES.includes(part.type) ? Number(value) : value);
+			pos = end;
+		}
+	}
+	return { values, end: pos };
+}
+
+function checkText(text, caller) {
+	if (typeof text != "string") {
+		throw new Error(caller + ": the text must be a string, not " + typeof text);
+	}
+}
+
+// The values of the fields if the whole text (up to trailing whitespace) fits the format,
+// otherwise null: parse("{:d}|{:d}", "47|53") is [47, 53], parse("{:d}|{:d}", "47-53") is null
+export function parse(format, text) {
+	const parts = compileFormat(format, "parse", true);
+	checkText(text, "parse");
+	const trimmed = text.trimEnd();
+	const match = matchAt(parts, trimmed, 0);
+	return match != null && match.end == trimmed.length ? match.values : null;
+}
+
+// The values of the fields of each match in the text, from left to right, without overlaps:
+// findAll("mul({:d},{:d})", "xmul(2,4)%mul[3,7]mul(5,5)") is [[2, 4], [5, 5]]
+export function findAll(format, text) {
+	const parts = compileFormat(format, "findAll", false);
+	checkText(text, "findAll");
+	// Jump to the first character of a format that starts with literal text
+	const first = typeof parts[0] == "string" && parts[0][0] != " " ? parts[0][0] : null;
+	const result = [];
+	let pos = 0;
+	while (pos < text.length) {
+		if (first != null) {
+			pos = text.indexOf(first, pos);
+			if (pos < 0) {
+				break;
+			}
+		}
+		const match = matchAt(parts, text, pos);
+		if (match != null && match.end > pos) {
+			result.push(match.values);
+			pos = match.end;
+		}
+		else {
+			pos++;
+		}
+	}
+	return result;
+}

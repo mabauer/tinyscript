@@ -158,7 +158,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testRegularExpression() {
-        assertEquals("Regular expressions are not supported (std:string has words, integers and isDigit)",
+        assertEquals("Regular expressions are not supported (std:string has parse, findAll, words and integers)",
                 firstError("const r = /a+/;"));
     }
 
