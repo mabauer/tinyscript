@@ -5,6 +5,10 @@
 // program with constructor functions and prototypes, and runs today; both must
 // print the same.
 //
+// class Add(left, right) { … } is short for a class whose constructor only sets
+// the fields this.left and this.right (a class has either such a header or a
+// constructor).
+//
 // The interface says what every kind of expression can do. The validator checks
 // each class that says "implements Expr": a missing method, or one with a
 // different number of parameters, is an error before the script runs.
@@ -63,8 +67,7 @@ function binary(left, op, right, precedence) {
 }
 
 // A number
-class Num implements Expr {
-    constructor(value) { this.value = value; }
+class Num(value) implements Expr {
     evaluate(env) { return this.value; }
     derive(name) { return new Num(0); }
     simplify() { return this; }
@@ -73,8 +76,7 @@ class Num implements Expr {
 }
 
 // A variable, its value comes from env
-class Var implements Expr {
-    constructor(name) { this.name = name; }
+class Var(name) implements Expr {
     evaluate(env) {
         const value = env[this.name];
         if (value == null) {
@@ -89,11 +91,7 @@ class Var implements Expr {
 }
 
 // left + right
-class Add implements Expr {
-    constructor(left, right) {
-        this.left = left;
-        this.right = right;
-    }
+class Add(left, right) implements Expr {
     evaluate(env) { return this.left.evaluate(env) + this.right.evaluate(env); }
     derive(name) { return new Add(this.left.derive(name), this.right.derive(name)); }
     simplify() { return add(this.left.simplify(), this.right.simplify()); }
@@ -102,11 +100,7 @@ class Add implements Expr {
 }
 
 // left - right
-class Sub implements Expr {
-    constructor(left, right) {
-        this.left = left;
-        this.right = right;
-    }
+class Sub(left, right) implements Expr {
     evaluate(env) { return this.left.evaluate(env) - this.right.evaluate(env); }
     derive(name) { return new Sub(this.left.derive(name), this.right.derive(name)); }
     simplify() { return sub(this.left.simplify(), this.right.simplify()); }
@@ -115,11 +109,7 @@ class Sub implements Expr {
 }
 
 // left * right
-class Mul implements Expr {
-    constructor(left, right) {
-        this.left = left;
-        this.right = right;
-    }
+class Mul(left, right) implements Expr {
     evaluate(env) { return this.left.evaluate(env) * this.right.evaluate(env); }
     derive(name) {
         // product rule: (uv)' = u'v + uv'
@@ -131,11 +121,7 @@ class Mul implements Expr {
 }
 
 // base ^ exponent, the exponent is a number
-class Pow implements Expr {
-    constructor(base, exponent) {
-        this.base = base;
-        this.exponent = exponent;
-    }
+class Pow(base, exponent) implements Expr {
     evaluate(env) { return Math.pow(this.base.evaluate(env), this.exponent); }
     derive(name) {
         // chain rule: (u^n)' = n * u^(n-1) * u'

@@ -3,10 +3,10 @@
 A program written twice, to see how the planned `class` and `interface` (see
 `TODO.md`, "Objects with methods are verbose") would feel:
 
-| File                                           | Written with                                                   | Runs  |
-| ---------------------------------------------- | -------------------------------------------------------------- | ----- |
-| [expressions.tys](expressions.tys)             | `class` without inheritance, `interface` / `implements`        | later |
-| [expressions_today.tys](expressions_today.tys) | constructor functions and methods on their `prototype` (today) | yes   |
+| File                                           | Written with                                                         | Runs  |
+| ---------------------------------------------- | -------------------------------------------------------------------- | ----- |
+| [expressions.tys](expressions.tys)             | `class Name(fields)` without inheritance, `interface` / `implements` | later |
+| [expressions_today.tys](expressions_today.tys) | constructor functions and methods on their `prototype` (today)       | yes   |
 
 The program represents expressions such as `3 * x^2 + 2 * x - 5` as trees of
 objects (`Num`, `Var`, `Add`, `Sub`, `Mul`, `Pow`) that all can evaluate,
