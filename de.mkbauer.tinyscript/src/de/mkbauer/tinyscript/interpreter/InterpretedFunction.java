@@ -63,6 +63,7 @@ public class InterpretedFunction extends Function {
 
 		// Leave the context and restore the call depth however the call ends
 		try {
+			engine.checkInterrupt();
 			if (monitor != null)
 				monitor.checkCallDepth(engine.callDepth);
 

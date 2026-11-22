@@ -38,7 +38,7 @@ public class FileSystemModuleLoader implements ModuleLoader {
 		String fileName = withExtension(path);
 		List<Path> candidates;
 		if (path.startsWith("./") || path.startsWith("../")) {
-			// EMF treats relative URIs (e.g. "__repl0.tys" of a REPL line) as files, too
+			// EMF treats relative URIs (e.g. "__repl1.tys" of a REPL line) as files, too
 			boolean importerIsFile = importer.isFile() && importer.hasAbsolutePath();
 			Path base = importerIsFile ? Path.of(importer.toFileString()).getParent() : Path.of("").toAbsolutePath();
 			candidates = List.of(base.resolve(fileName).normalize());
