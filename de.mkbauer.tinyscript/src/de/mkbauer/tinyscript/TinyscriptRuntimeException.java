@@ -38,6 +38,14 @@ public class TinyscriptRuntimeException extends RuntimeException {
 			this.node = node;
 	}
 
+	/**
+	 * Moves the error to another place, e.g. from inside the standard library to the call
+	 * in the script that caused it.
+	 */
+	public void relocate(EObject node) {
+		this.node = node;
+	}
+
 	public void setTinyscriptStacktrace(TSStacktraceElement[] stacktrace) {
 		setTinyscriptStacktrace(stacktrace, 0, 0);
 	}

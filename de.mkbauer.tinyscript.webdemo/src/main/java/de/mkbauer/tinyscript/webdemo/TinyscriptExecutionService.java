@@ -110,6 +110,9 @@ public class TinyscriptExecutionService {
 				throw error;
 
 			engine.defineStdOut(stdout);
+			// Warnings (e.g. a name that hides a builtin) come first in the output
+			for (String warning : TinyscriptDiagnostics.warnings(issues))
+				stdout.writeBytes((warning + "\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
 			// executionvisitor.setResourceLimits(ResourceLimits.UNLIMITED);
 			TSValue result = engine.execute(ast);
 			resultAsString = result.asString();

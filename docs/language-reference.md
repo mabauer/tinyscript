@@ -127,6 +127,11 @@ let a = 1, b = 2, c = a + b;   // multiple declarations in one statement
 const limit = 100;             // a constant (see below)
 ```
 
+A variable, function, parameter or class with the name of a builtin (`range`,
+`print`, `Number`, …) hides the builtin in its scope; that is allowed, as in
+Javascript, but the compiler warns, since `for (const range : spans)` makes
+`range(n)` fail further down.
+
 Variables are block-scoped like Javascript's `let`. There is no `var` (in
 Javascript it is function-scoped and hoisted): it is a reserved word, and
 `var x = 1;` is a syntax error that says to use `let`.
@@ -761,7 +766,9 @@ expression. As in Javascript, there are two short forms:
 - `{ row, col }` is short for `{ row: row, col: col }` (the counterpart of the
   object pattern `const { row, col } = position;`).
 
-The properties keep the order in which they were added (`Object.keys`).
+The properties keep the order in which they were added (`Object.keys`, `print`),
+except that integer keys come first in ascending order, as in Javascript:
+`{ b: 1, "7": 2, "10": 3 }` lists `7`, `10`, `b`.
 
 How to choose between object literals, factory functions and classes for objects
 with behavior: see [Classes and objects](#9-classes-and-objects).
@@ -1660,8 +1667,10 @@ print(area(2), unit, geo.area(1));
 
 ### Standard library
 
-The `std:` modules come with tinyscript. `std:array` and `std:string` are
-written in tinyscript (in the core bundle under `/std`); `std:fs` is native.
+The `std:` modules come with tinyscript. `std:array`, `std:string` and
+`std:math` are written in tinyscript (in the core bundle under `/std`); `std:fs`
+is native. An error inside one of them, e.g. a wrong format for `parse`, is
+reported at the call in your script.
 
 ```
 import sum from "std:array";
@@ -1689,14 +1698,15 @@ what Javascript writes `Math.max(...values)`.
 
 #### `std:string`
 
-| Function                |                                                                                                                     |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `words(text)`           | the words separated by any whitespace: `words(" 3   4\n")` is `["3", "4"]` (Javascript: `text.trim().split(/\s+/)`) |
-| `integers(text)`        | all integers in a text: `integers("p=0,4 v=3,-3")` is `[0, 4, 3, -3]`                                               |
-| `isWhitespace(c)`       | whether `c` is a space, a tab or a line break                                                                       |
-| `isDigit(c)`            | whether `c` is a digit `0` to `9`; `false` for `undefined`, e.g. `s[s.length]`                                      |
-| `parse(format, text)`   | the values of the fields if the whole text fits the format, otherwise `null` (see below)                            |
-| `findAll(format, text)` | the values of the fields of each match in the text (see below)                                                      |
+| Function                |                                                                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `words(text)`           | the words separated by any whitespace: `words(" 3   4\n")` is `["3", "4"]` (Javascript: `text.trim().split(/\s+/)`)                         |
+| `integers(text)`        | all integers in a text: `integers("p=0,4 v=3,-3")` is `[0, 4, 3, -3]`                                                                       |
+| `isWhitespace(c)`       | whether `c` is a space, a tab or a line break                                                                                               |
+| `isDigit(c)`            | whether `c` is a digit `0` to `9`; `false` for `undefined`, e.g. `s[s.length]`                                                              |
+| `parse(format, text)`   | the values of the fields if the whole text fits the format, otherwise `null` (see below)                                                    |
+| `findAll(format, text)` | the values of the fields of each match in the text (see below)                                                                              |
+| `blocks(text)`          | the groups of lines separated by blank lines, each an array of its lines: `blocks("a\nb\n\nc")` is `[["a", "b"], ["c"]]` (also with `\r\n`) |
 
 **Reading text with `parse` and `findAll`.** They read structured text with a
 format, as Python's `parse` library does, without regular expressions:
@@ -1733,6 +1743,18 @@ for (const [x, y] : findAll("mul({:d},{:d})", memory)) { … }
 - Named fields (`{x:d}`), the other types of Python's library and its case
   insensitivity are not supported. A malformed format (`{:x}`, a single `}`) is
   an `Error`.
+
+#### `std:math`
+
+Integer helpers that `Math` (a global, as in Javascript) does not have:
+
+| Function    |                                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------- |
+| `gcd(a, b)` | the greatest common divisor of two integers: `gcd(12, 18)` is `6`                         |
+| `lcm(a, b)` | the least common multiple: `lcm(4, 6)` is `12`; for several numbers `numbers.reduce(lcm)` |
+
+Both need integers (otherwise an `Error`). Results beyond 2^53 are not exact, as
+for all numbers.
 
 #### `std:fs`
 

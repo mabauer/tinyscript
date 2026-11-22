@@ -105,7 +105,7 @@ public abstract class TinyscriptTranspilerTestBase {
         } catch (IOException e) {
             throw new WrappedException(e);
         }
-        List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        List<Issue> issues = errorsOf(getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl));
         if (!issues.isEmpty()) {
             fail("Parse/validation error in Tinyscript source: " + issues.get(0).getMessage()
                     + "\n--- source ---\n" + tsCode);
@@ -128,7 +128,7 @@ public abstract class TinyscriptTranspilerTestBase {
         } catch (IOException e) {
             throw new WrappedException(e);
         }
-        List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        List<Issue> issues = errorsOf(getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl));
         if (!issues.isEmpty()) {
             fail("Parse/validation error in " + resourcePath + ": " + issues.get(0).getMessage());
         }
@@ -197,7 +197,7 @@ public abstract class TinyscriptTranspilerTestBase {
         } catch (IOException e) {
             throw new WrappedException(e);
         }
-        List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        List<Issue> issues = errorsOf(getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl));
         if (!issues.isEmpty()) {
             fail("Parse/validation error: " + issues.get(0).getMessage()
                     + "\n--- source ---\n" + tsCode);
@@ -237,7 +237,7 @@ public abstract class TinyscriptTranspilerTestBase {
         Injector localInjector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
         Resource resource = localResourceSet.getResource(URI.createFileURI(main.toAbsolutePath().toString()), true);
-        List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        List<Issue> issues = errorsOf(getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl));
         TinyscriptSyntaxError error = TinyscriptDiagnostics.firstError(issues, main.toString());
         if (error != null)
             throw error;
@@ -316,7 +316,7 @@ public abstract class TinyscriptTranspilerTestBase {
         } catch (IOException e) {
             throw new WrappedException(e);
         }
-        List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        List<Issue> issues = errorsOf(getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl));
         return TinyscriptDiagnostics.relevantErrors(issues).stream()
                 .map(issue -> issue.getLineNumber() + ":" + issue.getColumn() + ": " + issue.getMessage())
                 .toList();
@@ -326,7 +326,12 @@ public abstract class TinyscriptTranspilerTestBase {
      * Asserts that {@code tsCode} is rejected before execution, i.e. the parser
      * or the validator reports at least one error.
      */
-    protected void assertRejected(String tsCode) {
+    // Only the errors: a warning (a name that hides a builtin) does not stop a script
+    private static List<Issue> errorsOf(List<Issue> issues) {
+        return issues.stream().filter(issue -> issue.getSeverity() == org.eclipse.xtext.diagnostics.Severity.ERROR).toList();
+    }
+
+    protected List<String> reportedWarnings(String tsCode) {
         URI uri = freshUri();
         Resource resource = resourceSet.createResource(uri);
         try {
@@ -335,6 +340,21 @@ public abstract class TinyscriptTranspilerTestBase {
             throw new WrappedException(e);
         }
         List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+        return issues.stream()
+                .filter(issue -> issue.getSeverity() == org.eclipse.xtext.diagnostics.Severity.WARNING)
+                .map(issue -> issue.getLineNumber() + ":" + issue.getColumn() + ": " + issue.getMessage())
+                .toList();
+    }
+
+    protected void assertRejected(String tsCode) {
+        URI uri = freshUri();
+        Resource resource = resourceSet.createResource(uri);
+        try {
+            resource.load(new StringInputStream(tsCode), null);
+        } catch (IOException e) {
+            throw new WrappedException(e);
+        }
+        List<Issue> issues = errorsOf(getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl));
         if (issues.isEmpty()) {
             fail("Expected a parse or validation error, but none was reported"
                     + "\n--- source ---\n" + tsCode);

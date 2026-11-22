@@ -219,6 +219,24 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testStdMathGcdAndLcm() throws IOException {
+        Path main = write("main.tys", "import gcd, lcm from \"std:math\";\n"
+                + "print(gcd(12, 18), gcd(-12, 18), gcd(0, 5), gcd(7, 0), lcm(4, 6), lcm(-4, 6), lcm(0, 5));\n"
+                + "print([3739, 3761, 3797, 4001].reduce(lcm), [2, 3, 4].reduce(lcm, 1));\n"
+                + "try { gcd(1.5, 2); } catch (e) { print(e.message); }");
+        assertEquals("6 6 5 7 12 12 0\n213632807105063 12\ngcd needs two integers, not 1.5 and 2\n", runModule(main));
+        assertSameOutputModule(main);
+    }
+
+    @Test
+    public void testStdStringBlocks() throws IOException {
+        Path main = write("main.tys", "import blocks from \"std:string\";\n"
+                + "print(blocks(\"a\\nb\\n\\nc\\n\"), blocks(\"x\\r\\ny\\r\\n\\r\\nz\"), blocks(\"\\n\\n  \\na\\n \\n\\n\\nb\\n\\n\"), blocks(\"\"));");
+        assertEquals("[[\"a\", \"b\"], [\"c\"]] [[\"x\", \"y\"], [\"z\"]] [[\"a\"], [\"b\"]] []\n", runModule(main));
+        assertSameOutputModule(main);
+    }
+
+    @Test
     @Timeout(10)
     public void testStdArrayReverseIsLinear() throws IOException {
         // With unshift in a loop, reverse was quadratic: 200,000 elements took 2.2 s, a million about a minute
@@ -247,9 +265,9 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
         Path main = write("main.tys", "import x from \"std:nope\";\nprint(x);");
         TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class, () -> runModule(main));
         assertTrue(e.getMessage().contains("Standard library module \"std:nope\" not found"), e.getMessage());
-        // Math is a global (as in Javascript), not a module
-        Path main2 = write("main2.tys", "import * as math from \"std:math\";\nprint(math);");
-        assertThrows(TinyscriptReferenceError.class, () -> runModule(main2));
+        // Math is a global (as in Javascript); std:math only has what Math has not
+        Path main2 = write("main2.tys", "import * as math from \"std:math\";\nprint(Object.keys(math));");
+        assertEquals("[\"gcd\", \"lcm\"]\n", runModule(main2));
     }
 
     @Test

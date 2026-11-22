@@ -291,9 +291,10 @@ and differential tests run against node.
     3. ~~Generator~~ (done: bundles a program and its modules into one script;
        differential tests in `ModulesTest`).
     4. ~~Standard library and webdemo~~ (done: `std:array` written in tinyscript
-       (`std:math` was dropped again: `Math` stays a global, as in Javascript),
-       `StandardLibraryModuleLoader`; the webdemo imports only `std:` modules
-       and has a "Modules" example).
+       (`std:math` was dropped again: `Math` stays a global, as in Javascript;
+       since 2026-11-22 `std:math` holds only what `Math` has not: `gcd`,
+       `lcm`), `StandardLibraryModuleLoader`; the webdemo imports only `std:`
+       modules and has a "Modules" example).
     5. `fs` as a module (target, decided 2026-11-20): ~~`std:fs` as a native
        module~~ (done: `FileSystemModule`, generator wrapper for node; the
        sandbox does not provide it), ~~then remove the global `fs`~~ (done;
@@ -690,23 +691,28 @@ and differential tests run against node.
   day 20 with the same methods and no inheritance); `parse`, `?.` / `??`,
   destructuring parameters, `min` / `max` and `Map.values()` as an array were
   used a lot. Findings:
-  - **Bug: `Object.keys` order differs from node.** For integer-like keys
-    Javascript lists them first, in numeric order: `{ "|": 1, "7": 2, "10": 3 }`
-    gives `["|", "7", "10"]` in tinyscript and `["7", "10", "|"]` in node, also
-    in `print`; a differential test fails. Decide: follow Javascript's order
-    (the generator then needs nothing), or keep insertion order and make the
-    generated code use it.
-  - **Messages without a hint:** computed keys `{ [k]: 1 }` ("Missing '}' before
-    '['"), renaming in a pattern `const { a: b } = o;` ("Unexpected ':'"),
-    assignment with a pattern `[a, b] = [b, a];` ("Invalid left-hand side"); a
-    wrong `parse` format points into `std/string.tys` instead of the caller's
-    line.
-  - **Names:** `from` (and `as`) are reserved, but natural names in grid and
-    graph code (`const from = …`); Javascript treats them as contextual
-    keywords. A class, function or variable of the script can hide a builtin
-    (`class Number { }`, `const range = …` in a loop) without a warning, as in
-    Javascript; a warning would catch it.
-  - **Missing, with workarounds:** spread in calls (`push(...xs)`; `max` / `min`
+  - ~~**Bug: `Object.keys` order differs from node.**~~ (fixed 2026-11-22:
+    integer keys first, as in Javascript; only objects that have had an integer
+    key are sorted) For integer-like keys Javascript lists them first, in
+    numeric order: `{ "|": 1, "7": 2, "10": 3 }` gives `["|", "7", "10"]` in
+    tinyscript and `["7", "10", "|"]` in node, also in `print`; a differential
+    test fails. Decide: follow Javascript's order (the generator then needs
+    nothing), or keep insertion order and make the generated code use it.
+  - ~~**Messages without a hint:**~~ (done 2026-11-22, also the place of an
+    error inside the standard library) computed keys `{ [k]: 1 }` ("Missing '}'
+    before '['"), renaming in a pattern `const { a: b } = o;` ("Unexpected
+    ':'"), assignment with a pattern `[a, b] = [b, a];` ("Invalid left-hand
+    side"); a wrong `parse` format points into `std/string.tys` instead of the
+    caller's line.
+  - **Names** (decided 2026-11-22: `from` and `as` stay reserved, the message
+    says why and suggests other names; a declaration that hides a builtin gets a
+    warning, which the REPL and the web demo show): `from` (and `as`) are
+    reserved, but natural names in grid and graph code (`const from = …`);
+    Javascript treats them as contextual keywords. A class, function or variable
+    of the script can hide a builtin (`class Number { }`, `const range = …` in a
+    loop) without a warning, as in Javascript; a warning would catch it.
+  - **Missing, with workarounds** (done 2026-11-22: `gcd` / `lcm` in `std:math`,
+    `blocks` in `std:string`): spread in calls (`push(...xs)`; `max` / `min`
     cover the common case), assignment with a pattern (swap with a temporary),
     computed keys and object spread (`Object.assign({}, o)` and an assignment),
     `gcd` / `lcm` / `product` (written by hand), `findAll` with the positions of

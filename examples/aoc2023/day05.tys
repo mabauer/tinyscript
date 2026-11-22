@@ -5,7 +5,7 @@
 
 import inputText, numbers from "./aoc";
 import min from "std:array";
-import integers from "std:string";
+import blocks, integers from "std:string";
 
 // One map of the almanac, e.g. seed-to-soil: lines "destination source length"
 // move the numbers from source to source + length - 1 by destination - source;
@@ -51,9 +51,9 @@ class AlmanacMap {
 }
 
 // The input: a line "seeds: 79 14 55 13", then a block of lines for each map, in order
-const blocks = inputText().split("\n\n");
-const seeds = integers(blocks[0]);
-const maps = blocks.slice(1).map(block => new AlmanacMap(block.split("\n").slice(1).filter(line => line.trim() != "")));
+const almanac = blocks(inputText());
+const seeds = integers(almanac[0][0]);
+const maps = almanac.slice(1).map(lines => new AlmanacMap(lines.slice(1)));
 
 // Part 1: the lowest location of the seeds
 const locations = seeds.map(seed => maps.reduce((n, map) => map.convert(n), seed));

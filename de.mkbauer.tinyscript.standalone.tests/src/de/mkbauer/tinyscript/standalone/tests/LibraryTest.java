@@ -97,7 +97,7 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "print(Object.fromEntries(Object.entries(o).map(([k, v]) => [k + k, v])));";
         assertEquals("[1, \"x\"] [[\"a\", 1], [\"b\", \"x\"]] [7, 8] []\n"
                 + "a=1\nb=x\n"
-                + "{a: 1, b: [2], 3: \"three\"} {m: 1} {}\n"
+                + "{3: \"three\", a: 1, b: [2]} {m: 1} {}\n"
                 + "{a: 1, z: 9, b: 2, c: 3} true\n"
                 + "{aa: 1, bb: \"x\"}\n", interpreterOutput(code));
         assertInterpreterThrows(TinyscriptTypeError.class, "Object.values(5);");

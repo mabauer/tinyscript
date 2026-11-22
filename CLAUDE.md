@@ -183,7 +183,9 @@ Source text
 
 **Runtime built-ins** (`runtime/` subdirectories): `array/`, `string/`, `math/`,
 `object/`, `function/`, `system/`; `fs/` holds the native module `std:fs`
-(`FileSystemModule`)
+(`FileSystemModule`). The other `std:` modules (`std:array`, `std:string`,
+`std:math`) are written in tinyscript, in `de.mkbauer.tinyscript/src/std/`;
+errors inside them are reported at the caller
 
 **Scoping:** a script sees its own declarations and the global scope
 (`TinyscriptGlobalScopeProvider`), which contains only resources marked with

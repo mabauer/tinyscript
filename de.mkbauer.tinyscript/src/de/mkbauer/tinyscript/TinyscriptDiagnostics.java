@@ -36,6 +36,20 @@ public final class TinyscriptDiagnostics {
 	}
 
 	/**
+	 * The warnings, in the order of the source, as lines "Warning: … (line 3)"; none if there
+	 * are errors (they come first).
+	 */
+	public static List<String> warnings(List<Issue> issues) {
+		if (!relevantErrors(issues).isEmpty())
+			return List.of();
+		return issues.stream()
+				.filter(issue -> issue.getSeverity() == Severity.WARNING)
+				.sorted(Comparator.comparing((Issue issue) -> issue.getOffset() != null ? issue.getOffset() : 0))
+				.map(issue -> "Warning: " + issue.getMessage() + " (line " + issue.getLineNumber() + ")")
+				.toList();
+	}
+
+	/**
 	 * The first error worth reporting as an exception, or null if there is none.
 	 */
 	public static TinyscriptSyntaxError firstError(List<Issue> issues, String filename) {

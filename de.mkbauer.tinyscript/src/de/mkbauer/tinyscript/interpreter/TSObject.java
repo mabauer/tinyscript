@@ -1,5 +1,7 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,8 +12,12 @@ import de.mkbauer.tinyscript.runtime.string.StringConstructor;
 
 public non-sealed class TSObject implements TSValue {
 	
-	// Like Javascript, the properties keep their insertion order (Object.keys, printing)
+	// Like Javascript, the properties keep their insertion order (Object.keys, printing),
+	// except that integer keys ("7", "10") come first, in ascending order (see orderedKeys)
 	protected HashMap<String, TSPropertyDescriptor> properties;
+
+	// Whether a key was ever an integer key: only then the keys need sorting
+	private boolean hasIntegerKeys = false;
 	
 	private TSObject proto = null;
 	protected TinyscriptEngine engine;
@@ -129,6 +135,8 @@ public non-sealed class TSObject implements TSValue {
 		TSPropertyDescriptor existing = properties.get(key);
 		if (existing != null && !existing.isConfigurable())
 			throw new TinyscriptTypeError("Cannot redefine property: " + key);
+		if (existing == null)
+			noteKey(key);
 		properties.put(key,  desc);
 	}
 	
@@ -185,6 +193,7 @@ public non-sealed class TSObject implements TSValue {
 		}
 		else {
 			desc = new TSPropertyDescriptor(value);
+			noteKey(key);
 			properties.put(key, desc);
 			update();
 		}
@@ -201,15 +210,53 @@ public non-sealed class TSObject implements TSValue {
 	}
 	
 	public List<String> getKeys() {
-		return (properties.keySet().stream()
+		return (orderedKeys().stream()
 				.filter(key -> properties.get(key).isEnumerable())
 				.collect(Collectors.toList()));
 	}
 	
 	public List<String> getOwnPropertyNames() {
-		return (properties.keySet().stream()
+		return (orderedKeys().stream()
 				.filter(key -> !key.startsWith("__"))
 				.collect(Collectors.toList()));
+	}
+
+	private void noteKey(String key) {
+		if (!hasIntegerKeys && isIntegerKey(key))
+			hasIntegerKeys = true;
+	}
+
+	/**
+	 * The own keys in Javascript's order: integer keys ("0", "7", "10") ascending, then the
+	 * others in insertion order. Only objects that have had an integer key are sorted.
+	 */
+	protected List<String> orderedKeys() {
+		List<String> keys = new ArrayList<String>(properties.keySet());
+		if (!hasIntegerKeys)
+			return keys;
+		List<String> integers = new ArrayList<String>();
+		List<String> others = new ArrayList<String>();
+		for (String key : keys)
+			(isIntegerKey(key) ? integers : others).add(key);
+		integers.sort(Comparator.comparingLong(Long::parseLong));
+		integers.addAll(others);
+		return integers;
+	}
+
+	/**
+	 * An integer key as Javascript orders it first: the canonical text of an integer from 0 to
+	 * 2^32 - 2 ("7", not "07", "-1" or "1.5").
+	 */
+	static boolean isIntegerKey(String key) {
+		int n = key.length();
+		if (n == 0 || n > 10 || (n > 1 && key.charAt(0) == '0'))
+			return false;
+		for (int i = 0; i < n; i++) {
+			char c = key.charAt(i);
+			if (c < '0' || c > '9')
+				return false;
+		}
+		return Long.parseLong(key) <= 4294967294L;
 	}
 	
 	/**
@@ -225,7 +272,7 @@ public non-sealed class TSObject implements TSValue {
 	 * This object's display form: {x: 1, y: "a"}. The values inside go through {@code display.format}.
 	 */
 	protected String display(Display display) {
-		return classPrefix() + properties.keySet().stream()
+		return classPrefix() + orderedKeys().stream()
 				.filter(key -> properties.get(key).isEnumerable())
 				.map(key -> key + ": " + display.format(properties.get(key).getValue()))
 				.collect(Collectors.joining(", ", "{", "}"));
