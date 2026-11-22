@@ -1005,36 +1005,39 @@ child.greet();   // "Hello!" — inherited from base
 
 ### Prototype-as-class pattern
 
-Objects themselves can serve as "classes". The `oo_with_proto.tys` example
+Objects themselves can serve as "classes", also with inheritance, which `class`
+leaves out. The example
+[`examples/oo/prototypes_as_classes.tys`](../examples/oo/prototypes_as_classes.tys)
 demonstrates this:
 
 ```
 const Proto = {
-    _new: function(...args) {
+    _new(...args) {
         const instance = Object.create(this);
-        if (instance.constructor) {
-            instance.constructor.apply(instance, args);
-        }
+        instance.constructor.apply(instance, args);
         return instance;
     },
-    extend: function(subProps) {
-        const subProto = Object.create(this);
-        // copy subProps properties to subProto ...
-        return subProto;
+    extend(methods) {
+        const subclass = Object.create(this);
+        for (const key : Object.getOwnPropertyNames(methods)) {
+            Object.defineProperty(subclass, key, Object.getOwnPropertyDescriptor(methods, key));
+        }
+        subclass.super = this;
+        return subclass;
     }
 };
 
 const Person = Proto.extend({
-    constructor: function(name) { this.name = name; },
-    describe: function() { return "Person called " + this.name; }
+    constructor(name) { this.name = name; },
+    describe() { return "Person called " + this.name; }
 });
 
 const Employee = Person.extend({
-    constructor: function(name, title) {
+    constructor(name, title) {
         Employee.super.constructor.call(this, name);
         this.title = title;
     },
-    describe: function() {
+    describe() {
         return Employee.super.describe.call(this) + " (" + this.title + ")";
     }
 });

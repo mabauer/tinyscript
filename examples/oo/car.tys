@@ -1,0 +1,37 @@
+// A class before tinyscript had class: a constructor function with its methods
+// on the prototype, wrapped in a function that runs right away (an IIFE) so
+// that everything belonging to the class stays together. This is what the
+// TypeScript compiler made of a class for older Javascript versions.
+
+const OldCar = (function () {
+    // constructor
+    function OldCar(engine) {
+        this.engine = engine;
+    }
+
+    // method
+    OldCar.prototype.describe = function () {
+        return "Engine is: " + this.engine;
+    };
+
+    return OldCar;
+})();
+
+const oldCar = new OldCar("V8");
+print(oldCar.describe(), oldCar instanceof OldCar);
+
+// The same with class: the constructor and the methods in one
+// block; it can only be created with new, and print shows the class name.
+class Car {
+    constructor(engine) {
+        this.engine = engine;
+    }
+
+    describe() {
+        return "Engine is: " + this.engine;
+    }
+}
+
+const car = new Car("V8");
+print(car.describe(), car instanceof Car);
+print(oldCar, car);
