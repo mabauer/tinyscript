@@ -91,7 +91,8 @@ Numbers and strings are a `TypeError` ("Condition must be a boolean, not
 number"): in Javascript `0`, `""` and `NaN` are false although they are valid
 values, a common source of bugs. So `while (node)` and `if (o.child)` work,
 `if (count)` must be written `if (count > 0)`, `if (name)` as `if (name != "")`,
-and `if (i = 0)` (a typo for `==`) is an error.
+and `if (i = 0)` (a typo for `==`) is an error. `&&` and `||` give `true` or
+`false`, not one of their operands (see Logical).
 
 ### `typeof`
 
@@ -275,10 +276,20 @@ Comparing values of different or other types is a `TypeError`.
 | `??`     | `a ?? b` is `b` if `a` is `null` or `undefined`, otherwise `a` |
 
 Unlike Javascript, `&&` and `||` always give a boolean, and their operands must
-be conditions (see Conditions). So the Javascript idiom `x || defaultValue` does
-not work; use `x ?? defaultValue`, e.g. `counts.get(key) ?? 0`. As in
-Javascript, `b` is only evaluated if needed, and `??` cannot be combined with
-`&&` or `||` without parentheses: write `(a ?? b) || c`.
+be conditions (see Conditions). So the Javascript idioms that use them for a
+value do not work:
+
+```
+const cfg = options || {};        // Javascript: options, or {}; tinyscript: true
+const name = user && user.name;   // Javascript: the name; tinyscript: true or false
+```
+
+Use `??` for a default value (`options ?? {}`, `counts.get(key) ?? 0`) and `?.`
+for a property of an object that may be `null` (`user?.name`). An operand that
+can never be a condition (an object, array or function literal, `new …`, a
+number or a string) is a compile-time error that says so. As in Javascript, `b`
+is only evaluated if needed, and `??` cannot be combined with `&&` or `||`
+without parentheses: write `(a ?? b) || c`.
 
 ### Assignment
 

@@ -2,6 +2,7 @@ package de.mkbauer.tinyscript.validation;
 
 import de.mkbauer.tinyscript.Operators;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.ts.ArrayInitializer;
 import de.mkbauer.tinyscript.ts.ArrowFunction;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.BinaryOperator;
@@ -9,6 +10,7 @@ import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.BreakStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
+import de.mkbauer.tinyscript.ts.CallSuffix;
 import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.ContinueStatement;
 import de.mkbauer.tinyscript.ts.DotPropertyAccessSuffix;
@@ -17,13 +19,18 @@ import de.mkbauer.tinyscript.ts.ExpressionStatement;
 import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
+import de.mkbauer.tinyscript.ts.GroupingExpression;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.NewExpression;
+import de.mkbauer.tinyscript.ts.NumberLiteral;
+import de.mkbauer.tinyscript.ts.ObjectInitializer;
 import de.mkbauer.tinyscript.ts.Pattern;
 import de.mkbauer.tinyscript.ts.PropertyAssignment;
 import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
+import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
@@ -290,6 +297,39 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	public void checkNullishCoalescingNotMixedWithAndOr(BinaryExpression expression) {
 		if (expression.getOp() == BinaryOperator.NULLISH && (isAndOr(expression.getLeft()) || isAndOr(expression.getRight())))
 			error("Use parentheses to combine ?? with && or ||", null);
+	}
+
+	/**
+	 * && and || give true or false (as conditions do), not one of their operands as in
+	 * Javascript. So const cfg = options || {}; is always true: an object, array, function or
+	 * new ... as operand is always true, and a number or string is a TypeError at runtime.
+	 */
+	@Check
+	public void checkAndOrOperandsCanBeConditions(BinaryExpression expression) {
+		if (!isAndOr(expression))
+			return;
+		boolean or = expression.getOp() == BinaryOperator.OR;
+		String message = or
+				? "'||' gives true or false, not one of its operands: for a default value use ?? (e.g. options ?? {})"
+				: "'&&' gives true or false, not one of its operands: to read a property of an object that may be null use ?. (e.g. user?.name)";
+		if (isNeverACondition(expression.getLeft()))
+			error(message, TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+		else if (isNeverACondition(expression.getRight()))
+			error(message, TsPackage.Literals.BINARY_EXPRESSION__RIGHT);
+	}
+
+	// An operand that is always true (an object) or a TypeError in a condition (a number, a string)
+	private static boolean isNeverACondition(Expression expression) {
+		while (expression instanceof GroupingExpression grouping)
+			expression = grouping.getExpr();
+		// new Map() is the call of new Map
+		if (expression instanceof CallOrPropertyAccess call && call.getSuffix() instanceof CallSuffix
+				&& call.getExpr() instanceof NewExpression)
+			return true;
+		return expression instanceof ObjectInitializer || expression instanceof ArrayInitializer
+				|| expression instanceof FunctionDefinition || expression instanceof NewExpression
+				|| expression instanceof NumberLiteral || expression instanceof StringLiteral
+				|| expression instanceof Unary unary && unary.getOp() == UnaryOperator.NEGATE;
 	}
 
 	private static boolean isAndOr(Expression expression) {
