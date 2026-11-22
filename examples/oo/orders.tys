@@ -6,9 +6,9 @@
 // the same. Besides what expressions.tys uses, this example tries:
 //
 // - a class that implements several interfaces (Inventory, Accounting, AuditLog)
-// - instanceof with an interface: subscribe checks that a listener is an
-//   EventListener (with the optional class names after parameters, this would
-//   be subscribe(listener: EventListener))
+// - an interface is checked before the script runs and does not exist at
+//   runtime: subscribe tests for the method, so an object literal with an
+//   onEvent method is a listener too
 import parse from "std:string";
 
 interface EventListener {
@@ -97,8 +97,8 @@ class EventBus {
     }
 
     subscribe(listener) {
-        if (!(listener instanceof EventListener)) {
-            throw new Error("subscribe: a listener must be an EventListener");
+        if (listener == null || typeof listener.onEvent != "function") {
+            throw new Error("subscribe: a listener needs a method onEvent(event)");
         }
         this.listeners.push(listener);
     }
@@ -272,8 +272,8 @@ const accounting = new Accounting(bus);
 for (const listener : [audit, inventory, accounting, new Shipping(bus)]) {
     bus.subscribe(listener);
 }
-// bus.subscribe({ onEvent(event) { print(event); } }) would be an error: an
-// object literal is not an EventListener, even with the right method
+// bus.subscribe({ onEvent(event) { print(event); } }) works as well: a
+// listener does not have to be a class
 
 const input = [
     "order 1001 alice: 2 widget, 1 gadget",

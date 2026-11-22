@@ -3,12 +3,12 @@
 Programs written twice, to see how the planned `class` and `interface` (see
 `TODO.md`, "Objects with methods are verbose") would feel:
 
-| File                                           | Written with                                                              | Runs  |
-| ---------------------------------------------- | ------------------------------------------------------------------------- | ----- |
-| [expressions.tys](expressions.tys)             | `class` without inheritance, `interface` / `implements`                   | later |
-| [expressions_today.tys](expressions_today.tys) | constructor functions and methods on their `prototype` (today)            | yes   |
-| [orders.tys](orders.tys)                       | in addition: several interfaces per class, `instanceof` with an interface | later |
-| [orders_today.tys](orders_today.tys)           | constructor functions, a hand-written check in `subscribe`                | yes   |
+| File                                           | Written with                                                   | Runs  |
+| ---------------------------------------------- | -------------------------------------------------------------- | ----- |
+| [expressions.tys](expressions.tys)             | `class` without inheritance, `interface` / `implements`        | later |
+| [expressions_today.tys](expressions_today.tys) | constructor functions and methods on their `prototype` (today) | yes   |
+| [orders.tys](orders.tys)                       | in addition: several interfaces per class                      | later |
+| [orders_today.tys](orders_today.tys)           | constructor functions; nothing checks the reports              | yes   |
 
 The expressions program represents expressions such as `3 * x^2 + 2 * x - 5` as
 trees of objects (`Num`, `Var`, `Add`, `Sub`, `Mul`, `Pow`) that all can

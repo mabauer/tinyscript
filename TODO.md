@@ -405,28 +405,39 @@ and differential tests run against node.
             before its declaration (line …)"). Interfaces are declarations only:
             for `implements` the order does not matter.
           - **Modules:** `export class`, `export interface`;
-            `import EventListener from "./events"` works for `implements` and
-            `instanceof`.
-          - **An interface at runtime** is a frozen object without enumerable
-            properties: `typeof EventListener == "object"`,
-            `print(EventListener)` shows `interface EventListener`, it can be
-            assigned and passed, `new EventListener()` is a `TypeError` ("… is
-            an interface, it cannot be created with new"); the generated
-            Javascript makes it an object with `Symbol.hasInstance`, so node
-            behaves the same. A class is a function
-            (`typeof Num == "function"`).
+            `import EventListener from "./events"` works for `implements` (the
+            validator has to read the other file for it; the generator drops the
+            interface from the import).
+          - **An interface does not exist at runtime** (see step 3): its name is
+            only allowed after `implements`; anywhere else it is a compile-time
+            error ("EventListener is an interface: it can only be used after
+            implements"). A class is a function (`typeof Num == "function"`).
           - **A class without `new`** (`Num(3)`) is a `TypeError`: "Num is a
             class: use new Num(…)".
           - **Validator:** duplicate methods in a class, `return` with a value
-            in a constructor, missing interface methods or a wrong number of
-            parameters, a class and a function / variable with the same name.
-            Not checked: whether `this.x` exists (fields stay dynamic).
+            in a constructor, missing interface methods or too many parameters
+            (see step 3), a class, interface and a function / variable with the
+            same name. Not checked: whether `this.x` exists (fields stay
+            dynamic).
           - **Printing an instance** without `toString` shows the class name and
             the fields, as node does: `Num {value: 3}` (today objects with a
             prototype print as `{value: 3}`; check what changes).
           - Methods live on the prototype and are not enumerable (not in
             `Object.keys`, not printed); `this` in a method taken off its object
             (`const f = obj.m; f();`) is `undefined`, as in strict Javascript.
+          - **Open: freeze the prototype of a class?** (and the class itself;
+            the generator would add `Object.freeze(Num.prototype)`, a write is a
+            `TypeError`). For it: everything a class can do is in its body, no
+            methods added from elsewhere, no inheritance through the back door
+            (`Dog.prototype = Object.create(…)`), a clear message at the write.
+            Against: a class is then more than a short spelling of constructor
+            function plus prototype, the generator no longer passes it through
+            unchanged, one more difference to Javascript. Since interfaces are
+            only checked statically (step 3), nothing at runtime relies on the
+            methods of a class staying as declared. Tendency (2026-11-22): do
+            not freeze; tinyscript is strict where Javascript has traps one
+            falls into by accident, and nobody writes `Num.prototype.area = 5`
+            by accident.
 
        3. **`interface` / `implements`** (spelling as in TypeScript), to say
           that two classes implement the same protocol:
@@ -442,30 +453,37 @@ and differential tests run against node.
           ```
 
           An interface names methods and their number of parameters, without
-          bodies. Nominal: only a class that says `implements Shape` is a
-          `Shape`, so the validator checks it before the script runs (a missing
-          method or a wrong number of parameters is an error at the class, also
-          in the Eclipse editor). The generator drops `implements`. A class can
-          implement several interfaces (`implements EventListener, Reporting`);
-          two of them that require the same method with a different number of
-          parameters are an error at the class.
+          bodies. Decided 2026-11-22: **a static declaration only, erased as in
+          TypeScript.** The validator checks a class that says
+          `implements Shape` before the script runs (a missing method or one
+          with too many parameters is an error at the class, also in the Eclipse
+          editor); the generator drops `interface` and `implements`, and nothing
+          of them exists at runtime. A class can implement several interfaces
+          (`implements EventListener, Reporting`). **Number of parameters**
+          (decided 2026-11-22): a method may have fewer parameters than the
+          interface says, not more (`onEvent()` implements `onEvent(event)`), as
+          in TypeScript and like calls, where missing arguments are `undefined`
+          and extra ones are ignored; more parameters are the mistake, since no
+          caller passes them. A rest parameter (`...args`) is allowed and does
+          not count. If two interfaces require the same method, the smaller
+          number holds. Object literals and objects of constructor functions
+          stay equal to instances of classes: nothing asks at runtime whether an
+          object "is" a `Shape`; a function that wants to check its argument
+          tests for the method (`typeof listener.onEvent == "function"`, as
+          `orders.tys` does).
 
-       4. **`x instanceof Shape` at runtime** (the class remembers its
-          interfaces; in the generated Javascript an interface becomes an object
-          with `Symbol.hasInstance`, so `instanceof` works in node too).
-       5. Optional (2026-11-22; the examples do not need it, `orders.tys` checks
-          with `instanceof`): **class names after parameters**:
-          `subscribe(listener: EventListener)`, also in constructors
-          (`constructor(order: Order)`). Checked when the function is called,
-          like the arguments of a builtin: anything else, also `null`, is a
-          `TypeError` (not caught by `catch`) with a uniform message such as
-          "subscribe: listener must be an EventListener, not Order". Only names
-          of classes and interfaces (no `number`, not a type system). Same
-          spelling as TypeScript, different meaning: checked at runtime, not
-          erased. Consequence of nominal interfaces: an object literal or an
-          arrow function is never an `EventListener`, even with the right
-          method; a small class is needed.
-
+       - Dropped (2026-11-22, after a review):
+         - **`x instanceof Shape` with an interface** (the former step 4;
+           nominal interfaces at runtime): the examples hardly need it, an
+           object literal with the right method would not be an `EventListener`
+           (against the method shorthand and factory functions with closures),
+           and it needs an interface as a value (`typeof`, `print`, `new`,
+           `Symbol.hasInstance` in the generated Javascript).
+         - **Class names after parameters**
+           (`subscribe(listener: EventListener)`, the former step 5): looks like
+           TypeScript and means something else (checked at runtime), `n: number`
+           would not work, and return types, fields and `null` are the next
+           questions.
        - Not pursued: structural interfaces as in Go (only checkable at
          runtime); a `std:` module with `extend` / `_new` helpers (a convention
          nobody knows); a library function that checks for methods at runtime
