@@ -103,6 +103,10 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
         assertTypeError("Map has no method 'push'", "new Map().push(1);");
         assertTypeError("Car has no method 'drive'", "function Car() { } let c = new Car(); c.drive();");
         assertTypeError("Object has no method 'g'", "let o = {}; o[\"g\"]();");
+        assertTypeError("Point has no method 'move'", "class Point { } new Point().move();");
+        // A method that is only called constructor does not name the object
+        assertTypeError("Object has no method 'f'", "const o = { constructor() { } }; o.f();");
+        assertTypeError("Object has no method 'f'", "const base = { constructor() { } }; Object.create(base).f();");
     }
 
     @Test

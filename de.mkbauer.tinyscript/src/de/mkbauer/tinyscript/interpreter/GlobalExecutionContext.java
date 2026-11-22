@@ -53,6 +53,11 @@ public class GlobalExecutionContext extends ExecutionContext {
 	}
 	
 	@Override
+	public boolean isDeclared(String identifier) {
+		return globalObject.hasOwnProperty(identifier);
+	}
+
+	@Override
 	public boolean isFunctionContext() {
 		return true;
 	}

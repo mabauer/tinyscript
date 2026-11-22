@@ -365,10 +365,9 @@ and differential tests run against node.
 
        Examples (2026-11-22): `examples/oo/expressions.tys` (symbolic
        expressions) and `examples/oo/orders.tys` (orders through an event bus),
-       written with `class` and `interface` as planned, next to
+       written with `class` (first also with `interface`), next to
        `expressions_today.tys` / `orders_today.tys` with prototypes;
-       `OoExamplesTest` checks each pair against the same output (the planned
-       versions once enabled).
+       `OoExamplesTest` checks each pair against the same output.
 
        1. ~~**Method shorthand**~~ (done 2026-11-22; functions as values of
           properties are named after their key in stack traces)
@@ -378,9 +377,9 @@ and differential tests run against node.
           which give private state without `this`.
        2. ~~**`class` without inheritance:**~~ (done 2026-11-22; also "… is used
           before its declaration (line …)" for let / const / class instead of
-          "Unknown name"; open: a function that reads a let / const before its
-          statement has run gets undefined, where Javascript throws a
-          ReferenceError, as tinyscript now does for a class) short for a
+          "Unknown name", and at runtime a ReferenceError when a function reads
+          a let / const / class before its statement has run, as in Javascript
+          (before, a let / const read like that gave undefined)) short for a
           constructor function plus methods on its prototype; no `extends`, no
           `super` (the expensive part), no static members, no getters. Decided
           2026-11-22 after writing the examples:
@@ -452,8 +451,19 @@ and differential tests run against node.
             falls into by accident, and nobody writes `Num.prototype.area = 5`
             by accident.
 
-       3. **`interface` / `implements`** (spelling as in TypeScript), to say
-          that two classes implement the same protocol:
+       3. **`interface` / `implements`: parked (2026-11-22, after a review of
+          the reached state).** `interface` and `implements` are reserved words
+          with a hint, so that they can come later without breaking scripts.
+          Reasons: with the decisions below (checked only before the run, only
+          in the file that declares it) an interface only checks that a class of
+          the same file has all methods, and a missing method is reported anyway
+          when it is called ("Num has no method 'derive'"). What makes
+          interfaces worth it in TypeScript, types at the places of use, was
+          dropped on purpose; a protocol shared across modules needs validation
+          across files first. The examples describe their protocols in a
+          comment. Worth another look if checking across files exists, or if
+          programs with many classes miss the check. The plan as it stood, to
+          say that two classes implement the same protocol:
 
           ```js
           interface Shape { area(); describe(); }
@@ -588,7 +598,7 @@ and differential tests run against node.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
     `toString(radix)`); ~~`undefined`~~ (done); ~~minimal `try` / `catch`~~
     (done); a ~~library batch~~ (done, also `range(…).reverse()` and `delete`);
-    ~~method shorthand~~ (done), ~~`class`~~ (done), then `interface` (see 6.),
+    ~~method shorthand~~ (done), ~~`class`~~ (done; `interface` parked, see 6.),
     a more comfortable REPL, standard input.
 
 ## Interpreter and code quality

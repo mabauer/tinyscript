@@ -104,6 +104,20 @@ public class TinyscriptModelUtil {
 	}
 
 	/**
+	 * Whether an identifier declares a variable of let / const (also in a pattern) or the name of
+	 * a class: these exist only once their statement has run.
+	 */
+	public static boolean isLexicalDeclaration(Identifier identifier) {
+		for (EObject container = identifier.eContainer(); container != null; container = container.eContainer()) {
+			if (container instanceof VariableStatement || container instanceof ClassDeclaration)
+				return true;
+			if (!(container instanceof Pattern) && !(container instanceof BinaryExpression))
+				return false;
+		}
+		return false;
+	}
+
+	/**
 	 * The text of a property name: greet in { greet: … } or greet() { … }, "two words" for a string.
 	 */
 	public static String propertyKey(PropertyName key) {

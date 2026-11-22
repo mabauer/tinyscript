@@ -114,8 +114,11 @@ use of an undeclared name. A property access on `undefined` (`typeof o.x.y` when
 
 ### Declaration
 
-Variables must be declared before use. Tinyscript runs in strict mode — using an
-undeclared identifier throws a `ReferenceError`.
+Variables must be declared before use: an undeclared name, or one that is only
+declared further down in the same block (`print(x); let x = 1;`), is an error
+before the script runs. A function may use a variable declared after it, since
+it runs later; if it is called before the declaration has run, that is a
+`ReferenceError` ("x is used before its declaration"), as in Javascript.
 
 ```
 let x;          // declared, value is undefined
@@ -960,9 +963,10 @@ print(p instanceof Point, typeof Point, Object.keys(p));   // true function ["x"
   and methods may mention a class declared further down, since they run later,
   but `new Point(1, 2)` at the top level before `class Point` is an error.
 - Not supported: `extends` and `super`, `static` members, getters and setters,
-  and field declarations in the class body (fields get their values in the
-  constructor). The compiler says so with a hint. Code that several classes
-  share goes into a function.
+  field declarations in the class body (fields get their values in the
+  constructor), and interfaces (`interface` and `implements` are reserved
+  words). The compiler says so with a hint. Code that several classes share goes
+  into a function.
 
 ### Constructor functions and `.prototype`
 

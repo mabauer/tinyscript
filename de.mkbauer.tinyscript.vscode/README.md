@@ -3,8 +3,9 @@
 Syntax highlighting for [tinyscript](https://github.com/mabauer/tinyscript)
 files (`.tys`): keywords, strings with escapes, numbers, comments, builtins
 (`print`, `range`, `Math`, …), operators, class declarations; `finally`,
-`switch`, `case` and `var` are marked as not supported. Comment toggling,
-bracket matching and auto-closing quotes come from the language configuration.
+`switch`, `case`, `var`, `interface` and `implements` are marked as not
+supported. Comment toggling, bracket matching and auto-closing quotes come from
+the language configuration.
 
 This is stage 1 (see `TODO.md` in the repository): no validation or completion
 yet; those would come from a language server built from the Xtext grammar.

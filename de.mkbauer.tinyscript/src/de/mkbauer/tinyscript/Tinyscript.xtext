@@ -424,9 +424,9 @@ enum IncrementOperator:
 
 // Javascript keywords that tinyscript does not support. They are reserved, so that the parser
 // can say so (TinyscriptSyntaxErrorMessageProvider); like in Javascript, they are fine as
-// property names (o.class, { case: 1 }).
+// property names (o.switch, { case: 1 }).
 ReservedWord:
-	'finally' | 'switch' | 'case' | 'var'
+	'finally' | 'switch' | 'case' | 'var' | 'interface' | 'implements'
 ;
 
 // All keywords of tinyscript: they cannot be names of variables, but like in Javascript, they

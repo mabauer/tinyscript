@@ -1,23 +1,13 @@
 // Orders of a small shop, processed by listeners on an event bus.
 //
-// Written with class and interface as planned (TODO.md, "Objects with methods
-// are verbose"): it does not run yet. orders_today.tys is the same program
-// with constructor functions and prototypes, and runs today; both must print
-// the same. Besides what expressions.tys uses, this example tries:
+// Written with class; orders_today.tys is the same program with constructor
+// functions and prototypes, as before class. Both print the same.
 //
-// - a class that implements several interfaces (Inventory, Accounting, AuditLog)
-// - an interface is checked before the script runs and does not exist at
-//   runtime: subscribe tests for the method, so an object literal with an
-//   onEvent method is a listener too
+// The listeners (Inventory, Accounting, Shipping, AuditLog) have a method
+// onEvent(event); those that contribute to the report at the end also have
+// report(). The bus tests for onEvent, so an object literal with an onEvent
+// method is a listener too.
 import parse from "std:string";
-
-interface EventListener {
-    onEvent(event);
-}
-
-interface Reporting {
-    report();
-}
 
 // --- Data ---
 
@@ -124,7 +114,7 @@ class EventBus {
 // --- Listeners ---
 
 // Reserves the products of an order, or cancels it
-class Inventory implements EventListener, Reporting {
+class Inventory {
     constructor(bus, stock) {
         this.bus = bus;
         this.stock = stock;
@@ -152,7 +142,7 @@ class Inventory implements EventListener, Reporting {
 }
 
 // Keeps track of what is still to be paid, and of payments that cannot be used
-class Accounting implements EventListener, Reporting {
+class Accounting {
     constructor(bus) {
         this.bus = bus;
         this.open = new Map();       // order id -> amount in cents
@@ -194,7 +184,7 @@ class Accounting implements EventListener, Reporting {
 }
 
 // Ships an order once it is paid
-class Shipping implements EventListener {
+class Shipping {
     constructor(bus) {
         this.bus = bus;
         this.orders = new Map();     // order id -> order, until shipped
@@ -216,7 +206,7 @@ class Shipping implements EventListener {
 }
 
 // Records every event
-class AuditLog implements EventListener, Reporting {
+class AuditLog {
     constructor() {
         this.entries = [];
     }

@@ -1,20 +1,18 @@
 // Symbolic expressions: evaluate, differentiate, simplify.
 //
-// Written with class and interface as planned (TODO.md, "Objects with methods
-// are verbose"): it does not run yet. expressions_today.tys is the same
-// program with constructor functions and prototypes, and runs today; both must
-// print the same.
+// Written with class; expressions_today.tys is the same program with
+// constructor functions and prototypes, as before class. Both print the same.
 //
-// The interface says what every kind of expression can do. The validator checks
-// each class that says "implements Expr": a missing method, or one with more
-// parameters than the interface names, is an error before the script runs.
-interface Expr {
-    evaluate(env);
-    derive(name);
-    simplify();
-    precedence();
-    toString();
-}
+// Every kind of expression (Num, Var, Add, Sub, Mul, Pow) has the same methods:
+//
+//   evaluate(env)   its value, with the values of the variables in env
+//   derive(name)    its derivative by the variable name
+//   simplify()      the same expression, simplified
+//   precedence()    how tightly it binds, for the parentheses in toString
+//   toString()      the expression as text
+//
+// tinyscript has no interfaces that would check this before the script runs;
+// a missing method is reported when it is called.
 
 // Constructors that simplify while they build: constants are folded, neutral
 // elements dropped, a constant factor comes first.
@@ -63,7 +61,7 @@ function binary(left, op, right, precedence) {
 }
 
 // A number
-class Num implements Expr {
+class Num {
     constructor(value) { this.value = value; }
     evaluate(env) { return this.value; }
     derive(name) { return new Num(0); }
@@ -73,7 +71,7 @@ class Num implements Expr {
 }
 
 // A variable, its value comes from env
-class Var implements Expr {
+class Var {
     constructor(name) { this.name = name; }
     evaluate(env) {
         const value = env[this.name];
@@ -89,7 +87,7 @@ class Var implements Expr {
 }
 
 // left + right
-class Add implements Expr {
+class Add {
     constructor(left, right) {
         this.left = left;
         this.right = right;
@@ -102,7 +100,7 @@ class Add implements Expr {
 }
 
 // left - right
-class Sub implements Expr {
+class Sub {
     constructor(left, right) {
         this.left = left;
         this.right = right;
@@ -115,7 +113,7 @@ class Sub implements Expr {
 }
 
 // left * right
-class Mul implements Expr {
+class Mul {
     constructor(left, right) {
         this.left = left;
         this.right = right;
@@ -131,7 +129,7 @@ class Mul implements Expr {
 }
 
 // base ^ exponent, the exponent is a number
-class Pow implements Expr {
+class Pow {
     constructor(base, exponent) {
         this.base = base;
         this.exponent = exponent;
