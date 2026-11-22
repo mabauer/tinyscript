@@ -486,9 +486,15 @@ and differential tests run against node.
 
 ## Interpreter and code quality
 
-- **`JvmScriptEngineRunner` needs Graal.js**, so its 12 tests are always
-  skipped. Either add the GraalJS dependency or remove it (decision deferred).
-  Its error handling is minimal.
+- ~~**`JvmScriptEngineRunner` needs Graal.js**~~ (removed 2026-11-22). It ran
+  the generated Javascript with GraalJS or Nashorn via JSR-223, had no users and
+  no tests left. Decided: node stays the reference for the differential tests
+  (GraalJS is a different implementation, e.g. of `Math`), and embedding in Java
+  means `TinyscriptEngine` with its sandbox (a transpiled script would lose
+  tinyscript's checks, its error locations and the resource limits). If speed
+  matters, first make the interpreter faster (see Speed); an optional
+  `tinyscript-graal` module ("fast mode without sandbox", only with the Graal
+  JIT) would be a decision of its own, based on measurements.
 
 ## Build and operations
 

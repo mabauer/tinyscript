@@ -129,8 +129,7 @@ curl -s -X POST http://localhost:8080/execute -H 'Content-Type: text/plain' --da
 kill %1
 ```
 
-Expected test result: all interpreter tests pass; `JvmScriptEngineRunnerTest`
-shows 12 **skipped** (not failed) on standard OpenJDK without Graal.js/Nashorn.
+Expected test result: all tests pass.
 
 ---
 
@@ -254,13 +253,6 @@ workspace file.
 `org.eclipse.emf.mwe2.launch;bundle-version="2.12.1"` means "at least 2.12.1".
 This is satisfied by MWE2 2.24.x — do not change it to 2.24.0, as that would
 require exactly that version or higher and may break older setups unnecessarily.
-
-### No JavaScript engine on standard OpenJDK
-
-Nashorn was removed from the JDK in Java 15. Graal.js is only available in
-GraalVM distributions. `JvmScriptEngineRunnerTest` uses `Assume.assumeNotNull()`
-to skip gracefully. This is expected and correct — the 12 skipped tests are not
-failures.
 
 ### Eclipse IDE: the JavaSE-NN execution environment must be explicitly mapped
 

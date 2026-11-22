@@ -8,7 +8,8 @@ code in this repository.
 Tinyscript is a proof-of-concept JavaScript-like scripting language built on
 Eclipse Xtext. It supports dynamic typing, prototypal inheritance, closures, and
 sandboxed execution. The project targets multiple deployment targets: Eclipse
-IDE plugin, standalone REPL, Spring Boot web app, and JVM ScriptEngine.
+IDE plugin, standalone REPL, and Spring Boot web app; it can be embedded in Java
+applications via `TinyscriptEngine`.
 
 ## Build Commands
 

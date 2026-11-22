@@ -104,7 +104,4 @@ reuses its cached failed-resolution result for SNAPSHOTs.
 ## Running tests
 
 Launch the JUnit tests from the `de.mkbauer.tinyscript.tests` project as you
-would any Eclipse plug-in test. The 12 tests in `JvmScriptEngineRunnerTest` will
-appear as **skipped** (not failed) on standard OpenJDK, which has no built-in
-JavaScript engine (Nashorn was removed in Java 15; Graal.js is only available in
-GraalVM distributions). All other tests should pass.
+would any Eclipse plug-in test. All tests should pass.
