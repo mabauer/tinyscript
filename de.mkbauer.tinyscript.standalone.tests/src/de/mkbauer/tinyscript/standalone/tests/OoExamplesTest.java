@@ -35,6 +35,31 @@ public class OoExamplesTest extends TinyscriptTranspilerTestBase {
             Cannot evaluate x * y + y^3: no value for y
             """;
 
+    private static final String ORDERS_OUTPUT = """
+            Line 4: unknown product gizmo
+            Line 8: cannot read "refund 1001"
+
+            Audit log:
+               1  order 1001 placed by alice: 2 widget, 1 gadget for 34.99
+               2  order 1002 placed by bob: 5 gadget for 49.95
+               3  order 1002 cancelled: not enough gadget
+               4  payment of 34.99 for order 1001
+               5  order 1001 paid
+               6  order 1001 shipped to alice
+               7  order 1004 placed by carol: 1 widget for 12.50
+               8  payment of 10.00 for order 1004
+               9  payment of 49.95 for order 1002
+
+            Stock:
+              widget     0
+              gadget     3
+
+            Open:
+              order 1004      2.50
+            To refund:
+              order 1002     49.95
+            """;
+
     @Test
     public void testExpressionsToday() {
         assertProgramOutput(EXPRESSIONS_OUTPUT, DIRECTORY.resolve("expressions_today.tys"));
@@ -44,5 +69,16 @@ public class OoExamplesTest extends TinyscriptTranspilerTestBase {
     @Disabled("class and interface are not implemented yet (TODO.md: Objects with methods are verbose)")
     public void testExpressions() {
         assertProgramOutput(EXPRESSIONS_OUTPUT, DIRECTORY.resolve("expressions.tys"));
+    }
+
+    @Test
+    public void testOrdersToday() {
+        assertProgramOutput(ORDERS_OUTPUT, DIRECTORY.resolve("orders_today.tys"));
+    }
+
+    @Test
+    @Disabled("class and interface are not implemented yet (TODO.md: Objects with methods are verbose)")
+    public void testOrders() {
+        assertProgramOutput(ORDERS_OUTPUT, DIRECTORY.resolve("orders.tys"));
     }
 }
