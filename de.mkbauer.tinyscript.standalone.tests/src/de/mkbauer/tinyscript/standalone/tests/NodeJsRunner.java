@@ -20,7 +20,10 @@ import org.apache.commons.exec.PumpStreamHandler;
  */
 public class NodeJsRunner {
 
-    private static final int TIMEOUT_MS = 5_000;
+    // Generous: the first node process of a CI run can take several seconds to start
+    // (AdventOfCode2024Test.testDay01 was killed after 5 s once); a script that really
+    // hangs still fails
+    private static final int TIMEOUT_MS = 30_000;
 
     private static Boolean nodeAvailable = null;
 
