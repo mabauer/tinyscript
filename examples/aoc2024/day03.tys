@@ -3,64 +3,29 @@
 //
 // Usage: tinyscript day03.tys -- input.txt
 //
-// tinyscript has no regular expressions, so the instructions are read with a small scanner.
+// tinyscript has no regular expressions; findAll of std:string finds the instructions.
 
 import inputText from "./aoc";
-import isDigit from "std:string";
+import findAll from "std:string";
 
-// Whether text contains word at position pos
-function startsAt(text, pos, word) {
-    return text.slice(pos, pos + word.length) == word;
-}
-
-// The number of digits (1 to 3) at position pos, 0 if there is no digit
-function digitsAt(text, pos) {
-    let count = 0;
-    while (count < 3 && isDigit(text[pos + count])) {
-        count++;
-    }
-    return count;
-}
-
-// The product of the instruction mul(X,Y) at position pos, where X and Y have 1 to 3 digits;
-// null if there is no such instruction
-function multiplicationAt(text, pos) {
-    if (!startsAt(text, pos, "mul(")) {
-        return null;
-    }
-    const x = pos + 4;
-    const xDigits = digitsAt(text, x);
-    if (xDigits == 0 || text[x + xDigits] != ",") {
-        return null;
-    }
-    const y = x + xDigits + 1;
-    const yDigits = digitsAt(text, y);
-    if (yDigits == 0 || text[y + yDigits] != ")") {
-        return null;
-    }
-    return Number(text.slice(x, x + xDigits)) * Number(text.slice(y, y + yDigits));
-}
-
-// Adds up the results of all multiplications; with conditionals, do() and don't()
-// enable and disable the multiplications that follow
-function sumOfMultiplications(memory, withConditionals) {
+// Adds up the products of all instructions mul(X,Y), where X and Y have 1 to 3 digits
+function sumOfMultiplications(memory) {
     let sum = 0;
-    let enabled = true;
-    for (const pos : range(memory.length)) {
-        if (withConditionals && startsAt(memory, pos, "do()")) {
-            enabled = true;
-        }
-        else if (withConditionals && startsAt(memory, pos, "don't()")) {
-            enabled = false;
-        }
-        const product = multiplicationAt(memory, pos);
-        if (enabled && product != null) {
-            sum += product;
+    for (const [x, y] : findAll("mul({:d},{:d})", memory)) {
+        if (x >= 0 && x < 1000 && y >= 0 && y < 1000) {
+            sum += x * y;
         }
     }
     return sum;
 }
 
+// Part 2: don't() disables the multiplications that follow, do() enables them again. The
+// enabled parts are the start up to the first don't() and, after each do(), the text up to
+// the next don't(); a separator keeps two parts from forming a new instruction.
+function enabledParts(memory) {
+    return memory.split("do()").map(part => part.split("don't()")[0]).join("|");
+}
+
 const memory = inputText();
-print("Part 1: " + sumOfMultiplications(memory, false));
-print("Part 2: " + sumOfMultiplications(memory, true));
+print("Part 1: " + sumOfMultiplications(memory));
+print("Part 2: " + sumOfMultiplications(enabledParts(memory)));

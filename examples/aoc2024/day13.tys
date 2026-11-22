@@ -4,16 +4,16 @@
 // Usage: tinyscript day13.tys -- input.txt
 
 import inputLines from "./aoc";
-import integers from "std:string";
+import parse from "std:string";
 
 // Each machine has three lines: button A, button B and the prize, e.g.
 // "Button A: X+94, Y+34", "Button B: X+22, Y+67", "Prize: X=8400, Y=5400"
 const lines = inputLines();
 const machines = [];
 for (const i : range(0, lines.length, 3)) {
-    const [ax, ay] = integers(lines[i]);
-    const [bx, by] = integers(lines[i + 1]);
-    const [px, py] = integers(lines[i + 2]);
+    const [ax, ay] = parse("Button A: X+{:d}, Y+{:d}", lines[i]);
+    const [bx, by] = parse("Button B: X+{:d}, Y+{:d}", lines[i + 1]);
+    const [px, py] = parse("Prize: X={:d}, Y={:d}", lines[i + 2]);
     machines.push({ ax, ay, bx, by, px, py });
 }
 

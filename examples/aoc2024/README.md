@@ -8,17 +8,17 @@ examples of tinyscript.
 | --------------- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
 | [1](day01.tys)  | Historian Hysteria     | destructuring, `sort` with a comparison function, `Map` for counting with `??`, `reduce`                |
 | [2](day02.tys)  | Red-Nosed Reports      | `filter` and `some` with the index, `cond ? a : b`                                                      |
-| [3](day03.tys)  | Mull It Over           | a small scanner instead of regular expressions, `slice`, `while`                                        |
+| [3](day03.tys)  | Mull It Over           | `findAll` of `std:string` instead of regular expressions, `split` and `join`                            |
 | [4](day04.tys)  | Ceres Search           | a grid of letters, objects as directions, nested loops                                                  |
 | [5](day05.tys)  | Print Queue            | a `Set` of rules, `sort` with a comparison function built from them                                     |
 | [6](day06.tys)  | Guard Gallivant        | a simulation, `Set`s of numbers for visited positions and states, loop detection, `throw`               |
-| [7](day07.tys)  | Bridge Repair          | recursion with pruning, destructuring of `split`                                                        |
+| [7](day07.tys)  | Bridge Repair          | recursion with pruning, reading lines with `parse` of `std:string`                                      |
 | [8](day08.tys)  | Resonant Collinearity  | a `Map` of arrays (`?? []`), a `Set` of positions, `{ row, col }`                                       |
 | [9](day09.tys)  | Disk Fragmenter        | two pointers, objects as files and free spans, `find`, destructuring in `for`                           |
 | [10](day10.tys) | Hoof It                | depth-first search, counting paths and distinct ends at once                                            |
 | [11](day11.tys) | Plutonian Pebbles      | memoization with a `Map`, numbers beyond 32 bits                                                        |
 | [12](day12.tys) | Garden Groups          | flood fill, counting corners instead of sides, an arrow function as local helper                        |
-| [13](day13.tys) | Claw Contraption       | reading numbers from text (`integers` of `std:string`), Cramer's rule, `Number.isInteger`               |
+| [13](day13.tys) | Claw Contraption       | reading lines with `parse` of `std:string`, Cramer's rule, `Number.isInteger`                           |
 | [14](day14.tys) | Restroom Redoubt       | optional script arguments (`System.args`), patterns as parameters, a remainder that is never negative   |
 | [15](day15.tys) | Warehouse Woes         | a mutable grid, recursive pushing of boxes (also two cells wide)                                        |
 | [16](day16.tys) | Reindeer Maze          | Dijkstra's algorithm with a priority queue (a binary heap in a closure), searching forward and backward |

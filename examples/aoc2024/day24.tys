@@ -4,17 +4,19 @@
 // Usage: tinyscript day24.tys -- input.txt
 
 import inputLines from "./aoc";
+import parse from "std:string";
 
 // The input lists the initial values of wires ("x00: 1"), then the gates ("x00 AND y00 -> z00")
 const values = new Map();
 const gates = [];
 for (const line : inputLines()) {
-    if (line.includes(": ")) {
-        const [wire, value] = line.split(": ");
-        values.set(wire, Number(value));
+    const value = parse("{:w}: {:d}", line);
+    if (value != null) {
+        const [wire, bit] = value;
+        values.set(wire, bit);
     }
     else {
-        const [a, op, b, arrow, output] = line.split(" ");
+        const [a, op, b, output] = parse("{:w} {:w} {:w} -> {:w}", line);
         gates.push({ a, op, b, output });
     }
 }
