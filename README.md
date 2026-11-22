@@ -197,11 +197,13 @@ of primitive datatypes in Javascript is a mine-field on its own.
   `catch` cannot hide them. There is no `finally`.
 - **Arrow functions** are supported. These are part of Javascript starting with
   Ecmascript 6 :-)
-- **Classes without inheritance:** `class Point { constructor(x, y) { … } … }`
-  is short for a constructor function with methods on its prototype, as in
-  Javascript. There is no `extends`, no `static` and no getters; a class can
-  only be created with `new`. Object literals have the method shorthand
-  `{ area() { … } }`.
+- **Objects: literals, factory functions and classes, without inheritance.**
+  `class Point { constructor(x, y) { … } … }` is short for a constructor
+  function with methods on its prototype, as in Javascript; a class can only be
+  created with `new`. There is no `extends`, no `static` and no getters: code is
+  shared by composition or in functions, and objects with the same methods can
+  be used alike. Object literals have the method shorthand `{ area() { … } }`.
+  See [Classes and objects](docs/language-reference.md#9-classes-and-objects).
 - **Sandboxing:** in sandboxed mode every loop iteration counts against the
   statement limit, so even endless loops cannot exceed the resource limits (see
   [Sandboxing](#sandboxing)).

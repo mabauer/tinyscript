@@ -628,13 +628,17 @@ and differential tests run against node.
        for calls of declared functions, and a field set in a constructor with
        the name of a method. Both only reject, the generator stays as it is. Not
        intended: too few arguments, `undefined` for missing properties.
-    2. **Own kinds of errors.** `throw` takes only `Error`s and a class cannot
-       extend `Error`, so `throw new MyError(…)` is a `TypeError`. The way that
-       works is not documented:
+    2. ~~**Own kinds of errors.**~~ (done 2026-11-22: documented in the language
+       reference, "Kinds of errors") `throw` takes only `Error`s and a class
+       cannot extend `Error`, so `throw new MyError(…)` is a `TypeError`. The
+       way that works is not documented:
        `const e = new Error("bad"); e.name = "ParseError"; throw e;` and in the
        `catch`: `if (e.name != "ParseError") { throw e; }`. Proposal: document
        this pattern; no special rule `extends Error`.
-    3. **The message about inheritance.** `class` has no inheritance, but
+    3. ~~**The message about inheritance.**~~ (done 2026-11-22: chapter 9 of the
+       language reference is now "Classes and objects": which form for what,
+       methods and `this`, objects of different kinds used alike, reuse without
+       inheritance, prototypes "under the hood") `class` has no inheritance, but
        chapter 9 of the language reference is called "Prototypal Inheritance",
        starts with `__proto__` and shows three old inheritance patterns on more
        space than `class`. Five ways to an object (literal, closure factory,
