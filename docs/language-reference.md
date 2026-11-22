@@ -169,7 +169,7 @@ outside it:
 {
     const inner = "only visible here";
 }
-// inner is not accessible here — ReferenceError
+// inner is not visible here: a compile-time error (Unknown name 'inner')
 ```
 
 **No hoisting:** Unlike JavaScript's `var`, Tinyscript variables are
@@ -859,7 +859,7 @@ Javascript, writing any other key is a `TypeError`, including `nums.x = 1`,
 | `arr.findLast(fn)` / `arr.findLastIndex(fn)` | Like `find` / `findIndex`, searching from the end                                                                                                                  |
 | `arr.flat([depth])`                          | A new array with the elements of nested arrays, `depth` levels deep (default `1`, `Infinity` for all)                                                              |
 | `arr.flatMap(fn)`                            | Like `map`, but an array that `fn` returns adds its elements: `["a b", "c"].flatMap(s => s.split(" "))` is `["a", "b", "c"]`                                       |
-| `arr.toString()`                             | Returns a string representation                                                                                                                                    |
+| `arr.toString()`                             | The same text as `print` and `String(arr)`: `[1, "a"]` (Javascript: `1,a`)                                                                                         |
 
 The callbacks must be functions; the results of the callbacks of `filter`,
 `some`, `every`, `find`, `findIndex`, `findLast` and `findLastIndex` are
@@ -1145,12 +1145,17 @@ print("x =", 42);           // x = 42
 print([1, "a"]);            // [1, "a"]
 print({ x: 1, y: [2] });    // {x: 1, y: [2]}
 
-const p = { x: 1, toString: function() { return "P" + this.x; } };
+const p = { x: 1, toString() { return "P" + this.x; } };
 print(p, [p]);              // P1 [P1]
 
 const o = { name: "o" }; o.self = o;
 print(o);                   // {name: "o", self: [Circular]}
 ```
+
+`x.toString()` gives the same text as `print`, `String(x)` and `"" + x`, also
+for objects and arrays without a `toString` of their own (`{x: 1}`, `[1, "a"]`;
+Javascript gives `"[object Object]"` and `"1,a"`).
+`Object.prototype.toString.call(x)` shows `x` without its own `toString`.
 
 A reference back to an object that is still being printed shows as `[Circular]`;
 nesting deeper than 50 levels shows as `[Object]` / `[Array]`. The generated
@@ -1389,7 +1394,7 @@ is a `TypeError`.
 ```
 const counts = new Map();
 for (const word : "a b a".split(" ")) {
-    counts.set(word, (counts.has(word) ? counts.get(word) : 0) + 1);
+    counts.set(word, (counts.get(word) ?? 0) + 1);
 }
 print(counts.get("a"));      // 2
 
@@ -1460,12 +1465,13 @@ writing code and for knowing its intentional limitations.
 | **Control structure bodies** | Braces optional for single statements                    | Braces always required                                                     |
 | **Counting `for` loop**      | `for (let i = 0; i < n; i++)`                            | `for (const i : range(n))`; backwards `for (const i : range(n).reverse())` |
 | **Iterable `for` loop**      | `for (const x of array)`                                 | `for (const x : array)`                                                    |
-| **`for...in`**               | Iterates over keys                                       | Not supported (use `for...of` style with `:`)                              |
+| **`for...in`**               | Iterates over keys                                       | Not supported: `for (const key : Object.keys(obj))`                        |
 | **Array `+`**                | String concatenation                                     | Concatenation of two arrays; an array plus a number etc. is a `TypeError`  |
 | **`==` vs `===`**            | Different (type coercion vs. strict)                     | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`)     |
 | **Relational operators**     | Coerce operands (`1 < "2"`)                              | Only number with number or string with string; otherwise a `TypeError`     |
 | **`var` keyword**            | Function-scoped variable, hoisted                        | Reserved word; use `let`                                                   |
 | **`++` / `--`**              | Expressions, prefix and postfix                          | Only the statements `i++;` / `i--;`                                        |
+| **`toString()`**             | `"[object Object]"` for objects, `"1,2"` for arrays      | The same text as `print`: `{x: 1}`, `[1, 2]`                               |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
 
@@ -1558,12 +1564,16 @@ import * as fs from "std:fs";
 | `sum(items)`         | the sum of the numbers                     |
 | `contains(items, x)` | whether an element is `== x`               |
 | `reverse(items)`     | the elements in reverse order, a new array |
+| `min(items)`         | the smallest element (numbers, or strings) |
+| `max(items)`         | the largest element (numbers, or strings)  |
 
 They work on anything the `for` loop goes through: arrays, ranges, strings,
 `Set`s and `Map`s (`sum(range(10))` is `45`). The elements of a string are its
 characters, so `contains("abc", "bc")` is `false` (use `"abc".includes("bc")`);
 the elements of a `Map` are `[key, value]` pairs, which `==` never matches (use
-`m.has(key)`).
+`m.has(key)`). `min` and `max` compare as `<` does, so the elements must be all
+numbers or all strings; with no elements they throw an `Error`. `max(values)` is
+what Javascript writes `Math.max(...values)`.
 
 #### `std:string`
 
@@ -1641,13 +1651,13 @@ if (fs.exists("todo.txt")) {
 ### Keywords
 
 ```
-let  const  function  return  if  else  for  while  break  continue  throw
-new  this  null  undefined  true  false  typeof  instanceof  delete  assert  import
-export  from  as
+let  const  function  class  return  if  else  for  while  break  continue
+throw  try  catch  new  this  null  undefined  true  false  typeof  instanceof
+delete  assert  import  export  from  as
 ```
 
-Reserved (a syntax error with a hint what to write instead): `var`, `try`,
-`catch`, `finally`, `switch`, `case`, `class`.
+Reserved (a syntax error with a hint what to write instead): `var`, `finally`,
+`switch`, `case`, `interface`, `implements`.
 
 ### Literals
 
@@ -1658,6 +1668,7 @@ true      false               // booleans
 null      undefined           // null, undefined
 [1, 2, 3]                    // array
 { key: value }               // object
+{ key, method() { ... } }    // object with shorthands
 function(x) { ... }          // function expression
 x => x * 2                   // arrow function
 ```
@@ -1665,26 +1676,21 @@ x => x * 2                   // arrow function
 ### Common patterns
 
 ```
-// Named constructor
-function Circle(r) {
-    this.radius = r;
-    this.area = function() { return Math.PI * r * r; };
+// An object with a method
+const point = { x: 1, y: 2, length() { return Math.hypot(this.x, this.y); } };
+
+// A class
+class Circle {
+    constructor(r) { this.radius = r; }
+    area() { return Math.PI * this.radius * this.radius; }
 }
 const c = new Circle(5);
 print(c.area());
 
-// Inheritance
-function Shape(color) { this.color = color; }
-function Box(color, side) {
-    Shape.call(this, color);
-    this.side = side;
-}
-Box.prototype = Object.create(Shape.prototype);
-
-// Counter via closure
+// Counter via closure (private state)
 function makeCounter() {
     let n = 0;
-    return { inc: function() { n = n + 1; }, get: function() { return n; } };
+    return { inc() { n++; }, get() { return n; } };
 }
 
 // Functional array processing

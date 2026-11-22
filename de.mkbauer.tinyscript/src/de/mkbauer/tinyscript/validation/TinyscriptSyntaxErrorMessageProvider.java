@@ -124,6 +124,9 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		// class B extends A { … }: the parser reports it at class (or at extends)
 		if (text.equals("extends") || (text.equals("class") && extendsFollows(tokens, index)))
 			return "Classes in tinyscript have no inheritance (no extends): share code with functions";
+		// const Q = class { … }; or f(class { … })
+		if (text.equals("class") && BEFORE_EXPRESSION.contains(before))
+			return "A class is declared as a statement at the top level of a file (class Q { … }), not used as a value";
 		// static make() { … }, get area() { … }: a name before a method (never valid elsewhere)
 		Token next = next(tokens, index);
 		boolean method = isName(context, tokens.get(index)) && next != null && "(".equals(next.getText());

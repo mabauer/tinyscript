@@ -98,7 +98,7 @@ public class TinyscriptModelUtil {
 	public static List<Identifier> declaredIdentifiers(Statement statement) {
 		if (statement instanceof VariableStatement variables)
 			return declaredIdentifiers(variables);
-		if (statement instanceof ClassDeclaration declaration)
+		if (statement instanceof ClassDeclaration declaration && declaration.getId() != null)
 			return List.of(declaration.getId());
 		return List.of();
 	}

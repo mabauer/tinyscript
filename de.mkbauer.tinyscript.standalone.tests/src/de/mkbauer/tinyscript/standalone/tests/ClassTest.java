@@ -189,6 +189,16 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
                 reportedErrors("class A {\n  f() {\n    let x = 1\n    return x;\n  }\n}"));
     }
 
+    @Test
+    public void testAClassExpressionIsASyntaxErrorAndNoCrash() {
+        // Used to crash the validation (a declaration without name after the syntax error)
+        List<String> errors = reportedErrors("print(Math.PI);\nconst Q = class { };");
+        assertEquals("2:11: A class is declared as a statement at the top level of a file (class Q { … }), not used as a value",
+                errors.get(0), errors.toString());
+        errors = reportedErrors("const Q = class { };\nprint(limit);\nconst limit = 1;");
+        assertTrue(!errors.isEmpty(), errors.toString());
+    }
+
     private String onlyError(String code) {
         List<String> errors = reportedErrors(code);
         assertEquals(1, errors.size(), errors.toString());

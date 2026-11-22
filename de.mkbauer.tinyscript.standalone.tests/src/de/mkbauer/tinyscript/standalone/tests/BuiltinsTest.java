@@ -63,7 +63,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArrayJoinAndToString() {
-        assertEquals("1,2\n1-2\n1, a\n", interpreterOutput(
+        assertEquals("1,2\n1-2\n[1, \"a\"]\n", interpreterOutput(
                 "print([1, 2].join());\n"
                 + "print([1, 2].join(\"-\"));\n"
                 + "print([1, \"a\"].toString());"));
@@ -282,7 +282,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testObjectHasOwnPropertyAndToString() {
-        assertEquals("true\nfalse\n[object Object]\n", interpreterOutput(
+        assertEquals("true\nfalse\n{a: 1}\n", interpreterOutput(
                 "let p = { x: 1 };\n"
                 + "let o = Object.create(p);\n"
                 + "o.y = 2;\n"

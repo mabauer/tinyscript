@@ -206,6 +206,19 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testStdArrayMinAndMax() throws IOException {
+        Path main = write("main.tys", "import min, max from \"std:array\";\n"
+                + "print(min([3, -1, 2]), max([3, -1, 2]), min(range(5, 10)), max(range(5)), min([7]), max(new Set([1.5, 2.5])));\n"
+                + "print(min([\"pear\", \"apple\", \"fig\"]), max(\"tinyscript\"), max([2, Infinity]), min([-0.5, 0]));\n"
+                + "const scores = new Map([[\"a\", 3], [\"b\", 7]]); print(max(scores.values()), min(scores.keys()));\n"
+                + "try { max([]); } catch (e) { print(e.message); }");
+        assertEquals("-1 3 5 4 7 2.5\napple y Infinity -0.5\n7 a\nmax: there are no elements\n", runModule(main));
+        assertSameOutputModule(main);
+        // Mixed elements cannot be compared (as with <)
+        assertThrows(TinyscriptTypeError.class, () -> runModule(write("mixed.tys", "import min from \"std:array\";\nprint(min([1, \"2\"]));")));
+    }
+
+    @Test
     @Timeout(10)
     public void testStdArrayReverseIsLinear() throws IOException {
         // With unshift in a loop, reverse was quadratic: 200,000 elements took 2.2 s, a million about a minute

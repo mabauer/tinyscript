@@ -3,6 +3,7 @@ package de.mkbauer.tinyscript.runtime.object;
 import java.util.Arrays;
 import java.util.List;
 
+import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.EmptyFunction;
@@ -211,9 +212,11 @@ public class ObjectConstructor extends BuiltinConstructor {
 
 	// Object.prototype methods (the prototype of all objects)
 
-	// Like Javascript, also for objects of a constructor function: new Car().toString() is "[object Object]"
+	// The same text as print and String(o): {x: 1}, Point {x: 1, y: 2} (Javascript: "[object Object]")
 	private TSValue objectToString(TSObject self, TSValue[] args) {
-		return TSValue.of("[object Object]");
+		String result = new Display(true).own(self);
+		engine.recordStringCreation(result);
+		return TSValue.of(result);
 	}
 
 	private TSValue hasOwnProperty(TSObject self, TSValue[] args) {

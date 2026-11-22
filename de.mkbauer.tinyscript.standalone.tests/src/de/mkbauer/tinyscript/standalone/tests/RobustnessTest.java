@@ -114,7 +114,7 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
         String code = "function Car() { } let c = new Car();\n"
                 + "print(c.constructor == Car, Object.keys(Car.prototype).length, Car.prototype.constructor == Car, {}.constructor == Object);\n"
                 + "print(c.toString());";
-        assertEquals("true 0 true true\n[object Object]\n", interpreterOutput(code));
+        assertEquals("true 0 true true\n{}\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 

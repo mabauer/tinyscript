@@ -1,4 +1,4 @@
-// Standard library: helpers for collections.  import sum, reverse from "std:array";
+// Standard library: helpers for collections.  import sum, max, reverse from "std:array";
 // (They work on anything the for loop goes through: arrays, ranges, strings, Sets and Maps.)
 
 // The sum of the numbers in items
@@ -41,6 +41,32 @@ export function reverse(items) {
 	const result = new Array(n);
 	for (const i : range(n)) {
 		result[n - 1 - i] = all[i];
+	}
+	return result;
+}
+
+// The smallest element of items: numbers, or strings (compared with <); an error if there is none
+export function min(items) {
+	return extreme("min", items, (a, b) => a < b);
+}
+
+// The largest element of items: numbers, or strings (compared with >); an error if there is none
+export function max(items) {
+	return extreme("max", items, (a, b) => a > b);
+}
+
+// The element that is better than all others, by better(a, b)
+function extreme(name, items, better) {
+	let result = undefined;
+	let first = true;
+	for (const x : items) {
+		if (first || better(x, result)) {
+			result = x;
+		}
+		first = false;
+	}
+	if (first) {
+		throw new Error(name + ": there are no elements");
 	}
 	return result;
 }
