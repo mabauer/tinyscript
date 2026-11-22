@@ -13,7 +13,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
- * throw ends the script with an error message; there is no try / catch.
+ * throw ends the script with an error message, unless try / catch catches it (TryCatchTest).
  */
 public class ThrowTest extends TinyscriptTranspilerTestBase {
 
@@ -30,10 +30,10 @@ public class ThrowTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    public void testThrowOtherValues() {
-        assertEquals("oops", thrown("throw \"oops\";").getMessage());
-        assertEquals("42", thrown("throw 42;").getMessage());
+    public void testOnlyErrorsCanBeThrown() {
         assertEquals("", thrown("throw new Error();").getMessage());
+        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("throw \"oops\";"));
+        assertEquals("throw needs an Error object, e.g. throw new Error(\"...\"), not string", e.getMessage());
     }
 
     @Test

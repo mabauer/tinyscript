@@ -339,8 +339,9 @@ assert condition;
 ```
 
 Throws an error if `condition` is `false` (or `null` / `undefined`; numbers and
-strings are a `TypeError`, see Conditions). Useful for quick sanity checks
-during development:
+strings are a `TypeError`, see Conditions). A failed `assert` is a programming
+error: `catch` does not catch it. Useful for quick sanity checks during
+development:
 
 ```
 assert fibonacci(7) == 21;
@@ -499,10 +500,10 @@ for (const i : range(1, 11)) {
 
 ### `throw`
 
-Ends the script with an error. The message is that of an `Error` object, or the
-thrown value as a string; the REPL prints it with the stack trace as
-`TinyscriptError: message`. There is no `try` / `catch`: a thrown error cannot
-be caught.
+Throws an error: an `Error` object (see [Errors](#errors)). Unlike Javascript,
+only `Error` objects can be thrown; `throw "text";` is a `TypeError`. Unless a
+`try` / `catch` catches it, the error ends the script; the REPL prints it with
+the stack trace as `TinyscriptError: message`.
 
 ```
 function parse(line) {
@@ -512,6 +513,41 @@ function parse(line) {
     return line.split(",").map(Number);
 }
 ```
+
+### `try` / `catch`
+
+```
+try {
+    const point = parse(line);
+    print(point);
+}
+catch (e) {
+    print("skipped: " + e.message);
+}
+```
+
+If the `try` block throws an error that can be caught, the rest of the block is
+skipped and the `catch` block runs, with the error as `e`: always an `Error`
+object with `e.name` and `e.message`. `e` is a variable of the `catch` block (it
+can be assigned, as in Javascript). Without the variable, `catch { … }` ignores
+the error. There is no `finally`.
+
+Only the errors a script can expect are caught:
+
+- errors thrown with `throw`;
+- failed input / output of `std:fs` (a missing file, a directory that cannot be
+  listed, …): an `Error` named `IOError`, e.g. `e.message` is
+  `Cannot read file "data.txt": not found`.
+
+Everything else is a programming error and ends the script, also inside `try`: a
+`TypeError` (wrong types, wrong arguments of a builtin, accessing a property of
+`null`), a failed `assert`, a stack overflow, and a violated resource limit in
+sandboxed mode. This is stricter than Javascript, where `catch` gets every
+error; a broad `catch (e) { return null; }` cannot hide a typo.
+
+`throw e;` in a `catch` block throws the caught error again, with its original
+place and stack trace (unless its message was changed). `return`, `break` and
+`continue` leave a `try` or `catch` block as any other block.
 
 ### `return`
 
@@ -1312,7 +1348,9 @@ Calling something that is not a function is a `TypeError` that names it:
 `new Error(message)` (or `Error(message)`) creates an error object for `throw`:
 `e.message`, `e.name` (`"Error"`) and `e.toString()` (`"Error: message"`) as in
 Javascript; the message must be a string. There are no subclasses like
-`TypeError` and no stack property.
+`TypeError` and no stack property. `catch` gets thrown errors and failed input /
+output (`e.name` is `"IOError"`), not programming errors (see
+[`try` / `catch`](#try--catch)).
 
 A too deep (or endless) recursion is a `TinyscriptStackOverflowError` ("Stack
 overflow: too many nested calls"); its stack trace shows only the innermost and
@@ -1362,12 +1400,12 @@ writing code and for knowing its intentional limitations.
 ### Things not supported
 
 - **Regular expressions** — no regex literals or `RegExp`
-- **`try` / `catch`** — errors cannot be caught; `throw` ends the script
+- **`finally`** — only `try` / `catch`; `catch` does not catch programming
+  errors such as a `TypeError`
 - **Template literals** — no backtick strings
 - **Destructuring** beyond flat patterns in declarations, `for` and parameters —
   no nesting, defaults, renaming, `...rest`, or patterns in assignments
 - **Spread operator** — no `...array` in call sites
-- **`delete`** operator
 - **`switch` statement**
 - **Getter / setter properties** (`get`/`set` in object literals)
 - **`Symbol`, `WeakMap`, `Promise`**, and other ES6+ built-ins
@@ -1432,8 +1470,9 @@ print(area(2), unit, geo.area(1));
   ```
 
   - `std:fs` (native, not available sandboxed): file access, UTF-8, relative
-    paths against the working directory. Strict: errors end the script
-    (tinyscript has no `try` / `catch`), so check with `exists` first.
+    paths against the working directory. A failed read or write throws an
+    `Error` named `IOError`, which `catch` can catch (see
+    [`try` / `catch`](#try--catch)); wrong arguments are a `TypeError`.
 
     | Function                  |                                                                                       |
     | ------------------------- | ------------------------------------------------------------------------------------- |

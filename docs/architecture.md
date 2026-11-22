@@ -572,8 +572,13 @@ The generator prepends small JavaScript shims to make the transpiled output
 self-contained:
 
 ```javascript
-// Tinyscript assert() → JS function
-function assert(condition) { if (!condition) throw "AssertionError"; }
+// Tinyscript assert → JS function; its error is not caught by catch (__ts_catchable)
+class __ts_AssertionError extends Error {}
+function assert(condition) { if (!condition) throw new __ts_AssertionError("assert: condition is false"); }
+
+// throw x → throw __ts_throwable(x): only Error objects can be thrown
+// catch (e) { … } → catch (e) { __ts_catchable(e); … }: rethrows TypeError, RangeError,
+// ReferenceError, SyntaxError and failed asserts, as the interpreter does not catch them
 
 // System.currentTimeMillis() → Date.now()
 var System = {}; System.currentTimeMillis = Date.now;

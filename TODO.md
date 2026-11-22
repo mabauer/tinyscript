@@ -322,30 +322,21 @@ and differential tests run against node.
 
   - **Gaps**, by weight:
 
-    1. **No error handling.** Without `try` / `catch`, `throw` only ends the
-       script: `fs.readFile` on a missing file cannot be handled, and libraries
-       cannot report errors in a useful way. The biggest gap for practical use.
-       Revisits the decision of 2026-11-21. `throw` and all runtime errors are
-       already Java exceptions in the interpreter (like `break` and `return`),
-       so catching is cheap. Decided 2026-11-20: **the minimal `try` /
-       `catch`**. The variants:
-       - **Minimal `try { … } catch (e) { … }`** (chosen), no `finally`:
-         grammar, one case in the interpreter, the generator passes it through;
-         `try` / `catch` are already reserved.
-       - **A protected call as in Lua:**
-         `const r = attempt(() => fs.readFile(p));` with `r.ok`, `r.value`,
-         `r.error`. One builtin, no grammar change; the generator needs a small
-         helper for node.
-       - **Return values instead of errors** (`fs.readFile` gives `null` for a
-         missing file): no new mechanism, but only works for single functions
-         and does not help libraries written in tinyscript.
-       - Still to decide: _what is caught_ — everything, or only expected errors
-         (thrown values, input / output) while a `TypeError` stays a programming
-         error that ends the script (stricter, and it avoids comparing runtime
-         messages that differ between the interpreter and node); _what `e` is_ —
-         simplest: always an `Error` with `name` and `message`, any other thrown
-         value as it is; _sandbox_ — resource limit violations and the stack
-         overflow must never be catchable.
+    1. ~~**No error handling.**~~ (done 2026-11-22: the minimal
+       `try { … } catch (e) { … }`, optionally `catch { … }`, no `finally`).
+       Decided 2026-11-22: `catch` gets only what a script can expect, errors
+       thrown with `throw` and failed `std:fs` input / output (an `Error` named
+       `IOError`); `TypeError`s, failed `assert`s, the stack overflow and
+       resource limits end the script. `throw` takes only `Error` objects
+       (breaking: `throw "text";` is a `TypeError`), so `e` is always an `Error`
+       with `name` and `message`. `throw e;` throws a caught error again with
+       its place and stack trace. Node: the generated `catch` rethrows
+       `TypeError`, `RangeError`, `ReferenceError`, `SyntaxError` and failed
+       asserts; the generated `std:fs` throws the same `IOError`s. Not chosen: a
+       protected call as in Lua (`attempt(() => …)` with `r.ok`, `r.value`,
+       `r.error`), return values instead of errors. Possible later: `finally`,
+       error classes with `instanceof` (`TypeError`, `IOError`), patterns in
+       `catch ({ message })`.
     2. ~~**`undefined` as a name**~~ (done 2026-11-21: a literal like `null`).
     3. **No input.** Only files and `System.args`; nothing reads standard input,
        so interactive scripts are not possible. Candidate: `readLine()` in a
@@ -489,9 +480,9 @@ and differential tests run against node.
       or 3. Not pursued: (2) a `TypeError` for an object as operand of `&&` /
       `||`.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
-    `toString(radix)`); ~~`undefined`~~ (done); minimal `try` / `catch`; a
-    ~~library batch~~ (done, also `range(…).reverse()` and `delete`); method
-    shorthand, a more comfortable REPL, standard input.
+    `toString(radix)`); ~~`undefined`~~ (done); ~~minimal `try` / `catch`~~
+    (done); a ~~library batch~~ (done, also `range(…).reverse()` and `delete`);
+    method shorthand, a more comfortable REPL, standard input.
 
 ## Interpreter and code quality
 

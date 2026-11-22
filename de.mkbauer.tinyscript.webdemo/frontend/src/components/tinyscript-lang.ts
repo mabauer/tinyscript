@@ -7,7 +7,7 @@ interface State {
 
 // Keywords and literals of the tinyscript grammar (Tinyscript.xtext)
 const KEYWORDS = new Set([
-  'let', 'const', 'function', 'if', 'else', 'for', 'while', 'break', 'continue', 'throw', 'return',
+  'let', 'const', 'function', 'if', 'else', 'for', 'while', 'break', 'continue', 'throw', 'try', 'catch', 'return',
   'new', 'this', 'typeof', 'instanceof', 'delete', 'import', 'export', 'from', 'as',
 ])
 
