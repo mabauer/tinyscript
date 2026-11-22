@@ -118,7 +118,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         assertEquals(message, firstError("let x = 1;\ndelete x;"));
         assertEquals(message, firstError("const o = {};\ndelete o?.x;"));
         assertEquals(message, firstError("function f() { return {}; }\ndelete f();"));
-        assertEquals("'delete' is a reserved word in tinyscript and cannot be used as a name", firstError("let delete = 1;"));
+        assertEquals("'delete' is a reserved word in tinyscript and cannot be used as a name (it is the operator delete o.key; e.g. remove instead)", firstError("let delete = 1;"));
     }
 
     @Test
@@ -189,12 +189,40 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testPatternsAndKeysThatTinyscriptLeavesOut() {
+        assertEquals("Computed keys ({ [key]: value }) are not supported: create the object first, then o[key] = value;",
+                firstError("const k = \"x\";\nconst o = { [k]: 1 };"));
+        assertEquals("Computed keys ({ [key]: value }) are not supported: create the object first, then o[key] = value;",
+                firstError("const k = \"x\";\nconst o = { a: 1, [k + \"y\"]: 2 };"));
+        assertEquals("Renaming in a pattern ({ a: … }) is not supported: use the property's name ({ a }), or read it with o.a",
+                firstError("const o = { a: 1 };\nconst { a: b } = o;"));
+        assertEquals("Renaming in a pattern ({ value: … }) is not supported: use the property's name ({ value }), or read it with o.value",
+                firstError("function f({ value: v }) { return v; }"));
+        String noPatternAssignment = "Patterns can only declare variables (const [a, b] = pair;), not assign to existing ones: "
+                + "assign one by one, with a temporary variable to swap";
+        assertEquals(noPatternAssignment, firstError("let a = 1; let b = 2;\n[a, b] = [b, a];"));
+        assertEquals(noPatternAssignment, firstError("let x = 0;\n({ x } = { x: 1 });"));
+        // Object literals and arrays elsewhere are fine
+        assertEquals(List.of(), reportedErrors("const k = \"x\";\nconst o = { a: [1, 2], b: { c: 1 } };\nprint([o, { k }], f({ a: 1 }));\nfunction f({ a }) { return a; }"));
+    }
+
+    @Test
+    public void testAWarningForANameThatHidesABuiltin() {
+        assertEquals(List.of("2:12: 'range' hides the builtin range here: choose another name"),
+                reportedWarnings("const spans = [];\nfor (const range : spans) { print(range); }"));
+        assertEquals(List.of("1:7: 'Number' hides the builtin Number here: choose another name",
+                "2:10: 'print' hides the builtin print here: choose another name"),
+                reportedWarnings("class Number { }\nfunction print(x) { }"));
+        assertEquals(List.of(), reportedWarnings("const numbers = [1];\nfunction show(value) { print(value); }"));
+    }
+
+    @Test
     public void testReservedWordsAsNames() {
-        assertEquals("'from' is a reserved word in tinyscript and cannot be used as a name", firstError("const from = 1;"));
-        assertEquals("'as' is a reserved word in tinyscript and cannot be used as a name", firstError("function f(as) { return 1; }"));
+        assertEquals("'from' is a reserved word in tinyscript and cannot be used as a name (it belongs to import … from …; e.g. source, start or origin instead)", firstError("const from = 1;"));
+        assertEquals("'as' is a reserved word in tinyscript and cannot be used as a name (it belongs to import * as …; e.g. alias instead)", firstError("function f(as) { return 1; }"));
         assertEquals("'import' is a reserved word in tinyscript and cannot be used as a name", firstError("let import = 2;"));
         assertEquals("'function' is a reserved word in tinyscript and cannot be used as a name", firstError("const function = 1;"));
-        assertEquals("'from' is a reserved word in tinyscript and cannot be used as a name", firstError("function f(a, from) { return a; }"));
+        assertEquals("'from' is a reserved word in tinyscript and cannot be used as a name (it belongs to import … from …; e.g. source, start or origin instead)", firstError("function f(a, from) { return a; }"));
     }
 
     @Test

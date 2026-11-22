@@ -31,6 +31,17 @@ public final class Modules {
 	private Modules() {
 	}
 
+	/**
+	 * Whether a module is one of the standard library written in tinyscript (std:array,
+	 * std:string): loaded from /std in the core bundle.
+	 */
+	public static boolean isStandardLibrary(URI module) {
+		if (module == null || module.lastSegment() == null || !module.lastSegment().endsWith(".tys"))
+			return false;
+		java.net.URL resource = Modules.class.getResource("/std/" + module.lastSegment());
+		return resource != null && resource.toString().equals(module.toString());
+	}
+
 	public static boolean isNative(URI module) {
 		return "std".equals(module.scheme());
 	}

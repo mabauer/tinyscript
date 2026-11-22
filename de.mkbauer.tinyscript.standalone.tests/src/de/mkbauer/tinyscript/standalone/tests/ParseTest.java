@@ -130,6 +130,14 @@ public class ParseTest extends TinyscriptTranspilerTestBase {
         assertEquals("findAll: the format must be a string, not undefined", errorMessage("findAll(undefined, \"x\");"));
     }
 
+    @Test
+    public void testAnErrorInTheFormatIsReportedAtTheCall() {
+        // Not at the throw inside std/string.tys
+        TinyscriptRuntimeException e = assertThrows(TinyscriptError.class, () -> runModule(script("const x = 1;\nprint(parse(\"{:x}\", \"1\"));")));
+        assertEquals(3, e.getAffectedLine());
+        assertTrue(e.getAffectedFilename().endsWith("main.tys"), e.getAffectedFilename());
+    }
+
     private String errorMessage(String code) {
         TinyscriptRuntimeException e = assertThrows(TinyscriptError.class, () -> runModule(script(code)));
         return e.getMessage();

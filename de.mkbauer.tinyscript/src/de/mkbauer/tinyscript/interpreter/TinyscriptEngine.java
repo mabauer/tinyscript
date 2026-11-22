@@ -1324,8 +1324,34 @@ public class TinyscriptEngine {
 			builtin.checkMaxArgs(args.length, expr);
 		if (isConstructorCall(expr))
 			return construct(functionObject, args);
-		return functionObject.apply(self, args);
+		if (!isStandardLibraryFunction(functionObject) || inStandardLibrary(expr))
+			return functionObject.apply(self, args);
+		// An error inside the standard library (e.g. a wrong format for parse) is reported at
+		// the call in the script, not at the throw inside std/string.tys
+		try {
+			return functionObject.apply(self, args);
+		}
+		catch (TinyscriptRuntimeException e) {
+			if (e.getNode() == null || inStandardLibrary(e.getNode()))
+				e.relocate(expr);
+			throw e;
+		}
     }
+
+	private boolean isStandardLibraryFunction(Function function) {
+		return function instanceof InterpretedFunction interpreted && interpreted.getAst() != null
+				&& inStandardLibrary(interpreted.getAst());
+	}
+
+	// Per resource, since this runs for every call of an interpreted function
+	private final Map<org.eclipse.emf.ecore.resource.Resource, Boolean> standardLibraryResources = new java.util.IdentityHashMap<>();
+
+	private boolean inStandardLibrary(EObject node) {
+		org.eclipse.emf.ecore.resource.Resource resource = node.eResource();
+		if (resource == null)
+			return false;
+		return standardLibraryResources.computeIfAbsent(resource, r -> Modules.isStandardLibrary(r.getURI()));
+	}
 
 	/**
 	 * Calls a function as a constructor: its this-reference points to a newly created

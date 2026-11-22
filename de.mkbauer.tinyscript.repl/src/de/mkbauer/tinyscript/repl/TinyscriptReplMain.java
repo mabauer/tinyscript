@@ -259,6 +259,8 @@ class TinyscriptReplMain  {
 			}
 			return EXIT_ERROR;
 		}
+		for (String warning : TinyscriptDiagnostics.warnings(issues))
+			err.println(warning.replaceFirst("\\(line (\\d+)\\)$", "in " + java.util.regex.Matcher.quoteReplacement(file.toString()) + ":$1"));
 		try {
 			engine.execute((Tinyscript) resource.getContents().get(0));
 		}
@@ -309,6 +311,8 @@ class TinyscriptReplMain  {
 				try {
 					Tinyscript ast = parse(script + line, multiline);
 					if (ast != null) {
+						for (String warning : lastWarnings)
+							device.println(warning.replaceFirst(" \\(line \\d+\\)$", ""));
 						TSValue result = sessionEngine.execute(ast);
 						if (showsResult(ast, result))
 							device.println(result.toString());
@@ -400,8 +404,13 @@ class TinyscriptReplMain  {
 			currentResource = null;
 			throw error;
 		}
+		lastWarnings = TinyscriptDiagnostics.warnings(lastIssues);
 		return currentResource.getContents().isEmpty() ? null : (Tinyscript) currentResource.getContents().get(0);
 	}
+
+	// The issues of the last validation and the warnings of the last complete statement
+	private List<Issue> lastIssues = List.of();
+	private List<String> lastWarnings = List.of();
 
 	// The errors of the script, loaded into the current resource
 	private List<Issue> errors(String script) {
@@ -414,6 +423,7 @@ class TinyscriptReplMain  {
 			throw new WrappedException(e);
 		}
 		List<Issue> issues = getValidator(currentResource).validate(currentResource, CheckMode.ALL, CancelIndicator.NullImpl);
+		lastIssues = issues;
 		return TinyscriptDiagnostics.relevantErrors(issues);
 	}
 

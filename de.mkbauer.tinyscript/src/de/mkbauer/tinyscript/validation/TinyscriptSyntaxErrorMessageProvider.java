@@ -76,6 +76,13 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		String classHint = classHint(context, tokens, index, text, before);
 		if (classHint != null)
 			return classHint;
+		// { [key]: value }: a computed key, after { or , in an object literal
+		if (text.equals("[") && (before.equals("{") || before.equals(",")) && closingBracketFollowedBy(tokens, index, ":", "("))
+			return "Computed keys ({ [key]: value }) are not supported: create the object first, then o[key] = value;";
+		// const { a: b } = o;  function f({ a: b })
+		if (text.equals(":") && isName(context, previous) && isInPattern(tokens, previous.getTokenIndex()))
+			return "Renaming in a pattern ({ " + before + ": … }) is not supported: use the property's name ({ "
+					+ before + " }), or read it with o." + before;
 		// A keyword where a name is expected: const from = 1; or function f(as) (where the
 		// parser reports the "(" before it)
 		Token next = next(tokens, index);
@@ -158,6 +165,42 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		return false;
 	}
 
+	// Whether the "]" that closes the "[" at index is followed by one of the given tokens
+	private static boolean closingBracketFollowedBy(TokenStream tokens, int index, String... texts) {
+		int depth = 0;
+		for (int i = index; i < tokens.size(); i++) {
+			Token token = tokens.get(i);
+			if (token.getChannel() != Token.DEFAULT_CHANNEL)
+				continue;
+			if ("[".equals(token.getText()))
+				depth++;
+			else if ("]".equals(token.getText()) && --depth == 0) {
+				Token after = next(tokens, i);
+				return after != null && java.util.Arrays.asList(texts).contains(after.getText());
+			}
+		}
+		return false;
+	}
+
+	// Whether the token at index stands in an object pattern: the "{" around it follows let,
+	// const, or the "(" of parameters
+	private static boolean isInPattern(TokenStream tokens, int index) {
+		for (int i = index - 1; i >= 0; i--) {
+			Token token = tokens.get(i);
+			if (token.getChannel() != Token.DEFAULT_CHANNEL)
+				continue;
+			String text = token.getText();
+			if (text.equals("}") || text.equals(";"))
+				return false;
+			if (text.equals("{")) {
+				Token before = previous(tokens, i);
+				return before != null && (before.getText().equals("let") || before.getText().equals("const")
+						|| before.getText().equals("(") || before.getText().equals(","));
+			}
+		}
+		return false;
+	}
+
 	// Whether "extends" comes before the "{" that follows the token at index
 	private static boolean extendsFollows(TokenStream tokens, int index) {
 		for (int i = index + 1; i < tokens.size() && i < index + 20; i++) {
@@ -192,8 +235,17 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 	}
 
 	private static String reservedWord(String word) {
-		return "'" + word + "' is a reserved word in tinyscript and cannot be used as a name";
+		String hint = RESERVED_WORD_HINTS.get(word);
+		return "'" + word + "' is a reserved word in tinyscript and cannot be used as a name"
+				+ (hint != null ? " (" + hint + ")" : "");
 	}
+
+	// Keywords that are natural names, with why they are reserved and what to write instead
+	private static final Map<String, String> RESERVED_WORD_HINTS = Map.of(
+			"from", "it belongs to import … from …; e.g. source, start or origin instead",
+			"as", "it belongs to import * as …; e.g. alias instead",
+			"delete", "it is the operator delete o.key; e.g. remove instead",
+			"new", "it is the operator new; e.g. fresh or created instead");
 
 	// A keyword of the grammar (like from, as, import), not a name
 	private static boolean isKeyword(IParserErrorContext context, Token token) {

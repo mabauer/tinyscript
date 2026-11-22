@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.common.util.URI;
 import org.eclipse.xtext.validation.Check;
 
 /**
@@ -89,6 +91,27 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	 * (such as functions needed for the code generation to Javascript)
 	 * @param identifier
 	 */
+	/**
+	 * A declaration with the name of a builtin hides it in its scope, which is legal (as in
+	 * Javascript) but rarely meant: for (const range : ranges) makes range(n) fail further down.
+	 */
+	@Check
+	public void checkBuiltinIsNotHidden(Identifier identifier) {
+		Resource resource = identifier.eResource();
+		if (resource == null || resource.getResourceSet() == null || resource.getURI().toString().equals(BUILTINS))
+			return;
+		Resource builtins = resource.getResourceSet().getResource(URI.createURI(BUILTINS), false);
+		if (builtins == null)
+			return;
+		String name = identifier.getName();
+		boolean isBuiltin = builtins.getContents().stream()
+				.anyMatch(object -> object instanceof Identifier builtin && name != null && name.equals(builtin.getName()));
+		if (isBuiltin)
+			warning("'" + name + "' hides the builtin " + name + " here: choose another name", TsPackage.Literals.IDENTIFIER__NAME);
+	}
+
+	private static final String BUILTINS = "__builtins.tys";
+
 	@Check
 	public void checkReservedIdentifier(Identifier identifier) {
 		if (identifier.getName().startsWith("__ts")) {
@@ -173,8 +196,14 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	 */
 	@Check
 	public void checkAssignmentTarget(BinaryExpression assignment) {
-		if (isAssignment(assignment) && !(assignment.getLeft() instanceof Identifier) && !(assignment.getLeft() instanceof Pattern)
-				&& !isAssignable(assignment.getLeft()))
+		if (!isAssignment(assignment) || assignment.getLeft() instanceof Identifier || assignment.getLeft() instanceof Pattern
+				|| isAssignable(assignment.getLeft()))
+			return;
+		// [a, b] = [b, a]; { x, y } = point;
+		if (assignment.getLeft() instanceof ArrayInitializer || assignment.getLeft() instanceof ObjectInitializer)
+			error("Patterns can only declare variables (const [a, b] = pair;), not assign to existing ones: "
+					+ "assign one by one, with a temporary variable to swap", TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+		else
 			error("Invalid left-hand side of an assignment", TsPackage.Literals.BINARY_EXPRESSION__LEFT);
 	}
 
