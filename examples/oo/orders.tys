@@ -6,12 +6,9 @@
 // the same. Besides what expressions.tys uses, this example tries:
 //
 // - a class that implements several interfaces (Inventory, Accounting, AuditLog)
-// - class names after parameters and fields, checked when the function is
-//   called or the object is made: subscribe(listener: EventListener) is a
-//   TypeError for anything that is not an EventListener, as a builtin rejects
-//   a wrong argument
-// - fields with an initial value in the class body (open = new Map();), also
-//   next to a header such as Accounting(bus: EventBus)
+// - class names after parameters, checked when the function is called:
+//   subscribe(listener: EventListener) is a TypeError for anything that is not
+//   an EventListener, as a builtin rejects a wrong argument
 import parse from "std:string";
 
 interface EventListener {
@@ -24,12 +21,22 @@ interface Reporting {
 
 // --- Data ---
 
-class Item(product, quantity, price) {      // price per piece, in cents
+class Item {
+    constructor(product, quantity, price) {
+        this.product = product;
+        this.quantity = quantity;
+        this.price = price;     // per piece, in cents
+    }
     total() { return this.quantity * this.price; }
     toString() { return this.quantity + " " + this.product; }
 }
 
-class Order(id, customer, items) {
+class Order {
+    constructor(id, customer, items) {
+        this.id = id;
+        this.customer = customer;
+        this.items = items;
+    }
     total() { return this.items.reduce((sum, item) => sum + item.total(), 0); }
 }
 
@@ -39,35 +46,55 @@ function money(cents) {
 
 // --- Events ---
 
-class OrderPlaced(order: Order) {
+class OrderPlaced {
+    constructor(order: Order) {
+        this.order = order;
+    }
     toString() {
         return "order " + this.order.id + " placed by " + this.order.customer + ": "
             + this.order.items.join(", ") + " for " + money(this.order.total());
     }
 }
 
-class OrderCancelled(orderId, reason) {
+class OrderCancelled {
+    constructor(orderId, reason) {
+        this.orderId = orderId;
+        this.reason = reason;
+    }
     toString() { return "order " + this.orderId + " cancelled: " + this.reason; }
 }
 
-class PaymentReceived(orderId, amount) {
+class PaymentReceived {
+    constructor(orderId, amount) {
+        this.orderId = orderId;
+        this.amount = amount;
+    }
     toString() { return "payment of " + money(this.amount) + " for order " + this.orderId; }
 }
 
-class OrderPaid(orderId) {
+class OrderPaid {
+    constructor(orderId) {
+        this.orderId = orderId;
+    }
     toString() { return "order " + this.orderId + " paid"; }
 }
 
-class OrderShipped(orderId, customer) {
+class OrderShipped {
+    constructor(orderId, customer) {
+        this.orderId = orderId;
+        this.customer = customer;
+    }
     toString() { return "order " + this.orderId + " shipped to " + this.customer; }
 }
 
 // --- The bus ---
 
 class EventBus {
-    listeners = [];
-    queue = [];
-    dispatching = false;
+    constructor() {
+        this.listeners = [];
+        this.queue = [];
+        this.dispatching = false;
+    }
 
     subscribe(listener: EventListener) {
         this.listeners.push(listener);
@@ -94,7 +121,11 @@ class EventBus {
 // --- Listeners ---
 
 // Reserves the products of an order, or cancels it
-class Inventory(bus: EventBus, stock) implements EventListener, Reporting {
+class Inventory implements EventListener, Reporting {
+    constructor(bus: EventBus, stock) {
+        this.bus = bus;
+        this.stock = stock;
+    }
     onEvent(event) {
         if (!(event instanceof OrderPlaced)) {
             return;
@@ -118,9 +149,12 @@ class Inventory(bus: EventBus, stock) implements EventListener, Reporting {
 }
 
 // Keeps track of what is still to be paid, and of payments that cannot be used
-class Accounting(bus: EventBus) implements EventListener, Reporting {
-    open = new Map();       // order id -> amount in cents
-    refunds = [];
+class Accounting implements EventListener, Reporting {
+    constructor(bus: EventBus) {
+        this.bus = bus;
+        this.open = new Map();       // order id -> amount in cents
+        this.refunds = [];
+    }
 
     onEvent(event) {
         if (event instanceof OrderPlaced) {
@@ -157,8 +191,11 @@ class Accounting(bus: EventBus) implements EventListener, Reporting {
 }
 
 // Ships an order once it is paid
-class Shipping(bus: EventBus) implements EventListener {
-    orders = new Map();     // order id -> order, until shipped
+class Shipping implements EventListener {
+    constructor(bus: EventBus) {
+        this.bus = bus;
+        this.orders = new Map();     // order id -> order, until shipped
+    }
 
     onEvent(event) {
         if (event instanceof OrderPlaced) {
@@ -177,7 +214,9 @@ class Shipping(bus: EventBus) implements EventListener {
 
 // Records every event
 class AuditLog implements EventListener, Reporting {
-    entries = [];
+    constructor() {
+        this.entries = [];
+    }
 
     onEvent(event) {
         this.entries.push(event);

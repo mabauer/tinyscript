@@ -81,10 +81,4 @@ public class OoExamplesTest extends TinyscriptTranspilerTestBase {
     public void testOrders() {
         assertProgramOutput(ORDERS_OUTPUT, DIRECTORY.resolve("orders.tys"));
     }
-
-    @Test
-    @Disabled("class and interface are not implemented yet (TODO.md: Objects with methods are verbose)")
-    public void testOrdersWithConstructors() {
-        assertProgramOutput(ORDERS_OUTPUT, DIRECTORY.resolve("orders_constructors.tys"));
-    }
 }

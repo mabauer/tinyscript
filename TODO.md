@@ -363,9 +363,12 @@ and differential tests run against node.
        comfortable spelling. Tendency (2026-11-20): **no inheritance for now**,
        in this order:
 
-       Example: `examples/oo/expressions.tys` (symbolic expressions written with
-       `class` and `interface`, next to `expressions_today.tys` with prototypes;
-       `OoExamplesTest` checks both against the same output once enabled).
+       Examples (2026-11-22): `examples/oo/expressions.tys` (symbolic
+       expressions) and `examples/oo/orders.tys` (orders through an event bus),
+       written with `class` and `interface` as planned, next to
+       `expressions_today.tys` / `orders_today.tys` with prototypes;
+       `OoExamplesTest` checks each pair against the same output (the planned
+       versions once enabled).
 
        1. **Method shorthand** `{ greet() { … } }` for
           `greet: function() { … }`: grammar only, the generator passes it
@@ -374,7 +377,21 @@ and differential tests run against node.
           private state without `this`.
        2. **`class` without inheritance:** short for a constructor function plus
           methods on its prototype; no `extends`, no `super` (the expensive
-          part), no static members, no getters.
+          part), no static members, no getters. Decided 2026-11-22 after writing
+          the examples:
+          - **No `static`** for now: functions and constants in the module do
+            the same (the module is the namespace); can be added later without
+            breaking anything.
+          - **No class header** `class Add(left, right) { … }` (tried in the
+            examples, dropped): it saves about four lines per small data class,
+            but the `constructor` form is plain Javascript, needs no rule
+            "header or constructor" and nothing new to learn.
+          - **No field declarations with an initial value** (`open = new Map();`
+            in the class body): without a header the constructor is the one
+            place where fields get their values.
+          - **No value semantics** for data classes (`==` by value, objects as
+            keys of `Map` / `Set`, frozen fields): `==` would mean two things,
+            and node would need its own `Map` / `Set`; keys stay strings.
        3. **`interface` / `implements`** (spelling as in TypeScript), to say
           that two classes implement the same protocol:
 
@@ -392,13 +409,25 @@ and differential tests run against node.
           bodies. Nominal: only a class that says `implements Shape` is a
           `Shape`, so the validator checks it before the script runs (a missing
           method or a wrong number of parameters is an error at the class, also
-          in the Eclipse editor). The generator drops `interface` and
-          `implements`. Limit: without types on parameters nothing checks that
-          an argument is a `Shape`; `shape.area()` stays dynamic.
+          in the Eclipse editor). The generator drops `implements`. A class can
+          implement several interfaces (`implements EventListener, Reporting`);
+          two of them that require the same method with a different number of
+          parameters are an error at the class.
 
-       4. If needed: `x instanceof Shape` at runtime (the class remembers its
-          interfaces; the generator needs a helper for node, Javascript has no
-          interfaces).
+       4. **`x instanceof Shape` at runtime** (the class remembers its
+          interfaces; in the generated Javascript an interface becomes an object
+          with `Symbol.hasInstance`, so `instanceof` works in node too).
+       5. **Class names after parameters** (tendency 2026-11-22):
+          `subscribe(listener: EventListener)`, also in constructors
+          (`constructor(order: Order)`). Checked when the function is called,
+          like the arguments of a builtin: anything else, also `null`, is a
+          `TypeError` (not caught by `catch`) with a uniform message such as
+          "subscribe: listener must be an EventListener, not Order". Only names
+          of classes and interfaces (no `number`, not a type system). Same
+          spelling as TypeScript, different meaning: checked at runtime, not
+          erased. Consequence of nominal interfaces: an object literal or an
+          arrow function is never an `EventListener`, even with the right
+          method; a small class is needed.
 
        - Not pursued: structural interfaces as in Go (only checkable at
          runtime); a `std:` module with `extend` / `_new` helpers (a convention
