@@ -286,9 +286,12 @@ To run:
   options), which shows the value of each expression; statements end with `;`
   there as well, and Ctrl-C stops a statement that runs too long;
   `!load file.tys` runs a file in the session to try out its functions, `!help`
-  lists the other commands. Arguments after `--` are the script's `System.args`
-  (`tinyscript day1.tys -- input.txt`). The script finds Java 25 via `JAVA_HOME`
-  or the `PATH` and can be linked into a directory on your `PATH`:
+  lists the other commands. Tab completes names (after a dot the properties,
+  `Math.` → `max`, `min`, …), the input is colored, and a statement with an open
+  bracket goes on in the next line and is edited as a whole. Arguments after
+  `--` are the script's `System.args` (`tinyscript day1.tys -- input.txt`). The
+  script finds Java 25 via `JAVA_HOME` or the `PATH` and can be linked into a
+  directory on your `PATH`:
 
       ln -s "$PWD/de.mkbauer.tinyscript.repl/tinyscript" ~/bin/tinyscript
       tinyscript example.tys

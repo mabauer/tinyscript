@@ -373,4 +373,13 @@ public class TinyscriptReplMainTest {
         assertTrue(output.contains("Unknown command !lod (!help lists the commands)\n"), output);
         assertTrue(output.contains("> false\n"), output);
     }
+
+    @Test
+    public void testInteractiveOpenStatementIsOneInput() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("function f(x) {\n    return [\n        x,\n        x * 2\n    ];\n}\nf(3);\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("[3, 6]\n"), output);
+        assertTrue(!output.contains("Error"), output);
+    }
 }

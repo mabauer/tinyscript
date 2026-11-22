@@ -670,24 +670,34 @@ statement runs stops it: the signal handler calls
 `TinyscriptEngine.interrupt()`, which sets a flag that the engine checks at each
 statement, loop iteration and call and turns into a `TinyscriptInterruption`
 (not catchable by the script, like a resource limit); at the prompt Ctrl-C
-clears the input, Ctrl-D leaves. As in a file, every statement ends with `;`:
-incomplete statements continue on the next line (`...` prompt), but a statement
-that only lacks its final `;` (`x * 2`) is reported right away (`parse` tries
-the input with a `;` appended). Syntax and runtime errors look as for a file
-(the message, the source line and a marker; for a runtime error inside a
-function also the calls, with the inputs of the session called `REPL1`, `REPL2`,
-… as in node). Only the value of an expression statement is shown (strings
-quoted, `TSValue.toString()`), not the `undefined` of a declaration, a loop or a
-call like `print(x);`. Commands start with `!` (a line that ends with `;` is a
-statement, e.g. `!done;`): `!load file.tys` runs a file in the session (its
-resource is shared like the input lines, so later inputs see its top-level
-names; loading it again replaces the resource), `!names` lists the top-level
-names of the inputs and loaded files that have been declared, with their values,
-`!reset` starts a new engine and resource set, `!help`, `!quit` / `!bye`.
-Sandboxing is **off** (scripts can import `std:fs`). Each input line is
-evaluated in a persistent `ExecutionContext` so variable state accumulates
-across lines; the line resources are marked with `SharedGlobals.share`, so later
-lines also _see_ the earlier declarations.
+clears the input, Ctrl-D leaves. Editing (in the REPL module):
+`TinyscriptLineParser` tells jline that an input with an unclosed bracket or
+block comment goes on (`EOFError`), so a statement over several lines is one
+input, edited and recalled from the history as a whole; inputs that are
+incomplete in other ways (`let x = 1 +`) still continue via `parse`.
+`TinyscriptCompleter` completes the word at the cursor: the global object's
+names (the session's and the builtins), keywords and commands, and after a dot
+the properties of the object and its prototypes; it only reads properties (no
+getters exist), so completing has no effects. `TinyscriptHighlighter` colors
+keywords, literals, strings, numbers, comments and commands like the web demo.
+As in a file, every statement ends with `;`: incomplete statements continue on
+the next line (`...` prompt), but a statement that only lacks its final `;`
+(`x * 2`) is reported right away (`parse` tries the input with a `;` appended).
+Syntax and runtime errors look as for a file (the message, the source line and a
+marker; for a runtime error inside a function also the calls, with the inputs of
+the session called `REPL1`, `REPL2`, … as in node). Only the value of an
+expression statement is shown (strings quoted, `TSValue.toString()`), not the
+`undefined` of a declaration, a loop or a call like `print(x);`. Commands start
+with `!` (a line that ends with `;` is a statement, e.g. `!done;`):
+`!load file.tys` runs a file in the session (its resource is shared like the
+input lines, so later inputs see its top-level names; loading it again replaces
+the resource), `!names` lists the top-level names of the inputs and loaded files
+that have been declared, with their values, `!reset` starts a new engine and
+resource set, `!help`, `!quit` / `!bye`. Sandboxing is **off** (scripts can
+import `std:fs`). Each input line is evaluated in a persistent
+`ExecutionContext` so variable state accumulates across lines; the line
+resources are marked with `SharedGlobals.share`, so later lines also _see_ the
+earlier declarations.
 
 The helper script `de.mkbauer.tinyscript.repl/tinyscript` follows symlinks (so
 it can be linked into `~/bin`), uses `JAVA_HOME` or the `java` on the `PATH`,
