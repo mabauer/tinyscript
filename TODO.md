@@ -363,6 +363,10 @@ and differential tests run against node.
        comfortable spelling. Tendency (2026-11-20): **no inheritance for now**,
        in this order:
 
+       Example: `examples/oo/expressions.tys` (symbolic expressions written with
+       `class` and `interface`, next to `expressions_today.tys` with prototypes;
+       `OoExamplesTest` checks both against the same output once enabled).
+
        1. **Method shorthand** `{ greet() { … } }` for
           `greet: function() { … }`: grammar only, the generator passes it
           through. It also makes factory functions with closures readable
