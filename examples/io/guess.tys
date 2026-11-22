@@ -1,0 +1,32 @@
+// Guess the number: tinyscript examples/io/guess.tys
+
+import readLine from "std:io";
+
+const secret = Math.floor(Math.random() * 100) + 1;
+print("I am thinking of a number from 1 to 100.");
+
+let tries = 0;
+while (true) {
+    const answer = readLine("Your guess? ");
+    if (answer == null) {
+        print("");
+        print("Bye! It was " + secret + ".");
+        break;
+    }
+    const guess = Number(answer.trim());
+    if (!Number.isInteger(guess)) {
+        print("Please type a whole number.");
+        continue;
+    }
+    tries++;
+    if (guess < secret) {
+        print("Too small.");
+    }
+    else if (guess > secret) {
+        print("Too large.");
+    }
+    else {
+        print("You got it in " + tries + (tries == 1 ? " try." : " tries."));
+        break;
+    }
+}

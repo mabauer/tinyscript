@@ -506,9 +506,9 @@ output buffer is not part of the tracked memory.
 
 ### Sandboxed Flag
 
-`engine.sandboxed = true` disables privileged operations: the native module
-`std:fs` cannot be imported. The web demo always runs with sandboxing on; the
-REPL runs with it off.
+`engine.sandboxed = true` disables privileged operations: the native modules
+`std:fs` and `std:io` cannot be imported. The web demo always runs with
+sandboxing on; the REPL runs with it off.
 
 ---
 
@@ -638,10 +638,16 @@ See `docs/language-reference.md` (section 13) for the language side.
   `var __ts_modN = (function () { …; return Object.freeze({ … }); })();`,
   followed by `var a = __ts_modN.a;` per named import. Resolving, loading (with
   validation) and the cycle error are shared with the interpreter (`Modules`).
-- **Native modules:** `std:fs` is implemented in Java
-  (`runtime/fs/FileSystemModule`); its URI is `std:fs` (`Modules.isNative`). The
-  engine creates its exports instead of running a script, and refuses it when
-  sandboxed; the generator emits a small wrapper around node's `fs` instead.
+- **Native modules:** `std:fs` and `std:io` are implemented in Java
+  (`runtime/fs/FileSystemModule`, `runtime/io/IoModule`); their URIs are
+  `std:fs` and `std:io` (`Modules.isNative`). The engine creates their exports
+  instead of running a script, and refuses them when sandboxed; the generator
+  emits a small wrapper around node's `fs` instead. `std:io` reads the engine's
+  `StandardInput` (`defineStdIn`: a stream, by default `System.in`, read up to
+  each line break only, so that engines one after the other can share it, or the
+  REPL's line editor); `lines()` is a `LinesObject` that the `for` loop reads
+  lazily, like a range. In node, `std:io` reads file descriptor 0 with
+  `fs.readSync`, so scripts stay synchronous.
 - **Standard library:** `StandardLibraryModuleLoader` resolves `std:name` to the
   classpath resource `/std/name.tys` (source: `de.mkbauer.tinyscript/src/std/`);
   `FileSystemModuleLoader` delegates `std:` imports to it, and the webdemo uses
@@ -670,34 +676,40 @@ statement runs stops it: the signal handler calls
 `TinyscriptEngine.interrupt()`, which sets a flag that the engine checks at each
 statement, loop iteration and call and turns into a `TinyscriptInterruption`
 (not catchable by the script, like a resource limit); at the prompt Ctrl-C
-clears the input, Ctrl-D leaves. Editing (in the REPL module):
-`TinyscriptLineParser` tells jline that an input with an unclosed bracket or
-block comment goes on (`EOFError`), so a statement over several lines is one
-input, edited and recalled from the history as a whole; inputs that are
-incomplete in other ways (`let x = 1 +`) still continue via `parse`.
-`TinyscriptCompleter` completes the word at the cursor: the global object's
-names (the session's and the builtins), keywords and commands, and after a dot
-the properties of the object and its prototypes; it only reads properties (no
-getters exist), so completing has no effects. `TinyscriptHighlighter` colors
-keywords, literals, strings, numbers, comments and commands like the web demo.
-As in a file, every statement ends with `;`: incomplete statements continue on
-the next line (`...` prompt), but a statement that only lacks its final `;`
-(`x * 2`) is reported right away (`parse` tries the input with a `;` appended).
-Syntax and runtime errors look as for a file (the message, the source line and a
-marker; for a runtime error inside a function also the calls, with the inputs of
-the session called `REPL1`, `REPL2`, … as in node). Only the value of an
-expression statement is shown (strings quoted, `TSValue.toString()`), not the
-`undefined` of a declaration, a loop or a call like `print(x);`. Commands start
-with `!` (a line that ends with `;` is a statement, e.g. `!done;`):
-`!load file.tys` runs a file in the session (its resource is shared like the
-input lines, so later inputs see its top-level names; loading it again replaces
-the resource), `!names` lists the top-level names of the inputs and loaded files
-that have been declared, with their values, `!reset` starts a new engine and
-resource set, `!help`, `!quit` / `!bye`. Sandboxing is **off** (scripts can
-import `std:fs`). Each input line is evaluated in a persistent
-`ExecutionContext` so variable state accumulates across lines; the line
-resources are marked with `SharedGlobals.share`, so later lines also _see_ the
-earlier declarations.
+clears the input, Ctrl-D leaves. jline's own Ctrl-C handler interrupts the
+reading thread, which sometimes ends the read with `EndOfFileException` instead
+of `UserInterruptException`; a set interrupt flag tells the two apart. `std:io`
+reads the session's lines through a second `LineReader` on the same terminal
+(line editing, but no completion, highlighting or history), set with
+`TinyscriptEngine.defineStdIn(StandardInput)`; Ctrl-C there is a
+`TinyscriptInterruption`, Ctrl-D the end of the input (`null`). Files read
+`System.in`. Editing (in the REPL module): `TinyscriptLineParser` tells jline
+that an input with an unclosed bracket or block comment goes on (`EOFError`), so
+a statement over several lines is one input, edited and recalled from the
+history as a whole; inputs that are incomplete in other ways (`let x = 1 +`)
+still continue via `parse`. `TinyscriptCompleter` completes the word at the
+cursor: the global object's names (the session's and the builtins), keywords and
+commands, and after a dot the properties of the object and its prototypes; it
+only reads properties (no getters exist), so completing has no effects.
+`TinyscriptHighlighter` colors keywords, literals, strings, numbers, comments
+and commands like the web demo. As in a file, every statement ends with `;`:
+incomplete statements continue on the next line (`...` prompt), but a statement
+that only lacks its final `;` (`x * 2`) is reported right away (`parse` tries
+the input with a `;` appended). Syntax and runtime errors look as for a file
+(the message, the source line and a marker; for a runtime error inside a
+function also the calls, with the inputs of the session called `REPL1`, `REPL2`,
+… as in node). Only the value of an expression statement is shown (strings
+quoted, `TSValue.toString()`), not the `undefined` of a declaration, a loop or a
+call like `print(x);`. Commands start with `!` (a line that ends with `;` is a
+statement, e.g. `!done;`): `!load file.tys` runs a file in the session (its
+resource is shared like the input lines, so later inputs see its top-level
+names; loading it again replaces the resource), `!names` lists the top-level
+names of the inputs and loaded files that have been declared, with their values,
+`!reset` starts a new engine and resource set, `!help`, `!quit` / `!bye`.
+Sandboxing is **off** (scripts can import `std:fs` and `std:io`). Each input
+line is evaluated in a persistent `ExecutionContext` so variable state
+accumulates across lines; the line resources are marked with
+`SharedGlobals.share`, so later lines also _see_ the earlier declarations.
 
 The helper script `de.mkbauer.tinyscript.repl/tinyscript` follows symlinks (so
 it can be linked into `~/bin`), uses `JAVA_HOME` or the `java` on the `PATH`,

@@ -24,6 +24,7 @@ import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.reader.UserInterruptException;
+import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -49,7 +50,9 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
+import de.mkbauer.tinyscript.interpreter.StandardInput;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
+import de.mkbauer.tinyscript.interpreter.TinyscriptInterruption;
 import de.mkbauer.tinyscript.interpreter.TSValue;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
@@ -140,6 +143,9 @@ class TinyscriptReplMain  {
 
 	private Resource currentResource;
 
+	/** How std:io reads in the interactive session: with line editing (null: from in). */
+	private StandardInput sessionInput;
+
 	/** The inputs and files the session has run, for !names. */
 	private final List<Tinyscript> sessionScripts = new ArrayList<>();
 
@@ -170,6 +176,10 @@ class TinyscriptReplMain  {
 		TinyscriptEngine engine = new TinyscriptEngine(resourceSet);
 		engine.setSandboxed(false);
 		engine.defineStdOut(out);
+		if (sessionInput != null)
+			engine.defineStdIn(sessionInput);
+		else
+			engine.defineStdIn(in);
 		engine.setModuleLoader(new FileSystemModuleLoader(modulePath(defaultDirectory)));
 		engine.setScriptArguments(scriptArguments);
 		return engine;
@@ -360,6 +370,8 @@ class TinyscriptReplMain  {
 		if (historyFile != null)
 			builder.variable(LineReader.HISTORY_FILE, historyFile);
 		LineReader reader = builder.build();
+		sessionInput = scriptInput(terminal);
+		sessionEngine.defineStdIn(sessionInput);
 		PrintWriter console = terminal.writer();
 		// Ctrl-C while a statement runs stops it (at the prompt, jline reports it instead)
 		terminal.handle(Terminal.Signal.INT, signal -> sessionEngine.interrupt());
@@ -375,11 +387,20 @@ class TinyscriptReplMain  {
 				}
 				catch (UserInterruptException e) {
 					// Ctrl-C at the prompt: forget the input so far
+					Thread.interrupted();
 					multiline = false;
 					script = "";
 					continue;
 				}
 				catch (EndOfFileException e) {
+					// jline's Ctrl-C handler interrupts the reading thread, which may end the
+					// read as if the input had ended: that is Ctrl-C too, not the end
+					if (Thread.interrupted()) {
+						console.println();
+						multiline = false;
+						script = "";
+						continue;
+					}
 					break;
 				}
 				Matcher command = COMMAND.matcher(line.trim());
@@ -561,6 +582,40 @@ class TinyscriptReplMain  {
 		}
 		names.remove(null);
 		return List.copyOf(names);
+	}
+
+	/**
+	 * What std:io reads in the session: lines from the terminal, with line editing but
+	 * without the session's completion, highlighting and history. Ctrl-C stops the
+	 * statement, Ctrl-D is the end of the input.
+	 */
+	private StandardInput scriptInput(Terminal terminal) {
+		DefaultParser parser = new DefaultParser();
+		// Plain lines: quotes and backslashes need not be closed
+		parser.setEofOnUnclosedQuote(false);
+		parser.setEofOnEscapedNewLine(false);
+		LineReader reader = LineReaderBuilder.builder()
+				.terminal(terminal)
+				.parser(parser)
+				.option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+				.build();
+		return prompt -> {
+			out.flush();
+			try {
+				return reader.readLine(prompt);
+			}
+			catch (UserInterruptException e) {
+				Thread.interrupted();
+				throw new TinyscriptInterruption();
+			}
+			catch (EndOfFileException e) {
+				// jline's Ctrl-C handler interrupts the reading thread, which may end the read
+				// as if the input had ended
+				if (Thread.interrupted())
+					throw new TinyscriptInterruption();
+				return null;
+			}
+		};
 	}
 
 	/**

@@ -16,6 +16,7 @@ import de.mkbauer.tinyscript.TinyscriptDiagnostics;
 
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.runtime.fs.FileSystemModule;
+import de.mkbauer.tinyscript.runtime.io.IoModule;
 import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 
@@ -26,7 +27,7 @@ import de.mkbauer.tinyscript.ts.Tinyscript;
 public final class Modules {
 
 	/** Standard library modules implemented in Java; their URI is "std:name". */
-	public static final List<String> NATIVE_MODULES = List.of("fs");
+	public static final List<String> NATIVE_MODULES = List.of("fs", "io");
 
 	private Modules() {
 	}
@@ -50,6 +51,7 @@ public final class Modules {
 	public static List<String> nativeExports(URI module) {
 		return switch (module.opaquePart()) {
 			case "fs" -> FileSystemModule.EXPORTS;
+			case "io" -> IoModule.EXPORTS;
 			default -> throw new IllegalArgumentException("Not a native module: " + module);
 		};
 	}
@@ -64,6 +66,7 @@ public final class Modules {
 			throw new TinyscriptUnsupportedOperationError(module + " is not available when running sandboxed");
 		return switch (module.opaquePart()) {
 			case "fs" -> FileSystemModule.create(engine);
+			case "io" -> IoModule.create(engine);
 			default -> throw new IllegalArgumentException("Not a native module: " + module);
 		};
 	}

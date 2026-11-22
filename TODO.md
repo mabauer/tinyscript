@@ -339,9 +339,10 @@ and differential tests run against node.
        error classes with `instanceof` (`TypeError`, `IOError`), patterns in
        `catch ({ message })`.
     2. ~~**`undefined` as a name**~~ (done 2026-11-21: a literal like `null`).
-    3. **No input.** Only files and `System.args`; nothing reads standard input,
-       so interactive scripts are not possible. Candidate: `readLine()` in a
-       `std:` module (not sandboxed).
+    3. ~~**No input.**~~ (done 2026-11-22: the native module `std:io` with
+       `readLine(prompt)`, `null` at the end, and a lazy `lines()` for the `for`
+       loop; not sandboxed. Possible later: `readAll()`, an input field in the
+       web demo.)
     4. **Arrays and objects cannot shrink.** Done 2026-11-21: `splice`,
        `reverse` / `toReversed`, `lastIndexOf`, `findLast` / `findLastIndex`,
        `flat`, `flatMap`; `Object.values`, `entries`, `fromEntries`, `assign`;
@@ -600,7 +601,7 @@ and differential tests run against node.
     `toString(radix)`); ~~`undefined`~~ (done); ~~minimal `try` / `catch`~~
     (done); a ~~library batch~~ (done, also `range(…).reverse()` and `delete`);
     ~~method shorthand~~ (done), ~~`class`~~ (done; `interface` parked, see 6.),
-    ~~a more comfortable REPL~~ (done, plan below), standard input.
+    ~~a more comfortable REPL~~ (done, plan below), ~~standard input~~ (done).
   - ~~**A more comfortable REPL**~~ (plan 2026-11-22, all steps done the same
     day). Today: line editing and a history file (`~/.tinyscript_history`, jline
     2.14.6 from 2018, no longer maintained), statements over several lines

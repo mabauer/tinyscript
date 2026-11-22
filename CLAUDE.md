@@ -182,10 +182,11 @@ Source text
   CPU time, statement count, call depth, memory, string length and output size
 
 **Runtime built-ins** (`runtime/` subdirectories): `array/`, `string/`, `math/`,
-`object/`, `function/`, `system/`; `fs/` holds the native module `std:fs`
-(`FileSystemModule`). The other `std:` modules (`std:array`, `std:string`,
-`std:math`) are written in tinyscript, in `de.mkbauer.tinyscript/src/std/`;
-errors inside them are reported at the caller
+`object/`, `function/`, `system/`; `fs/` and `io/` hold the native modules
+`std:fs` (`FileSystemModule`) and `std:io` (`IoModule`, the standard input). The
+other `std:` modules (`std:array`, `std:string`, `std:math`) are written in
+tinyscript, in `de.mkbauer.tinyscript/src/std/`; errors inside them are reported
+at the caller
 
 **Scoping:** a script sees its own declarations and the global scope
 (`TinyscriptGlobalScopeProvider`), which contains only resources marked with
@@ -236,9 +237,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   once; imported names are read-only; files share names only via imports (see
   `docs/language-reference.md`, section 13)
 - `try { … } catch (e) { … }` (no `finally`) catches only errors thrown with
-  `throw` (which takes only `Error` objects) and failed `std:fs` input / output
-  (`e.name == "IOError"`); `TypeError`s, failed `assert`s, stack overflows and
-  resource limits are not caught
+  `throw` (which takes only `Error` objects) and failed `std:fs` / `std:io`
+  input / output (`e.name == "IOError"`); `TypeError`s, failed `assert`s, stack
+  overflows and resource limits are not caught
 - `this` as in Javascript's strict mode: set by a method call, `undefined` in a
   plain call and outside functions (`this` there is a compile-time error)
 

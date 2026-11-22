@@ -96,8 +96,9 @@ interpreter for it in Java for a couple of reasons:
   The interpreter is also the way to embed _tinyscript_ in a Java application,
   optionally sandboxed with resource limits (see [Sandboxing](#sandboxing)).
 
-- Modules and a small standard library: `std:array`, `std:string`, and file
-  access with `std:fs`.
+- Modules and a small standard library: `std:array`, `std:string`, file access
+  with `std:fs` and the standard input with `std:io`
+  (`for (const line : lines())`).
 
 - A command line tool (project
   [`de.mkbauer.tinyscript.repl`](de.mkbauer.tinyscript.repl)) that runs scripts
@@ -176,7 +177,7 @@ of primitive datatypes in Javascript is a mine-field on its own.
 - **Globals vs. modules:** what is a standard global in Javascript and needs no
   privileges stays global (`Math`, `Object`, `print`, …); modules are for
   additions Javascript does not have (`std:array`) and for privileged things
-  (`std:fs`).
+  (`std:fs`, `std:io`).
 - **File access is a module:** there is no global `fs`; use
   `import * as fs from "std:fs";` (not available in the sandboxed web demo).
 - **Few methods on primitives:** strings have their methods (`length`, `charAt`,

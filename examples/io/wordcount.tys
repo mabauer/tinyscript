@@ -1,0 +1,33 @@
+// Counts the lines, words and characters of the standard input and shows the most
+// frequent words, as a filter:
+//     tinyscript examples/io/wordcount.tys < README.md
+// or interactively: type some lines, then Ctrl-D (Ctrl-Z on Windows).
+
+import lines from "std:io";
+import words from "std:string";
+
+let lineCount = 0;
+let wordCount = 0;
+let charCount = 0;
+const counts = new Map();
+
+for (const line : lines()) {
+    lineCount++;
+    charCount += line.length;
+    for (const word : words(line.toLowerCase())) {
+        wordCount++;
+        counts.set(word, (counts.get(word) ?? 0) + 1);
+    }
+}
+
+print(lineCount + " lines, " + wordCount + " words, " + charCount + " characters");
+
+// The five most frequent words; equally frequent ones alphabetically
+const ranking = [];
+for (const entry : counts) {
+    ranking.push(entry);
+}
+ranking.sort(([w1, n1], [w2, n2]) => n1 != n2 ? n2 - n1 : (w1 < w2 ? -1 : 1));
+for (const [word, n] : ranking.slice(0, 5)) {
+    print(String(n).padStart(4) + "  " + word);
+}

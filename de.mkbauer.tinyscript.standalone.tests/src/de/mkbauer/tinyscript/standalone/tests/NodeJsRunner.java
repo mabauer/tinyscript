@@ -1,5 +1,6 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -66,6 +67,13 @@ public class NodeJsRunner {
      *     message includes the node stderr output so the failure is actionable
      */
     public static String run(String jsCode, String... args) {
+        return runWithInput(jsCode, "", args);
+    }
+
+    /**
+     * Like {@link #run(String, String...)}, with {@code input} as the standard input.
+     */
+    public static String runWithInput(String jsCode, String input, String... args) {
         File tmpFile = null;
         try {
             tmpFile = Files.createTempFile("tinyscript_test_", ".js").toFile();
@@ -80,7 +88,8 @@ public class NodeJsRunner {
                 cmd.addArgument(arg, false);
 
             DefaultExecutor executor = DefaultExecutor.builder().get();
-            executor.setStreamHandler(new PumpStreamHandler(stdout, stderr));
+            executor.setStreamHandler(new PumpStreamHandler(stdout, stderr,
+                    new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))));
             ExecuteWatchdog watchdog = ExecuteWatchdog.builder()
                     .setTimeout(java.time.Duration.ofMillis(TIMEOUT_MS))
                     .get();

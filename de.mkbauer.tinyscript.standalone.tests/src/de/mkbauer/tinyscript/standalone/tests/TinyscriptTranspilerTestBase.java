@@ -3,12 +3,15 @@ package de.mkbauer.tinyscript.standalone.tests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.common.util.WrappedException;
@@ -223,17 +226,37 @@ public abstract class TinyscriptTranspilerTestBase {
      * Validation errors of {@code main} are thrown as {@link TinyscriptSyntaxError}.
      */
     protected String runModule(Path main, Path... modulePath) {
-        return runModule(main, false, List.of(), modulePath);
+        return runModule(main, false, List.of(), "", modulePath);
+    }
+
+    /**
+     * Like {@link #runModule(Path, Path...)}, with {@code input} as the standard input (std:io).
+     */
+    protected String runModuleWithInput(Path main, String input) {
+        return runModule(main, false, List.of(), input);
     }
 
     /**
      * Like {@link #runModule(Path, Path...)}, but sandboxed (as in the webdemo).
      */
     protected String runModuleSandboxed(Path main, Path... modulePath) {
-        return runModule(main, true, List.of(), modulePath);
+        return runModule(main, true, List.of(), "", modulePath);
     }
 
-    private String runModule(Path main, boolean sandboxed, List<String> args, Path... modulePath) {
+    private String runModule(Path main, boolean sandboxed, List<String> args, String input, Path... modulePath) {
+        return runModule(main, sandboxed, args,
+                engine -> engine.defineStdIn(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8))), modulePath);
+    }
+
+    /**
+     * Like {@link #runModule(Path, Path...)}; {@code setUp} prepares the engine (e.g. its
+     * standard input) before it runs {@code main}.
+     */
+    protected String runModuleWithEngine(Path main, Consumer<TinyscriptEngine> setUp) {
+        return runModule(main, false, List.of(), setUp);
+    }
+
+    private String runModule(Path main, boolean sandboxed, List<String> args, Consumer<TinyscriptEngine> setUp, Path... modulePath) {
         Injector localInjector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         XtextResourceSet localResourceSet = localInjector.getInstance(XtextResourceSet.class);
         Resource resource = localResourceSet.getResource(URI.createFileURI(main.toAbsolutePath().toString()), true);
@@ -247,6 +270,7 @@ public abstract class TinyscriptTranspilerTestBase {
         engine.setModuleLoader(new FileSystemModuleLoader(List.of(modulePath)));
         engine.setScriptArguments(args);
         engine.defineStdOut(stdout);
+        setUp.accept(engine);
         engine.execute((Tinyscript) resource.getContents().get(0));
         return stdout.toString();
     }
@@ -257,7 +281,7 @@ public abstract class TinyscriptTranspilerTestBase {
      * print {@code expected}. Imports are relative to {@code main}.
      */
     protected void assertProgramOutput(String expected, Path main, String... args) {
-        assertEquals(expected, runModule(main, false, List.of(args)), "Interpreter output of " + main);
+        assertEquals(expected, runModule(main, false, List.of(args), ""), "Interpreter output of " + main);
         assumeNodeAvailable();
         String jsCode = transpileModule(main);
         String nodeOut;
@@ -286,12 +310,20 @@ public abstract class TinyscriptTranspilerTestBase {
      * and node, running the bundled Javascript, must print the same.
      */
     protected void assertSameOutputModule(Path main, Path... modulePath) {
+        assertSameOutputModuleWithInput(main, "", modulePath);
+    }
+
+    /**
+     * Like {@link #assertSameOutputModule(Path, Path...)}, with {@code input} as the standard
+     * input of both.
+     */
+    protected void assertSameOutputModuleWithInput(Path main, String input, Path... modulePath) {
         assumeNodeAvailable();
-        String interpreterOut = runModule(main, modulePath);
+        String interpreterOut = runModule(main, false, List.of(), input, modulePath);
         String jsCode = transpileModule(main, modulePath);
         String nodeOut;
         try {
-            nodeOut = NodeJsRunner.run(jsCode);
+            nodeOut = NodeJsRunner.runWithInput(jsCode, input);
         } catch (AssertionError e) {
             fail("node.js failed for " + main + "\n--- Generated JS ---\n" + jsCode + "\n--- node error ---\n" + e.getMessage());
             return;
