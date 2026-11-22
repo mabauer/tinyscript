@@ -764,6 +764,10 @@ and differential tests run against node.
     `vscode-tmgrammar-test` and the `.vsix` package in CI). Not done: a "Run
     tinyscript" task (would need extension code; the REPL in a terminal does
     it).
+  - `package.json` overrides `minimatch` for `@vscode/vsce` with `^11.0.1`
+    (Dependabot alert #57, 2026-11-22: vsce 4.1.1 needs `^10.2.6`, which has a
+    denial of service with many glob patterns). Remove the override once a vsce
+    release depends on minimatch 11.
   - Stage 2, language server (about 1–2 days): validation while typing,
     completion, go to definition, references, rename, outline come from Xtext.
     Build a fat jar from core + `de.mkbauer.tinyscript.ide` with
