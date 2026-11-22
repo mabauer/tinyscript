@@ -1,0 +1,154 @@
+// Advent of Code 2023, day 20: Pulse Propagation
+// https://adventofcode.com/2023/day/20
+//
+// Usage: tinyscript day20.tys -- input.txt
+
+import inputLines from "./aoc";
+import parse from "std:string";
+
+// The modules: each kind is a class with the same methods, so the network treats them alike
+// (no inheritance needed):
+//   outputs                the names of the modules it sends its pulses to
+//   connect(input)         another module sends pulses to this one
+//   receive(input, high)   handles a pulse (high: true, low: false) from the module input;
+//                          returns the pulse it sends to all its outputs, or null for none
+
+// The broadcaster sends each pulse on as it is
+class Broadcaster {
+    constructor(outputs) { this.outputs = outputs; }
+    connect(input) { }
+    receive(input, high) { return high; }
+}
+
+// A flip-flop ignores high pulses; a low pulse switches it on or off, and it sends high if it is
+// now on, low if it is now off
+class FlipFlop {
+    constructor(outputs) {
+        this.outputs = outputs;
+        this.on = false;
+    }
+    connect(input) { }
+    receive(input, high) {
+        if (high) {
+            return null;
+        }
+        this.on = !this.on;
+        return this.on;
+    }
+}
+
+// A conjunction remembers the last pulse from each of its inputs (low at first); it sends low if
+// they were all high, otherwise high
+class Conjunction {
+    constructor(outputs) {
+        this.outputs = outputs;
+        this.last = new Map();
+        this.highInputs = 0;
+    }
+    connect(input) { this.last.set(input, false); }
+    receive(input, high) {
+        if (this.last.get(input) != high) {
+            this.last.set(input, high);
+            this.highInputs += high ? 1 : -1;
+        }
+        return this.highInputs < this.last.size;
+    }
+}
+
+// The network: a map from the names to the modules, from lines like "%a -> inv, con". Names
+// that only appear as outputs (like "output" or "rx") get no module: pulses to them just end.
+function buildNetwork() {
+    const modules = new Map();
+    for (const line : inputLines()) {
+        const [kindAndName, outputList] = parse("{} -> {}", line);
+        const outputs = outputList.split(", ");
+        if (kindAndName == "broadcaster") {
+            modules.set(kindAndName, new Broadcaster(outputs));
+        } else if (kindAndName[0] == "%") {
+            modules.set(kindAndName.slice(1), new FlipFlop(outputs));
+        } else {
+            modules.set(kindAndName.slice(1), new Conjunction(outputs));
+        }
+    }
+    for (const [name, module] : modules) {
+        for (const output : module.outputs) {
+            modules.get(output)?.connect(name);
+        }
+    }
+    return modules;
+}
+
+// Pushes the button once: a low pulse to the broadcaster, then all pulses in the order they are
+// sent, until none is left. Calls watch(source, target, high) for each pulse.
+function pushButton(modules, watch) {
+    const pulses = [{ source: "button", target: "broadcaster", high: false }];
+    let next = 0;
+    while (next < pulses.length) {
+        const { source, target, high } = pulses[next];
+        next++;
+        watch(source, target, high);
+        const module = modules.get(target);
+        if (module == null) {
+            continue;
+        }
+        const sent = module.receive(source, high);
+        if (sent != null) {
+            for (const output : module.outputs) {
+                pulses.push({ source: target, target: output, high: sent });
+            }
+        }
+    }
+}
+
+// Part 1: the number of low pulses times the number of high pulses in 1000 pushes
+function pulseProduct() {
+    const modules = buildNetwork();
+    let low = 0, high = 0;
+    for (const push : range(1000)) {
+        pushButton(modules, (source, target, isHigh) => {
+            if (isHigh) {
+                high++;
+            } else {
+                low++;
+            }
+        });
+    }
+    return low * high;
+}
+
+print("Part 1: " + pulseProduct());
+
+function gcd(a, b) {
+    return b == 0 ? a : gcd(b, a % b);
+}
+
+// Part 2: the fewest pushes until rx gets a low pulse. Simulating that would take far too
+// long; but in the puzzle inputs, rx gets its pulses from one conjunction, whose inputs are
+// independent counters that each send a high pulse every n pushes (and low again in the same
+// push). So rx gets a low pulse at the least common multiple of these n.
+function fewestPushesForRx() {
+    const modules = buildNetwork();
+    const feeders = modules.keys().filter(name => modules.get(name).outputs.includes("rx"));
+    if (feeders.length == 0) {
+        return "no rx module";
+    }
+    const feeder = feeders[0];
+    if (feeders.length != 1 || !(modules.get(feeder) instanceof Conjunction)) {
+        throw new Error("Expected that rx gets its pulses from one conjunction");
+    }
+    const inputs = modules.get(feeder).last.keys();
+    // The first push at which each of the inputs sends a high pulse to the feeder
+    const cycles = new Map();
+    let pushes = 0;
+    while (cycles.size < inputs.length) {
+        pushes++;
+        pushButton(modules, (source, target, high) => {
+            if (target == feeder && high && !cycles.has(source)) {
+                cycles.set(source, pushes);
+            }
+        });
+    }
+    return cycles.values().reduce((lcm, n) => lcm / gcd(lcm, n) * n, 1);
+}
+
+print("Part 2: " + fewestPushesForRx());

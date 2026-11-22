@@ -1,0 +1,80 @@
+// Advent of Code 2023, day 3: Gear Ratios
+// https://adventofcode.com/2023/day/3
+//
+// Usage: tinyscript day03.tys -- input.txt
+
+import inputLines from "./aoc";
+import sum from "std:array";
+import isDigit from "std:string";
+
+// A number in the engine schematic: its value, its row and the columns it covers
+class SchematicNumber {
+    constructor(value, row, start, end) {
+        this.value = value;
+        this.row = row;
+        this.start = start;
+        this.end = end;     // exclusive
+    }
+
+    // The positions around the number (some may be outside the grid)
+    neighbors() {
+        const positions = [{ row: this.row, col: this.start - 1 }, { row: this.row, col: this.end }];
+        for (const col : range(this.start - 1, this.end + 1)) {
+            positions.push({ row: this.row - 1, col }, { row: this.row + 1, col });
+        }
+        return positions;
+    }
+}
+
+// All numbers of the schematic, row by row
+function findNumbers(grid) {
+    const numbers = [];
+    for (const row : range(grid.length)) {
+        const line = grid[row];
+        let col = 0;
+        while (col < line.length) {
+            if (!isDigit(line[col])) {
+                col++;
+                continue;
+            }
+            const start = col;
+            while (isDigit(line[col])) {
+                col++;
+            }
+            numbers.push(new SchematicNumber(Number(line.substring(start, col)), row, start, col));
+        }
+    }
+    return numbers;
+}
+
+// The character at a position, "." outside the grid
+function charAt(grid, { row, col }) {
+    if (row < 0 || row >= grid.length || col < 0 || col >= grid[row].length) {
+        return ".";
+    }
+    return grid[row][col];
+}
+
+function isSymbol(c) {
+    return c != "." && !isDigit(c);
+}
+
+const grid = inputLines();
+const numbers = findNumbers(grid);
+
+// Part 1: the numbers next to a symbol are part numbers
+const partNumbers = numbers.filter(number => number.neighbors().some(position => isSymbol(charAt(grid, position))));
+print("Part 1: " + sum(partNumbers.map(number => number.value)));
+
+// Part 2: a gear is a "*" next to exactly two numbers; collect the numbers around each "*"
+const numbersAtStar = new Map();
+for (const number : numbers) {
+    for (const position : number.neighbors()) {
+        if (charAt(grid, position) == "*") {
+            const key = position.row + "," + position.col;
+            numbersAtStar.set(key, (numbersAtStar.get(key) ?? []) + [number.value]);
+        }
+    }
+}
+const gearRatios = numbersAtStar.values().filter(values => values.length == 2).map(([a, b]) => a * b);
+print("Part 2: " + sum(gearRatios));

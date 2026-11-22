@@ -1,0 +1,99 @@
+// Advent of Code 2023, day 14: Parabolic Reflector Dish
+// https://adventofcode.com/2023/day/14
+//
+// Usage: tinyscript day14.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The platform with round rocks (O) that roll, cube-shaped rocks (#) that stay, and
+// empty space (.). The cells are kept in one array, row by row.
+class Platform {
+    constructor(lines) {
+        this.height = lines.length;
+        this.width = lines[0].length;
+        this.cells = lines.join("").split("");
+    }
+
+    // The lines along which the rocks roll when the platform is tilted to the north,
+    // west, south or east: each one is a column or row, as a list of cell indexes
+    // starting at the edge the rocks roll to
+    linesTowards(direction) {
+        const columns = range(this.width).map(x => range(this.height).map(y => y * this.width + x));
+        const rows = range(this.height).map(y => range(this.width).map(x => y * this.width + x));
+        if (direction == "north") {
+            return columns;
+        } else if (direction == "west") {
+            return rows;
+        } else if (direction == "south") {
+            return columns.map(line => line.toReversed());
+        }
+        return rows.map(line => line.toReversed());
+    }
+
+    // Tilting rolls each round rock along its line as far as it can: up to the edge,
+    // a cube-shaped rock or another round rock that has already stopped
+    tilt(lines) {
+        const cells = this.cells;
+        for (const line : lines) {
+            let free = 0;      // the first place in the line where a rock can stop
+            for (const k : range(line.length)) {
+                const cell = cells[line[k]];
+                if (cell == "#") {
+                    free = k + 1;
+                } else if (cell == "O") {
+                    cells[line[k]] = ".";
+                    cells[line[free]] = "O";
+                    free++;
+                }
+            }
+        }
+    }
+
+    // Each round rock adds the number of rows from it to the south edge, including its own
+    northLoad() {
+        let load = 0;
+        for (const i : range(this.cells.length)) {
+            if (this.cells[i] == "O") {
+                load += this.height - Math.floor(i / this.width);
+            }
+        }
+        return load;
+    }
+
+    toString() {
+        return this.cells.join("");
+    }
+}
+
+const directions = ["north", "west", "south", "east"];
+
+// Part 1: the load after tilting the platform to the north
+const platform = new Platform(inputLines());
+const linesTowards = new Map(directions.map(direction => [direction, platform.linesTowards(direction)]));
+platform.tilt(linesTowards.get("north"));
+print("Part 1: " + platform.northLoad());
+
+// Part 2: the load after a billion spin cycles (north, west, south, east). The
+// platform soon goes through the same states again and again: once a state comes
+// back, the remaining cycles can be skipped, except for the remainder of the loop.
+function loadAfterCycles(cycles) {
+    const seen = new Map();      // state -> the number of cycles after which it was seen
+    let done = 0;
+    while (done < cycles) {
+        for (const direction : directions) {
+            platform.tilt(linesTowards.get(direction));
+        }
+        done++;
+        const state = platform.toString();
+        if (seen.has(state)) {
+            const loop = done - seen.get(state);
+            done += Math.floor((cycles - done) / loop) * loop;
+            seen.clear();
+        }
+        seen.set(state, done);
+    }
+    return platform.northLoad();
+}
+
+// Tilting north again does not matter: the first spin cycle starts with it anyway
+print("Part 2: " + loadAfterCycles(1000000000));

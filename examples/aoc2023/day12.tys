@@ -1,0 +1,60 @@
+// Advent of Code 2023, day 12: Hot Springs
+// https://adventofcode.com/2023/day/12
+//
+// Usage: tinyscript day12.tys -- input.txt
+
+import inputLines from "./aoc";
+import sum from "std:array";
+
+// Each line is a row of springs, operational (.), damaged (#) or unknown (?),
+// and the sizes of the groups of damaged springs: "???.### 1,1,3"
+const rows = inputLines().map(line => {
+    const [springs, sizes] = line.split(" ");
+    return { springs, groups: sizes.split(",").map(Number) };
+});
+
+// The number of ways to replace the unknown springs so that the row has these groups.
+// ways[i][j] is the number of arrangements of the springs from position i on with the
+// groups from j on; it is computed from the end of the row backwards (dynamic programming).
+// A group of size g fits at position i if none of the g springs is operational and the
+// spring after it is not damaged; the group and the spring after it are then done.
+function arrangements(springs, groups) {
+    const n = springs.length;
+    const m = groups.length;
+    // One more row for the position after the separator of a group at the very end
+    const ways = range(n + 2).map(() => new Array(m + 1).fill(0));
+    ways[n][m] = 1;
+    ways[n + 1][m] = 1;
+    for (const i : range(n).reverse()) {
+        const spring = springs[i];
+        for (const j : range(m + 1)) {
+            let count = 0;
+            if (spring != "#") {
+                count += ways[i + 1][j];      // operational
+            }
+            if (spring != "." && j < m && groupFits(springs, i, groups[j])) {
+                count += ways[i + groups[j] + 1][j + 1];      // the start of a group
+            }
+            ways[i][j] = count;
+        }
+    }
+    return ways[0][0];
+}
+
+function groupFits(springs, start, size) {
+    const end = start + size;
+    return end <= springs.length && !springs.slice(start, end).includes(".") && springs[end] != "#";
+}
+
+print("Part 1: " + sum(rows.map(({ springs, groups }) => arrangements(springs, groups))));
+
+// Part 2: each row is unfolded, five copies of the springs separated by "?" and five
+// copies of the groups
+function unfold({ springs, groups }) {
+    return {
+        springs: new Array(5).fill(springs).join("?"),
+        groups: new Array(5).fill(groups).flat()
+    };
+}
+
+print("Part 2: " + sum(rows.map(unfold).map(({ springs, groups }) => arrangements(springs, groups))));

@@ -1,0 +1,115 @@
+// Advent of Code 2023, day 17: Clumsy Crucible
+// https://adventofcode.com/2023/day/17
+//
+// Usage: tinyscript day17.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The heat loss of each city block, a grid of digits
+const grid = inputLines().map(line => line.split("").map(Number));
+const height = grid.length;
+const width = grid[0].length;
+
+// A priority queue: a binary heap, in which each entry is not larger than its two children.
+// Instead of swapping entries, push and pop move a hole up or down to where the new or last
+// entry fits.
+class PriorityQueue {
+    constructor() {
+        this.entries = [];
+    }
+    isEmpty() { return this.entries.length == 0; }
+    push(priority, value) {
+        const entries = this.entries;
+        let i = entries.length;
+        while (i > 0) {
+            const parent = (i - 1) >> 1;
+            if (entries[parent].priority <= priority) {
+                break;
+            }
+            entries[i] = entries[parent];
+            i = parent;
+        }
+        entries[i] = { priority, value };
+    }
+    // Removes the entry with the smallest priority and returns it as [priority, value]
+    pop() {
+        const entries = this.entries;
+        const first = entries[0];
+        const last = entries.pop();
+        const size = entries.length;
+        if (size > 0) {
+            let i = 0;
+            while (true) {
+                let child = 2 * i + 1;
+                if (child >= size) {
+                    break;
+                }
+                if (child + 1 < size && entries[child + 1].priority < entries[child].priority) {
+                    child++;   // the smaller of the two children
+                }
+                if (last.priority <= entries[child].priority) {
+                    break;
+                }
+                entries[i] = entries[child];
+                i = child;
+            }
+            entries[i] = last;
+        }
+        return [first.priority, first.value];
+    }
+}
+
+// A state is a block and the axis the crucible arrived on (0: vertically, 1: horizontally),
+// as one number. From there it turns and goes straight along the other axis.
+function state(row, col, axis) {
+    return (row * width + col) * 2 + axis;
+}
+
+// The least heat loss from the top left to the bottom right block (Dijkstra's algorithm), if
+// the crucible goes at least minSteps and at most maxSteps blocks straight before it turns
+function leastHeatLoss(minSteps, maxSteps) {
+    const losses = new Array(height * width * 2).fill(Infinity);
+    const queue = new PriorityQueue();
+    // At the start, the crucible may go right or down: as if it had arrived on either axis
+    for (const axis : [0, 1]) {
+        losses[state(0, 0, axis)] = 0;
+        queue.push(0, state(0, 0, axis));
+    }
+    while (!queue.isEmpty()) {
+        const [loss, current] = queue.pop();
+        if (loss > losses[current]) {
+            continue;   // already reached with less heat loss
+        }
+        const axis = current % 2;
+        const block = (current - axis) / 2;
+        const row = Math.floor(block / width);
+        const col = block % width;
+        if (row == height - 1 && col == width - 1) {
+            return loss;
+        }
+        // Turn and go 1 to maxSteps blocks along the other axis, in both directions
+        for (const sign : [1, -1]) {
+            let nextLoss = loss;
+            for (const steps : range(1, maxSteps + 1)) {
+                const nextRow = axis == 1 ? row + sign * steps : row;
+                const nextCol = axis == 0 ? col + sign * steps : col;
+                if (nextRow < 0 || nextRow >= height || nextCol < 0 || nextCol >= width) {
+                    break;
+                }
+                nextLoss += grid[nextRow][nextCol];
+                const next = state(nextRow, nextCol, 1 - axis);
+                if (steps >= minSteps && nextLoss < losses[next]) {
+                    losses[next] = nextLoss;
+                    queue.push(nextLoss, next);
+                }
+            }
+        }
+    }
+    throw new Error("The crucible cannot reach the factory");
+}
+
+// Part 1: a crucible goes at most three blocks straight
+print("Part 1: " + leastHeatLoss(1, 3));
+
+// Part 2: an ultra crucible goes at least four and at most ten blocks straight
+print("Part 2: " + leastHeatLoss(4, 10));

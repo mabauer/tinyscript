@@ -1,0 +1,161 @@
+// Advent of Code 2023, day 24: Never Tell Me The Odds
+// https://adventofcode.com/2023/day/24
+//
+// Usage: tinyscript day24.tys -- input.txt [low high]
+// (part 1 looks at the test area from 200000000000000 to 400000000000000 in x and y, or from
+// low to high; the example in the puzzle uses 7 27)
+
+import inputLines from "./aoc";
+import integers from "std:string";
+
+const low = System.args.length > 2 ? Number(System.args[1]) : 200000000000000;
+const high = System.args.length > 2 ? Number(System.args[2]) : 400000000000000;
+
+// Each hailstone has a position and a velocity: "19, 13, 30 @ -2,  1, -2"
+const hailstones = inputLines().map(line => {
+    const [x, y, z, vx, vy, vz] = integers(line);
+    return { position: [x, y, z], velocity: [vx, vy, vz] };
+});
+
+// Part 1: the number of pairs of hailstones whose paths in x and y cross in the future, inside
+// the test area. The paths p1 + v1 * t and p2 + v2 * s cross where both coordinates agree: two
+// equations for t and s (Cramer's rule). Parallel paths never cross.
+function crossInTestArea(a, b) {
+    const [x1, y1] = a.position, [vx1, vy1] = a.velocity;
+    const [x2, y2] = b.position, [vx2, vy2] = b.velocity;
+    const determinant = vx1 * vy2 - vy1 * vx2;
+    if (determinant == 0) {
+        return false;
+    }
+    const t = ((x2 - x1) * vy2 - (y2 - y1) * vx2) / determinant;
+    const s = ((x2 - x1) * vy1 - (y2 - y1) * vx1) / determinant;
+    const x = x1 + vx1 * t, y = y1 + vy1 * t;
+    return t >= 0 && s >= 0 && x >= low && x <= high && y >= low && y <= high;
+}
+
+let crossings = 0;
+for (const i : range(hailstones.length)) {
+    for (const j : range(i + 1, hailstones.length)) {
+        if (crossInTestArea(hailstones[i], hailstones[j])) {
+            crossings++;
+        }
+    }
+}
+print("Part 1: " + crossings);
+
+// Part 2: a rock thrown from position P with velocity V hits every hailstone (at some time t,
+// P + V * t = p + v * t); the sum of the coordinates of P.
+
+function minus(a, b) {
+    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+
+function cross(a, b) {
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+
+// The matrix of x => cross(a, x)
+function crossMatrix(a) {
+    return [[0, -a[2], a[1]], [a[2], 0, -a[0]], [-a[1], a[0], 0]];
+}
+
+// Solves the linear equations matrix * x = rhs (Gaussian elimination with partial pivoting)
+function solve(matrix, rhs) {
+    const n = rhs.length;
+    const rows = matrix.map((row, i) => row + [rhs[i]]);
+    for (const col : range(n)) {
+        let pivot = col;
+        for (const row : range(col + 1, n)) {
+            if (Math.abs(rows[row][col]) > Math.abs(rows[pivot][col])) {
+                pivot = row;
+            }
+        }
+        const swapped = rows[col];
+        rows[col] = rows[pivot];
+        rows[pivot] = swapped;
+        for (const row : range(n)) {
+            if (row != col) {
+                const factor = rows[row][col] / rows[col][col];
+                for (const k : range(col, n + 1)) {
+                    rows[row][k] -= factor * rows[col][k];
+                }
+            }
+        }
+    }
+    return rows.map((row, i) => row[n] / row[i]);
+}
+
+// The time at which the rock (position, velocity) hits the hailstone, or null if it misses
+function hitTime(rock, hailstone) {
+    let time = null;
+    for (const k : range(3)) {
+        const distance = hailstone.position[k] - rock.position[k];
+        const speed = rock.velocity[k] - hailstone.velocity[k];
+        if (speed == 0) {
+            if (distance != 0) {
+                return null;
+            }
+        } else if (time == null) {
+            time = distance / speed;
+        } else if (distance != speed * time) {
+            return null;
+        }
+    }
+    return time != null && Number.isInteger(time) && time >= 0 ? time : null;
+}
+
+// The rock from three hailstones a, b and c, or null if they do not give one that hits all
+// hailstones.
+//
+// Seen from a (positions and velocities relative to a's), a stands still at the origin, so
+// the rock passes the origin: its relative position R and velocity W are parallel,
+// R x W = 0. For b, with relative position q and velocity u, (R - q) x (W - u) = 0; with
+// R x W = 0 this is linear: R x u + q x W = q x u. Three equations for b and three for c give
+// R and W.
+//
+// But the numbers are too large for exact arithmetic with doubles: q x u is around 10^17, more
+// than 2^53 (about 9 * 10^15), and R comes out a few units off. The velocity is small, so W
+// rounded is exact. Then the time t0 at which the rock hits a follows from two coordinates of
+// R + W * tb = q + u * tb with R = -W * t0 (rounded too), and P = pa - W * t0 is exact, as all
+// products stay below 2^53. Finally, the rock must hit all hailstones (exactly).
+function rockFrom(a, b, c) {
+    const matrix = [], rhs = [];
+    for (const other : [b, c]) {
+        const q = minus(other.position, a.position);
+        const u = minus(other.velocity, a.velocity);
+        const uMatrix = crossMatrix(u), qMatrix = crossMatrix(q), qu = cross(q, u);
+        for (const k : range(3)) {
+            matrix.push(uMatrix[k].map(x => -x) + qMatrix[k]);
+            rhs.push(qu[k]);
+        }
+    }
+    const solution = solve(matrix, rhs);
+    const w = solution.slice(3).map(Math.round);
+    // R + W * tb = q + u * tb with R = -W * t0: (W - u) * tb - W * t0 = q, in x and y
+    const q = minus(b.position, a.position);
+    const u = minus(b.velocity, a.velocity);
+    const determinant = -(w[0] - u[0]) * w[1] + (w[1] - u[1]) * w[0];
+    if (determinant == 0) {
+        return null;
+    }
+    const t0 = Math.round(((w[0] - u[0]) * q[1] - (w[1] - u[1]) * q[0]) / determinant);
+    const rock = {
+        position: minus(a.position, w.map(x => x * t0)),
+        velocity: [w[0] + a.velocity[0], w[1] + a.velocity[1], w[2] + a.velocity[2]]
+    };
+    return hailstones.every(hailstone => hitTime(rock, hailstone) != null) ? rock : null;
+}
+
+// The rock from the first three hailstones, or the next three, if these do not give it
+function rock() {
+    for (const i : range(hailstones.length - 2)) {
+        const found = rockFrom(hailstones[i], hailstones[i + 1], hailstones[i + 2]);
+        if (found != null) {
+            return found;
+        }
+    }
+    throw new Error("Found no rock that hits all hailstones");
+}
+
+const { position } = rock();
+print("Part 2: " + (position[0] + position[1] + position[2]));
