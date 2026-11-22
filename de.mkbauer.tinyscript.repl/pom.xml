@@ -94,9 +94,9 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>jline</groupId>
+			<groupId>org.jline</groupId>
 			<artifactId>jline</artifactId>
-			<version>2.14.6</version>
+			<version>3.30.17</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.inject</groupId>
@@ -141,6 +141,8 @@
 									<mainClass>de.mkbauer.tinyscript.repl.TinyscriptReplMain</mainClass>
 									<manifestEntries>
 										<Implementation-Version>${project.version}</Implementation-Version>
+										<!-- jline's native terminal access, without a warning on Java 24+ -->
+										<Enable-Native-Access>ALL-UNNAMED</Enable-Native-Access>
 									</manifestEntries>
 								</transformer>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
@@ -162,13 +164,6 @@
 										<exclude>**</exclude>
 									</excludes>
 								</filter>
-								<!-- <filter>
-									<artifact>jline:jline</artifact>
-									<excludes>
-										<exclude>org/fusesource/**</exclude>
-									</excludes>
-								</filter>
-								-->
 								<!-- Omit xtext.util's empty plugin.properties, 
 									 because we assemble one (see transformer above) -->
 								<filter>

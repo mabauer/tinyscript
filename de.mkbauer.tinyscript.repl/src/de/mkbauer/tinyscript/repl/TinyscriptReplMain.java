@@ -11,9 +11,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import jline.console.ConsoleReader;
-import jline.console.history.FileHistory;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+
+import org.jline.reader.EndOfFileException;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.UserInterruptException;
+import org.jline.terminal.Attributes;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+import org.jline.terminal.impl.DumbTerminal;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.common.util.WrappedException;
@@ -87,6 +98,7 @@ class TinyscriptReplMain  {
 			statement continues on the next line. The value of an expression is shown.
 			  !help          show this help
 			  !quit, !bye    leave (or Ctrl-D)
+			Ctrl-C stops a running statement, or clears the input at the prompt.
 			""";
 
 	private final InputStream in;
@@ -285,37 +297,60 @@ class TinyscriptReplMain  {
 	private int interactive() {
 		sessionResourceSet = injector.getInstance(XtextResourceSet.class);
 		sessionEngine = newEngine(sessionResourceSet, Path.of("").toAbsolutePath());
-		ConsoleReader device;
+		Terminal terminal;
 		try {
-			device = new ConsoleReader(in, out);
+			terminal = newTerminal();
 		}
 		catch (IOException e) {
 			err.println("Error initializing console: " + e.getMessage());
 			return EXIT_USAGE;
 		}
-		device.setExpandEvents(false);
-		FileHistory history = loadHistory(device);
-		out.println("tinyscript " + version() + " - !help for help, !quit to leave");
+		LineReaderBuilder builder = LineReaderBuilder.builder()
+				.terminal(terminal)
+				.option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+				// One statement per line, as the history of jline 2 had it
+				.option(LineReader.Option.HISTORY_TIMESTAMPED, false);
+		if (historyFile != null)
+			builder.variable(LineReader.HISTORY_FILE, historyFile);
+		LineReader reader = builder.build();
+		PrintWriter console = terminal.writer();
+		// Ctrl-C while a statement runs stops it (at the prompt, jline reports it instead)
+		terminal.handle(Terminal.Signal.INT, signal -> sessionEngine.interrupt());
+		console.println("tinyscript " + version() + " - !help for help, !quit to leave");
 		String script = "";
 		boolean multiline = false;
 		try {
 			while (true) {
-				device.setPrompt(multiline ? "... " : "> ");
-				String line = device.readLine();
-				if (line == null || line.trim().equals("!quit") || line.trim().equals("!bye"))
+				String line;
+				try {
+					console.flush();
+					line = reader.readLine(multiline ? "... " : "> ");
+				}
+				catch (UserInterruptException e) {
+					// Ctrl-C at the prompt: forget the input so far
+					multiline = false;
+					script = "";
+					continue;
+				}
+				catch (EndOfFileException e) {
+					break;
+				}
+				if (line.trim().equals("!quit") || line.trim().equals("!bye"))
 					break;
 				if (line.trim().equals("!help")) {
-					device.print(INTERACTIVE_HELP);
+					console.print(INTERACTIVE_HELP);
 					continue;
 				}
 				try {
 					Tinyscript ast = parse(script + line, multiline);
 					if (ast != null) {
 						for (String warning : lastWarnings)
-							device.println(warning.replaceFirst(" \\(line \\d+\\)$", ""));
+							console.println(warning.replaceFirst(" \\(line \\d+\\)$", ""));
+						console.flush();
 						TSValue result = sessionEngine.execute(ast);
+						out.flush();
 						if (showsResult(ast, result))
-							device.println(result.toString());
+							console.println(result.toString());
 						multiline = false;
 						script = "";
 					}
@@ -327,35 +362,65 @@ class TinyscriptReplMain  {
 				catch (TinyscriptSyntaxError e) {
 					// As for a file; the line is counted from the first line of the statement
 					String input = script + line;
-					device.println("TinyscriptSyntaxError: " + e.getMessage()
+					console.println("TinyscriptSyntaxError: " + e.getMessage()
 							+ (input.contains("\n") ? " (line " + e.getAffectedLine() + " of the input)" : ""));
-					device.print(TinyscriptDiagnostics.excerpt(input, e.getAffectedLine(), e.getAffectedColumn()));
+					console.print(TinyscriptDiagnostics.excerpt(input, e.getAffectedLine(), e.getAffectedColumn()));
 					multiline = false;
 					script = "";
 				}
 				catch (TinyscriptRuntimeException e) {
-					device.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+					out.flush();
+					console.print(describeRuntimeError(e));
 					multiline = false;
 					script = "";
 				}
 				catch (RuntimeException e) {
 					// An interpreter bug must not end the session
-					device.println("InternalError: " + e);
+					console.println("InternalError: " + e);
 					multiline = false;
 					script = "";
 				}
 			}
-			device.println("Bye!");
-			device.flush();
-		}
-		catch (IOException e) {
-			err.println("Console error: " + e.getMessage());
-			return EXIT_ERROR;
+			console.println("Bye!");
+			console.flush();
 		}
 		finally {
-			saveHistory(history);
+			saveHistory(reader);
+			closeQuietly(terminal);
 		}
 		return EXIT_OK;
+	}
+
+	/**
+	 * The terminal of the session: the system's if the session reads System.in (with line
+	 * editing where it is a real terminal), otherwise a plain one on the given streams.
+	 */
+	private Terminal newTerminal() throws IOException {
+		// jline logs hints (e.g. on the permissions of the history file) that do not concern the session
+		Logger.getLogger("org.jline").setLevel(Level.SEVERE);
+		if (in == System.in && out == System.out)
+			return TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true).dumb(true).build();
+		Terminal terminal = new DumbTerminal("tinyscript", Terminal.TYPE_DUMB, in, out, StandardCharsets.UTF_8);
+		// Like a pipe: no echo of the input, no \r before each \n
+		Attributes attributes = terminal.getAttributes();
+		attributes.setLocalFlag(Attributes.LocalFlag.ECHO, false);
+		attributes.setOutputFlag(Attributes.OutputFlag.OPOST, false);
+		terminal.setAttributes(attributes);
+		return terminal;
+	}
+
+	/**
+	 * A runtime error as when running a file: the message and the source line with a marker,
+	 * then the calls that led there if the error is inside a function. The lines of the
+	 * session are called REPL1, REPL2, ... in the calls, as in node.
+	 */
+	static String describeRuntimeError(TinyscriptRuntimeException e) {
+		String nl = System.lineSeparator();
+		StringBuilder result = new StringBuilder(e.getClass().getSimpleName() + ": " + e.getMessage() + nl);
+		result.append(TinyscriptDiagnostics.excerpt(e));
+		if (e.getTinyscriptStacktrace() != null && e.getTinyscriptStacktrace().length > 1)
+			result.append(e.getTinyscriptStacktraceAsString().replaceAll("__repl(\\d+)\\." + FILE_EXTENSION, "REPL$1"));
+		return result.toString();
 	}
 
 	/**
@@ -434,28 +499,21 @@ class TinyscriptReplMain  {
 		return new TinyscriptSyntaxError("Missing ';' at the end of the statement", null, lines.length, last.length() + 1);
 	}
 
-	private FileHistory loadHistory(ConsoleReader device) {
-		if (historyFile == null)
-			return null;
+	private static void saveHistory(LineReader reader) {
 		try {
-			FileHistory history = new FileHistory(historyFile.toFile());
-			device.setHistory(history);
-			return history;
-		}
-		catch (IOException e) {
-			// The session works without history
-			return null;
-		}
-	}
-
-	private void saveHistory(FileHistory history) {
-		if (history == null)
-			return;
-		try {
-			history.flush();
+			reader.getHistory().save();
 		}
 		catch (IOException e) {
 			// Losing the history is not worth an error
+		}
+	}
+
+	private static void closeQuietly(Terminal terminal) {
+		try {
+			terminal.close();
+		}
+		catch (IOException e) {
+			// Nothing left to do at the end of the session
 		}
 	}
 
@@ -470,7 +528,7 @@ class TinyscriptReplMain  {
 
 	private URI newResourceUri() {
 		String name = "__repl";
-		for (int i = 0; i < Integer.MAX_VALUE; i++) {
+		for (int i = 1; i < Integer.MAX_VALUE; i++) {
 			URI syntheticUri = URI.createURI(name + i + "." + FILE_EXTENSION);
 			if (sessionResourceSet.getResource(syntheticUri, false) == null)
 				return syntheticUri;

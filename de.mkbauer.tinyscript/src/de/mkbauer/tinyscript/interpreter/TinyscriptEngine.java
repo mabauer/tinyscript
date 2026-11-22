@@ -130,6 +130,9 @@ public class TinyscriptEngine {
 	
 	protected int callDepth;
 	private ResourceMonitor resourceMonitor;
+
+	// Set by interrupt() from another thread (e.g. Ctrl-C); checked at each statement and call
+	private volatile boolean interruptRequested;
 	
 	public TinyscriptEngine(XtextResourceSet resourceSet) {
 		this.resourceSet = resourceSet;
@@ -400,6 +403,8 @@ public class TinyscriptEngine {
 		currentContext = globalContext;
 		contextStack.clear();
 		callDepth = 0;
+		// An interrupt from before this script (e.g. Ctrl-C at the prompt) does not stop it
+		interruptRequested = false;
 		if (resourceMonitor != null)
 			resourceMonitor.start();
 		checkMXCpuTimeAndMemory();
@@ -1514,8 +1519,28 @@ public class TinyscriptEngine {
 	}
 
 	private void recordStatement() {
+		checkInterrupt();
 		if (resourceMonitor != null) 
 			resourceMonitor.recordStatement();
+	}
+
+	/**
+	 * Stops the running script (called from another thread, e.g. on Ctrl-C): it ends with a
+	 * {@link TinyscriptInterruption} at its next statement, loop iteration or call. Without a
+	 * running script, the next one is not affected.
+	 */
+	public void interrupt() {
+		interruptRequested = true;
+	}
+
+	/**
+	 * Ends the script with a {@link TinyscriptInterruption} if {@link #interrupt()} was called.
+	 */
+	protected void checkInterrupt() {
+		if (interruptRequested) {
+			interruptRequested = false;
+			throw new TinyscriptInterruption();
+		}
 	}
 	
 	protected void recordObjectCreation(TSObject object) {

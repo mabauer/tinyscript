@@ -605,23 +605,27 @@ and differential tests run against node.
     history file (`~/.tinyscript_history`, jline 2.14.6 from 2018, no longer
     maintained), statements over several lines (`...` prompt), `!help`, `!quit`;
     the value of an expression statement is shown. Steps, by benefit:
-    1. **Ctrl-C stops a running script** instead of ending the JVM: an endless
-       loop costs the whole session today. The engine checks a flag (as the
-       resource monitor does); at the prompt Ctrl-C clears the input.
+    1. ~~**Ctrl-C stops a running script**~~ (done, with 3 and 5) instead of
+       ending the JVM: an endless loop costs the whole session today. The engine
+       checks a flag (as the resource monitor does); at the prompt Ctrl-C clears
+       the input.
     2. **`!load file.tys`:** runs a file in the session, so its functions,
        classes and variables can be tried out interactively (today each file
        runs with a fresh engine).
-    3. **Runtime errors with their place:** the source excerpt with a `^`
+    3. ~~**Runtime errors with their place:**~~ the source excerpt with a `^`
        marker, as for syntax errors and when running a file (today only the
        message).
     4. **`!reset`** (a new session) and **`!names`** (the names the session has
        defined).
-    5. **jline 3** instead of jline 2: the base for 6 and 7, maintained.
+    5. ~~**jline 3**~~ (done, 3.30.17; needed for 1: jline 2 lets Ctrl-C end the
+       JVM while a statement runs) instead of jline 2: the base for 6 and 7,
+       maintained.
     6. **Tab completion:** the session's names, the builtins, and the properties
        of an object after a dot (`Math.` → `max`, `min`, …).
     7. **Syntax highlighting** of the input and editing a statement over several
        lines as a whole.
-    - PRs: 1–4 (no new library), then 5–7.
+    - PRs: 1, 3 and 5 (jline 3 is needed for Ctrl-C); then 2 and 4; then 6
+      and 7.
 
 - **Review after `class`** (2026-11-22; language reference, TODO.md, the OO
   examples and about 60 probe scripts against the REPL). Verdict: the line holds

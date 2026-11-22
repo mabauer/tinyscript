@@ -286,4 +286,22 @@ public class TinyscriptReplMainTest {
         assertEquals(TinyscriptReplMain.EXIT_OK, run(file.toString()));
         assertEquals("0\n", out.toString());
     }
+
+    @Test
+    public void testInteractiveRuntimeErrorShowsTheSourceLineAndTheCalls() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("function area(s) {\nreturn s.w * s.h;\n}\narea({ w: 2 });\nlet n = 1;\nn.x;\nprint(\"alive\");\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("TinyscriptTypeError: '*' needs two numbers, but s.h is undefined\n"
+                + "    return s.w * s.h;\n"
+                + "           ^\n"
+                + "    at area(REPL1:2)\n"
+                + "    at global(REPL2:1)\n"), output);
+        // An error right in the input: no calls to show
+        assertTrue(output.contains("TinyscriptTypeError: Cannot read 'x' of n: numbers only have the methods toFixed and toString\n"
+                + "    n.x;\n"
+                + "    ^\n"
+                + "> "), output);
+        assertTrue(output.contains("alive\n"), output);
+    }
 }
