@@ -57,7 +57,7 @@ public abstract class Function extends TSObject {
 			result = result + "{ ";
 		result = result + label();
 		if (hasEnumerableProperties())
-			result = result + " " + properties.keySet().stream()
+			result = result + " " + orderedKeys().stream()
 				.filter(key->properties.get(key).isEnumerable())
 				.map(key -> key + ": " + display.format(properties.get(key).getValue()))
 				.collect(Collectors.joining(", ")) + " }";

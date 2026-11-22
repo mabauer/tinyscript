@@ -761,7 +761,9 @@ expression. As in Javascript, there are two short forms:
 - `{ row, col }` is short for `{ row: row, col: col }` (the counterpart of the
   object pattern `const { row, col } = position;`).
 
-The properties keep the order in which they were added (`Object.keys`).
+The properties keep the order in which they were added (`Object.keys`, `print`),
+except that integer keys come first in ascending order, as in Javascript:
+`{ b: 1, "7": 2, "10": 3 }` lists `7`, `10`, `b`.
 
 How to choose between object literals, factory functions and classes for objects
 with behavior: see [Classes and objects](#9-classes-and-objects).
