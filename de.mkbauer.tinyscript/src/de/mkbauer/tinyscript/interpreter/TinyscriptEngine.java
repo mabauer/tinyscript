@@ -1,5 +1,6 @@
 package de.mkbauer.tinyscript.interpreter;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -82,6 +83,7 @@ import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.number.NumberFunctions;
 import de.mkbauer.tinyscript.runtime.range.RangeFunction;
 import de.mkbauer.tinyscript.runtime.range.RangeObject;
+import de.mkbauer.tinyscript.runtime.io.LinesObject;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 import de.mkbauer.tinyscript.runtime.collection.MapConstructor;
 import de.mkbauer.tinyscript.runtime.error.ErrorConstructor;
@@ -120,6 +122,9 @@ public class TinyscriptEngine {
 	private TSObject numberPrototype;
 	
 	private OutputStream stdOut; 
+
+	// Where std:io reads lines (null: System.in, once a script reads)
+	private StandardInput stdIn;
 	
 	private boolean sandboxed = true; 
 
@@ -234,6 +239,29 @@ public class TinyscriptEngine {
 	
 	public OutputStream getStdOut() {
 		return stdOut;
+	}
+
+	/**
+	 * The standard input of std:io: the lines of {@code in} (UTF-8); a prompt goes to stdout.
+	 */
+	public void defineStdIn(InputStream in) {
+		stdIn = new StreamStandardInput(in, this::getStdOut);
+	}
+
+	/**
+	 * Reads the lines of std:io from {@code input}, e.g. with line editing.
+	 */
+	public void defineStdIn(StandardInput input) {
+		stdIn = input;
+	}
+
+	/**
+	 * The standard input of std:io; System.in unless defined otherwise.
+	 */
+	public StandardInput getStdIn() {
+		if (stdIn == null)
+			defineStdIn(System.in);
+		return stdIn;
 	}
 
 	public boolean isSandboxed() {
@@ -633,6 +661,13 @@ public class TinyscriptEngine {
 				}
 				return result;
 			}
+			if (iterable instanceof LinesObject lines) {
+				// The lines of the standard input as they come
+				for (TSValue line = lines.next(); line != null; line = lines.next()) {
+					result = executeLoopIteration(forstmt, line);
+				}
+				return result;
+			}
 			List<TSValue> items = iterableItems(iterable);
 			if (items == null)
 				throw new TinyscriptTypeError("for needs an array, a string, a Map, a Set or a range, not " + iterable.typeOf(), expr.getIterable());
@@ -662,6 +697,12 @@ public class TinyscriptEngine {
     			for (double i = range.getStart(); range.contains(i); i += range.getStep())
     				numbers.add(TSValue.of(i));
     			yield numbers;
+    		}
+    		case LinesObject lines -> {
+    			List<TSValue> all = new ArrayList<>();
+    			for (TSValue line = lines.next(); line != null; line = lines.next())
+    				all.add(line);
+    			yield all;
     		}
     		case MapObject map -> map.getEntries().entrySet().stream()
     				.map(entry -> {

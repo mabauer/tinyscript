@@ -302,7 +302,7 @@ class TinyscriptGenerator   {
 			if (value instanceof globalThis.Map || value instanceof globalThis.Set) {
 				return Array.from(value)[Symbol.iterator]();
 			}
-			if (Array.isArray(value) || value instanceof __ts_Range) {
+			if (Array.isArray(value) || value instanceof __ts_Range || (value !== null && typeof value === "object" && value.__ts_lines === true)) {
 				return value[Symbol.iterator]();
 			}
 			throw new TypeError("for needs an array, a string, a Map, a Set or a range");
@@ -404,7 +404,7 @@ class TinyscriptGenerator   {
 				if (loading.contains(uri))
 					throw Modules.cyclicImport(loading, uri)
 				if (!modules.containsKey(uri)) {
-					// Native modules (std:fs) have no script; they are emitted as Javascript directly
+					// Native modules (std:fs, std:io) have no script; they are emitted as Javascript directly
 					val module = if (Modules.isNative(uri)) null else Modules.load(script.eResource.resourceSet, uri)
 					if (module !== null) {
 						loading.push(uri)
@@ -482,6 +482,69 @@ class TinyscriptGenerator   {
 						writeLines: function (path, lines) { write(path, lines.map(function (line) { return line + "\n"; }).join("")); },
 						appendFile: function (path, text) { io("Cannot write file", path, function () { nodefs.appendFileSync(path, text, "utf8"); }); },
 						listDir: function (path) { return io("Cannot list directory", path, function () { return nodefs.readdirSync(path).sort(); }); }
+					});
+				})()'''
+			// std:io like IoModule: lines of the standard input (UTF-8, split at \n, a \r before it
+			// removed), read synchronously, so that a script reads as in the interpreter; null at the end
+			case "io": '''
+				(function () {
+					var nodefs = require("fs");
+					var chunk = Buffer.alloc(65536);
+					var pending = Buffer.alloc(0);
+					var ended = false;
+					function strip(line) { return line.endsWith("\r") ? line.slice(0, -1) : line; }
+					function read(prompt) {
+						if (prompt !== "") { process.stdout.write(prompt); }
+						while (true) {
+							var newline = pending.indexOf(10);
+							if (newline >= 0) {
+								var line = pending.subarray(0, newline).toString("utf8");
+								pending = pending.subarray(newline + 1);
+								return strip(line);
+							}
+							if (ended) {
+								if (pending.length === 0) { return null; }
+								var rest = pending.toString("utf8");
+								pending = Buffer.alloc(0);
+								return strip(rest);
+							}
+							var count;
+							try {
+								count = nodefs.readSync(0, chunk, 0, chunk.length, null);
+							}
+							catch (e) {
+								if (e.code === "EAGAIN") {
+									// A non-blocking standard input without data yet: wait a little
+									Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 10);
+									continue;
+								}
+								if (e.code !== "EOF") {
+									var error = new Error("Cannot read the standard input: " + e.message);
+									error.name = "IOError";
+									throw error;
+								}
+								count = 0;
+							}
+							if (count === 0) { ended = true; }
+							else { pending = Buffer.concat([pending, chunk.subarray(0, count)]); }
+						}
+					}
+					return Object.freeze({
+						readLine: function (prompt) {
+							if (prompt !== undefined && typeof prompt !== "string") {
+								throw new TypeError("io.readLine: prompt must be a string, not " + typeof prompt);
+							}
+							return read(prompt === undefined ? "" : prompt);
+						},
+						lines: function () {
+							return {
+								__ts_lines: true,
+								[Symbol.iterator]: function* () {
+									for (var line = read(""); line !== null; line = read("")) { yield line; }
+								},
+								toString: function () { return "[Lines]"; }
+							};
+						}
 					});
 				})()'''
 			default: throw new IllegalArgumentException("Not a native module: " + module)

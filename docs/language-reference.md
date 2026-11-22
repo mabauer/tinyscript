@@ -555,7 +555,7 @@ Only the errors a script can expect are caught:
 
 - errors thrown with `throw`;
 - failed input / output of `std:fs` (a missing file, a directory that cannot be
-  listed, …): an `Error` named `IOError`, e.g. `e.message` is
+  listed, …) and `std:io`: an `Error` named `IOError`, e.g. `e.message` is
   `Cannot read file "data.txt": not found`.
 
 Everything else is a programming error and ends the script, also inside `try`: a
@@ -1566,7 +1566,8 @@ the web demo the limit is lower.
 
 There is no global `fs` (since 0.18): file access is the module `std:fs` (see
 [Modules](#13-modules)), `import * as fs from "std:fs";`. It is not available in
-the web demo or any sandboxed execution context.
+the web demo or any sandboxed execution context. The standard input (keyboard or
+pipe) is the module `std:io`.
 
 ---
 
@@ -1660,7 +1661,7 @@ print(area(2), unit, geo.area(1));
 - Files do not see each other's top-level names; sharing works only through
   `import` / `export`.
 - The sandboxed web demo can import only `std:` modules, no files, and not
-  `std:fs`.
+  `std:fs` or `std:io`.
 - The Javascript generator bundles a program and its modules into one script:
   each module becomes an immediately invoked function (so it runs once and its
   private names stay private) that returns its frozen exports.
@@ -1669,13 +1670,14 @@ print(area(2), unit, geo.area(1));
 
 The `std:` modules come with tinyscript. `std:array`, `std:string` and
 `std:math` are written in tinyscript (in the core bundle under `/std`); `std:fs`
-is native. An error inside one of them, e.g. a wrong format for `parse`, is
-reported at the call in your script.
+and `std:io` are native. An error inside one of them, e.g. a wrong format for
+`parse`, is reported at the call in your script.
 
 ```
 import sum from "std:array";
 import words, parse from "std:string";
 import * as fs from "std:fs";
+import readLine, lines from "std:io";
 ```
 
 #### `std:array`
@@ -1779,6 +1781,42 @@ if (fs.exists("todo.txt")) {
     for (const line : fs.readLines("todo.txt")) { print("- " + line); }
 }
 ```
+
+#### `std:io`
+
+The standard input, line by line: what the user types, or a file or pipe
+(`tinyscript sum.tys < numbers.txt`). UTF-8; a line ends at `\n` or `\r\n` and
+comes without it, and a last line without a line break counts. It is native and
+not available sandboxed (e.g. in the web demo). A failed read throws an `Error`
+named `IOError`; wrong arguments are a `TypeError`.
+
+| Function           |                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `readLine(prompt)` | shows `prompt` (optional, a string; without a line break) and reads a line; `null` at the end of input |
+| `lines()`          | the remaining lines for a `for` loop, read one by one as the loop goes on                              |
+
+```
+import readLine, lines from "std:io";
+
+const name = readLine("Your name? ");
+if (name != null) { print("Hello " + name); }
+
+let sum = 0;
+for (const line : lines()) { sum += Number(line); }
+print(sum);
+```
+
+- The end of the input is `null`: Ctrl-D at the keyboard (Ctrl-Z on Windows),
+  the end of a file. After that, `readLine` keeps giving `null`.
+- `lines()` reads lazily, so a filter prints its first results before all input
+  has arrived, and a loop that `break`s leaves the rest: `readLine` and a later
+  `lines()` go on where it stopped. Lines that have been read are gone, so
+  `lines()` can be read only once; to keep the lines, push them into an array in
+  the loop.
+- In the interactive REPL, `readLine` reads the next line of the terminal, with
+  line editing; Ctrl-C stops the statement.
+- The Javascript generator reads the standard input of node synchronously, so a
+  generated script behaves the same.
 
 ## Quick Reference
 

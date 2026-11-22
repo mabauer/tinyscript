@@ -382,4 +382,39 @@ public class TinyscriptReplMainTest {
         assertTrue(output.contains("[3, 6]\n"), output);
         assertTrue(!output.contains("Error"), output);
     }
+
+    @Test
+    public void testFileReadsTheStandardInput() throws IOException {
+        Path file = script("sum.tys", "import lines from \"std:io\";\n"
+                + "let sum = 0;\nfor (const line : lines()) { sum += Number(line); }\nprint(sum);\n");
+        assertEquals(TinyscriptReplMain.EXIT_OK, runWithInput("1\n2\n39\n", file.toString()));
+        assertEquals("42\n", out.toString());
+    }
+
+    @Test
+    public void testFilesShareTheStandardInput() throws IOException {
+        Path first = script("first.tys", "import readLine from \"std:io\";\nprint(\"first: \" + readLine());\n");
+        Path second = script("second.tys", "import readLine from \"std:io\";\nprint(\"second: \" + readLine());\n");
+        assertEquals(TinyscriptReplMain.EXIT_OK, runWithInput("a\nb\n", first.toString(), second.toString()));
+        assertEquals("first: a\nsecond: b\n", out.toString());
+    }
+
+    @Test
+    public void testInteractiveReadLineReadsTheNextLine() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("import readLine from \"std:io\";\nconst name = readLine(\"Name? \");\nAda \"Countess\n"
+                        + "name + \"!\";\n!reset\nimport readLine from \"std:io\";\nreadLine();\n!quit\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("> Name? > \"Ada \\\"Countess!\"\n"), output);
+        // After !reset, the new session reads with line editing too
+        assertTrue(output.contains("> \"!quit\"\n"), output);
+    }
+
+    @Test
+    public void testInteractiveReadLineAtTheEndOfTheInputIsNull() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("import readLine from \"std:io\";\nreadLine() == null;\n"));
+        String output = out.toString();
+        assertTrue(output.contains("> true\n"), output);
+    }
 }
