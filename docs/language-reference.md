@@ -1399,7 +1399,8 @@ writing code and for knowing its intentional limitations.
 
 ### Things not supported
 
-- **Regular expressions** — no regex literals or `RegExp`
+- **Regular expressions** — no regex literals or `RegExp`; to read structured
+  text, use `parse` / `findAll` of `std:string`
 - **`finally`** — only `try` / `catch`; `catch` does not catch programming
   errors such as a `TypeError`
 - **Template literals** — no backtick strings
@@ -1462,7 +1463,43 @@ print(area(2), unit, geo.area(1));
     `words(" 3   4\n")` is `["3", "4"]`; Javascript:
     `text.trim().split(/\s+/)`), `integers(text)` (all integers in a text:
     `integers("p=0,4 v=3,-3")` is `[0, 4, 3, -3]`), `isWhitespace(c)`,
-    `isDigit(c)` (`false` for `undefined`, e.g. `s[s.length]`)
+    `isDigit(c)` (`false` for `undefined`, e.g. `s[s.length]`), and `parse` /
+    `findAll` (below)
+
+  **`parse` and `findAll`** read structured text with a format, as Python's
+  `parse` library does, without regular expressions:
+
+  ```
+  import parse, findAll from "std:string";
+  const [px, py, vx, vy] = parse("p={:d},{:d} v={:d},{:d}", "p=0,4 v=3,-3");
+  const [a, op, b, out] = parse("{:w} {:w} {:w} -> {:w}", "x00 AND y00 -> z00");
+  for (const [x, y] : findAll("mul({:d},{:d})", memory)) { … }
+  ```
+
+  - `parse(format, text)`: the values of the fields as an array if the whole
+    text fits the format (trailing whitespace is ignored), otherwise `null`, so
+    formats can be tried one after the other.
+  - `findAll(format, text)`: an array with the values of each match, from left
+    to right, without overlaps (`[]` if there is none).
+
+  | Field  | Matches                                                   | Value  |
+  | ------ | --------------------------------------------------------- | ------ |
+  | `{}`   | any text (at least one character) up to the text after it | string |
+  | `{:d}` | an integer, with an optional sign: `42`, `-3`, `+7`       | number |
+  | `{:f}` | a decimal number with a point: `3.5`, `-.25`              | number |
+  | `{:g}` | any number: `42`, `-2.5`, `1e3`                           | number |
+  | `{:w}` | a word: letters, digits and `_`                           | string |
+  | `{:l}` | letters                                                   | string |
+  | `{:S}` | anything but whitespace                                   | string |
+
+  Everything else in the format must appear as it is; `{{` and `}}` are literal
+  braces, and a space matches one or more spaces or tabs. Fields take as much as
+  their type allows, `{}` up to the first occurrence of the text after it (so
+  `{}` needs text after it, except at the end of a `parse` format). There is no
+  backtracking, unlike Python: `parse("{:d}{:d}", "123")` is `null`, not
+  `[12, 3]`; the time is linear in the length of the text. Named fields
+  (`{x:d}`), the other types of Python's library and its case insensitivity are
+  not supported. A malformed format (`{:x}`, a single `}`) is an `Error`.
 
   ```
   import sum from "std:array";
