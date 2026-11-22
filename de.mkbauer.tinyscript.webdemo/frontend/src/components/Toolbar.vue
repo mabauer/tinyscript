@@ -14,6 +14,7 @@ const examples: Example[] = [
   { file: 'fibonacci_recursive.tys',  label: 'Functions: recursion' },
   { file: 'arrays.tys',               label: 'Working with Arrays' },
   { file: 'closures.tys',             label: 'Closures' },
+  { file: 'errors.tys',               label: 'Errors: throw and try / catch' },
   { file: 'oo.tys',                   label: 'Objects and Prototypes' },
   { file: 'modules.tys',              label: 'Modules and the Standard Library' },
   { file: 'people.tys',               label: 'Monitoring Runtime Resources' },

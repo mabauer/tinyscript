@@ -1,0 +1,73 @@
+// Errors: throw stops the normal flow, try / catch handles it.
+
+// A function reports bad input by throwing an Error
+function parsePoint(text) {
+    const parts = text.split(",");
+    if (parts.length != 2) {
+        throw new Error("expected x,y but got \"" + text + "\"");
+    }
+    const point = { x: Number(parts[0]), y: Number(parts[1]) };
+    if (isNaN(point.x) || isNaN(point.y)) {
+        throw new Error("not a number in \"" + text + "\"");
+    }
+    return point;
+}
+
+// The caller decides what to do: here, skip bad lines and go on
+const lines = ["1,2", "3;4", "5,six", "7,8"];
+const points = [];
+for (const line : lines) {
+    try {
+        points.push(parsePoint(line));
+    }
+    catch (e) {
+        print("skipped:", e.message);
+    }
+}
+print(points);                            // [{x: 1, y: 2}, {x: 7, y: 8}]
+
+// e is always an Error object: e.name, e.message, and print shows both
+try {
+    parsePoint("");
+}
+catch (e) {
+    print(e.name, "|", e.message, "|", e);
+}
+
+// Without the variable, catch just ignores the error
+function pointOrOrigin(text) {
+    try {
+        return parsePoint(text);
+    }
+    catch {
+        return { x: 0, y: 0 };
+    }
+}
+print(pointOrOrigin("oops"));             // {x: 0, y: 0}
+
+// Add context and throw on; an error nobody catches ends the script
+function parseAll(texts) {
+    const result = [];
+    for (const i : range(texts.length)) {
+        try {
+            result.push(parsePoint(texts[i]));
+        }
+        catch (e) {
+            throw new Error("line " + (i + 1) + ": " + e.message);
+        }
+    }
+    return result;
+}
+try {
+    parseAll(["1,1", "2"]);
+}
+catch (e) {
+    print(e.message);                     // line 2: expected x,y but got "2"
+}
+
+// Stricter than Javascript: catch gets only errors thrown with throw (and,
+// outside the sandbox, failed file access). Programming errors are not
+// caught, so a broad catch cannot hide them:
+//     try { const p = null; print(p.x); } catch (e) { … }
+// still ends the script with a TypeError. Only Error objects can be thrown:
+// throw "text"; is a TypeError, too.
