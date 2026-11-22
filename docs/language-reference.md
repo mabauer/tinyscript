@@ -18,7 +18,7 @@ and all the details you need to write correct programs.
 6. [Functions](#6-functions)
 7. [Objects](#7-objects)
 8. [Arrays](#8-arrays)
-9. [Prototypal inheritance](#9-prototypal-inheritance)
+9. [Classes and objects](#9-classes-and-objects)
 10. [Closures](#10-closures)
 11. [Built-in objects and functions](#11-built-in-objects-and-functions)
 12. [Differences from JavaScript](#12-differences-from-javascript)
@@ -563,6 +563,41 @@ error; a broad `catch (e) { return null; }` cannot hide a typo.
 place and stack trace (unless its message was changed). `return`, `break` and
 `continue` leave a `try` or `catch` block as any other block.
 
+### Kinds of errors
+
+To tell your own errors apart, give them a name. `throw` takes only `Error`
+objects, and a class cannot extend `Error`, so the name is a property: a small
+function makes such errors, and a `catch` that handles only them throws the
+others on.
+
+```
+function parseError(message) {
+    const e = new Error(message);
+    e.name = "ParseError";
+    return e;
+}
+
+function parsePoint(text) {
+    const parts = text.split(",");
+    if (parts.length != 2) {
+        throw parseError("expected x,y but got \"" + text + "\"");
+    }
+    return { x: Number(parts[0]), y: Number(parts[1]) };
+}
+
+for (const line : ["1,2", "oops"]) {
+    try {
+        print(parsePoint(line));
+    }
+    catch (e) {
+        if (e.name != "ParseError") {
+            throw e;            // not ours: pass it on
+        }
+        print(e);               // ParseError: expected x,y but got "oops"
+    }
+}
+```
+
 ### `return`
 
 Returns a value from a function. A `return` without an expression returns
@@ -728,21 +763,8 @@ expression. As in Javascript, there are two short forms:
 
 The properties keep the order in which they were added (`Object.keys`).
 
-Methods in a literal that a function returns keep private state in a closure,
-without `this`:
-
-```
-function counter() {
-    let n = 0;
-    return {
-        inc() { n++; },
-        get() { return n; }
-    };
-}
-const c = counter();
-c.inc(); c.inc();
-print(c.get(), c.n);   // 2 undefined
-```
+How to choose between object literals, factory functions and classes for objects
+with behavior: see [Classes and objects](#9-classes-and-objects).
 
 ### Property access
 
@@ -919,16 +941,65 @@ for (const i : range(array.length)) { ... }   // iterates indexes
 
 ---
 
-## 9. Prototypal Inheritance
+## 9. Classes and Objects
 
-Tinyscript follows JavaScript's prototypal model. Every object has a prototype
-(accessible as `__proto__`). When you access a property that doesn't exist on an
-object, the lookup walks up the prototype chain.
+There are three ways to make objects with behavior. Choose by what you need:
+
+| Form                                                 | Use it for                                          | Example                                              |
+| ---------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------- |
+| [Object literal](#object-literals)                   | a single object: settings, a record, a small helper | `{ x, y, length() { … } }`                           |
+| [Factory function](#factory-functions-with-closures) | objects with private state, without `this`          | `counter()` returning `{ inc() { … }, get() { … } }` |
+| [`class`](#classes)                                  | many objects of the same kind with shared methods   | `class Point { … }`                                  |
+
+There is no inheritance between classes: code that several kinds of objects
+share goes into a function, or one object uses another one (see
+[Reuse without inheritance](#reuse-without-inheritance)). Objects of different
+kinds can still be used alike, if they have the same methods (see
+[Objects of different kinds used alike](#objects-of-different-kinds-used-alike)).
+Under the hood, all of this is Javascript's prototypes (see
+[Under the hood: prototypes](#under-the-hood-prototypes)).
+
+### Object literals
+
+A literal (see [Objects](#7-objects)) with methods is the simplest object with
+behavior; `this` in a method is the object the method is called on:
+
+```
+const origin = {
+    x: 0,
+    y: 0,
+    distanceTo(other) { return Math.hypot(other.x - this.x, other.y - this.y); }
+};
+print(origin.distanceTo({ x: 3, y: 4 }));   // 5
+```
+
+### Factory functions with closures
+
+A function that returns an object literal makes objects whose state only their
+methods can reach (see [Closures](#10-closures)). The methods use the variables
+of the function, not `this`:
+
+```
+function counter(start) {
+    let n = start;              // private: only inc and get see it
+    return {
+        inc() { n++; },
+        get() { return n; }
+    };
+}
+
+const c = counter(10);
+c.inc();
+print(c.get(), c.n);   // 11 undefined
+```
+
+Each call makes new state. Since the methods do not use `this`, they also work
+when taken off the object (`const inc = c.inc; inc();`).
 
 ### Classes
 
-`class` is short for a constructor function and the methods on its prototype, as
-in Javascript, but without inheritance:
+A class describes many objects of the same kind: the `constructor` gives each
+new object its fields, the methods are shared by all of them.
 
 ```
 class Point {
@@ -942,16 +1013,13 @@ class Point {
 
 const p = new Point(3, 4);
 print(p.length(), p.plus(p));    // 5 Point {x: 6, y: 8}
-print(p instanceof Point, typeof Point, Object.keys(p));   // true function ["x", "y"]
+print(p instanceof Point, Object.keys(p));   // true ["x", "y"]
 ```
 
-- The method `constructor` gives a new object its fields; a class without it
-  creates empty objects. `new Point(…)` always gives the new object, so a
-  constructor cannot `return` a value.
-- Methods live on the prototype: they are shared by all objects of the class and
-  are not enumerable (not in `Object.keys`, not printed). Parameters work as in
-  functions (`...rest`, patterns). `this` is set by the method call as usual: a
-  method taken off its object (`const f = p.length; f();`) has no `this`.
+- A class without `constructor` creates empty objects. `new Point(…)` always
+  gives the new object, so a constructor cannot `return` a value.
+- The methods are not fields of the objects: they are not in `Object.keys` and
+  not printed. Parameters work as in functions (`...rest`, patterns).
 - `print` shows an object of a class with the class name (`Point {x: 3, y: 4}`),
   unless the class has a `toString` method; `print(Point)` shows
   `[class Point]`.
@@ -962,112 +1030,154 @@ print(p instanceof Point, typeof Point, Object.keys(p));   // true function ["x"
 - Like `let` and `const`, a class can be used from its declaration on: functions
   and methods may mention a class declared further down, since they run later,
   but `new Point(1, 2)` at the top level before `class Point` is an error.
-- Not supported: `extends` and `super`, `static` members, getters and setters,
-  field declarations in the class body (fields get their values in the
-  constructor), and interfaces (`interface` and `implements` are reserved
-  words). The compiler says so with a hint. Code that several classes share goes
-  into a function.
+- Not supported: `extends` and `super`, `static` members (write a function or a
+  constant next to the class), getters and setters, field declarations in the
+  class body (fields get their values in the constructor), and interfaces
+  (`interface` and `implements` are reserved words). The compiler says so with a
+  hint.
 
-### Constructor functions and `.prototype`
+### Methods and `this`
 
-Before `class`, and for inheritance, the standard JavaScript pattern works:
-
-```
-function Animal(name) {
-    this.name = name;
-}
-
-Animal.prototype.speak = function() {
-    print(this.name + " makes a sound.");
-};
-
-function Dog(name) {
-    Animal.call(this, name);   // call parent constructor
-}
-
-Dog.prototype = Object.create(Animal.prototype);
-
-Dog.prototype.speak = function() {
-    print(this.name + " barks.");
-};
-
-const d = new Dog("Rex");
-d.speak();                     // "Rex barks."
-print(d instanceof Dog);       // true
-print(d instanceof Animal);    // true
-```
-
-### `Object.create(proto)`
-
-Creates a new object with `proto` as its prototype:
+A method call `obj.method()` sets `this` to `obj`. An arrow function inside a
+method takes `this` from the method, so it can use the fields:
 
 ```
-const base = { greet: function() { print("Hello!"); } };
-const child = Object.create(base);
-child.greet();   // "Hello!" — inherited from base
-```
-
-### Prototype-as-class pattern
-
-Objects themselves can serve as "classes", also with inheritance, which `class`
-leaves out. The example
-[`examples/oo/prototypes_as_classes.tys`](../examples/oo/prototypes_as_classes.tys)
-demonstrates this:
-
-```
-const Proto = {
-    _new(...args) {
-        const instance = Object.create(this);
-        instance.constructor.apply(instance, args);
-        return instance;
-    },
-    extend(methods) {
-        const subclass = Object.create(this);
-        for (const key : Object.getOwnPropertyNames(methods)) {
-            Object.defineProperty(subclass, key, Object.getOwnPropertyDescriptor(methods, key));
-        }
-        subclass.super = this;
-        return subclass;
+class Basket {
+    constructor(prices, discount) {
+        this.prices = prices;
+        this.discount = discount;
     }
-};
+    total() {
+        return this.prices.map(price => price * (1 - this.discount)).reduce((a, b) => a + b, 0);
+    }
+}
+print(new Basket([10, 20], 0.5).total());   // 15
+```
 
-const Person = Proto.extend({
-    constructor(name) { this.name = name; },
+A method taken off its object has no `this`: `const f = p.length; f();` is a
+`TypeError`, since `this` is `undefined` in a plain call. To hand a method on,
+wrap the call in an arrow function: `points.map(point => point.length())`. A
+`function () { … }` written inside a method has its own `this` as well; use an
+arrow function there.
+
+### Objects of different kinds used alike
+
+Objects that have the same methods can be used alike, whatever made them:
+objects of different classes, and object literals too.
+
+```
+class Circle {
+    constructor(radius) { this.radius = radius; }
+    area() { return Math.PI * this.radius * this.radius; }
+    toString() { return "circle " + this.radius; }
+}
+
+class Square {
+    constructor(side) { this.side = side; }
+    area() { return this.side * this.side; }
+    toString() { return "square " + this.side; }
+}
+
+const shapes = [new Circle(1), new Square(2), { area() { return 1.5; }, toString() { return "patch"; } }];
+for (const shape : shapes) {
+    print(shape + ": " + shape.area().toFixed(2));
+}
+```
+
+Describe the methods such objects need in a comment. Where a missing method
+would only show up much later, a function can check for it right away:
+
+```
+function addListener(listeners, listener) {
+    if (listener == null || typeof listener.onEvent != "function") {
+        throw new Error("a listener needs a method onEvent(event)");
+    }
+    listeners.push(listener);
+}
+```
+
+Otherwise, calling a method that is not there is a clear error anyway:
+`Square has no method 'perimeter'`. The examples
+[`expressions.tys`](../examples/oo/expressions.tys) (kinds of expressions that
+can all evaluate, derive and simplify themselves) and
+[`orders.tys`](../examples/oo/orders.tys) (listeners on an event bus) are built
+this way.
+
+### Reuse without inheritance
+
+Instead of a class that extends another one, an object can have another one and
+pass work on to it (composition):
+
+```
+class Person {
+    constructor(name) { this.name = name; }
     describe() { return "Person called " + this.name; }
-});
+}
 
-const Employee = Person.extend({
+class Employee {
     constructor(name, title) {
-        Employee.super.constructor.call(this, name);
+        this.person = new Person(name);
         this.title = title;
-    },
-    describe() {
-        return Employee.super.describe.call(this) + " (" + this.title + ")";
     }
-});
+    describe() { return this.person.describe() + " (" + this.title + ")"; }
+}
 
-const jane = Employee._new("Jane", "CTO");
-print(jane.describe());   // "Person called Jane (CTO)"
+print(new Employee("Jane", "CTO").describe());   // Person called Jane (CTO)
 ```
 
-### `instanceof`
+Code that several classes share, but that does not belong to any of them, goes
+into a function next to them, e.g. `binary(left, op, right, precedence)` in
+[`expressions.tys`](../examples/oo/expressions.tys), which the classes `Add`,
+`Sub` and `Mul` use for `toString`.
 
-Checks whether an object has a constructor's `prototype` anywhere in its
-prototype chain:
+### Under the hood: prototypes
 
-```
-print(d instanceof Dog);      // true
-print(d instanceof Animal);   // true
-print(d instanceof Object);   // true (all objects ultimately trace back)
-```
-
-### `__proto__`
-
-The prototype of any object is accessible as `__proto__`:
+Every object has a prototype: a property that the object does not have is looked
+up in its prototype, then in the prototype's prototype, and so on. A class is a
+constructor function whose `prototype` holds the methods:
 
 ```
-print(child.__proto__ == base);   // true
+class Pair {
+    constructor(a, b) { this.a = a; this.b = b; }
+    sum() { return this.a + this.b; }
+}
+const pair = new Pair(1, 2);
+print(typeof Pair, Object.getPrototypeOf(pair) == Pair.prototype, pair.hasOwnProperty("sum"));
+// function true false
 ```
+
+`Object.create(proto)` makes a new object with `proto` as its prototype:
+
+```
+const base = { greet() { return "Hello from " + this.name; } };
+const child = Object.create(base);
+child.name = "child";
+print(child.greet(), Object.getPrototypeOf(child) == base);   // Hello from child true
+```
+
+`x instanceof C` checks whether `C.prototype` is in the prototype chain of `x`.
+`Object.getPrototypeOf(x)` gives the prototype; `x.__proto__` is the same.
+
+Before `class`, objects of the same kind were made with a constructor function
+and methods assigned to its `prototype`; older code reads like this:
+
+```
+function Car(engine) {
+    this.engine = engine;
+}
+Car.prototype.describe = function() { return "Engine: " + this.engine; };
+print(new Car("V8").describe());   // Engine: V8
+```
+
+Unlike a class, such a function can be called without `new` by mistake (then
+`this` is `undefined` and the first assignment fails), and its objects print
+without a name. Inheritance can be built from these parts
+(`Object.create(Parent.prototype)` and `Parent.call(this, …)`, or plain objects
+as classes), but it is not the way tinyscript recommends: use composition.
+[`examples/oo/car.tys`](../examples/oo/car.tys) shows a constructor function
+next to the same class, and
+[`examples/oo/prototypes_as_classes.tys`](../examples/oo/prototypes_as_classes.tys)
+inheritance with prototypes next to the same with classes and composition.
 
 ---
 
@@ -1092,7 +1202,9 @@ print(counter());   // 3
 ```
 
 Each call to `makeCounter()` creates a fresh `count` variable, so closures from
-different calls do not share state.
+different calls do not share state. A function that returns an object with
+several such methods makes objects with private state (see
+[Factory functions with closures](#factory-functions-with-closures)).
 
 Two common uses: a function that remembers results (here in a `Map`, which only
 the returned function can reach) and a function made from a parameter, e.g. a
@@ -1476,7 +1588,7 @@ writing code and for knowing its intentional limitations.
 ### Things Tinyscript shares with JavaScript (strict mode)
 
 - All variables must be declared before use (no implicit globals)
-- Prototypal inheritance via `prototype` and `__proto__`
+- Classes (without inheritance) and prototypes (`Object.create`, `__proto__`)
 - First-class functions, closures, and lexical scoping
 - `this` binding in constructors and methods
 - `class` with a `constructor` and methods (without inheritance)
