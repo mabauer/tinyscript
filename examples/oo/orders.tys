@@ -1,0 +1,297 @@
+// Orders of a small shop, processed by listeners on an event bus.
+//
+// Written with class and interface as planned (TODO.md, "Objects with methods
+// are verbose"): it does not run yet. orders_today.tys is the same program
+// with constructor functions and prototypes, and runs today; both must print
+// the same. Besides what expressions.tys uses, this example tries:
+//
+// - a class that implements several interfaces (Inventory, Accounting, AuditLog)
+// - class names after parameters, checked when the function is called:
+//   subscribe(listener: EventListener) is a TypeError for anything that is not
+//   an EventListener, as a builtin rejects a wrong argument
+import parse from "std:string";
+
+interface EventListener {
+    onEvent(event);
+}
+
+interface Reporting {
+    report();
+}
+
+// --- Data ---
+
+class Item {
+    constructor(product, quantity, price) {
+        this.product = product;
+        this.quantity = quantity;
+        this.price = price;     // per piece, in cents
+    }
+    total() { return this.quantity * this.price; }
+    toString() { return this.quantity + " " + this.product; }
+}
+
+class Order {
+    constructor(id, customer, items) {
+        this.id = id;
+        this.customer = customer;
+        this.items = items;
+    }
+    total() { return this.items.reduce((sum, item) => sum + item.total(), 0); }
+}
+
+function money(cents) {
+    return (cents / 100).toFixed(2);
+}
+
+// --- Events ---
+
+class OrderPlaced {
+    constructor(order: Order) {
+        this.order = order;
+    }
+    toString() {
+        return "order " + this.order.id + " placed by " + this.order.customer + ": "
+            + this.order.items.join(", ") + " for " + money(this.order.total());
+    }
+}
+
+class OrderCancelled {
+    constructor(orderId, reason) {
+        this.orderId = orderId;
+        this.reason = reason;
+    }
+    toString() { return "order " + this.orderId + " cancelled: " + this.reason; }
+}
+
+class PaymentReceived {
+    constructor(orderId, amount) {
+        this.orderId = orderId;
+        this.amount = amount;
+    }
+    toString() { return "payment of " + money(this.amount) + " for order " + this.orderId; }
+}
+
+class OrderPaid {
+    constructor(orderId) {
+        this.orderId = orderId;
+    }
+    toString() { return "order " + this.orderId + " paid"; }
+}
+
+class OrderShipped {
+    constructor(orderId, customer) {
+        this.orderId = orderId;
+        this.customer = customer;
+    }
+    toString() { return "order " + this.orderId + " shipped to " + this.customer; }
+}
+
+// --- The bus ---
+
+class EventBus {
+    constructor() {
+        this.listeners = [];
+        this.queue = [];
+        this.dispatching = false;
+    }
+
+    subscribe(listener: EventListener) {
+        this.listeners.push(listener);
+    }
+
+    // An event emitted by a listener is delivered after the current one, so
+    // every listener sees the events in the same order
+    emit(event) {
+        this.queue.push(event);
+        if (this.dispatching) {
+            return;
+        }
+        this.dispatching = true;
+        while (this.queue.length > 0) {
+            const next = this.queue.shift();
+            for (const listener : this.listeners) {
+                listener.onEvent(next);
+            }
+        }
+        this.dispatching = false;
+    }
+}
+
+// --- Listeners ---
+
+// Reserves the products of an order, or cancels it
+class Inventory implements EventListener, Reporting {
+    constructor(bus: EventBus, stock) {
+        this.bus = bus;
+        this.stock = stock;
+    }
+    onEvent(event) {
+        if (!(event instanceof OrderPlaced)) {
+            return;
+        }
+        const missing = event.order.items.filter(item => (this.stock.get(item.product) ?? 0) < item.quantity);
+        if (missing.length > 0) {
+            this.bus.emit(new OrderCancelled(event.order.id, "not enough " + missing.map(item => item.product).join(", ")));
+            return;
+        }
+        for (const item : event.order.items) {
+            this.stock.set(item.product, this.stock.get(item.product) - item.quantity);
+        }
+    }
+
+    report() {
+        print("Stock:");
+        for (const [product, count] : this.stock) {
+            print("  " + product.padEnd(8) + ("" + count).padStart(4));
+        }
+    }
+}
+
+// Keeps track of what is still to be paid, and of payments that cannot be used
+class Accounting implements EventListener, Reporting {
+    constructor(bus: EventBus) {
+        this.bus = bus;
+        this.open = new Map();       // order id -> amount in cents
+        this.refunds = [];
+    }
+
+    onEvent(event) {
+        if (event instanceof OrderPlaced) {
+            this.open.set(event.order.id, event.order.total());
+        }
+        else if (event instanceof OrderCancelled) {
+            this.open.delete(event.orderId);
+        }
+        else if (event instanceof PaymentReceived) {
+            const open = this.open.get(event.orderId);
+            if (open == null || event.amount > open) {
+                this.refunds.push(event);
+            }
+            else if (event.amount == open) {
+                this.open.delete(event.orderId);
+                this.bus.emit(new OrderPaid(event.orderId));
+            }
+            else {
+                this.open.set(event.orderId, open - event.amount);
+            }
+        }
+    }
+
+    report() {
+        print("Open:");
+        for (const [id, amount] : this.open) {
+            print("  order " + id + money(amount).padStart(10));
+        }
+        print("To refund:");
+        for (const payment : this.refunds) {
+            print("  order " + payment.orderId + money(payment.amount).padStart(10));
+        }
+    }
+}
+
+// Ships an order once it is paid
+class Shipping implements EventListener {
+    constructor(bus: EventBus) {
+        this.bus = bus;
+        this.orders = new Map();     // order id -> order, until shipped
+    }
+
+    onEvent(event) {
+        if (event instanceof OrderPlaced) {
+            this.orders.set(event.order.id, event.order);
+        }
+        else if (event instanceof OrderCancelled) {
+            this.orders.delete(event.orderId);
+        }
+        else if (event instanceof OrderPaid) {
+            const order = this.orders.get(event.orderId);
+            this.orders.delete(order.id);
+            this.bus.emit(new OrderShipped(order.id, order.customer));
+        }
+    }
+}
+
+// Records every event
+class AuditLog implements EventListener, Reporting {
+    constructor() {
+        this.entries = [];
+    }
+
+    onEvent(event) {
+        this.entries.push(event);
+    }
+
+    report() {
+        print("Audit log:");
+        for (const i : range(this.entries.length)) {
+            print(("" + (i + 1)).padStart(4) + "  " + this.entries[i]);
+        }
+    }
+}
+
+// --- Reading the input ---
+
+const prices = new Map([["widget", 1250], ["gadget", 999]]);
+
+function readItem(text) {
+    const fields = parse("{:d} {:w}", text);
+    if (fields == null) {
+        throw new Error("cannot read the item \"" + text + "\"");
+    }
+    const [quantity, product] = fields;
+    if (!prices.has(product)) {
+        throw new Error("unknown product " + product);
+    }
+    return new Item(product, quantity, prices.get(product));
+}
+
+function readEvent(line) {
+    const order = parse("order {:d} {:w}: {}", line);
+    if (order != null) {
+        const [id, customer, items] = order;
+        return new OrderPlaced(new Order(id, customer, items.split(", ").map(readItem)));
+    }
+    const payment = parse("payment {:d} {:g}", line);
+    if (payment != null) {
+        const [id, amount] = payment;
+        return new PaymentReceived(id, Math.round(amount * 100));
+    }
+    throw new Error("cannot read \"" + line + "\"");
+}
+
+// --- Running it ---
+
+const bus = new EventBus();
+const audit = new AuditLog();
+const inventory = new Inventory(bus, new Map([["widget", 3], ["gadget", 4]]));
+const accounting = new Accounting(bus);
+for (const listener : [audit, inventory, accounting, new Shipping(bus)]) {
+    bus.subscribe(listener);
+}
+// bus.subscribe({ onEvent(event) { print(event); } }) would be a TypeError: an
+// object literal is not an EventListener, even with the right method
+
+const input = [
+    "order 1001 alice: 2 widget, 1 gadget",
+    "order 1002 bob: 5 gadget",
+    "payment 1001 34.99",
+    "order 1003 carol: 1 widget, 1 gizmo",
+    "order 1004 carol: 1 widget",
+    "payment 1004 10",
+    "payment 1002 49.95",
+    "refund 1001"
+];
+for (const i : range(input.length)) {
+    try {
+        bus.emit(readEvent(input[i]));
+    }
+    catch (e) {
+        print("Line " + (i + 1) + ": " + e.message);
+    }
+}
+
+for (const part : [audit, inventory, accounting]) {
+    print();
+    part.report();
+}

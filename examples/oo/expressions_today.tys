@@ -1,0 +1,172 @@
+// Symbolic expressions: evaluate, differentiate, simplify.
+//
+// The same program as expressions.tys, written with what tinyscript has today:
+// a constructor function per kind of expression and its methods on the
+// prototype. Nothing checks that every kind has all the methods.
+
+// Constructors that simplify while they build: constants are folded, neutral
+// elements dropped, a constant factor comes first.
+function add(a, b) {
+    if (a instanceof Num && b instanceof Num) { return new Num(a.value + b.value); }
+    if (isConstant(a, 0)) { return b; }
+    if (isConstant(b, 0)) { return a; }
+    return new Add(a, b);
+}
+
+function sub(a, b) {
+    if (a instanceof Num && b instanceof Num) { return new Num(a.value - b.value); }
+    if (isConstant(b, 0)) { return a; }
+    return new Sub(a, b);
+}
+
+function mul(a, b) {
+    if (a instanceof Num && b instanceof Num) { return new Num(a.value * b.value); }
+    if (isConstant(a, 0) || isConstant(b, 0)) { return new Num(0); }
+    if (isConstant(a, 1)) { return b; }
+    if (isConstant(b, 1)) { return a; }
+    if (b instanceof Num) { return mul(b, a); }
+    if (a instanceof Num && b instanceof Mul && b.left instanceof Num) {
+        return mul(new Num(a.value * b.left.value), b.right);
+    }
+    return new Mul(a, b);
+}
+
+function pow(base, exponent) {
+    if (exponent == 0) { return new Num(1); }
+    if (exponent == 1) { return base; }
+    if (base instanceof Num) { return new Num(Math.pow(base.value, exponent)); }
+    return new Pow(base, exponent);
+}
+
+function isConstant(e, value) {
+    return e instanceof Num && e.value == value;
+}
+
+// "a op b" with parentheses where the precedence needs them
+function binary(left, op, right, precedence) {
+    const l = left.precedence() < precedence ? "(" + left + ")" : "" + left;
+    const r = right.precedence() <= precedence ? "(" + right + ")" : "" + right;
+    return l + " " + op + " " + r;
+}
+
+// A number
+function Num(value) {
+    this.value = value;
+}
+Num.prototype.evaluate = function(env) { return this.value; };
+Num.prototype.derive = function(name) { return new Num(0); };
+Num.prototype.simplify = function() { return this; };
+Num.prototype.precedence = function() { return 4; };
+Num.prototype.toString = function() { return "" + this.value; };
+
+// A variable, its value comes from env
+function Var(name) {
+    this.name = name;
+}
+Var.prototype.evaluate = function(env) {
+    const value = env[this.name];
+    if (value == null) {
+        throw new Error("no value for " + this.name);
+    }
+    return value;
+};
+Var.prototype.derive = function(name) { return new Num(name == this.name ? 1 : 0); };
+Var.prototype.simplify = function() { return this; };
+Var.prototype.precedence = function() { return 4; };
+Var.prototype.toString = function() { return this.name; };
+
+// left + right
+function Add(left, right) {
+    this.left = left;
+    this.right = right;
+}
+Add.prototype.evaluate = function(env) { return this.left.evaluate(env) + this.right.evaluate(env); };
+Add.prototype.derive = function(name) { return new Add(this.left.derive(name), this.right.derive(name)); };
+Add.prototype.simplify = function() { return add(this.left.simplify(), this.right.simplify()); };
+Add.prototype.precedence = function() { return 1; };
+Add.prototype.toString = function() { return binary(this.left, "+", this.right, 1); };
+
+// left - right
+function Sub(left, right) {
+    this.left = left;
+    this.right = right;
+}
+Sub.prototype.evaluate = function(env) { return this.left.evaluate(env) - this.right.evaluate(env); };
+Sub.prototype.derive = function(name) { return new Sub(this.left.derive(name), this.right.derive(name)); };
+Sub.prototype.simplify = function() { return sub(this.left.simplify(), this.right.simplify()); };
+Sub.prototype.precedence = function() { return 1; };
+Sub.prototype.toString = function() { return binary(this.left, "-", this.right, 1); };
+
+// left * right
+function Mul(left, right) {
+    this.left = left;
+    this.right = right;
+}
+Mul.prototype.evaluate = function(env) { return this.left.evaluate(env) * this.right.evaluate(env); };
+Mul.prototype.derive = function(name) {
+    // product rule: (uv)' = u'v + uv'
+    return new Add(new Mul(this.left.derive(name), this.right), new Mul(this.left, this.right.derive(name)));
+};
+Mul.prototype.simplify = function() { return mul(this.left.simplify(), this.right.simplify()); };
+Mul.prototype.precedence = function() { return 2; };
+Mul.prototype.toString = function() { return binary(this.left, "*", this.right, 2); };
+
+// base ^ exponent, the exponent is a number
+function Pow(base, exponent) {
+    this.base = base;
+    this.exponent = exponent;
+}
+Pow.prototype.evaluate = function(env) { return Math.pow(this.base.evaluate(env), this.exponent); };
+Pow.prototype.derive = function(name) {
+    // chain rule: (u^n)' = n * u^(n-1) * u'
+    return new Mul(new Mul(new Num(this.exponent), new Pow(this.base, this.exponent - 1)), this.base.derive(name));
+};
+Pow.prototype.simplify = function() { return pow(this.base.simplify(), this.exponent); };
+Pow.prototype.precedence = function() { return 3; };
+Pow.prototype.toString = function() {
+    const b = this.base.precedence() <= 3 ? "(" + this.base + ")" : "" + this.base;
+    return b + "^" + this.exponent;
+};
+
+// --- Using it ---
+
+const x = new Var("x");
+const y = new Var("y");
+
+// f(x) = 3x² + 2x - 5
+const f = new Sub(new Add(new Mul(new Num(3), new Pow(x, 2)), new Mul(new Num(2), x)), new Num(5));
+const df = f.derive("x");
+print("f(x)   =", f);
+print("f'(x)  =", df);
+print("       =", df.simplify());
+for (const v : range(-2, 3)) {
+    print("f(" + v + ") =", f.evaluate({ x: v }), "  f'(" + v + ") =", df.evaluate({ x: v }));
+}
+
+// Partial derivatives
+const h = new Add(new Mul(x, y), new Pow(y, 3));
+print("h(x, y) =", h);
+print("dh/dx   =", h.derive("x").simplify());
+print("dh/dy   =", h.derive("y").simplify());
+
+// Newton's method finds a zero of g: x := x - g(x) / g'(x)
+function newton(g, start, steps) {
+    const dg = g.derive("x").simplify();
+    print("Newton for", g, "with g'(x) =", dg);
+    let value = start;
+    for (const i : range(steps)) {
+        value = value - g.evaluate({ x: value }) / dg.evaluate({ x: value });
+        print("  step", i + 1, value);
+    }
+    return value;
+}
+const root = newton(new Sub(new Pow(x, 2), new Num(2)), 1, 5);
+print("sqrt(2) =", Math.sqrt(2), " difference:", Math.abs(root - Math.sqrt(2)));
+
+// A variable without a value
+try {
+    h.evaluate({ x: 1 });
+}
+catch (e) {
+    print("Cannot evaluate", h + ":", e.message);
+}
