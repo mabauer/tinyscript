@@ -64,6 +64,12 @@ try { x = this ? true : undefined; } catch (e) { } /* block */
 //                                   ^^^^^ keyword.control.tinyscript
 //                                                 ^^^^^^^^^^^ comment.block.tinyscript
 
+class Point {
+// <----- storage.type.class.tinyscript
+//    ^^^^^ entity.name.type.class.tinyscript
+    constructor(x) { this.x = x; }
+}
+
 finally { }
 // <------- invalid.illegal.reserved.tinyscript
 

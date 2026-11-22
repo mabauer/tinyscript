@@ -26,6 +26,7 @@ Block:
 
 Statement:
 	(=> FunctionDeclaration) | 
+	ClassDeclaration |
 	(=> BlockStatement) |
 	VariableStatement | 
 	ExpressionStatement | 
@@ -55,6 +56,17 @@ FunctionDeclaration returns FunctionDefinition:
 	( '(' (params += Parameter)? (',' params += Parameter)* (',' '...' rest=Identifier)? ')' 
 		| '(' '...' rest=Identifier ')'  )
 	block=Block 
+;
+
+// class Num { constructor(value) { ... } evaluate(env) { ... } }: a constructor function with
+// methods on its prototype, without inheritance (the validator allows it only at the top level)
+ClassDeclaration:
+	=>((exported ?= 'export')? 'class') id=Identifier '{' (methods += ClassMethod)* '}'
+;
+
+// A method of a class; the one named constructor initializes a new object
+ClassMethod:
+	name=PropertyName function=MethodDefinition
 ;
 
 // i++; and i--; are only statements, not expressions
@@ -414,13 +426,13 @@ enum IncrementOperator:
 // can say so (TinyscriptSyntaxErrorMessageProvider); like in Javascript, they are fine as
 // property names (o.class, { case: 1 }).
 ReservedWord:
-	'finally' | 'switch' | 'case' | 'class' | 'var'
+	'finally' | 'switch' | 'case' | 'var'
 ;
 
 // All keywords of tinyscript: they cannot be names of variables, but like in Javascript, they
 // are fine as property names (range.from, { if: 1 })
 Keyword:
-	ReservedWord | 'let' | 'const' | 'function' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
+	ReservedWord | 'let' | 'const' | 'function' | 'class' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
 	| 'continue' | 'throw' | 'try' | 'catch' | 'new' | 'this' | 'null' | 'undefined' | 'typeof' | 'delete' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
 ;
 

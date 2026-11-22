@@ -74,6 +74,8 @@ import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.WhileStatement;
 import de.mkbauer.tinyscript.ts.TryStatement;
 import de.mkbauer.tinyscript.ts.CatchClause;
+import de.mkbauer.tinyscript.ts.ClassDeclaration;
+import de.mkbauer.tinyscript.ts.ClassMethod;
 import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
@@ -349,6 +351,8 @@ public class TinyscriptEngine {
     		return caseThrowStatement((ThrowStatement) object);
 		case TsPackage.TRY_STATEMENT:
     		return caseTryStatement((TryStatement) object);
+		case TsPackage.CLASS_DECLARATION:
+    		return caseClassDeclaration((ClassDeclaration) object);
 		case TsPackage.CONDITIONAL_EXPRESSION:
     		return caseConditionalExpression((ConditionalExpression) object);
 		case TsPackage.FUNCTION_DEFINITION:
@@ -542,6 +546,26 @@ public class TinyscriptEngine {
     }
 
     
+    /**
+     * class Num { ... }: creates the class (a constructor function) and its prototype with
+     * the methods, which are not enumerable as in Javascript, and declares Num.
+     */
+    public TSValue caseClassDeclaration(ClassDeclaration declaration) {
+    	recordStatement();
+    	ClassObject cls = new ClassObject(this, declaration);
+    	cls.setOuterContext(currentContext);
+    	TSObject prototype = (TSObject) cls.getPrototypeProperty();
+    	for (ClassMethod method : declaration.getMethods()) {
+    		String name = TinyscriptModelUtil.propertyKey(method.getName());
+    		if ("constructor".equals(name))
+    			cls.setAst(method.getFunction());
+    		else
+    			prototype.defineDefaultProperty(name, caseFunctionDefinition(method.getFunction()));
+    	}
+    	declare(declaration.getId(), cls);
+    	return TSValue.UNDEFINED;
+    }
+
     public TSValue caseVariableStatement(VariableStatement object) {
     	recordStatement();
     	for (Expression expr : object.getVardecls()) {
@@ -1134,7 +1158,12 @@ public class TinyscriptEngine {
 			TSObject thisRef = currentContext.getThisRef();
 			return (thisRef != null) ? thisRef : TSValue.UNDEFINED;
 		}
-		return currentContext.lookup(expr.getId().getName());
+		TSValue value = currentContext.lookup(expr.getId().getName());
+		// A function that runs before the class statement (the validator rejects the other uses)
+		if (value == TSValue.UNDEFINED && expr.getId().eContainer() instanceof ClassDeclaration declaration)
+			throw new TinyscriptReferenceError(declaration.getId().getName() + " is used before its declaration (line "
+					+ TinyscriptModelUtil.getLineOfASTNode(declaration) + ")", expr);
+		return value;
     }
     
     public TSValue caseBooleanLiteral(BooleanLiteral expr) {
@@ -1308,7 +1337,10 @@ public class TinyscriptEngine {
 			TSObject proto = constructor.get("prototype") instanceof TSObject p ? p : getDefaultPrototype();
 			self = new TSObject(this, proto);
 		}
-		constructor.apply(self, args);
+		if (constructor instanceof ClassObject cls)
+			cls.initialize(self, args);
+		else
+			constructor.apply(self, args);
 		return self;
 	}
 	

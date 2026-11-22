@@ -14,11 +14,14 @@ import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.CatchClause;
+import de.mkbauer.tinyscript.ts.ClassDeclaration;
 import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.Pattern;
+import de.mkbauer.tinyscript.ts.PropertyName;
+import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Statement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
@@ -82,8 +85,33 @@ public class TinyscriptModelUtil {
 				result.add(function.getId());
 			if (stmt instanceof VariableStatement variables && variables.isExported())
 				result.addAll(declaredIdentifiers(variables));
+			if (stmt instanceof ClassDeclaration declaration && declaration.isExported())
+				result.add(declaration.getId());
 		}
 		return result;
+	}
+
+	/**
+	 * The variables a statement declares in its block: those of let / const, or the name of a
+	 * class (which, like a const, can be used from its declaration on).
+	 */
+	public static List<Identifier> declaredIdentifiers(Statement statement) {
+		if (statement instanceof VariableStatement variables)
+			return declaredIdentifiers(variables);
+		if (statement instanceof ClassDeclaration declaration)
+			return List.of(declaration.getId());
+		return List.of();
+	}
+
+	/**
+	 * The text of a property name: greet in { greet: … } or greet() { … }, "two words" for a string.
+	 */
+	public static String propertyKey(PropertyName key) {
+		if (key.getName() != null)
+			return key.getName();
+		if (key.getExpr() instanceof StringLiteral literal)
+			return literal.getValue();
+		return null;
 	}
 
 	/**
@@ -120,9 +148,7 @@ public class TinyscriptModelUtil {
 		Iterator<Statement> stmt_it = stmts.iterator();
 		while (stmt_it.hasNext()) {
 			Statement stmt = stmt_it.next();
-			if (stmt instanceof VariableStatement varstmt) {
-				result.addAll(declaredIdentifiers(varstmt));
-			}
+			result.addAll(declaredIdentifiers(stmt));
 		}
 		return result;
 	}
@@ -142,9 +168,7 @@ public class TinyscriptModelUtil {
 			Statement stmt = stmt_it.next();
 			if (stmt == containingStatement(elem))
 				return result;
-			if (stmt instanceof VariableStatement varstmt) {
-				result.addAll(declaredIdentifiers(varstmt));
-			}
+			result.addAll(declaredIdentifiers(stmt));
 		}
 		return result;
 	}

@@ -27,7 +27,6 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			"finally", "finally is not supported in tinyscript: there is only try { ... } catch (e) { ... }",
 			"switch", "switch is not supported in tinyscript: use if / else if",
 			"case", "switch is not supported in tinyscript: use if / else if",
-			"class", "class is not supported in tinyscript: use a constructor function and its prototype",
 			"var", "tinyscript has no var: use let, or const for a variable that is never assigned again");
 
 	// Where an expression starts, a "/" can only be meant as a regular expression
@@ -69,6 +68,9 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			return UNSUPPORTED.get(text);
 		if (UNSUPPORTED.containsKey(before))
 			return UNSUPPORTED.get(before);
+		String classHint = classHint(context, tokens, index, text, before);
+		if (classHint != null)
+			return classHint;
 		// A keyword where a name is expected: const from = 1; or function f(as) (where the
 		// parser reports the "(" before it)
 		Token next = next(tokens, index);
@@ -107,6 +109,57 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		if (context.getDefaultMessage().startsWith("no viable alternative") && OPERATORS.contains(before))
 			return "Unexpected '" + text + "', expected an expression";
 		return null;
+	}
+
+	/**
+	 * Javascript's class features that tinyscript leaves out: extends, static members,
+	 * getters and setters, field declarations.
+	 */
+	private static String classHint(IParserErrorContext context, TokenStream tokens, int index, String text, String before) {
+		// class B extends A { … }: the parser reports it at class (or at extends)
+		if (text.equals("extends") || (text.equals("class") && extendsFollows(tokens, index)))
+			return "Classes in tinyscript have no inheritance (no extends): share code with functions";
+		// static make() { … }, get area() { … }: a name before a method (never valid elsewhere)
+		Token next = next(tokens, index);
+		boolean method = isName(context, tokens.get(index)) && next != null && "(".equals(next.getText());
+		if (method && before.equals("static"))
+			return "Classes in tinyscript have no static members: write a function or a constant next to the class";
+		if (method && (before.equals("get") || before.equals("set")))
+			return "Classes in tinyscript have no getters and setters: write a method, e.g. area() { … }";
+		if ((text.equals("=") || text.equals(";")) && isInClassBody(tokens, index))
+			return "A class has no field declarations: fields get their values in the constructor, this." + before + " = …;";
+		return null;
+	}
+
+	// Whether the token at index stands directly in the body of a class: the "{" that encloses it
+	// follows class Name
+	private static boolean isInClassBody(TokenStream tokens, int index) {
+		int depth = 0;
+		for (int i = index - 1; i >= 0; i--) {
+			Token token = tokens.get(i);
+			if (token.getChannel() != Token.DEFAULT_CHANNEL)
+				continue;
+			if ("}".equals(token.getText()))
+				depth++;
+			else if ("{".equals(token.getText()) && depth-- == 0) {
+				Token name = previous(tokens, i);
+				Token keyword = name != null ? previous(tokens, name.getTokenIndex()) : null;
+				return keyword != null && "class".equals(keyword.getText());
+			}
+		}
+		return false;
+	}
+
+	// Whether "extends" comes before the "{" that follows the token at index
+	private static boolean extendsFollows(TokenStream tokens, int index) {
+		for (int i = index + 1; i < tokens.size() && i < index + 20; i++) {
+			String text = tokens.get(i).getText();
+			if (text == null || text.equals("{"))
+				return false;
+			if (text.equals("extends"))
+				return true;
+		}
+		return false;
 	}
 
 	private static final String FOR_WITH_RANGE = "tinyscript's for loop goes through items: "

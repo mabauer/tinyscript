@@ -12,6 +12,7 @@ import de.mkbauer.tinyscript.ts.Reference
 import de.mkbauer.tinyscript.ts.AssertStatement
 import de.mkbauer.tinyscript.ts.BreakStatement
 import de.mkbauer.tinyscript.ts.ContinueStatement
+import de.mkbauer.tinyscript.ts.ClassDeclaration
 import de.mkbauer.tinyscript.ts.Pattern
 import de.mkbauer.tinyscript.ts.ArrayPattern
 import de.mkbauer.tinyscript.ts.ObjectPattern
@@ -121,6 +122,11 @@ class TinyscriptGenerator   {
 			return __ts_display(value, []);
 		}
 
+		// A class of the script (written with class, not a constructor function)
+		function __ts_isClass(f) {
+			return typeof f === "function" && /^class[\s{]/.test(Function.prototype.toString.call(f));
+		}
+
 		function __ts_display(value, path) {
 			if (typeof value === "string") {
 				return JSON.stringify(value);
@@ -161,10 +167,14 @@ class TinyscriptGenerator   {
 				}
 				const properties = Object.keys(value).map(key => key + ": " + show(value[key]));
 				if (typeof value === "function") {
-					const name = "[Function" + (value.name ? ": " + value.name : "") + "]";
+					const name = __ts_isClass(value) ? "[class " + value.name + "]" : "[Function" + (value.name ? ": " + value.name : "") + "]";
 					return properties.length > 0 ? "{ " + name + " " + properties.join(", ") + " }" : name;
 				}
-				return "{" + properties.join(", ") + "}";
+				// An instance of a class shows its name first: Num {value: 3}
+				const prototype = Object.getPrototypeOf(value);
+				const prefix = prototype !== null && Object.hasOwn(prototype, "constructor") && __ts_isClass(prototype.constructor)
+					&& prototype.constructor.prototype === prototype ? prototype.constructor.name + " " : "";
+				return prefix + "{" + properties.join(", ") + "}";
 			}
 			finally {
 				path.pop();
@@ -520,6 +530,18 @@ class TinyscriptGenerator   {
 		
 	''' 
 	
+	// A Javascript class: the same constructor and methods (tinyscript's classes have no extends)
+	def dispatch generate(ClassDeclaration cls) '''
+		class «cls.id.generate» {
+			«FOR method : cls.methods»
+				«method.name.generate»(«method.function.generateParams») {
+					«method.function.parameterPrologue»«method.function.block.generate»
+				}
+			«ENDFOR»
+		}
+		
+	'''
+
 	// A Javascript arrow function, so that this is the one of the surrounding function
 	def dispatch generate(ArrowFunction func) {
 		val body = func.block

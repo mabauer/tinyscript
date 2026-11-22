@@ -9,9 +9,10 @@ import de.mkbauer.tinyscript.ts.ArrowExpressionBody;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.ts.ClassDeclaration;
+import de.mkbauer.tinyscript.ts.ClassMethod;
 import de.mkbauer.tinyscript.ts.PropertyAssignment;
-import de.mkbauer.tinyscript.ts.PropertyName;
-import de.mkbauer.tinyscript.ts.StringLiteral;
 
 public class InterpretedFunction extends Function {
 	
@@ -124,12 +125,13 @@ public class InterpretedFunction extends Function {
 				return ast.getId().getName();
 			// Like Javascript: { greet() { ... } } and { greet: function() { ... } } are named greet
 			if (ast.eContainer() instanceof PropertyAssignment property) {
-				PropertyName key = property.getKey();
-				if (key.getName() != null)
-					return key.getName();
-				if (key.getExpr() instanceof StringLiteral literal)
-					return literal.getValue();
+				String key = TinyscriptModelUtil.propertyKey(property.getKey());
+				if (key != null)
+					return key;
 			}
+			// A method of a class: Num.evaluate (the constructor is the class, see ClassObject)
+			if (ast.eContainer() instanceof ClassMethod method && method.eContainer() instanceof ClassDeclaration declaration)
+				return declaration.getId().getName() + "." + TinyscriptModelUtil.propertyKey(method.getName());
 		}
 		return "";
 	}

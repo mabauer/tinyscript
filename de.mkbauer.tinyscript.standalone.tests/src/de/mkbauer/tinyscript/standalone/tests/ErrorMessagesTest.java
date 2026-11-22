@@ -186,8 +186,6 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         assertEquals("Duplicate identifier", firstError("try { print(1); } catch (e) { let e = 2; }"));
         assertEquals("switch is not supported in tinyscript: use if / else if",
                 firstError("const x = 1;\nswitch (x) { case 1: print(1); }"));
-        assertEquals("class is not supported in tinyscript: use a constructor function and its prototype",
-                firstError("class Point {\n    constructor(x) { this.x = x; }\n}"));
     }
 
     @Test

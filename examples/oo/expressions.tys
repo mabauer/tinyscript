@@ -6,8 +6,8 @@
 // print the same.
 //
 // The interface says what every kind of expression can do. The validator checks
-// each class that says "implements Expr": a missing method, or one with a
-// different number of parameters, is an error before the script runs.
+// each class that says "implements Expr": a missing method, or one with more
+// parameters than the interface names, is an error before the script runs.
 interface Expr {
     evaluate(env);
     derive(name);

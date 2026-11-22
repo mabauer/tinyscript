@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.xtext.diagnostics.DiagnosticMessage;
 import org.eclipse.xtext.linking.impl.LinkingDiagnosticMessageProvider;
 import org.eclipse.xtext.scoping.IScope;
@@ -12,9 +13,14 @@ import org.eclipse.xtext.scoping.IScopeProvider;
 
 import com.google.inject.Inject;
 
+import de.mkbauer.tinyscript.TinyscriptModelUtil;
+import de.mkbauer.tinyscript.ts.Block;
+import de.mkbauer.tinyscript.ts.Identifier;
+
 /**
  * "Unknown name 'valeus' (did you mean 'values'?)" for a name that is not declared: the
- * suggestion is the most similar name visible at that place.
+ * suggestion is the most similar name visible at that place. A name that is declared later
+ * in the same block (or an enclosing one) is "used before its declaration".
  */
 public class TinyscriptLinkingDiagnosticMessageProvider extends LinkingDiagnosticMessageProvider {
 
@@ -25,11 +31,28 @@ public class TinyscriptLinkingDiagnosticMessageProvider extends LinkingDiagnosti
 	public DiagnosticMessage getUnresolvedProxyMessage(ILinkingDiagnosticContext context) {
 		DiagnosticMessage original = super.getUnresolvedProxyMessage(context);
 		String name = context.getLinkText();
+		Identifier later = laterDeclaration(context.getContext(), name);
+		if (later != null)
+			return new DiagnosticMessage(name + " is used before its declaration (line "
+					+ TinyscriptModelUtil.getLineOfASTNode(later) + ")",
+					original.getSeverity(), original.getIssueCode(), original.getIssueData());
 		String message = "Unknown name '" + name + "'";
 		String suggestion = suggestion(name, visibleNames(context));
 		if (suggestion != null)
 			message = message + " (did you mean '" + suggestion + "'?)";
 		return new DiagnosticMessage(message, original.getSeverity(), original.getIssueCode(), original.getIssueData());
+	}
+
+	// A let / const / class of this name in a block around the reference, after it
+	private static Identifier laterDeclaration(EObject reference, String name) {
+		for (Block block = TinyscriptModelUtil.containingBlock(reference); block != null;
+				block = TinyscriptModelUtil.containingBlock(block.eContainer())) {
+			for (Identifier id : TinyscriptModelUtil.declaredVariablesInBlock(block)) {
+				if (id.getName().equals(name))
+					return id;
+			}
+		}
+		return null;
 	}
 
 	private List<String> visibleNames(ILinkingDiagnosticContext context) {

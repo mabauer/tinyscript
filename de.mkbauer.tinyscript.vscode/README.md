@@ -2,9 +2,9 @@
 
 Syntax highlighting for [tinyscript](https://github.com/mabauer/tinyscript)
 files (`.tys`): keywords, strings with escapes, numbers, comments, builtins
-(`print`, `range`, `Math`, …), operators; `try`, `catch`, `switch`, `class` and
-`var` are marked as not supported. Comment toggling, bracket matching and
-auto-closing quotes come from the language configuration.
+(`print`, `range`, `Math`, …), operators, class declarations; `finally`,
+`switch`, `case` and `var` are marked as not supported. Comment toggling,
+bracket matching and auto-closing quotes come from the language configuration.
 
 This is stage 1 (see `TODO.md` in the repository): no validation or completion
 yet; those would come from a language server built from the Xtext grammar.
@@ -14,9 +14,9 @@ yet; those would come from a language server built from the Xtext grammar.
 ```bash
 cd de.mkbauer.tinyscript.vscode
 npm install
-npm run package                     # creates tinyscript-0.1.0.vsix
-code --install-extension tinyscript-0.1.0.vsix
-# or into a profile:  code --install-extension tinyscript-0.1.0.vsix --profile Docs
+npm run package                     # creates tinyscript-0.3.0.vsix
+code --install-extension tinyscript-0.3.0.vsix
+# or into a profile:  code --install-extension tinyscript-0.3.0.vsix --profile Docs
 ```
 
 To run a script, use the REPL from a terminal:
