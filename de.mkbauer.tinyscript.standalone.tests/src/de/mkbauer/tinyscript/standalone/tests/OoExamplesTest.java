@@ -6,8 +6,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
- * The examples in examples/oo, in the interpreter and in node: the same program written
- * with class / interface (planned) and with what tinyscript has today.
+ * The examples in examples/oo, in the interpreter and in node: classes before class
+ * (car, prototypes_as_classes), and programs written with class / interface (planned) and
+ * with what tinyscript has today.
  */
 public class OoExamplesTest extends TinyscriptTranspilerTestBase {
 
@@ -59,6 +60,24 @@ public class OoExamplesTest extends TinyscriptTranspilerTestBase {
             To refund:
               order 1002     49.95
             """;
+
+    @Test
+    public void testCar() {
+        assertProgramOutput("Engine is: V8 true\nEngine is: V8 true\n{engine: \"V8\"} Car {engine: \"V8\"}\n",
+                DIRECTORY.resolve("car.tys"));
+    }
+
+    @Test
+    public void testPrototypesAsClasses() {
+        assertProgramOutput("""
+                Person called Joe
+                Person called Jane (CTO)
+                true true ["name", "title"]
+                Person called Joe
+                Person called Jane (CTO)
+                EmployeeClass {person: PersonClass {name: "Jane"}, title: "CTO"}
+                """, DIRECTORY.resolve("prototypes_as_classes.tys"));
+    }
 
     @Test
     public void testExpressionsToday() {

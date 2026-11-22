@@ -1,0 +1,79 @@
+// Classes with inheritance, built from prototypes only: the pattern
+// "prototypes as classes". A class is a plain object; Object.create makes an
+// object (an instance or a subclass) whose prototype is that object.
+//
+// It shows what tinyscript's class deliberately leaves out: extends and super.
+// At the end, the same example with class, where a class uses another one
+// instead of extending it.
+
+// The root of all classes of this pattern. new and extend are inherited by
+// every subclass, since Proto is in its prototype chain.
+const Proto = {
+    // A new instance of this class, initialized by its method constructor
+    _new(...args) {
+        const instance = Object.create(this);
+        instance.constructor.apply(instance, args);
+        return instance;
+    },
+
+    // A subclass of this class with the given methods; super is the class itself
+    extend(methods) {
+        const subclass = Object.create(this);
+        for (const key : Object.getOwnPropertyNames(methods)) {
+            Object.defineProperty(subclass, key, Object.getOwnPropertyDescriptor(methods, key));
+        }
+        subclass.super = this;
+        return subclass;
+    }
+};
+
+const Person = Proto.extend({
+    constructor(name) {
+        this.name = name;
+    },
+    describe() {
+        return "Person called " + this.name;
+    }
+});
+
+const Employee = Person.extend({
+    constructor(name, title) {
+        Employee.super.constructor.call(this, name);
+        this.title = title;
+    },
+    describe() {
+        return Employee.super.describe.call(this) + " (" + this.title + ")";
+    }
+});
+
+const joe = Person._new("Joe");
+const jane = Employee._new("Jane", "CTO");
+print(joe.describe());
+print(jane.describe());
+// Employee is an object, not a function, so instanceof does not work: ask the prototype
+print(Object.getPrototypeOf(jane) == Employee, Object.getPrototypeOf(Employee) == Person, Object.keys(jane));
+
+// The same with class: without extends, an employee has a person and passes
+// describe on to it (composition instead of inheritance)
+class PersonClass {
+    constructor(name) {
+        this.name = name;
+    }
+    describe() {
+        return "Person called " + this.name;
+    }
+}
+
+class EmployeeClass {
+    constructor(name, title) {
+        this.person = new PersonClass(name);
+        this.title = title;
+    }
+    describe() {
+        return this.person.describe() + " (" + this.title + ")";
+    }
+}
+
+print(new PersonClass("Joe").describe());
+print(new EmployeeClass("Jane", "CTO").describe());
+print(new EmployeeClass("Jane", "CTO"));

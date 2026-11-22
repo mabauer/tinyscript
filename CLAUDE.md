@@ -70,12 +70,13 @@ Tests run in this order (alphabetical class order enforced by Surefire):
    through both interpreter (must not throw) and node (must exit 0).
 
 Whole programs: `AdventOfCode2024Test` (examples/aoc2024), `OoExamplesTest`
-(examples/oo: one program with the planned `class` / `interface`, its test
-disabled for now, and the same with prototypes) and `DemoExamplesTest` (every
-example of the web demo, from `de.mkbauer.tinyscript.webdemo/frontend/public`)
-compare the interpreter with node. The webdemo's `ExamplesTests` run every
-example as the demo does (sandboxed) and check that `Toolbar.vue` lists exactly
-the example files; a new example needs no new test.
+(examples/oo: classes before `class`, and programs written with the planned
+`interface`, their tests disabled for now, next to the same with prototypes) and
+`DemoExamplesTest` (every example of the web demo, from
+`de.mkbauer.tinyscript.webdemo/frontend/public`) compare the interpreter with
+node. The webdemo's `ExamplesTests` run every example as the demo does
+(sandboxed) and check that `Toolbar.vue` lists exactly the example files; a new
+example needs no new test.
 
 Base class `TinyscriptTranspilerTestBase` provides:
 

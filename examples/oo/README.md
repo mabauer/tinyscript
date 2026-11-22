@@ -1,7 +1,14 @@
-# Objects in tinyscript: the planned class and interface
+# Objects in tinyscript: classes and interfaces
 
-Programs written twice, to see how the planned `class` and `interface` (see
-`TODO.md`, "Objects with methods are verbose") would feel:
+How classes were written before `class`, each next to the same with `class`:
+
+| File                                                   | Shows                                                                                                                            |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| [car.tys](car.tys)                                     | a constructor function with methods on its prototype, wrapped in an IIFE (as TypeScript compiled `class`)                        |
+| [prototypes_as_classes.tys](prototypes_as_classes.tys) | inheritance with `super`, built from prototypes only (what `class` leaves out); with `class`, composition instead of inheritance |
+
+Programs written twice, to see how the planned `interface` (see `TODO.md`,
+"Objects with methods are verbose") would feel:
 
 | File                                           | Written with                                                   | Runs  |
 | ---------------------------------------------- | -------------------------------------------------------------- | ----- |
