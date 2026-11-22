@@ -278,3 +278,24 @@ export function findAll(format, text) {
 	}
 	return result;
 }
+
+// The blocks of a text: groups of lines separated by blank lines, each as an array of its
+// lines. blocks("a\nb\n\nc\n") is [["a", "b"], ["c"]]; also for Windows line breaks (\r\n).
+export function blocks(text) {
+	const result = [];
+	let block = [];
+	for (const line : text.split("\n")) {
+		const trimmed = line.endsWith("\r") ? line.slice(0, -1) : line;
+		if (trimmed.trim() != "") {
+			block.push(trimmed);
+		}
+		else if (block.length > 0) {
+			result.push(block);
+			block = [];
+		}
+	}
+	if (block.length > 0) {
+		result.push(block);
+	}
+	return result;
+}

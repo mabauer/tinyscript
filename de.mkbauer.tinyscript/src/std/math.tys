@@ -1,0 +1,31 @@
+// Standard library: integer helpers that Javascript's Math does not have.  import gcd, lcm from "std:math";
+// (Math itself stays a global, as in Javascript.)
+
+// The greatest common divisor of two integers: gcd(12, 18) is 6, gcd(0, 5) is 5
+export function gcd(a, b) {
+	checkIntegers("gcd", a, b);
+	let x = Math.abs(a);
+	let y = Math.abs(b);
+	while (y != 0) {
+		const rest = x % y;
+		x = y;
+		y = rest;
+	}
+	return x;
+}
+
+// The least common multiple of two integers: lcm(4, 6) is 12, lcm(0, 5) is 0.
+// For several numbers: numbers.reduce(lcm)
+export function lcm(a, b) {
+	checkIntegers("lcm", a, b);
+	if (a == 0 || b == 0) {
+		return 0;
+	}
+	return Math.abs(a / gcd(a, b) * b);
+}
+
+function checkIntegers(name, a, b) {
+	if (!Number.isInteger(a) || !Number.isInteger(b)) {
+		throw new Error(name + " needs two integers, not " + a + " and " + b);
+	}
+}

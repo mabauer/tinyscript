@@ -4,6 +4,7 @@
 // Usage: tinyscript day20.tys -- input.txt
 
 import inputLines from "./aoc";
+import lcm from "std:math";
 import parse from "std:string";
 
 // The modules: each kind is a class with the same methods, so the network treats them alike
@@ -118,10 +119,6 @@ function pulseProduct() {
 
 print("Part 1: " + pulseProduct());
 
-function gcd(a, b) {
-    return b == 0 ? a : gcd(b, a % b);
-}
-
 // Part 2: the fewest pushes until rx gets a low pulse. Simulating that would take far too
 // long; but in the puzzle inputs, rx gets its pulses from one conjunction, whose inputs are
 // independent counters that each send a high pulse every n pushes (and low again in the same
@@ -148,7 +145,7 @@ function fewestPushesForRx() {
             }
         });
     }
-    return cycles.values().reduce((lcm, n) => lcm / gcd(lcm, n) * n, 1);
+    return cycles.values().reduce(lcm, 1);
 }
 
 print("Part 2: " + fewestPushesForRx());
