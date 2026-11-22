@@ -304,4 +304,73 @@ public class TinyscriptReplMainTest {
                 + "> "), output);
         assertTrue(output.contains("alive\n"), output);
     }
+
+    @Test
+    public void testInteractiveLoadRunsAFileInTheSession() throws IOException {
+        Path file = script("geometry.tys", "function area(r) { return 3 * r * r; }\nconst unit = \"cm\";\nclass Box { constructor(w) { this.w = w; } }\nprint(\"loading\");\n");
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("!load " + file + "\narea(2) + unit;\nnew Box(1);\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("loading\nLoaded " + file + ": area, unit, Box\n"), output);
+        assertTrue(output.contains("\"12cm\"\n"), output);
+        assertTrue(output.contains("Box {w: 1}\n"), output);
+    }
+
+    @Test
+    public void testInteractiveLoadAgainAfterAChange() throws IOException {
+        Path file = script("f.tys", "function f() { return 1; }");
+        // The session changes the file itself, then loads it again (quoted)
+        String path = file.toString().replace("\\", "/");
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("!load " + file + "\nf();\nimport writeFile from \"std:fs\";\n"
+                        + "writeFile(\"" + path + "\", \"function f() { return 2; }\");\n"
+                        + "!load '" + file + "'\nf();\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("> 1\n"), output);
+        assertTrue(output.contains("> 2\n"), output);
+    }
+
+    @Test
+    public void testInteractiveLoadOfAFileWithErrorsDefinesNothing() throws IOException {
+        Path file = script("broken.tys", "function g() { return 1; }\nlet ;\n");
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("!load " + file + "\n!load missing.tys\n!load\ng();\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("TinyscriptSyntaxError: "), output);
+        assertTrue(output.contains(file + ":2:"), output);
+        assertTrue(output.contains("File not found: missing.tys\n"), output);
+        assertTrue(output.contains("!load needs a file: !load file.tys\n"), output);
+        assertTrue(output.contains("Unknown name 'g'"), output);
+    }
+
+    @Test
+    public void testInteractiveResetForgetsAllNames() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("let x = 1;\n!reset\n!names\nx;\nlet x = 3;\nx;\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("A new session: all names are forgotten\n"), output);
+        assertTrue(output.contains("No names yet: the session has not defined any\n"), output);
+        assertTrue(output.contains("Unknown name 'x'"), output);
+        assertTrue(output.contains("> 3\n"), output);
+    }
+
+    @Test
+    public void testInteractiveNamesShowsTheNamesOfTheSession() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("let x = 1;\nconst s = \"a\";\nfunction f() { }\nlet x = 2;\nconst long = range(100).toArray();\n!names\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("> x = 2\ns = \"a\"\nf = [Function: f]\nlong = [0, 1, 2, 3, "), output);
+        assertTrue(output.contains("...\n> "), output);
+        // Builtins are not names of the session
+        assertTrue(!output.contains("Math"), output);
+    }
+
+    @Test
+    public void testInteractiveUnknownCommandAndStatementsWithNot() {
+        assertEquals(TinyscriptReplMain.EXIT_OK,
+                runWithInput("!lod x.tys\n!true;\n!quit\n"));
+        String output = out.toString();
+        assertTrue(output.contains("Unknown command !lod (!help lists the commands)\n"), output);
+        assertTrue(output.contains("> false\n"), output);
+    }
 }
