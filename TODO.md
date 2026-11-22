@@ -628,6 +628,7 @@ and differential tests run against node.
   Javascript-compatible"); `class` without `extends` fits it, parking
   `interface` was right. The biggest inconsistency: the strictness ends at the
   script's own objects and functions.
+
   - Done: ~~a crash~~ (`print(Math.PI); const Q = class { };` crashed the
     validation with a `NullPointerException`; now the message says that a class
     is declared as a statement); ~~one text form per object~~ (see below);
@@ -680,6 +681,46 @@ and differential tests run against node.
     6. **Not needed** (by the review): getters, `static` (`Point.origin = …`
        works anyway), value semantics (string keys such as `a + "," + b` occur
        only once in the examples), `finally`.
+
+- **Advent of Code 2023, ten days** (2026-11-22, with 0.25: days 3, 5, 7, 10,
+  12, 14, 17, 19, 20, 24 in `examples/aoc2023`; each checked against an
+  independent Python solution on the examples and on synthetic inputs of real
+  size). All ran correctly; no wrong results, no crashes. Classes fitted where
+  they were natural (a hand of cards, a priority queue, rules, the modules of
+  day 20 with the same methods and no inheritance); `parse`, `?.` / `??`,
+  destructuring parameters, `min` / `max` and `Map.values()` as an array were
+  used a lot. Findings:
+  - **Bug: `Object.keys` order differs from node.** For integer-like keys
+    Javascript lists them first, in numeric order: `{ "|": 1, "7": 2, "10": 3 }`
+    gives `["|", "7", "10"]` in tinyscript and `["7", "10", "|"]` in node, also
+    in `print`; a differential test fails. Decide: follow Javascript's order
+    (the generator then needs nothing), or keep insertion order and make the
+    generated code use it.
+  - **Messages without a hint:** computed keys `{ [k]: 1 }` ("Missing '}' before
+    '['"), renaming in a pattern `const { a: b } = o;` ("Unexpected ':'"),
+    assignment with a pattern `[a, b] = [b, a];` ("Invalid left-hand side"); a
+    wrong `parse` format points into `std/string.tys` instead of the caller's
+    line.
+  - **Names:** `from` (and `as`) are reserved, but natural names in grid and
+    graph code (`const from = …`); Javascript treats them as contextual
+    keywords. A class, function or variable of the script can hide a builtin
+    (`class Number { }`, `const range = …` in a loop) without a warning, as in
+    Javascript; a warning would catch it.
+  - **Missing, with workarounds:** spread in calls (`push(...xs)`; `max` / `min`
+    cover the common case), assignment with a pattern (swap with a temporary),
+    computed keys and object spread (`Object.assign({}, o)` and an assignment),
+    `gcd` / `lcm` / `product` (written by hand), `findAll` with the positions of
+    the matches (day 3 scans by hand), a single-character field in `parse`
+    (`a<2006`), `Array.from` and `concat` (`range(n).map`, `+`), a `blocks()`
+    helper for input in paragraphs (`split("\n\n")` breaks on CRLF).
+  - **Awkward:** without `switch`, chains of `if (…) { return …; }`; positions
+    as `row * width + col` numbers for `Set`s (no tuple keys).
+  - **Speed:** at most about 4.5 s per day on inputs of real size (CPython
+    0.03–0.35 s; about 0.6 s of tinyscript's time is starting the JVM). Function
+    and method calls are the biggest cost (about 0.35 µs each, as much as two or
+    three other statements); in day 17, replacing a heap's `swap` method by
+    inline code, a `for` over a two-element array literal, and a `Map` by an
+    array each saved about 1.5 of 8.5 s.
 
 ## Interpreter and code quality
 

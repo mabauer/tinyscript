@@ -1,0 +1,65 @@
+// Advent of Code 2023, day 5: If You Give A Seed A Fertilizer
+// https://adventofcode.com/2023/day/5
+//
+// Usage: tinyscript day05.tys -- input.txt
+
+import inputText, numbers from "./aoc";
+import min from "std:array";
+import integers from "std:string";
+
+// One map of the almanac, e.g. seed-to-soil: lines "destination source length"
+// move the numbers from source to source + length - 1 by destination - source;
+// all other numbers stay as they are
+class AlmanacMap {
+    constructor(lines) {
+        this.rules = lines.map(line => {
+            const [destination, source, length] = numbers(line);
+            return { start: source, end: source + length, shift: destination - source };
+        });
+        this.rules.sort((a, b) => a.start - b.start);
+    }
+
+    convert(n) {
+        const rule = this.rules.find(rule => rule.start <= n && n < rule.end);
+        return rule == null ? n : n + rule.shift;
+    }
+
+    // Converts ranges { start, end } (end exclusive): a range that overlaps several
+    // rules is split into pieces, each of which moves as a whole
+    convertRanges(ranges) {
+        const result = [];
+        for (const span : ranges) {
+            let start = span.start;
+            for (const rule : this.rules) {
+                if (rule.end <= start || rule.start >= span.end) {
+                    continue;
+                }
+                if (start < rule.start) {      // the gap before the rule stays
+                    result.push({ start, end: rule.start });
+                    start = rule.start;
+                }
+                const end = Math.min(span.end, rule.end);
+                result.push({ start: start + rule.shift, end: end + rule.shift });
+                start = end;
+            }
+            if (start < span.end) {           // the rest after the last rule stays
+                result.push({ start, end: span.end });
+            }
+        }
+        return result;
+    }
+}
+
+// The input: a line "seeds: 79 14 55 13", then a block of lines for each map, in order
+const blocks = inputText().split("\n\n");
+const seeds = integers(blocks[0]);
+const maps = blocks.slice(1).map(block => new AlmanacMap(block.split("\n").slice(1).filter(line => line.trim() != "")));
+
+// Part 1: the lowest location of the seeds
+const locations = seeds.map(seed => maps.reduce((n, map) => map.convert(n), seed));
+print("Part 1: " + min(locations));
+
+// Part 2: the seeds are pairs "start length"; convert whole ranges instead of single seeds
+const seedRanges = range(0, seeds.length, 2).map(i => ({ start: seeds[i], end: seeds[i] + seeds[i + 1] }));
+const locationRanges = maps.reduce((ranges, map) => map.convertRanges(ranges), seedRanges);
+print("Part 2: " + min(locationRanges.map(span => span.start)));

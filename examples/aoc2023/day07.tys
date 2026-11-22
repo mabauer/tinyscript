@@ -1,0 +1,80 @@
+// Advent of Code 2023, day 7: Camel Cards
+// https://adventofcode.com/2023/day/7
+//
+// Usage: tinyscript day07.tys -- input.txt
+
+import inputLines from "./aoc";
+import parse from "std:string";
+
+// The cards from weakest to strongest; with jokers, J is the weakest card
+const CARDS = "23456789TJQKA";
+const CARDS_WITH_JOKERS = "J23456789TQKA";
+
+// A hand of five cards like "KTJJT" and its bid
+class Hand {
+    constructor(cards, bid) {
+        this.cards = cards;
+        this.bid = bid;
+    }
+
+    // The kind of hand, from 0 (high card) to 6 (five of a kind). It only depends on
+    // the two largest groups of equal cards: [5] beats [4, 1] beats [3, 2] and so on.
+    // A joker joins the largest group, as that always gives the best hand.
+    type(withJokers) {
+        const counts = new Map();
+        let jokers = 0;
+        for (const card : this.cards) {
+            if (withJokers && card == "J") {
+                jokers++;
+            } else {
+                counts.set(card, (counts.get(card) ?? 0) + 1);
+            }
+        }
+        const groups = counts.values().sort((a, b) => b - a);
+        const largest = (groups[0] ?? 0) + jokers;    // "JJJJJ" has no other cards
+        const second = groups[1] ?? 0;
+        if (largest == 5) { return 6; }
+        if (largest == 4) { return 5; }
+        if (largest == 3) { return second == 2 ? 4 : 3; }
+        if (largest == 2) { return second == 2 ? 2 : 1; }
+        return 0;
+    }
+
+    // A number to sort the hands by: the type first, then the cards from left to
+    // right, as the digits of a number in base 13
+    strength(withJokers) {
+        const order = withJokers ? CARDS_WITH_JOKERS : CARDS;
+        let result = this.type(withJokers);
+        for (const card : this.cards) {
+            result = result * 13 + order.indexOf(card);
+        }
+        return result;
+    }
+
+    toString() {
+        return this.cards + " " + this.bid;
+    }
+}
+
+const hands = inputLines().map(line => {
+    const [cards, bid] = parse("{:w} {:d}", line);
+    return new Hand(cards, bid);
+});
+
+// Each hand wins its bid times its rank (1 for the weakest hand)
+function totalWinnings(withJokers) {
+    const ranked = hands
+        .map(hand => ({ hand, strength: hand.strength(withJokers) }))
+        .sort((a, b) => a.strength - b.strength);
+    let total = 0;
+    for (const i : range(ranked.length)) {
+        total += (i + 1) * ranked[i].hand.bid;
+    }
+    return total;
+}
+
+// Part 1: J is a jack
+print("Part 1: " + totalWinnings(false));
+
+// Part 2: J is a joker, the weakest card, but it counts as whatever makes the best type
+print("Part 2: " + totalWinnings(true));

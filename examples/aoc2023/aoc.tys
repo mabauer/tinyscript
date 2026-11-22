@@ -1,0 +1,26 @@
+// Helpers for the Advent of Code 2023 solutions in this directory
+
+import * as fs from "std:fs";
+import words from "std:string";
+
+// The puzzle input: the file given after --, e.g. tinyscript day01.tys -- input.txt
+// (input.txt if there is none)
+function inputFile() {
+    return System.args.length > 0 ? System.args[0] : "input.txt";
+}
+
+// The whole puzzle input as one string
+export function inputText() {
+    return fs.readFile(inputFile());
+}
+
+// The lines of the puzzle input, without blank lines
+export function inputLines() {
+    return fs.readLines(inputFile()).filter(line => line.trim() != "");
+}
+
+// The numbers in a line separated by whitespace: "3   4" gives [3, 4]
+export function numbers(line) {
+    return words(line).map(Number);
+}
+

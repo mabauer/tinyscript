@@ -1,0 +1,85 @@
+// Advent of Code 2023, day 10: Pipe Maze
+// https://adventofcode.com/2023/day/10
+//
+// Usage: tinyscript day10.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// A grid of pipes; S is the start, on a pipe of unknown shape
+const grid = inputLines().map(line => line.split(""));
+const height = grid.length;
+const width = grid[0].length;
+
+const directions = {
+    north: { row: -1, col: 0, opposite: "south" },
+    south: { row: 1, col: 0, opposite: "north" },
+    east: { row: 0, col: 1, opposite: "west" },
+    west: { row: 0, col: -1, opposite: "east" }
+};
+
+// The two directions each pipe connects
+const pipes = {
+    "|": ["north", "south"],
+    "-": ["east", "west"],
+    "L": ["north", "east"],
+    "J": ["north", "west"],
+    "7": ["south", "west"],
+    "F": ["south", "east"]
+};
+
+function connections(row, col) {
+    return pipes[grid[row][col]] ?? [];
+}
+
+// Find the start
+const startRow = grid.findIndex(line => line.includes("S"));
+const startCol = grid[startRow].indexOf("S");
+
+// The start's pipe connects to those neighbors that connect back to it
+const startConnections = Object.keys(directions).filter(name => {
+    const direction = directions[name];
+    const row = startRow + direction.row;
+    const col = startCol + direction.col;
+    return row >= 0 && row < height && col >= 0 && col < width
+        && connections(row, col).includes(direction.opposite);
+});
+grid[startRow][startCol] = Object.keys(pipes).find(pipe =>
+    pipes[pipe].every(name => startConnections.includes(name)));
+
+// Follow the loop from the start until we are back; remember its cells
+const onLoop = new Set();
+let row = startRow;
+let col = startCol;
+let heading = startConnections[0];
+while (true) {
+    onLoop.add(row * width + col);
+    row += directions[heading].row;
+    col += directions[heading].col;
+    if (row == startRow && col == startCol) {
+        break;
+    }
+    // Leave the pipe through its other end
+    const cameFrom = directions[heading].opposite;
+    heading = connections(row, col).find(name => name != cameFrom);
+}
+
+// Part 1: the farthest point is halfway around the loop
+print("Part 1: " + onLoop.size / 2);
+
+// Part 2: going along a row from the left, we cross the loop each time we pass a
+// pipe of the loop that leads north (|, L, J): F-J is a crossing, F-7 is not.
+// A cell not on the loop is inside after an odd number of crossings.
+let enclosed = 0;
+for (const r : range(height)) {
+    let inside = false;
+    for (const c : range(width)) {
+        if (onLoop.has(r * width + c)) {
+            if (connections(r, c).includes("north")) {
+                inside = !inside;
+            }
+        } else if (inside) {
+            enclosed++;
+        }
+    }
+}
+print("Part 2: " + enclosed);

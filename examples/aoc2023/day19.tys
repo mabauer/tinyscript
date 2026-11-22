@@ -1,0 +1,101 @@
+// Advent of Code 2023, day 19: Aplenty
+// https://adventofcode.com/2023/day/19
+//
+// Usage: tinyscript day19.tys -- input.txt
+
+import inputLines from "./aoc";
+import parse from "std:string";
+
+// A rule of a workflow, e.g. "a<2006:qkq": if the part's rating in a category is less
+// (or greater) than a value, the part goes to the target: a workflow, A(ccepted) or R(ejected)
+class Rule {
+    constructor(text) {
+        const [condition, target] = text.split(":");
+        this.category = condition[0];
+        this.op = condition[1];
+        this.value = Number(condition.slice(2));
+        this.target = target;
+    }
+    matches(part) {
+        const rating = part[this.category];
+        return this.op == "<" ? rating < this.value : rating > this.value;
+    }
+    // Splits the ratings from low to high into those that match and those that do not, as
+    // [[low, high], [low, high]]; either may be empty (low > high)
+    split([low, high]) {
+        if (this.op == "<") {
+            return [[low, Math.min(high, this.value - 1)], [Math.max(low, this.value), high]];
+        }
+        return [[Math.max(low, this.value + 1), high], [low, Math.min(high, this.value)]];
+    }
+}
+
+// The workflows ("px{a<2006:qkq,m>2090:A,rfg}") by name: the rules and the target for a
+// part that matches none of them; the parts ("{x=787,m=2655,a=1222,s=2876}")
+const workflows = new Map();
+const parts = [];
+for (const line : inputLines()) {
+    const values = parse("{{x={:d},m={:d},a={:d},s={:d}}}", line);
+    if (values != null) {
+        const [x, m, a, s] = values;
+        parts.push({ x, m, a, s });
+    } else {
+        const [name, body] = parse("{:w}{{{}}}", line);
+        const rules = body.split(",");
+        workflows.set(name, { rules: rules.slice(0, -1).map(text => new Rule(text)), fallback: rules.at(-1) });
+    }
+}
+
+// Whether the workflows accept a part, starting with "in"
+function accepts(part) {
+    let name = "in";
+    while (name != "A" && name != "R") {
+        const workflow = workflows.get(name);
+        name = workflow.rules.find(rule => rule.matches(part))?.target ?? workflow.fallback;
+    }
+    return name == "A";
+}
+
+// Part 1: the ratings of the accepted parts, added up
+let total = 0;
+for (const part : parts.filter(accepts)) {
+    total += part.x + part.m + part.a + part.s;
+}
+print("Part 1: " + total);
+
+// The number of combinations of ratings that a workflow accepts, from ranges of ratings
+// ({ x: [1, 4000], … }): each rule sends the ratings that match it to its target and leaves
+// the others to the next rule
+function acceptedCombinations(name, ranges) {
+    if (name == "R") {
+        return 0;
+    }
+    if (name == "A") {
+        let combinations = 1;
+        for (const [low, high] : Object.values(ranges)) {
+            combinations *= Math.max(0, high - low + 1);
+        }
+        return combinations;
+    }
+    const workflow = workflows.get(name);
+    let rest = ranges;
+    let count = 0;
+    for (const rule : workflow.rules) {
+        const [matching, notMatching] = rule.split(rest[rule.category]);
+        if (matching[0] <= matching[1]) {
+            const sent = Object.assign({}, rest);
+            sent[rule.category] = matching;
+            count += acceptedCombinations(rule.target, sent);
+        }
+        if (notMatching[0] > notMatching[1]) {
+            return count;   // nothing left for the next rules
+        }
+        rest = Object.assign({}, rest);
+        rest[rule.category] = notMatching;
+    }
+    return count + acceptedCombinations(workflow.fallback, rest);
+}
+
+// Part 2: all combinations of ratings from 1 to 4000 that are accepted
+const all = [1, 4000];
+print("Part 2: " + acceptedCombinations("in", { x: all, m: all, a: all, s: all }));
