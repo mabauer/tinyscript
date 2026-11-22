@@ -404,10 +404,19 @@ and differential tests run against node.
             the validator where it is clear, otherwise at runtime: "Num is used
             before its declaration (line …)"). Interfaces are declarations only:
             for `implements` the order does not matter.
-          - **Modules:** `export class`, `export interface`;
-            `import EventListener from "./events"` works for `implements` (the
-            validator has to read the other file for it; the generator drops the
-            interface from the import).
+          - **Modules:** `export class`. Interfaces (decided 2026-11-22):
+            **first only in the file that declares them**; `export interface` is
+            a compile-time error with a hint, and importing one fails with the
+            usual `… does not export "Shape"`. Reason: the validator does not
+            read other files today (imports are checked when the script runs);
+            `implements` of an imported interface needs validation across files,
+            with the module search of each environment (module path in the REPL,
+            only `std:` in the web demo, the workspace in Eclipse). Later:
+            `export interface` and `import EventListener from "./events"` with
+            that cross-file validation (the generator drops the interface from
+            the import). Open until then: how `import * as m` reaches an
+            interface (`implements m.EventListener` needs qualified names in the
+            grammar; tendency: interfaces only with named imports).
           - **An interface does not exist at runtime** (see step 3): its name is
             only allowed after `implements`; anywhere else it is a compile-time
             error ("EventListener is an interface: it can only be used after
