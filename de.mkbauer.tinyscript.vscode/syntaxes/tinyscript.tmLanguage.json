@@ -71,11 +71,11 @@
         {
           "comment": "Reserved, but not supported: the compiler reports them with a hint",
           "name": "invalid.illegal.reserved.tinyscript",
-          "match": "(?<!\\.)\\b(try|catch|finally|switch|case|class|var)\\b"
+          "match": "(?<!\\.)\\b(finally|switch|case|class|var)\\b"
         },
         {
           "name": "keyword.control.tinyscript",
-          "match": "(?<!\\.)\\b(if|else|for|while|break|continue|return|throw)\\b"
+          "match": "(?<!\\.)\\b(if|else|for|while|break|continue|return|throw|try|catch)\\b"
         },
         {
           "name": "keyword.control.import.tinyscript",

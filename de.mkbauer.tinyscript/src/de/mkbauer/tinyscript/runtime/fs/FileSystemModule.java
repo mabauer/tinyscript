@@ -26,8 +26,8 @@ import de.mkbauer.tinyscript.runtime.array.ArrayObject;
 
 /**
  * The native module std:fs: file access, UTF-8, relative paths against the working
- * directory. Strict: errors end the script (tinyscript has no try / catch), so scripts
- * check with exists() first. Not available when the engine runs sandboxed.
+ * directory. A failed read or write is a TinyscriptIOError, which catch (e) gets as an Error
+ * named IOError; wrong arguments are a TypeError. Not available when the engine runs sandboxed.
  */
 public final class FileSystemModule {
 

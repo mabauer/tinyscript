@@ -6,7 +6,7 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 
 /**
  * An error thrown by a script with throw: its message is the message of the thrown Error
- * object, or the thrown value as a string.
+ * object. try / catch catches it (and failed input / output, TinyscriptIOError), nothing else.
  */
 public class TinyscriptError extends TinyscriptRuntimeException {
 

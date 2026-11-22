@@ -8,7 +8,9 @@ import de.mkbauer.tinyscript.ts.ElseStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.IfStatement;
+import de.mkbauer.tinyscript.ts.CatchClause;
 import de.mkbauer.tinyscript.ts.ForStatement;
+import de.mkbauer.tinyscript.ts.TryStatement;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.util.TsSwitch;
 
@@ -49,6 +51,16 @@ public class TinyscriptNameResolver extends TsSwitch<String> {
 	@Override
 	public String caseForStatement(ForStatement object) {
 		return "for" + getUniqueID(object);
+	}
+
+	@Override
+	public String caseTryStatement(TryStatement object) {
+		return "try" + getUniqueID(object);
+	}
+
+	@Override
+	public String caseCatchClause(CatchClause object) {
+		return "catch" + getUniqueID(object);
 	}
 
 	@Override

@@ -72,6 +72,8 @@ import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.WhileStatement;
+import de.mkbauer.tinyscript.ts.TryStatement;
+import de.mkbauer.tinyscript.ts.CatchClause;
 import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
@@ -345,6 +347,8 @@ public class TinyscriptEngine {
     		return caseContinueStatement((ContinueStatement) object);
 		case TsPackage.THROW_STATEMENT:
     		return caseThrowStatement((ThrowStatement) object);
+		case TsPackage.TRY_STATEMENT:
+    		return caseTryStatement((TryStatement) object);
 		case TsPackage.CONDITIONAL_EXPRESSION:
     		return caseConditionalExpression((ConditionalExpression) object);
 		case TsPackage.FUNCTION_DEFINITION:
@@ -709,12 +713,47 @@ public class TinyscriptEngine {
     	throw TSContinue.INSTANCE;
     }
 
-    // throw value; ends the script: the message is that of an Error object, or the value as a string
+    // throw error; only Error objects can be thrown, so that catch (e) always gets one. Throwing a
+    // caught error again (unchanged) throws the original error, with its place and stack trace.
     public TSValue caseThrowStatement(ThrowStatement object) {
     	recordStatement();
     	TSValue value = execute(object.getExpr());
-    	String message = value instanceof ErrorObject error ? error.getMessage() : TSObject.stringify(value);
-    	throw new TinyscriptError(message, value, object);
+    	if (!(value instanceof ErrorObject error))
+    		throw new TinyscriptTypeError("throw needs an Error object, e.g. throw new Error(\"...\"), not " + value.typeOf(), object);
+    	TinyscriptRuntimeException origin = error.getOrigin();
+    	if (origin != null && error.getMessage().equals(origin.getMessage()))
+    		throw origin;
+    	throw new TinyscriptError(error.getMessage(), error, object);
+    }
+
+    /**
+     * try { ... } catch (e) { ... }: catches only the errors a script may expect, those thrown with
+     * throw and failed input / output. Programming errors (TypeError, unknown names ...), failed
+     * asserts, a stack overflow and violated resource limits are not caught: they end the script.
+     */
+    public TSValue caseTryStatement(TryStatement object) {
+    	recordStatement();
+    	try {
+    		return executeInBlockContext("try", object.getBlock());
+    	}
+    	catch (TinyscriptError | TinyscriptIOError e) {
+    		CatchClause handler = object.getHandler();
+    		return executeInBlockContext("catch", handler.getBlock(), handler.getParam(), caughtError(e));
+    	}
+    }
+
+    // The Error object a catch gets: the thrown one, or one named IOError for failed input / output
+    private ErrorObject caughtError(TinyscriptRuntimeException e) {
+    	ErrorObject error;
+    	if (e instanceof TinyscriptError thrown)
+    		error = (ErrorObject) thrown.getThrownValue();
+    	else {
+    		error = (ErrorObject) getConstructor(ErrorConstructor.NAME).createObject();
+    		error.defineDefaultProperty("name", "IOError");
+    		error.defineDefaultProperty("message", e.getMessage());
+    	}
+    	error.setOrigin(e);
+    	return error;
     }
 
     // cond ? a : b evaluates only one of a and b

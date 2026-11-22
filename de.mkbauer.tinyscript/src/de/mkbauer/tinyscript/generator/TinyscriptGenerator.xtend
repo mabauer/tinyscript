@@ -16,6 +16,7 @@ import de.mkbauer.tinyscript.ts.Pattern
 import de.mkbauer.tinyscript.ts.ArrayPattern
 import de.mkbauer.tinyscript.ts.ObjectPattern
 import de.mkbauer.tinyscript.ts.ThrowStatement
+import de.mkbauer.tinyscript.ts.TryStatement
 import de.mkbauer.tinyscript.ts.ConditionalExpression
 import de.mkbauer.tinyscript.ts.WhileStatement
 import de.mkbauer.tinyscript.ts.StringLiteral
@@ -72,13 +73,31 @@ class TinyscriptGenerator   {
 	
 	def generateBuiltins() '''
 
+		// A failed assert is a programming error: catch does not get it (see __ts_catchable)
+		class __ts_AssertionError extends Error {}
+		__ts_AssertionError.prototype.name = "AssertionError";
+
 		function assert(condition) {
 			if (!condition) {
-				message = "Assertion failed";
-				if (typeof Error !== "undefined") {
-					throw new Error(message);
-				}
-			throw message; // Fallback
+				throw new __ts_AssertionError("assert: condition is false");
+			}
+		}
+
+		// Like the interpreter: only Error objects can be thrown
+		function __ts_throwable(value) {
+			if (!(value instanceof Error)) {
+				throw new TypeError("throw needs an Error object, e.g. throw new Error(\"...\"), not " + (value === null ? "object" : typeof value));
+			}
+			return value;
+		}
+
+		// Like the interpreter: catch gets only the errors thrown with throw and failed input / output
+		// (an Error named IOError); programming errors (TypeError, RangeError such as a stack overflow,
+		// ReferenceError ...) and failed asserts go on and end the script
+		function __ts_catchable(error) {
+			if (!(error instanceof Error) || error instanceof TypeError || error instanceof RangeError
+					|| error instanceof ReferenceError || error instanceof SyntaxError || error instanceof __ts_AssertionError) {
+				throw error;
 			}
 		}
 		
@@ -409,26 +428,41 @@ class TinyscriptGenerator   {
 		«script.generate»
 	'''
 	
-	// std:fs for node, with the same behavior as FileSystemModule (UTF-8, errors end the script)
+	// std:fs for node, with the same behavior as FileSystemModule (UTF-8; a failed read or write is
+	// an Error named IOError with the same message, wrong arguments a TypeError)
 	def private generateNativeModule(URI module) {
 		switch (module.opaquePart) {
 			case "fs": '''
 				(function () {
 					var nodefs = require("fs");
+					var reasons = { ENOENT: "not found", EACCES: "permission denied", EPERM: "permission denied", ENOTDIR: "not a directory" };
+					function io(what, path, action) {
+						try {
+							return action();
+						}
+						catch (e) {
+							if (e instanceof TypeError || !e.code) { throw e; }
+							var error = new Error(what + " \"" + path + "\": " + (reasons[e.code] || e.message));
+							error.name = "IOError";
+							throw error;
+						}
+					}
+					function read(path) { return io("Cannot read file", path, function () { return nodefs.readFileSync(path, "utf8"); }); }
+					function write(path, text) { io("Cannot write file", path, function () { nodefs.writeFileSync(path, text, "utf8"); }); }
 					return Object.freeze({
 						exists: function (path) { return nodefs.existsSync(path); },
-						readFile: function (path) { return nodefs.readFileSync(path, "utf8"); },
+						readFile: function (path) { return read(path); },
 						readLines: function (path) {
-							var text = nodefs.readFileSync(path, "utf8");
+							var text = read(path);
 							if (text === "") { return []; }
 							var lines = text.split(/\r?\n/);
 							if (lines[lines.length - 1] === "") { lines.pop(); }
 							return lines;
 						},
-						writeFile: function (path, text) { nodefs.writeFileSync(path, text, "utf8"); },
-						writeLines: function (path, lines) { nodefs.writeFileSync(path, lines.map(function (line) { return line + "\n"; }).join(""), "utf8"); },
-						appendFile: function (path, text) { nodefs.appendFileSync(path, text, "utf8"); },
-						listDir: function (path) { return nodefs.readdirSync(path).sort(); }
+						writeFile: function (path, text) { write(path, text); },
+						writeLines: function (path, lines) { write(path, lines.map(function (line) { return line + "\n"; }).join("")); },
+						appendFile: function (path, text) { io("Cannot write file", path, function () { nodefs.appendFileSync(path, text, "utf8"); }); },
+						listDir: function (path) { return io("Cannot list directory", path, function () { return nodefs.readdirSync(path).sort(); }); }
 					});
 				})()'''
 			default: throw new IllegalArgumentException("Not a native module: " + module)
@@ -538,8 +572,21 @@ class TinyscriptGenerator   {
 	'''
 
 	def dispatch generate(ThrowStatement stmt) '''
-		throw «stmt.expr.generate»;
+		throw __ts_throwable(«stmt.expr.generate»);
 	'''
+
+	def dispatch generate(TryStatement stmt) {
+		val error = if (stmt.handler.param !== null) stmt.handler.param.generate else "__ts_error"
+		'''
+			try {
+				«stmt.block.generate»
+			}
+			catch («error») {
+				__ts_catchable(«error»);
+				«stmt.handler.block.generate»
+			}
+		'''
+	}
 
 	def dispatch generate(AssertStatement stmt) '''
 		assert «stmt.cond.generate»;

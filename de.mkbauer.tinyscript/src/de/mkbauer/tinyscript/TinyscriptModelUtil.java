@@ -13,6 +13,7 @@ import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 import de.mkbauer.tinyscript.ts.BinaryExpression;
 import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Expression;
+import de.mkbauer.tinyscript.ts.CatchClause;
 import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
@@ -239,6 +240,8 @@ public class TinyscriptModelUtil {
 			if (loopVariables(forStmt).stream().anyMatch(id -> id.getName().equals(name)))
 				return true;
 		}
+		if (declaresCatchParameter(block, name))
+			return true;
 		return false;
 	}
 
@@ -255,6 +258,12 @@ public class TinyscriptModelUtil {
 				result.addAll(pattern.getNames());
 		}
 		return result;
+	}
+
+	// Whether block is that of catch (e) { ... } with an error variable of this name
+	private static boolean declaresCatchParameter(Block block, String name) {
+		return block.eContainer() instanceof CatchClause handler && handler.getParam() != null
+				&& handler.getParam().getName().equals(name);
 	}
 
 	/**
@@ -296,6 +305,8 @@ public class TinyscriptModelUtil {
 			if (loopVariables(forStmt).stream().anyMatch(id -> id.getName().equals(name)))
 				return true;
 		}
+		if (declaresCatchParameter(block, name))
+			return true;
 
 		return false;
 	}

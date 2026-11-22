@@ -32,7 +32,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testNoFollowUpErrorsOfAnUnsupportedConstruct() {
         assertEquals(1, reportedErrors("function f(a, b = 2) { return a + b; }\nprint(f(1));").size());
-        assertEquals(1, reportedErrors("try {\n    print(1);\n} catch (e) {\n    print(e);\n}").size());
+        assertEquals(1, reportedErrors("try {\n    print(1);\n} catch (e) {\n    print(e);\n} finally {\n    print(2);\n}").size());
         assertEquals(1, reportedErrors("const r = /a+/;").size());
     }
 
@@ -164,8 +164,9 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testUnsupportedKeywords() {
-        assertEquals("try / catch is not supported in tinyscript: errors cannot be caught (throw ends the script)",
-                firstError("try {\n    print(1);\n} catch (e) {\n    print(e);\n}"));
+        assertEquals("finally is not supported in tinyscript: there is only try { ... } catch (e) { ... }",
+                firstError("try {\n    print(1);\n} catch (e) {\n    print(e);\n} finally {\n    print(2);\n}"));
+        assertEquals("Duplicate identifier", firstError("try { print(1); } catch (e) { let e = 2; }"));
         assertEquals("switch is not supported in tinyscript: use if / else if",
                 firstError("const x = 1;\nswitch (x) { case 1: print(1); }"));
         assertEquals("class is not supported in tinyscript: use a constructor function and its prototype",

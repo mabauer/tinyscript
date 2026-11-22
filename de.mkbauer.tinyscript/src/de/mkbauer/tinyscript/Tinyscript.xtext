@@ -36,6 +36,7 @@ Statement:
 	BreakStatement |
 	ContinueStatement |
 	ThrowStatement |
+	TryStatement |
 	AssertStatement |
 	EmptyStatement
 ;
@@ -215,9 +216,20 @@ ContinueStatement:
 	'continue' ';'
 ;
 
-// throw ends the script with an error (there is no try / catch)
+// throw new Error("..."): only Error objects can be thrown
 ThrowStatement:
 	'throw' expr=AssignmentExpression ';'
+;
+
+// try { ... } catch (e) { ... }, or catch { ... } without the error; no finally. It catches only
+// what a script may expect: errors thrown with throw and failed input / output (std:fs);
+// programming errors (TypeError ...), failed asserts and resource limits end the script
+TryStatement:
+	'try' block=Block handler=CatchClause
+;
+
+CatchClause:
+	'catch' ('(' param=Identifier ')')? block=Block
 ;
 
 VariableStatement:
@@ -393,14 +405,14 @@ enum IncrementOperator:
 // can say so (TinyscriptSyntaxErrorMessageProvider); like in Javascript, they are fine as
 // property names (o.class, { case: 1 }).
 ReservedWord:
-	'try' | 'catch' | 'finally' | 'switch' | 'case' | 'class' | 'var'
+	'finally' | 'switch' | 'case' | 'class' | 'var'
 ;
 
 // All keywords of tinyscript: they cannot be names of variables, but like in Javascript, they
 // are fine as property names (range.from, { if: 1 })
 Keyword:
 	ReservedWord | 'let' | 'const' | 'function' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
-	| 'continue' | 'throw' | 'new' | 'this' | 'null' | 'undefined' | 'typeof' | 'delete' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
+	| 'continue' | 'throw' | 'try' | 'catch' | 'new' | 'this' | 'null' | 'undefined' | 'typeof' | 'delete' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
 ;
 
 // let is block-scoped (like Javascript's let); const cannot be assigned again. var is a reserved

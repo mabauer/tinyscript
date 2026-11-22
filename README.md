@@ -173,6 +173,11 @@ of primitive datatypes in Javascript is a mine-field on its own.
   `let arr = ["hello"]; arr = arr + ["world"];` results in `["hello", "world"]`.
   With a string on either side, `+` concatenates strings (`"arr: " + arr`); an
   array plus anything else is a `TypeError`.
+- **Catching errors:** `try { … } catch (e) { … }` catches only what a script
+  can expect: errors thrown with `throw` (only `Error` objects can be thrown)
+  and failed file access (`e.name == "IOError"`). Programming errors such as a
+  `TypeError` or a failed `assert` end the script even inside `try`, so a broad
+  `catch` cannot hide them. There is no `finally`.
 - **Arrow functions** are supported. These are part of Javascript starting with
   Ecmascript 6 :-)
 - **Sandboxing:** in sandboxed mode every loop iteration counts against the
@@ -185,7 +190,7 @@ Certainly, _tinyscript_ is not perfect. It's just a proof-of-concept (but a
 usable one!). Some Javascript features are simply missing, for example:
 
 - There is no support for _regular expressions_.
-- There is no `switch` and no `delete`.
+- There is no `switch` and no `class`.
 
 See [TODO.md](TODO.md) for what's planned.
 

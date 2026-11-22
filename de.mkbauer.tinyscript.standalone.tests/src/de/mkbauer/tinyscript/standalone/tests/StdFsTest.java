@@ -107,6 +107,29 @@ public class StdFsTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testCatchFailedInputAndOutput() throws IOException {
+        Path main = script("function readOr(path, fallback) {\n"
+                + "  try { return fs.readFile(path); }\n"
+                + "  catch (e) { print(e.name, e instanceof Error, e.message == \"Cannot read file \\\"\" + path + \"\\\": not found\"); return fallback; }\n"
+                + "}\n"
+                + "print(readOr(dir + \"/nope.txt\", \"default\"));\n"
+                + "for (const action : [() => fs.readLines(dir + \"/nope\"), () => fs.listDir(dir + \"/nope\"), () => fs.writeFile(dir + \"/no/such/dir/x\", \"\")]) {\n"
+                + "  try { action(); } catch (e) { print(\"\" + e == \"IOError: \" + e.message, e.message.slice(0, 14), e.message.endsWith(\": not found\")); }\n"
+                + "}");
+        assertEquals("IOError true true\ndefault\n"
+                + "true Cannot read fi true\n"
+                + "true Cannot list di true\n"
+                + "true Cannot write f true\n", runModule(main));
+        assertSameOutputModule(main);
+    }
+
+    @Test
+    public void testWrongArgumentsAreNotCaught() throws IOException {
+        assertThrows(TinyscriptTypeError.class,
+                () -> runModule(script("try { fs.writeFile(dir + \"/x\", 42); } catch (e) { print(\"caught\"); }")));
+    }
+
+    @Test
     public void testOnlyStringsCanBeWritten() throws IOException {
         assertThrows(TinyscriptTypeError.class, () -> runModule(script("fs.writeFile(dir + \"/x\", 42);")));
         assertThrows(TinyscriptTypeError.class, () -> runModule(script("fs.writeLines(dir + \"/x\", \"a\");")));

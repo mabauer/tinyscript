@@ -56,12 +56,16 @@ flags &= ~mask << 2; i++;
 //             ^^ keyword.operator.bitwise.tinyscript
 //                    ^^ keyword.operator.increment.tinyscript
 
-try { x = this ? true : undefined; } /* block */
-// <-- invalid.illegal.reserved.tinyscript
+try { x = this ? true : undefined; } catch (e) { } /* block */
+// <--- keyword.control.tinyscript
 //        ^^^^ variable.language.this.tinyscript
 //               ^^^^ constant.language.boolean.tinyscript
 //                      ^^^^^^^^^ constant.language.tinyscript
-//                                   ^^^^^^^^^^^ comment.block.tinyscript
+//                                   ^^^^^ keyword.control.tinyscript
+//                                                 ^^^^^^^^^^^ comment.block.tinyscript
+
+finally { }
+// <------- invalid.illegal.reserved.tinyscript
 
 assert typeof x == "number" && x instanceof Object;
 // <----- keyword.other.assert.tinyscript

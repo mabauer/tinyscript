@@ -1,5 +1,6 @@
 package de.mkbauer.tinyscript.runtime.error;
 
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.Display;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -11,6 +12,17 @@ public class ErrorObject extends TSObject {
 
 	ErrorObject(TinyscriptEngine engine, TSObject prototype) {
 		super(engine, prototype);
+	}
+
+	// The error this object was caught as (catch (e)), so that throw e; throws it again
+	private TinyscriptRuntimeException origin;
+
+	public TinyscriptRuntimeException getOrigin() {
+		return origin;
+	}
+
+	public void setOrigin(TinyscriptRuntimeException origin) {
+		this.origin = origin;
 	}
 
 	public String getMessage() {

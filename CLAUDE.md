@@ -220,6 +220,10 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   or `import * as m from "./m";`. Each module runs once; imported names are
   read-only; files share names only via imports (see
   `docs/language-reference.md`, section 13)
+- `try { … } catch (e) { … }` (no `finally`) catches only errors thrown with
+  `throw` (which takes only `Error` objects) and failed `std:fs` input / output
+  (`e.name == "IOError"`); `TypeError`s, failed `assert`s, stack overflows and
+  resource limits are not caught
 - `this` as in Javascript's strict mode: set by a method call, `undefined` in a
   plain call and outside functions (`this` there is a compile-time error)
 

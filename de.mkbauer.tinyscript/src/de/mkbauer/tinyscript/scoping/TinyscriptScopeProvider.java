@@ -16,6 +16,7 @@ import com.google.common.base.Predicate;
 
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.Block;
+import de.mkbauer.tinyscript.ts.CatchClause;
 import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.Identifier;
@@ -112,6 +113,10 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 			if (foreach.getPattern() != null) {
 				ids.addAll(foreach.getPattern().getNames());
 			}
+		}
+		// catch (e) { ... }: the error is a variable of the catch block
+		if (container instanceof CatchClause handler && handler.getParam() != null) {
+			ids.add(handler.getParam());
 		}
 		// The top level also sees the imported names
 		if (container instanceof Tinyscript) {

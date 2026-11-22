@@ -15,7 +15,7 @@ import de.mkbauer.tinyscript.ts.FunctionDefinition;
 
 /**
  * Syntax errors in plain words. Constructs that are common in Javascript, but not part of
- * tinyscript or written differently there (a C-style for loop, ===, try / catch ...), get a
+ * tinyscript or written differently there (a C-style for loop, ===, switch ...), get a
  * hint what to write instead; the other errors of the ANTLR parser are put in plain words.
  */
 public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProvider {
@@ -24,9 +24,7 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 	public static final String UNEXPECTED_END = "Unexpected end of input";
 
 	private static final Map<String, String> UNSUPPORTED = Map.of(
-			"try", "try / catch is not supported in tinyscript: errors cannot be caught (throw ends the script)",
-			"catch", "try / catch is not supported in tinyscript: errors cannot be caught (throw ends the script)",
-			"finally", "try / catch is not supported in tinyscript: errors cannot be caught (throw ends the script)",
+			"finally", "finally is not supported in tinyscript: there is only try { ... } catch (e) { ... }",
 			"switch", "switch is not supported in tinyscript: use if / else if",
 			"case", "switch is not supported in tinyscript: use if / else if",
 			"class", "class is not supported in tinyscript: use a constructor function and its prototype",
