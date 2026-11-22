@@ -83,17 +83,30 @@ interpreter for it in Java for a couple of reasons:
 
 - Definition of _tinyscript_'s grammar. Implementation of the corresponding
   parser including an _abstract syntax tree (AST)_ using _Xtext_ (project
-  [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript`).
+  [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package `tinyscript`). A
+  validator checks scripts before they run, and syntax errors are explained in
+  plain words, with a hint for constructs from Javascript that tinyscript writes
+  differently (`var`, `===`, a C-style `for` loop, …).
 
 - Design and implementation of a „high-level“ interpreter in Java (project
   [`de.mkbauer.tinyscript`](de.mkbauer.tinyscript), package
   `tinyscript.interpreter`). Specifically have a look at class
   `TinyscriptEngine` and _tinyscript_'s runtime (package `tinyscript.runtime`).
+  The interpreter is also the way to embed _tinyscript_ in a Java application,
+  optionally sandboxed with resource limits (see [Sandboxing](#sandboxing)).
+
+- Modules and a small standard library: `std:array`, `std:string`, and file
+  access with `std:fs`.
+
+- A command line tool (project
+  [`de.mkbauer.tinyscript.repl`](de.mkbauer.tinyscript.repl)) that runs scripts
+  or starts an interactive session (see [Setup](#setup)).
 
 - Integration of _tinyscript_'s interpreter into a demo web app (project
   [`de.mkbauer.tinyscript.webdemo`](de.mkbauer.tinyscript.webdemo)) based on
-  _SpringBoot_. That's the same [web app](https://tinyscript.mkbauer.de) I've
-  mentioned above when introducing _tinyscript_'s language features.
+  _Spring Boot_ and _Vue_, also available as a Docker image. That's the same
+  [web app](https://tinyscript.mkbauer.de) I've mentioned above when introducing
+  _tinyscript_'s language features.
 
 - With _Xtext_ it's easy to provide an editor plugin for _Eclipse_ (project
   [`de.mkbauer.tinyscript.ui`](de.mkbauer.tinyscript.ui)). For _Visual Studio
@@ -101,11 +114,14 @@ interpreter for it in Java for a couple of reasons:
   ([`de.mkbauer.tinyscript.vscode`](de.mkbauer.tinyscript.vscode), see its
   README for how to install it).
 
-- Implementation of a very rudimentary code generator to generate valid
-  Javascript code from _tinyscript_'s AST (package `tinyscript.generator`). This
-  code can be executed either with the _Nashorn_ engine (shipped with JDK8) or
-  within a native iOS app. For the latter, I've provided a proof-of-concept
-  implementation in branch `ios_demo`.
+- A code generator that translates _tinyscript_'s AST to Javascript (package
+  `tinyscript.generator`). Today it keeps the interpreter honest: the tests run
+  each language feature, every example of the web demo and the
+  [Advent of Code solutions](examples/aoc2024) both in the interpreter and,
+  translated, in _node.js_, and compare their output. Originally, the generated
+  code ran in the _Nashorn_ engine of Java 8 and in a native iOS app (a
+  proof-of-concept in [`TinyscriptiOSDemo`](TinyscriptiOSDemo) and branch
+  `iosdemo`).
 
 ## Design decisions
 
@@ -196,22 +212,16 @@ See [TODO.md](TODO.md) for what's planned.
 
 ## Performance
 
-The runtime performance of _tinyscript_'s interpreter is rather poor, especially
-when compared with the highly-optimized Javascript engines. Usually,
-_tinyscript_ is slower by a factor 10 (_node.js_, _V8_), or factor 5-7
-(_Nashorn_).
+_tinyscript_'s interpreter walks the syntax tree directly, so it is slow
+compared with the highly-optimized Javascript engines. A simulation of 8 million
+steps (part 2 of day 6 of Advent of Code 2024, on a test grid) takes 19 s in
+_tinyscript_ and 1.9 s in _CPython_; _node.js_ is faster still. For most scripts
+and the Advent of Code puzzles, this is fast enough. Ideas for a faster
+interpreter are in [TODO.md](TODO.md).
 
-But: _tinyscript_ is often twice as fast as the Java based Javascript engine
-[dynJS](http://dynjs.org/). :-)
-
-Examples:
-
-- An iterative implementation of Fibonacci numbers
-  [Ian Bull's benchmark](https://eclipsesource.com/blogs/2014/11/17/highly-efficient-java-javascript-integration/):
-  100000 iterations: _tinyscript_: 6195ms, _Nashorn_: 1021ms, _DynJS_: 29047ms
-
-- `People.js` (see demo web app): N=100000, R=10: _tinyscript_: 37000ms,
-  _DynJS_: 140000ms.
+When I measured in 2015 (Java 8), _tinyscript_ was slower than _V8_ by a factor
+of 10 and than _Nashorn_ by a factor of 5–7, but often twice as fast as the Java
+based Javascript engine [DynJS](http://dynjs.org/). :-)
 
 ## Sandboxing
 

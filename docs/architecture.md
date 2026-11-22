@@ -27,8 +27,8 @@ used to build a complete, executable language toolchain: grammar → parser → 
 - **Standalone REPL** — interactive command-line shell
 - **Spring Boot web demo** — sandboxed script execution via REST API + browser
   playground
-- **JVM ScriptEngine** — compiles Tinyscript to JavaScript, then executes via
-  GraalJS/Nashorn
+- **Embedded in Java** — `TinyscriptEngine` directly, optionally sandboxed with
+  resource limits (as the REPL and the web demo do)
 
 ---
 
@@ -551,7 +551,8 @@ Transpiles the Tinyscript AST to ES5-compatible JavaScript source text.
 **Used by:**
 
 - `/xcompile` REST endpoint (`TinyscriptCrossCompilingService`)
-- `JvmScriptEngineRunner` — compiles to JS then runs via GraalJS or Nashorn
+- the differential tests, which run the generated code with `node` and compare
+  its output with the interpreter's
 
 **Not used by the interpreter** — the interpreter walks the AST directly without
 a JavaScript intermediate.
@@ -713,25 +714,11 @@ serves as static files. Key components:
 | `frontend/src/components/tinyscript-lang.ts` | CM6 `StreamLanguage` tokenizer for Tinyscript syntax                           |
 | `frontend/src/components/Output.vue`         | Spinner, success/error alerts, formatted statistics                            |
 | `frontend/src/types.ts`                      | TypeScript interfaces: `ExecutionResult`, `Statistics`                         |
-| `frontend/public/*.tys`                      | 12 example scripts served as static files                                      |
+| `frontend/public/*.tys`                      | 13 example scripts served as static files                                      |
 
 Frontend unit tests (Vitest) cover `Output`, `Toolbar`, and the
 `tinyscript-lang` tokenizer. They run as part of the Maven build before the
 Spring Boot tests.
-
-### JVM ScriptEngine
-
-**Entry point:**
-`de.mkbauer.tinyscript.jvmscriptengine/src/.../JvmScriptEngineRunner.java`
-
-Implements the standard `javax.script.ScriptEngine` interface. Internally:
-
-1. Parses and validates Tinyscript
-2. Uses `TinyscriptGenerator` to transpile to JavaScript
-3. Executes the JavaScript via GraalJS (falling back to Nashorn if unavailable)
-
-This is the integration point for embedding Tinyscript in a JVM application via
-the standard scripting API.
 
 ### Eclipse Plugin
 

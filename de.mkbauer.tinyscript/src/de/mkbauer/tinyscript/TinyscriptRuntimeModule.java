@@ -7,10 +7,6 @@ import org.eclipse.xtext.linking.ILinkingDiagnosticMessageProvider;
 import org.eclipse.xtext.naming.IQualifiedNameProvider;
 import org.eclipse.xtext.parser.antlr.ISyntaxErrorMessageProvider;
 
-import com.google.inject.Provides;
-
-import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
-import de.mkbauer.tinyscript.jvmscriptengine.JvmScriptEngineRunner;
 import de.mkbauer.tinyscript.scoping.TinyscriptGlobalScopeProvider;
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
 import de.mkbauer.tinyscript.validation.TinyscriptLinkingDiagnosticMessageProvider;
@@ -40,10 +36,5 @@ public class TinyscriptRuntimeModule extends AbstractTinyscriptRuntimeModule {
 	// "Unknown name 'valeus' (did you mean 'values'?)"
 	public Class<? extends ILinkingDiagnosticMessageProvider> bindILinkingDiagnosticMessageProvider() {
 		return TinyscriptLinkingDiagnosticMessageProvider.class;
-	}
-
-	@Provides
-	public JvmScriptEngineRunner getScriptEngineRunner(TinyscriptGenerator generator) {
-		return new JvmScriptEngineRunner(generator);
 	}
 }
