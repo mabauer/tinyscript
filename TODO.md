@@ -370,11 +370,12 @@ and differential tests run against node.
        `OoExamplesTest` checks each pair against the same output (the planned
        versions once enabled).
 
-       1. **Method shorthand** `{ greet() { … } }` for
-          `greet: function() { … }`: grammar only, the generator passes it
-          through. It also makes factory functions with closures readable
-          (`return { inc() { n++; }, get() { return n; } };`), which give
-          private state without `this`.
+       1. ~~**Method shorthand**~~ (done 2026-11-22; functions as values of
+          properties are named after their key in stack traces)
+          `{ greet() { … } }` for `greet: function() { … }`: grammar only, the
+          generator passes it through. It also makes factory functions with
+          closures readable (`return { inc() { n++; }, get() { return n; } };`),
+          which give private state without `this`.
        2. **`class` without inheritance:** short for a constructor function plus
           methods on its prototype; no `extends`, no `super` (the expensive
           part), no static members, no getters. Decided 2026-11-22 after writing
@@ -521,7 +522,8 @@ and differential tests run against node.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
     `toString(radix)`); ~~`undefined`~~ (done); ~~minimal `try` / `catch`~~
     (done); a ~~library batch~~ (done, also `range(…).reverse()` and `delete`);
-    method shorthand, a more comfortable REPL, standard input.
+    ~~method shorthand~~ (done), then `class` and `interface` (see 6.), a more
+    comfortable REPL, standard input.
 
 ## Interpreter and code quality
 

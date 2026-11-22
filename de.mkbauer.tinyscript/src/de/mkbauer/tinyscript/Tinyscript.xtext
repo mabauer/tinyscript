@@ -295,9 +295,18 @@ ObjectInitializer:
 	'{' (propertyassignments+=PropertyAssignment)? (',' propertyassignments+=PropertyAssignment)* '}'
 ;
 
-// key: value, or the shorthand { row, col } for { row: row, col: col }
+// key: value, the method shorthand { greet() { ... } } for { greet: function() { ... } },
+// or the shorthand { row, col } for { row: row, col: col }
 PropertyAssignment:
-	key=PropertyName ':' value=AssignmentExpression | shorthand=Reference
+	key=PropertyName (':' value=AssignmentExpression | value=MethodDefinition) | shorthand=Reference
+;
+
+// The parameters and body of a method in an object literal: greet(name) { ... }
+MethodDefinition returns FunctionDefinition:
+	{FunctionDefinition}
+	( '(' (params += Parameter)? (',' params += Parameter)* (',' '...' rest=Identifier)? ')'
+	| '(' '...' rest=Identifier ')'  )
+	block=Block
 ;
 
 PropertyName:
