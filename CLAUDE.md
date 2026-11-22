@@ -220,9 +220,13 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - `++` / `--` only as statements (`i++;`); compound assignments `+=` … `%=` and
   `cond ? a : b` as in JavaScript
 - Arrow functions use `=>` syntax
-- Modules: `export` top-level functions / variables; `import a, b from "./m";`
-  or `import * as m from "./m";`. Each module runs once; imported names are
-  read-only; files share names only via imports (see
+- `class` without inheritance (only at the top level; a `constructor` and
+  methods, no `extends` / `static` / getters / field declarations); a class
+  needs `new`, and its instances print with the class name (`Point {x: 1}`);
+  object literals have the method shorthand `{ area() { … } }`
+- Modules: `export` top-level functions / variables / classes;
+  `import a, b from "./m";` or `import * as m from "./m";`. Each module runs
+  once; imported names are read-only; files share names only via imports (see
   `docs/language-reference.md`, section 13)
 - `try { … } catch (e) { … }` (no `finally`) catches only errors thrown with
   `throw` (which takes only `Error` objects) and failed `std:fs` input / output

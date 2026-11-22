@@ -225,10 +225,21 @@ public non-sealed class TSObject implements TSValue {
 	 * This object's display form: {x: 1, y: "a"}. The values inside go through {@code display.format}.
 	 */
 	protected String display(Display display) {
-		return properties.keySet().stream()
+		return classPrefix() + properties.keySet().stream()
 				.filter(key -> properties.get(key).isEnumerable())
 				.map(key -> key + ": " + display.format(properties.get(key).getValue()))
 				.collect(Collectors.joining(", ", "{", "}"));
+	}
+
+	// An instance of a class shows its name first, as node does: Num {value: 3}
+	private String classPrefix() {
+		TSObject prototype = getPrototype();
+		if (prototype == null)
+			return "";
+		TSPropertyDescriptor constructor = prototype.getOwnPropertyDescriptor("constructor");
+		if (constructor != null && constructor.getValue() instanceof ClassObject cls && cls.getPrototypeProperty() == prototype)
+			return cls.getName() + " ";
+		return "";
 	}
 	
 	protected void update() {

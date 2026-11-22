@@ -2,7 +2,7 @@
   "name": "tinyscript",
   "displayName": "tinyscript",
   "description": "Syntax highlighting for tinyscript (.tys), a small Javascript-like language",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "mkbauer",
   "license": "GPL-2.0",
   "repository": {

@@ -11,6 +11,8 @@ import de.mkbauer.tinyscript.ts.BreakStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
+import de.mkbauer.tinyscript.ts.ClassDeclaration;
+import de.mkbauer.tinyscript.ts.ClassMethod;
 import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.ContinueStatement;
 import de.mkbauer.tinyscript.ts.DotPropertyAccessSuffix;
@@ -59,7 +61,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	 */
 	@Check
 	public void checkVariableDoesNotCauseConflictInBlock(Identifier identifier) {
-		if (TinyscriptModelUtil.isPartOfVariableStatement(identifier)) {
+		if (TinyscriptModelUtil.isPartOfVariableStatement(identifier) || identifier.eContainer() instanceof ClassDeclaration) {
 			Block block = TinyscriptModelUtil.containingBlock(identifier);
 			if (TinyscriptModelUtil.blockContainsConflictingIdentifiersBefore(identifier, block))
 				error("Duplicate identifier", TsPackage.Literals.IDENTIFIER__NAME);
@@ -99,6 +101,44 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 		if (TinyscriptModelUtil.containingFunction(retStmt) instanceof Tinyscript) {
 			error("Return only allowed in functions", null);
 		}
+	}
+
+	/**
+	 * new Num(…) always gives the new object: a constructor cannot return a value (a plain
+	 * return; is fine).
+	 */
+	@Check
+	public void checkConstructorReturnsNoValue(ReturnStatement retStmt) {
+		if (retStmt.getExpr() != null && TinyscriptModelUtil.containingFunction(retStmt) instanceof FunctionDefinition function
+				&& function.eContainer() instanceof ClassMethod method && isConstructor(method))
+			error("A constructor cannot return a value: new " + className(method) + "(…) always gives the new object",
+					TsPackage.Literals.RETURN_STATEMENT__EXPR);
+	}
+
+	/**
+	 * A class only at the top level of a file, each method only once.
+	 */
+	@Check
+	public void checkClassDeclaration(ClassDeclaration declaration) {
+		if (!isTopLevel(declaration))
+			error("A class can only be declared at the top level of a file, not in a block or function",
+					TsPackage.Literals.CLASS_DECLARATION__ID);
+		Set<String> names = new HashSet<String>();
+		for (ClassMethod method : declaration.getMethods()) {
+			String name = TinyscriptModelUtil.propertyKey(method.getName());
+			if (name != null && !names.add(name))
+				error(isConstructor(method) ? "A class has only one constructor"
+						: "Duplicate method '" + name + "' in class " + declaration.getId().getName(),
+						method, TsPackage.Literals.CLASS_METHOD__NAME);
+		}
+	}
+
+	private static boolean isConstructor(ClassMethod method) {
+		return "constructor".equals(TinyscriptModelUtil.propertyKey(method.getName()));
+	}
+
+	private static String className(ClassMethod method) {
+		return ((ClassDeclaration) method.eContainer()).getId().getName();
 	}
 
 	/**
@@ -184,19 +224,24 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	@Check
 	public void checkNoAssignmentToConstant(BinaryExpression assignment) {
 		if (isAssignment(assignment) && isConstant(assignment.getLeft()))
-			error("Cannot assign to the constant " + name(assignment.getLeft()), TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+			error("Cannot assign to the " + constantKind(assignment.getLeft()) + " " + name(assignment.getLeft()), TsPackage.Literals.BINARY_EXPRESSION__LEFT);
 	}
 
 	@Check
 	public void checkNoAssignmentToConstant(ExpressionStatement statement) {
 		if (Operators.increment(statement) != null && isConstant(statement.getExpr()))
-			error("Cannot assign to the constant " + name(statement.getExpr()), TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
+			error("Cannot assign to the " + constantKind(statement.getExpr()) + " " + name(statement.getExpr()), TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
 	}
 
 	@Check
 	public void checkNoAssignmentToConstant(ForStatement forStatement) {
 		if (forStatement.getRef() != null && isConstant(forStatement.getRef()))
-			error("Cannot assign to the constant " + name(forStatement.getRef()), TsPackage.Literals.FOR_STATEMENT__REF);
+			error("Cannot assign to the " + constantKind(forStatement.getRef()) + " " + name(forStatement.getRef()), TsPackage.Literals.FOR_STATEMENT__REF);
+	}
+
+	// "class" for the name of a class, otherwise "constant"
+	private static String constantKind(Expression reference) {
+		return ((Reference) reference).getId().eContainer() instanceof ClassDeclaration ? "class" : "constant";
 	}
 
 	private static boolean isConstantDeclaration(String kind) {
@@ -207,6 +252,9 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	private static boolean isConstant(Expression expression) {
 		if (!(expression instanceof Reference reference) || reference.getId() == null)
 			return false;
+		// The name of a class cannot be assigned either
+		if (reference.getId().eContainer() instanceof ClassDeclaration)
+			return true;
 		for (EObject container = reference.getId().eContainer(); container != null; container = container.eContainer()) {
 			if (container instanceof VariableStatement statement)
 				return isConstantDeclaration(statement.getKind());
@@ -342,13 +390,13 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	@Check
 	public void checkExportOnlyAtTopLevel(FunctionDeclaration function) {
 		if (function.isExported() && !isTopLevel(function))
-			error("Only top-level functions and variables can be exported", TsPackage.Literals.FUNCTION_DEFINITION__ID);
+			error("Only top-level functions, variables and classes can be exported", TsPackage.Literals.FUNCTION_DEFINITION__ID);
 	}
 
 	@Check
 	public void checkExportOnlyAtTopLevel(VariableStatement variables) {
 		if (variables.isExported() && !isTopLevel(variables))
-			error("Only top-level functions and variables can be exported", null);
+			error("Only top-level functions, variables and classes can be exported", null);
 	}
 
 	private static boolean isTopLevel(EObject declaration) {

@@ -376,10 +376,14 @@ and differential tests run against node.
           generator passes it through. It also makes factory functions with
           closures readable (`return { inc() { n++; }, get() { return n; } };`),
           which give private state without `this`.
-       2. **`class` without inheritance:** short for a constructor function plus
-          methods on its prototype; no `extends`, no `super` (the expensive
-          part), no static members, no getters. Decided 2026-11-22 after writing
-          the examples:
+       2. ~~**`class` without inheritance:**~~ (done 2026-11-22; also "… is used
+          before its declaration (line …)" for let / const / class instead of
+          "Unknown name"; open: a function that reads a let / const before its
+          statement has run gets undefined, where Javascript throws a
+          ReferenceError, as tinyscript now does for a class) short for a
+          constructor function plus methods on its prototype; no `extends`, no
+          `super` (the expensive part), no static members, no getters. Decided
+          2026-11-22 after writing the examples:
 
           - **No `static`** for now: functions and constants in the module do
             the same (the module is the namespace); can be added later without
@@ -584,8 +588,8 @@ and differential tests run against node.
   - **Suggested order:** ~~the bugs~~ (all fixed 2026-11-21; also `toFixed` /
     `toString(radix)`); ~~`undefined`~~ (done); ~~minimal `try` / `catch`~~
     (done); a ~~library batch~~ (done, also `range(…).reverse()` and `delete`);
-    ~~method shorthand~~ (done), then `class` and `interface` (see 6.), a more
-    comfortable REPL, standard input.
+    ~~method shorthand~~ (done), ~~`class`~~ (done), then `interface` (see 6.),
+    a more comfortable REPL, standard input.
 
 ## Interpreter and code quality
 

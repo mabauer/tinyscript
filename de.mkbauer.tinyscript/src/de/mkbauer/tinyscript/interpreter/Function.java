@@ -55,16 +55,18 @@ public abstract class Function extends TSObject {
 		String result = "";
 		if (hasEnumerableProperties())
 			result = result + "{ ";
-		result = result + "[Function";
-		if (getName() != null)
-			result = result + ": " + getName(); 
-		result = result + "]";
+		result = result + label();
 		if (hasEnumerableProperties())
 			result = result + " " + properties.keySet().stream()
 				.filter(key->properties.get(key).isEnumerable())
 				.map(key -> key + ": " + display.format(properties.get(key).getValue()))
 				.collect(Collectors.joining(", ")) + " }";
 		return result;
+	}
+
+	// [Function: name], or [Function] without a name
+	protected String label() {
+		return "[Function" + (getName() != null && !getName().isEmpty() ? ": " + getName() : "") + "]";
 	}
 
 	public boolean isArrowFunction() {

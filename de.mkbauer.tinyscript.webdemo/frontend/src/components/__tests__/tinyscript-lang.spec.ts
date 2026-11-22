@@ -23,7 +23,7 @@ describe('tinyscript-lang tokenizer', () => {
   })
 
   it('keywords tokenize as keyword', () => {
-    for (const kw of ['let', 'const', 'function', 'if', 'else', 'for', 'while', 'break', 'continue', 'throw', 'return',
+    for (const kw of ['let', 'const', 'function', 'class', 'if', 'else', 'for', 'while', 'break', 'continue', 'throw', 'return',
                       'new', 'this', 'typeof', 'instanceof', 'delete', 'import', 'export', 'from', 'as']) {
       expect(typeOf(kw, kw)).toBe('keyword')
     }

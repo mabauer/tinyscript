@@ -922,9 +922,51 @@ Tinyscript follows JavaScript's prototypal model. Every object has a prototype
 (accessible as `__proto__`). When you access a property that doesn't exist on an
 object, the lookup walks up the prototype chain.
 
+### Classes
+
+`class` is short for a constructor function and the methods on its prototype, as
+in Javascript, but without inheritance:
+
+```
+class Point {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    plus(other) { return new Point(this.x + other.x, this.y + other.y); }
+    length() { return Math.hypot(this.x, this.y); }
+}
+
+const p = new Point(3, 4);
+print(p.length(), p.plus(p));    // 5 Point {x: 6, y: 8}
+print(p instanceof Point, typeof Point, Object.keys(p));   // true function ["x", "y"]
+```
+
+- The method `constructor` gives a new object its fields; a class without it
+  creates empty objects. `new Point(…)` always gives the new object, so a
+  constructor cannot `return` a value.
+- Methods live on the prototype: they are shared by all objects of the class and
+  are not enumerable (not in `Object.keys`, not printed). Parameters work as in
+  functions (`...rest`, patterns). `this` is set by the method call as usual: a
+  method taken off its object (`const f = p.length; f();`) has no `this`.
+- `print` shows an object of a class with the class name (`Point {x: 3, y: 4}`),
+  unless the class has a `toString` method; `print(Point)` shows
+  `[class Point]`.
+- A class can only be created with `new`: `Point(1, 2)` is a `TypeError`.
+- Classes are declared at the top level of a file only, not in blocks or
+  functions, and can be exported (`export class Point { … }`, see
+  [Modules](#13-modules)). The name is a constant.
+- Like `let` and `const`, a class can be used from its declaration on: functions
+  and methods may mention a class declared further down, since they run later,
+  but `new Point(1, 2)` at the top level before `class Point` is an error.
+- Not supported: `extends` and `super`, `static` members, getters and setters,
+  and field declarations in the class body (fields get their values in the
+  constructor). The compiler says so with a hint. Code that several classes
+  share goes into a function.
+
 ### Constructor functions and `.prototype`
 
-The standard JavaScript pattern works:
+Before `class`, and for inheritance, the standard JavaScript pattern works:
 
 ```
 function Animal(name) {
@@ -1424,6 +1466,7 @@ writing code and for knowing its intentional limitations.
 - Prototypal inheritance via `prototype` and `__proto__`
 - First-class functions, closures, and lexical scoping
 - `this` binding in constructors and methods
+- `class` with a `constructor` and methods (without inheritance)
 - `new`, `instanceof`, `typeof`
 - Arrow functions with lexical `this`
 - Rest parameters (`...args`)
@@ -1440,7 +1483,9 @@ writing code and for knowing its intentional limitations.
   no nesting, defaults, renaming, `...rest`, or patterns in assignments
 - **Spread operator** — no `...array` in call sites
 - **`switch` statement**
-- **Getter / setter properties** (`get`/`set` in object literals)
+- **Getter / setter properties** (`get`/`set` in object literals and classes)
+- **Inheritance between classes** (`extends`, `super`), **`static`** members and
+  field declarations in a class body
 - **`Symbol`, `WeakMap`, `Promise`**, and other ES6+ built-ins
 - **`Date`** object (use `System.currentTimeMillis()` instead)
 - **`console`** (use `print()` instead)
@@ -1464,8 +1509,8 @@ import * as geo from "./geometry.tys";   // the whole module as a (read-only) ob
 print(area(2), unit, geo.area(1));
 ```
 
-- Imports come first in a file; `export` is only allowed for top-level functions
-  and variables.
+- Imports come first in a file; `export` is only allowed for top-level
+  functions, variables and classes.
 - **Paths:** relative paths (`"./x"`, `"../lib/y"`) resolve against the
   importing file; bare paths (`"x"`, `"math/vector"`) are searched in the module
   path (REPL: `--module-path dir1:dir2` or `TINYSCRIPT_PATH`, by default the

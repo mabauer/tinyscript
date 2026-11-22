@@ -197,6 +197,11 @@ of primitive datatypes in Javascript is a mine-field on its own.
   `catch` cannot hide them. There is no `finally`.
 - **Arrow functions** are supported. These are part of Javascript starting with
   Ecmascript 6 :-)
+- **Classes without inheritance:** `class Point { constructor(x, y) { … } … }`
+  is short for a constructor function with methods on its prototype, as in
+  Javascript. There is no `extends`, no `static` and no getters; a class can
+  only be created with `new`. Object literals have the method shorthand
+  `{ area() { … } }`.
 - **Sandboxing:** in sandboxed mode every loop iteration counts against the
   statement limit, so even endless loops cannot exceed the resource limits (see
   [Sandboxing](#sandboxing)).
@@ -207,7 +212,7 @@ Certainly, _tinyscript_ is not perfect. It's just a proof-of-concept (but a
 usable one!). Some Javascript features are simply missing, for example:
 
 - There is no support for _regular expressions_.
-- There is no `switch` and no `class`.
+- There is no `switch`, and classes have no inheritance.
 
 See [TODO.md](TODO.md) for what's planned.
 
