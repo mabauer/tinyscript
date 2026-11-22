@@ -380,6 +380,7 @@ and differential tests run against node.
           methods on its prototype; no `extends`, no `super` (the expensive
           part), no static members, no getters. Decided 2026-11-22 after writing
           the examples:
+
           - **No `static`** for now: functions and constants in the module do
             the same (the module is the namespace); can be added later without
             breaking anything.
@@ -393,6 +394,40 @@ and differential tests run against node.
           - **No value semantics** for data classes (`==` by value, objects as
             keys of `Map` / `Set`, frozen fields): `==` would mean two things,
             and node would need its own `Map` / `Set`; keys stay strings.
+
+          Decided 2026-11-22 for `class` and `interface` (also step 3):
+
+          - **Only at the top level** of a module (not in blocks or functions).
+          - **Usable from the declaration on**, as in Javascript: methods and
+            functions may mention a later class (they run later), but
+            `new Num(1)` at the top level before `class Num` is an error (from
+            the validator where it is clear, otherwise at runtime: "Num is used
+            before its declaration (line …)"). Interfaces are declarations only:
+            for `implements` the order does not matter.
+          - **Modules:** `export class`, `export interface`;
+            `import EventListener from "./events"` works for `implements` and
+            `instanceof`.
+          - **An interface at runtime** is a frozen object without enumerable
+            properties: `typeof EventListener == "object"`,
+            `print(EventListener)` shows `interface EventListener`, it can be
+            assigned and passed, `new EventListener()` is a `TypeError` ("… is
+            an interface, it cannot be created with new"); the generated
+            Javascript makes it an object with `Symbol.hasInstance`, so node
+            behaves the same. A class is a function
+            (`typeof Num == "function"`).
+          - **A class without `new`** (`Num(3)`) is a `TypeError`: "Num is a
+            class: use new Num(…)".
+          - **Validator:** duplicate methods in a class, `return` with a value
+            in a constructor, missing interface methods or a wrong number of
+            parameters, a class and a function / variable with the same name.
+            Not checked: whether `this.x` exists (fields stay dynamic).
+          - **Printing an instance** without `toString` shows the class name and
+            the fields, as node does: `Num {value: 3}` (today objects with a
+            prototype print as `{value: 3}`; check what changes).
+          - Methods live on the prototype and are not enumerable (not in
+            `Object.keys`, not printed); `this` in a method taken off its object
+            (`const f = obj.m; f();`) is `undefined`, as in strict Javascript.
+
        3. **`interface` / `implements`** (spelling as in TypeScript), to say
           that two classes implement the same protocol:
 
