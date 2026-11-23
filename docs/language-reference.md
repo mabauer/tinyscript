@@ -447,6 +447,7 @@ for (const i : range(1, 11)) { ... }          // 1, 2, …, 10
 for (const i : range(10, 0, -2)) { ... }      // 10, 8, 6, 4, 2
 for (const i : range(array.length)) { ... }   // the indexes of an array
 for (const i : range(array.length).reverse()) { ... }   // … backwards
+for (const [i, element] : array.entries()) { ... }     // indexes and elements
 ```
 
 There is no counting loop with a condition: `for (let i = 0; i < n; i++)` (and
@@ -961,6 +962,7 @@ Javascript, writing any other key is a `TypeError`, including `nums.x = 1`,
 | `arr.findLast(fn)` / `arr.findLastIndex(fn)` | Like `find` / `findIndex`, searching from the end                                                                                                                  |
 | `arr.flat([depth])`                          | A new array with the elements of nested arrays, `depth` levels deep (default `1`, `Infinity` for all)                                                              |
 | `arr.flatMap(fn)`                            | Like `map`, but an array that `fn` returns adds its elements: `["a b", "c"].flatMap(s => s.split(" "))` is `["a", "b", "c"]`                                       |
+| `arr.entries()`                              | An array of `[index, element]` pairs, as for a `Map`: `for (const [i, x] : arr.entries())` (Javascript: an iterator)                                               |
 | `arr.toString()`                             | The same text as `print` and `String(arr)`: `[1, "a"]` (Javascript: `1,a`)                                                                                         |
 
 The callbacks must be functions; the results of the callbacks of `filter`,

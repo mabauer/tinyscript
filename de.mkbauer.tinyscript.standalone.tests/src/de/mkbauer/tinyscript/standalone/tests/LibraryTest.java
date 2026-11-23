@@ -76,6 +76,17 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testArrayEntries() {
+        // Like the entries of a Map: an array of [index, element] pairs (Javascript: an iterator)
+        String code = "const a = [\"x\", \"y\"];\n"
+                + "for (const [i, x] : a.entries()) { print(i, x); }\n"
+                + "print(a.entries(), [].entries(), a.entries().length, [...a.entries()][1], a.entries().map(([i, x]) => x + i));\n"
+                + "const e = a.entries(); a.push(\"z\"); print(e.length);";
+        assertEquals("0 x\n1 y\n[[0, \"x\"], [1, \"y\"]] [] 2 [1, \"y\"] [\"x0\", \"y1\"]\n2\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
     public void testFlatAndFlatMap() {
         String code = "const a = [1, [2, [3, [4]]], 5];\n"
                 + "print(a.flat(), a.flat(2), a.flat(1 / 0), a.flat(0), [].flat());\n"

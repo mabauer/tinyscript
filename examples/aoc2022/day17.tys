@@ -51,8 +51,8 @@ class Chamber {
             }
             y--;
         }
-        for (const i : range(rock.length)) {
-            this.rows[y + i] = (this.rows[y + i] ?? 0) | rock[i];
+        for (const [i, bits] : rock.entries()) {
+            this.rows[y + i] = (this.rows[y + i] ?? 0) | bits;
         }
     }
     height() {

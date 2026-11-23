@@ -52,6 +52,7 @@ public class ArrayConstructor extends BuiltinConstructor {
 		arrayPrototype.defineBuiltinMethod("findLastIndex", this::findLastIndex, 1);
 		arrayPrototype.defineBuiltinMethod("flat", this::flat, 0, 1);
 		arrayPrototype.defineBuiltinMethod("flatMap", this::flatMap, 1);
+		arrayPrototype.defineBuiltinMethod("entries", this::entries, 0);
 	}
 
 	// new Array(length) or new Array(item, ...); like Javascript, Array(...) without new works the same
@@ -378,6 +379,16 @@ public class ArrayConstructor extends BuiltinConstructor {
 			else
 				result.push(mapped);
 		}
+		return result;
+	}
+
+	// Array.prototype.entries(): like the entries of a Map, an array of [index, element] pairs
+	// (Javascript: an iterator), so for (const [i, x] : a.entries()) goes through both
+	private TSValue entries(TSObject self, TSValue[] args) {
+		List<TSValue> items = thisArray(self, "entries").getItems();
+		ArrayObject result = (ArrayObject) createObject();
+		for (int i = 0; i < items.size(); i++)
+			result.push(copy(List.of(TSValue.of(i), items.get(i))));
 		return result;
 	}
 
