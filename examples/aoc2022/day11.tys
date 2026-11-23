@@ -1,0 +1,53 @@
+// Advent of Code 2022, day 11: Monkey in the Middle
+// https://adventofcode.com/2022/day/11
+//
+// Usage: tinyscript day11.tys -- input.txt
+
+import inputText from "./aoc";
+import parse, integers, blocks from "std:string";
+import lcm from "std:math";
+
+// A monkey: its items (worry levels), how it changes them, and to whom it throws them
+class Monkey {
+    constructor(lines) {
+        this.items = integers(lines[1]);
+        const [operator, operand] = parse("Operation: new = old {} {}", lines[2].trim());
+        this.operation = operator == "*"
+            ? (operand == "old" ? old => old * old : old => old * Number(operand))
+            : old => old + Number(operand);
+        this.divisor = integers(lines[3])[0];
+        this.ifTrue = integers(lines[4])[0];
+        this.ifFalse = integers(lines[5])[0];
+        this.inspected = 0;
+    }
+    target(worry) {
+        return worry % this.divisor == 0 ? this.ifTrue : this.ifFalse;
+    }
+}
+
+// The level of monkey business after the given rounds: the product of the two largest numbers
+// of inspected items. relief changes the worry level after each inspection.
+function monkeyBusiness(rounds, relief) {
+    const monkeys = blocks(inputText()).map(lines => new Monkey(lines));
+    for (const round : range(rounds)) {
+        for (const monkey : monkeys) {
+            for (const item : monkey.items) {
+                const worry = relief(monkey.operation(item));
+                monkeys[monkey.target(worry)].items.push(worry);
+            }
+            monkey.inspected += monkey.items.length;
+            monkey.items = [];
+        }
+    }
+    const [first, second] = monkeys.map(monkey => monkey.inspected).sort((a, b) => b - a);
+    return first * second;
+}
+
+// Part 1: 20 rounds; after each inspection the worry level is divided by three
+print("Part 1: " + monkeyBusiness(20, worry => Math.floor(worry / 3)));
+
+// Part 2: 10000 rounds without relief. Only whether a worry level is divisible by the
+// divisors matters, so it can be kept modulo their least common multiple (otherwise it would
+// soon exceed what a number holds exactly).
+const modulus = blocks(inputText()).map(lines => integers(lines[3])[0]).reduce(lcm);
+print("Part 2: " + monkeyBusiness(10000, worry => worry % modulus));

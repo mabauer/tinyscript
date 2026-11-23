@@ -1,0 +1,62 @@
+// Advent of Code 2022, day 7: No Space Left On Device
+// https://adventofcode.com/2022/day/7
+//
+// Usage: tinyscript day07.tys -- input.txt
+
+import inputLines from "./aoc";
+import sum, min from "std:array";
+
+// A directory with its subdirectories and the sizes of its files, by name (a Map, so that a
+// file listed twice counts once)
+class Directory {
+    constructor(parent) {
+        this.parent = parent;
+        this.children = new Map();
+        this.files = new Map();
+    }
+    child(name) {
+        if (!this.children.has(name)) {
+            this.children.set(name, new Directory(this));
+        }
+        return this.children.get(name);
+    }
+    // The total size of the files in this directory and below
+    size() {
+        return sum([...this.files.values()]) + sum([...this.children.values()].map(dir => dir.size()));
+    }
+    // This directory and all below it
+    all() {
+        return [this, ...[...this.children.values()].flatMap(dir => dir.all())];
+    }
+}
+
+// Replays the terminal output: cd moves around, ls lists directories and files with sizes
+function readTree(lines) {
+    const root = new Directory(null);
+    let current = root;
+    for (const line : lines) {
+        // "$ cd a", "$ ls", "dir a" or "29116 f"; "$ ls" has only two words
+        const [first, second, ...rest] = line.split(" ");
+        if (first == "$" && second == "cd") {
+            const name = rest[0];
+            current = name == "/" ? root : name == ".." ? current.parent : current.child(name);
+        }
+        else if (first == "dir") {
+            current.child(second);
+        }
+        else if (first != "$") {
+            current.files.set(second, Number(first));
+        }
+    }
+    return root;
+}
+
+const root = readTree(inputLines());
+const sizes = root.all().map(dir => dir.size());
+
+// Part 1: the total size of all directories of at most 100000
+print("Part 1: " + sum(sizes.filter(size => size <= 100000)));
+
+// Part 2: the smallest directory that frees enough space for the update
+const needed = 30000000 - (70000000 - root.size());
+print("Part 2: " + min(sizes.filter(size => size >= needed)));

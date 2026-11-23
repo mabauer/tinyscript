@@ -1,0 +1,38 @@
+// Advent of Code 2022, day 20: Grove Positioning System
+// https://adventofcode.com/2022/day/20
+//
+// Usage: tinyscript day20.tys -- input.txt
+
+import inputLines from "./aoc";
+import sum from "std:array";
+
+const numbers = inputLines().map(Number);
+
+// The remainder of a divided by b, also for negative a: mod(-1, 5) is 4 (a % b is -1)
+function mod(a, b) {
+    return (a % b + b) % b;
+}
+
+// Mixes the numbers multiplied by the key as often as given and returns the sum of the
+// numbers 1000, 2000 and 3000 places after the 0. The mixed list holds the indices of the
+// numbers (they are not unique); each number moves as many places as its value, in a circle.
+function groveCoordinates(key, rounds) {
+    const values = numbers.map(n => n * key);
+    const mixed = range(values.length).toArray();
+    for (const round : range(rounds)) {
+        for (const i : range(values.length)) {
+            const position = mixed.indexOf(i);
+            mixed.splice(position, 1);
+            // Without the number itself, the circle has one place less
+            mixed.splice(mod(position + values[i], mixed.length), 0, i);
+        }
+    }
+    const zero = mixed.indexOf(values.indexOf(0));
+    return sum([1000, 2000, 3000].map(offset => values[mixed[(zero + offset) % mixed.length]]));
+}
+
+// Part 1: mixed once
+print("Part 1: " + groveCoordinates(1, 1));
+
+// Part 2: multiplied by the decryption key and mixed ten times
+print("Part 2: " + groveCoordinates(811589153, 10));
