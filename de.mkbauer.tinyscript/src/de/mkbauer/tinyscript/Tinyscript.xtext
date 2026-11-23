@@ -80,33 +80,40 @@ Increment:
 ;
 
 AssignmentExpression returns Expression:
-	(=>ArrowFunctionDefinition|ConditionalExpression) ({BinaryExpression.left=current} op=AssignmentOperator right=AssignmentExpression)?	
+	ArrowFunctionOrConditional ({BinaryExpression.left=current} op=AssignmentOperator right=AssignmentExpression)?	
 ;
 
 // cond ? a : b; unlike Javascript, b cannot be an assignment (c ? a : b = 1 is (c ? a : b) = 1, an error)
 ConditionalExpression returns Expression:
-	CoalesceExpression ({ConditionalExpression.cond=current} '?' then=AssignmentExpression ':' (=>else=ArrowFunctionDefinition | else=ConditionalExpression))?
+	CoalesceExpression ({ConditionalExpression.cond=current} '?' then=AssignmentExpression ':' else=ArrowFunctionOrConditional)?
 ;
 
 // Where an arrow function can stand, it is tried first (=>, a syntactic predicate): only the =>
 // tells (a = 1) => a (a parameter with a default) from the assignment in parentheses (a = 1).
-// The parser tries it only where the tokens so far allow both, i.e. after ( name =
-ArrowFunctionDefinition returns FunctionDefinition:
+// The predicate covers only the parameters and the =>, so that a mistake in the body is
+// reported where it is (not as an unexpected =>).
+ArrowFunctionOrConditional returns Expression:
+	=>(ArrowFunctionHead '=>') block=ArrowFunctionBlock
+	| ConditionalExpression
+;
+
+// The parameters of an arrow function: x, (a, b = 1), ([x, y]) or (...rest)
+ArrowFunctionHead returns FunctionDefinition:
 	{ArrowFunction}
 	( (params+=Identifier) 
 		| ( '(' (params += Parameter (',' params += Parameter)* (',' '...' rest=Identifier)?)? ')')
 		| ( '(' '...' rest=Identifier ')' )
-	)  '=>' block=ArrowFunctionBlock 
+	)
 ;
 
 // x => expr returns expr; x => { ... } is a function body (without return, the result is undefined).
 // Like Javascript, a { after => always starts a block: x => ({ ... }) returns an object.
 ArrowFunctionBlock returns Block:
-	=> Block | {ArrowExpressionBody} statements += ExpressionStatementWithoutSemicolon
+	=>({Block} '{') (statements += Statement)* '}' | {ArrowExpressionBody} statements += ExpressionStatementWithoutSemicolon
 ;
 
 ExpressionStatementWithoutSemicolon returns ExpressionStatement:
-	(=>expr=ArrowFunctionDefinition | expr=ConditionalExpression)
+	expr=ArrowFunctionOrConditional
 ;
 
 // a ?? b: b if a is null or undefined. Like Javascript, it cannot be mixed with && or ||

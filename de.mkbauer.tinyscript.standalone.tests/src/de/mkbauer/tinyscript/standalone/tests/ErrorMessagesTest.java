@@ -153,6 +153,18 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testMistakesInArrowFunctionBodiesAreReportedWhereTheyAre() {
+        // The parser tries an arrow function only up to its =>: a mistake in the body is not
+        // reported as an unexpected => (0.27.0 did)
+        assertEquals("3:5: Missing ';' at the end of line 2",
+                reportedErrors("const f = [1].map(x => {\n    const y = x\n    return y;\n});").get(0));
+        assertEquals("2:23: Missing ';' before '}'",
+                reportedErrors("const g = (x) => {\n    if (x) { return 1 }\n    return 2;\n};").get(0));
+        assertEquals("2:11: 'from' is a reserved word in tinyscript and cannot be used as a name (it belongs to import … from …; e.g. source, start or origin instead)",
+                reportedErrors("const h = [1].map(x => {\n    const from = x;\n    return from;\n});").get(0));
+    }
+
+    @Test
     public void testIncrementInsideAnExpression() {
         assertEquals("++ and -- are statements, not expressions: write i++; on its own",
                 firstError("let i = 0;\nconst j = i++;"));
