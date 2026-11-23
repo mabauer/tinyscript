@@ -175,7 +175,10 @@ of primitive datatypes in Javascript is a mine-field on its own.
   `NaN`. Convert explicitly with `Number(s)`, `parseInt(s)` or `String(x)`;
   unlike Javascript, `Number("")` is `NaN`, not `0`. `valueOf` is not supported.
   Kept on purpose: missing arguments of your own functions are `undefined`, and
-  reading a missing property gives `undefined`.
+  reading a missing property gives `undefined`. Too many arguments are an error
+  before the run where the called function is known (`f(1, 2, 3)` for a declared
+  `f(a, b)`, `new Point(…)`); callbacks and methods ignore extra arguments, as
+  in Javascript.
 - **Globals vs. modules:** what is a standard global in Javascript and needs no
   privileges stays global (`Math`, `Object`, `print`, …); modules are for
   additions Javascript does not have (`std:array`) and for privileged things

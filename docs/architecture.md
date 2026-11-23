@@ -563,8 +563,12 @@ Violations become error markers (red squiggles). The checks cover:
 - targets and operands: what can be assigned or incremented, `delete` operands,
   `??` not mixed with `&&` / `||`, operands of `&&` / `||` that can never be
   conditions, patterns, shorthand properties;
-- classes (only at top level, each method only once) and modules (`export` only
-  at top level, imported names unique and read-only).
+- calls: too many arguments where the callee is known before the run (a function
+  declaration, a `const` with a function, `new` of a class); function
+  declarations cannot be assigned, so that this stays sound;
+- classes (only at top level, each method only once, a field must not hide a
+  method) and modules (`export` only at top level, imported names unique and
+  read-only).
 
 These checks are compile-time only — the interpreter does not re-run them at
 runtime.

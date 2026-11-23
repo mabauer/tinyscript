@@ -96,9 +96,11 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testUserFunctionsIgnoreExtraArguments() {
-        // Unchanged: as in Javascript, extra arguments of user-defined functions are ignored
-        String code = "function f(x) { return x; } print(f(1, 2, 3));";
-        assertEquals("1\n", interpreterOutput(code));
+        // As in Javascript, a function value (a callback, a method) ignores extra arguments; a
+        // call of a declared function with too many is rejected before the run (ErrorMessagesTest)
+        String code = "function f(x) { return x; } const g = f; print(g(1, 2, 3), [1].map(x => x * 2));";
+        assertEquals("1 [2]\n", interpreterOutput(code));
+        assertSameOutput(code);
     }
 
     // =========================================================================
