@@ -4,28 +4,9 @@
 // Usage: tinyscript day13.tys -- input.txt
 
 import inputLines from "./aoc";
+import Point from "./point";
 import listIncludes from "./utils";
 import parse from "std:string";
-
-class Point {
-
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    equals(other) {
-        return (other && this.x == other.x && this.y == other.y);
-    }
-
-    // TypeScript: get hashCode(), which returns 31 * (31 * 7 + x) + y. That number is
-    // not unique ((x, y) and (x + 1, y - 31) have the same), and listIncludes compares
-    // only hash codes, so a different point counted as equal. Fixed: a string, which is
-    // unique. (tinyscript has no getters.)
-    hashCode() {
-        return this.x + "," + this.y;
-    }
-}
 
 // TypeScript: s.match(/(\d+)\s*,\s*(\d+)/)
 function parseDots(lines) {
