@@ -12,6 +12,8 @@ import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.CallSuffix;
 import de.mkbauer.tinyscript.ts.ClassDeclaration;
+import de.mkbauer.tinyscript.ts.InterfaceDeclaration;
+import de.mkbauer.tinyscript.ts.InterfaceMethod;
 import de.mkbauer.tinyscript.ts.ClassMethod;
 import de.mkbauer.tinyscript.ts.ComputedPropertyAccessSuffix;
 import de.mkbauer.tinyscript.ts.ContinueStatement;
@@ -64,7 +66,8 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	 */
 	@Check
 	public void checkVariableDoesNotCauseConflictInBlock(Identifier identifier) {
-		if (TinyscriptModelUtil.isPartOfVariableStatement(identifier) || identifier.eContainer() instanceof ClassDeclaration) {
+		if (TinyscriptModelUtil.isPartOfVariableStatement(identifier) || identifier.eContainer() instanceof ClassDeclaration
+				|| identifier.eContainer() instanceof InterfaceDeclaration) {
 			Block block = TinyscriptModelUtil.containingBlock(identifier);
 			if (TinyscriptModelUtil.blockContainsConflictingIdentifiersBefore(identifier, block))
 				error("Duplicate identifier", TsPackage.Literals.IDENTIFIER__NAME);
@@ -154,6 +157,65 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 				error(isConstructor(method) ? "A class has only one constructor"
 						: "Duplicate method '" + name + "' in class " + declaration.getId().getName(),
 						method, TsPackage.Literals.CLASS_METHOD__NAME);
+		}
+	}
+
+	/**
+	 * class Circle implements Shape: a name that is an interface, and for one of the same file,
+	 * the class has all its methods (one imported from another file is checked when the class is
+	 * declared, see TinyscriptEngine.checkImplements).
+	 */
+	@Check
+	public void checkImplements(ClassDeclaration declaration) {
+		if (declaration.getId() == null)
+			return;
+		String className = declaration.getId().getName();
+		Set<String> methods = new HashSet<String>();
+		for (ClassMethod method : declaration.getMethods())
+			methods.add(TinyscriptModelUtil.propertyKey(method.getName()));
+		Set<String> seen = new HashSet<String>();
+		for (Reference reference : declaration.getInterfaces()) {
+			Identifier id = reference.getId();
+			if (id == null || id.eIsProxy()) {
+				if (reference.isThis())
+					error("A class implements interfaces, not this", reference, null);
+				continue;
+			}
+			if (!seen.add(id.getName()))
+				error(className + " implements " + id.getName() + " twice", reference, null);
+			EObject container = id.eContainer();
+			if (container instanceof InterfaceDeclaration anInterface) {
+				List<String> missing = anInterface.getMethods().stream()
+						.map(method -> TinyscriptModelUtil.propertyKey(method.getName()))
+						.filter(name -> !methods.contains(name))
+						.toList();
+				if (!missing.isEmpty())
+					error(TinyscriptModelUtil.missingMethods(className, id.getName(), missing), reference, null);
+			}
+			else if (container instanceof ClassDeclaration || isFunctionName(id)
+					|| TinyscriptModelUtil.isPartOfVariableStatement(id) || container instanceof FunctionDefinition)
+				error(className + " implements " + id.getName() + ", but " + id.getName() + " is "
+						+ (container instanceof ClassDeclaration ? "a class" : isFunctionName(id) ? "a function" : "a variable")
+						+ ", not an interface", reference, null);
+		}
+	}
+
+	/**
+	 * An interface only at the top level of a file, each method only once, no constructor.
+	 */
+	@Check
+	public void checkInterfaceDeclaration(InterfaceDeclaration declaration) {
+		if (!isTopLevel(declaration))
+			error("An interface can only be declared at the top level of a file, not in a block or function",
+					TsPackage.Literals.INTERFACE_DECLARATION__ID);
+		Set<String> names = new HashSet<String>();
+		for (InterfaceMethod method : declaration.getMethods()) {
+			String name = TinyscriptModelUtil.propertyKey(method.getName());
+			if ("constructor".equals(name))
+				error("An interface lists methods, not the constructor", method, TsPackage.Literals.INTERFACE_METHOD__NAME);
+			else if (name != null && !names.add(name))
+				error("Duplicate method '" + name + "' in interface " + declaration.getId().getName(),
+						method, TsPackage.Literals.INTERFACE_METHOD__NAME);
 		}
 	}
 
@@ -275,10 +337,10 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 		return kind.equals("function") ? message + " (to replace a function, declare it with let " + name(reference) + " = …)" : message;
 	}
 
-	// "class", "function" or "constant", for the message
+	// "class", "interface", "function" or "constant", for the message
 	private static String constantKind(Expression reference) {
 		EObject declaration = ((Reference) reference).getId().eContainer();
-		return declaration instanceof ClassDeclaration ? "class" : isFunctionName(((Reference) reference).getId()) ? "function" : "constant";
+		return declaration instanceof ClassDeclaration ? "class" : declaration instanceof InterfaceDeclaration ? "interface" : isFunctionName(((Reference) reference).getId()) ? "function" : "constant";
 	}
 
 	// The name of a function declaration (not one of its parameters)
@@ -295,7 +357,8 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 		if (!(expression instanceof Reference reference) || reference.getId() == null)
 			return false;
 		// The name of a class cannot be assigned either
-		if (reference.getId().eContainer() instanceof ClassDeclaration || isFunctionName(reference.getId()))
+		if (reference.getId().eContainer() instanceof ClassDeclaration || reference.getId().eContainer() instanceof InterfaceDeclaration
+				|| isFunctionName(reference.getId()))
 			return true;
 		for (EObject container = reference.getId().eContainer(); container != null; container = container.eContainer()) {
 			if (container instanceof VariableStatement statement)

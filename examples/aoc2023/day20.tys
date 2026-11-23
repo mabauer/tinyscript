@@ -8,14 +8,18 @@ import lcm from "std:math";
 import parse from "std:string";
 
 // The modules: each kind is a class with the same methods, so the network treats them alike
-// (no inheritance needed):
-//   outputs                the names of the modules it sends its pulses to
-//   connect(input)         another module sends pulses to this one
-//   receive(input, high)   handles a pulse (high: true, low: false) from the module input;
-//                          returns the pulse it sends to all its outputs, or null for none
+// (no inheritance needed). Each also has a field outputs, the names of the modules it sends its
+// pulses to.
+interface Module {
+    // Another module sends pulses to this one
+    connect(input);
+    // Handles a pulse (high: true, low: false) from the module input; returns the pulse it sends
+    // to all its outputs, or null for none
+    receive(input, high);
+}
 
 // The broadcaster sends each pulse on as it is
-class Broadcaster {
+class Broadcaster implements Module {
     constructor(outputs) { this.outputs = outputs; }
     connect(input) { }
     receive(input, high) { return high; }
@@ -23,7 +27,7 @@ class Broadcaster {
 
 // A flip-flop ignores high pulses; a low pulse switches it on or off, and it sends high if it is
 // now on, low if it is now off
-class FlipFlop {
+class FlipFlop implements Module {
     constructor(outputs) {
         this.outputs = outputs;
         this.on = false;
@@ -40,7 +44,7 @@ class FlipFlop {
 
 // A conjunction remembers the last pulse from each of its inputs (low at first); it sends low if
 // they were all high, otherwise high
-class Conjunction {
+class Conjunction implements Module {
     constructor(outputs) {
         this.outputs = outputs;
         this.last = new Map();

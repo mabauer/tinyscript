@@ -3,16 +3,16 @@
 // Written with class; expressions_today.tys is the same program with
 // constructor functions and prototypes, as before class. Both print the same.
 //
-// Every kind of expression (Num, Var, Add, Sub, Mul, Pow) has the same methods:
-//
-//   evaluate(env)   its value, with the values of the variables in env
-//   derive(name)    its derivative by the variable name
-//   simplify()      the same expression, simplified
-//   precedence()    how tightly it binds, for the parentheses in toString
-//   toString()      the expression as text
-//
-// tinyscript has no interfaces that would check this before the script runs;
-// a missing method is reported when it is called.
+// Every kind of expression (Num, Var, Add, Sub, Mul, Pow) has the same methods,
+// and says so with implements Expression: a class that lacks one of them is an
+// error before the script runs.
+interface Expression {
+    evaluate(env);    // its value, with the values of the variables in env
+    derive(name);     // its derivative by the variable name
+    simplify();       // the same expression, simplified
+    precedence();     // how tightly it binds, for the parentheses in toString
+    toString();       // the expression as text
+}
 
 // Constructors that simplify while they build: constants are folded, neutral
 // elements dropped, a constant factor comes first.
@@ -61,7 +61,7 @@ function binary(left, op, right, precedence) {
 }
 
 // A number
-class Num {
+class Num implements Expression {
     constructor(value) { this.value = value; }
     evaluate(env) { return this.value; }
     derive(name) { return new Num(0); }
@@ -71,7 +71,7 @@ class Num {
 }
 
 // A variable, its value comes from env
-class Var {
+class Var implements Expression {
     constructor(name) { this.name = name; }
     evaluate(env) {
         const value = env[this.name];
@@ -87,7 +87,7 @@ class Var {
 }
 
 // left + right
-class Add {
+class Add implements Expression {
     constructor(left, right) {
         this.left = left;
         this.right = right;
@@ -100,7 +100,7 @@ class Add {
 }
 
 // left - right
-class Sub {
+class Sub implements Expression {
     constructor(left, right) {
         this.left = left;
         this.right = right;
@@ -113,7 +113,7 @@ class Sub {
 }
 
 // left * right
-class Mul {
+class Mul implements Expression {
     constructor(left, right) {
         this.left = left;
         this.right = right;
@@ -129,7 +129,7 @@ class Mul {
 }
 
 // base ^ exponent, the exponent is a number
-class Pow {
+class Pow implements Expression {
     constructor(base, exponent) {
         this.base = base;
         this.exponent = exponent;

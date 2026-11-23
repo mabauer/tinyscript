@@ -27,6 +27,7 @@ Block:
 Statement:
 	(=> FunctionDeclaration) | 
 	ClassDeclaration |
+	InterfaceDeclaration |
 	(=> BlockStatement) |
 	VariableStatement | 
 	ExpressionStatement | 
@@ -61,7 +62,20 @@ FunctionDeclaration returns FunctionDefinition:
 // class Num { constructor(value) { ... } evaluate(env) { ... } }: a constructor function with
 // methods on its prototype, without inheritance (the validator allows it only at the top level)
 ClassDeclaration:
-	=>((exported ?= 'export')? 'class') id=Identifier '{' (methods += ClassMethod)* '}'
+	=>((exported ?= 'export')? 'class') id=Identifier
+	('implements' interfaces += Reference (',' interfaces += Reference)*)?
+	'{' (methods += ClassMethod)* '}'
+;
+
+// interface Shape { area(); scale(factor); }: the methods that a class with implements Shape
+// must have. The parameters are only for the reader; the names are checked when the class is
+// declared (the validator checks a class and an interface of the same file before the run)
+InterfaceDeclaration:
+	=>((exported ?= 'export')? 'interface') id=Identifier '{' (methods += InterfaceMethod)* '}'
+;
+
+InterfaceMethod:
+	name=PropertyName '(' (params += ID (',' params += ID)* (',' '...' rest=ID)? | '...' rest=ID)? ')' ';'
 ;
 
 // A method of a class; the one named constructor initializes a new object
@@ -456,13 +470,13 @@ enum IncrementOperator:
 // can say so (TinyscriptSyntaxErrorMessageProvider); like in Javascript, they are fine as
 // property names (o.switch, { case: 1 }).
 ReservedWord:
-	'finally' | 'switch' | 'case' | 'var' | 'interface' | 'implements'
+	'finally' | 'switch' | 'case' | 'var'
 ;
 
 // All keywords of tinyscript: they cannot be names of variables, but like in Javascript, they
 // are fine as property names (range.from, { if: 1 })
 Keyword:
-	ReservedWord | 'let' | 'const' | 'function' | 'class' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
+	ReservedWord | 'let' | 'const' | 'function' | 'class' | 'interface' | 'implements' | 'return' | 'if' | 'else' | 'for' | 'while' | 'break'
 	| 'continue' | 'throw' | 'try' | 'catch' | 'new' | 'this' | 'null' | 'undefined' | 'typeof' | 'delete' | 'instanceof' | 'assert' | 'import' | 'export' | 'from' | 'as'
 ;
 

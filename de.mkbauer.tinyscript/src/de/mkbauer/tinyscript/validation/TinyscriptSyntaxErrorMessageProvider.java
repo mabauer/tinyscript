@@ -23,16 +23,11 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 	/** The start of the message for a script that ends too early (the REPL then reads on). */
 	public static final String UNEXPECTED_END = "Unexpected end of input";
 
-	private static final String INTERFACE = "interface and implements are not supported in tinyscript: "
-			+ "describe the methods in a comment; a missing method is reported when it is called";
-
 	private static final Map<String, String> UNSUPPORTED = Map.of(
 			"finally", "finally is not supported in tinyscript: there is only try { ... } catch (e) { ... }",
 			"switch", "switch is not supported in tinyscript: use if / else if",
 			"case", "switch is not supported in tinyscript: use if / else if",
-			"var", "tinyscript has no var: use let, or const for a variable that is never assigned again",
-			"interface", INTERFACE,
-			"implements", INTERFACE);
+			"var", "tinyscript has no var: use let, or const for a variable that is never assigned again");
 
 	// Where an expression starts, a "/" can only be meant as a regular expression
 	private static final Set<String> BEFORE_EXPRESSION = Set.of("=", "(", ",", "[", ":", "return", "?", "&&", "||", "!");

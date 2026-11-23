@@ -90,3 +90,10 @@ var old = 1;
 delete o.key; m.delete(k);
 // <------ keyword.operator.expression.tinyscript
 //              ^^^^^^ variable.other.property.tinyscript
+
+interface Shape { area(); }
+// <--------- storage.type.class.tinyscript
+//        ^^^^^ entity.name.type.class.tinyscript
+
+class Square implements Shape { area() { return 1; } }
+//           ^^^^^^^^^^ storage.type.tinyscript

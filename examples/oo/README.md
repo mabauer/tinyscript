@@ -6,7 +6,7 @@ before `class`, with constructor functions and methods on their `prototype`
 
 | Program                            | Before `class`                                 | Shows                                                                                                                                 |
 | ---------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| [expressions.tys](expressions.tys) | [expressions_today.tys](expressions_today.tys) | objects of different classes used alike (they have the same methods), code that several classes share in a function                   |
+| [expressions.tys](expressions.tys) | [expressions_today.tys](expressions_today.tys) | objects of different classes used alike (they implement the same interface), code that several classes share in a function            |
 | [orders.tys](orders.tys)           | [orders_today.tys](orders_today.tys)           | classes for data and for listeners, an event bus that tests for the method `onEvent`, so that an object literal can be a listener too |
 
 The expressions program represents expressions such as `3 * x^2 + 2 * x - 5` as
