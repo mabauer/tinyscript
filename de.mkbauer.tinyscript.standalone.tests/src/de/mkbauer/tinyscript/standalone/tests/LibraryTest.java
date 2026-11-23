@@ -118,10 +118,12 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
     public void testNumbers() {
         String code = "print(parseFloat(\"3.5kg\"), parseFloat(\"  -1e3 \"), parseFloat(\".5\"), parseFloat(\"1e\"), parseFloat(\"Infinity!\"), parseFloat(\"x1\"), parseFloat(\"\"));\n"
                 + "print(Number.isFinite(1), Number.isFinite(1 / 0), Number.isFinite(0 / 0), Number.isFinite(\"1\"));\n"
-                + "print(Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER + 2);";
+                + "print(Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER + 2);\n"
+                + "print(Number.MAX_VALUE, Number.MIN_VALUE, Number.EPSILON, Number.MAX_VALUE * 2, 1 + Number.EPSILON > 1, Number.MIN_VALUE / 2);";
         assertEquals("3.5 -1000 0.5 1 Infinity NaN NaN\n"
                 + "true false false false\n"
-                + "9007199254740991 -9007199254740991 9007199254740992\n", interpreterOutput(code));
+                + "9007199254740991 -9007199254740991 9007199254740992\n"
+                + "1.7976931348623157e+308 5e-324 2.220446049250313e-16 Infinity true 0\n", interpreterOutput(code));
         assertSameOutput(code);
         assertInterpreterThrows(TinyscriptTypeError.class, "parseFloat(3.5);");
     }

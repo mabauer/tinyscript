@@ -350,16 +350,16 @@ and differential tests run against node.
        to `splice`).
     5. **Numbers.** Done 2026-11-21: `Math.pow`, `trunc`, `sign`, `exp`, `log`,
        `log2`, `log10`, `cbrt`, `hypot`, the trigonometric functions, `Math.E`;
-       `parseFloat`, `Number.isFinite`, `MAX_SAFE_INTEGER` / `MIN_SAFE_INTEGER`;
-       `Math.round` fixed (large numbers, `NaN`). `log2` and `cbrt` are ports of
-       FreeBSD's msun, as V8 uses them (bit-exact with node); the others use
-       `StrictMath` (in rare cases one unit in the last digit off). Deferred
-       (2026-11-21): the operator `**` (rather not: `Math.pow` and `1 << n` do
-       it, and it brings its own precedence rules) and spread in calls
-       (`Math.max(...values)`; `f.apply(null, values)` does it). Formatting is
-       done: `toFixed` and `toString(radix)` (2026-11-21; not now:
-       `toPrecision`, `toExponential`; not at all: `toLocaleString`,
-       `printf`-like format strings).
+       `parseFloat`, `Number.isFinite`, `MAX_SAFE_INTEGER` / `MIN_SAFE_INTEGER`
+       (2026-11-23 also `MAX_VALUE`, `MIN_VALUE`, `EPSILON`); `Math.round` fixed
+       (large numbers, `NaN`). `log2` and `cbrt` are ports of FreeBSD's msun, as
+       V8 uses them (bit-exact with node); the others use `StrictMath` (in rare
+       cases one unit in the last digit off). Deferred (2026-11-21): the
+       operator `**` (rather not: `Math.pow` and `1 << n` do it, and it brings
+       its own precedence rules) and spread in calls (`Math.max(...values)`;
+       `f.apply(null, values)` does it). Formatting is done: `toFixed` and
+       `toString(radix)` (2026-11-21; not now: `toPrecision`, `toExponential`;
+       not at all: `toLocaleString`, `printf`-like format strings).
     6. **Objects with methods are verbose.** The mechanics are complete
        (`Object.create`, `prototype`, `instanceof`); what is missing is a
        comfortable spelling. Tendency (2026-11-20): **no inheritance for now**,
@@ -762,9 +762,10 @@ and differential tests run against node.
     `hashCode()` as a method), field declarations (4, in the constructor),
     regular expressions (5, `parse` / `words`), rest elements in patterns (4,
     `slice(1)`), spread in calls (4, `f.apply(null, array)`), `Number.MAX_VALUE`
-    (`Infinity`), `in` (`g[key] == undefined`), `extends` (a second class with
-    the same methods), `enum` (an object), template strings, `RangeError`,
-    `from` as a name. The messages said what to write instead each time.
+    (`Infinity`; added 2026-11-23), `in` (`g[key] == undefined`), `extends` (a
+    second class with the same methods), `enum` (an object), template strings,
+    `RangeError`, `from` as a name. The messages said what to write instead each
+    time.
   - **Javascript forgives, tinyscript does not:** comparisons with `undefined`
     or `NaN` (an off-by-one loop bound and the empty last line in day 1), a
     string as a condition (`s && s.length > 0`), destructuring an array that is
