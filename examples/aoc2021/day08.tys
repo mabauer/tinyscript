@@ -16,7 +16,7 @@ const seven_segments = [
     "abdefg",  // 6
     "acf",     // 7
     "abcdefg", // 8
-    "abcdfg"   // 9 (TypeScript allows a comma after the last element, tinyscript not)
+    "abcdfg",  // 9
 ];
 
 // TypeScript: split(/\s+/) (and a console.log of each line, here left out)

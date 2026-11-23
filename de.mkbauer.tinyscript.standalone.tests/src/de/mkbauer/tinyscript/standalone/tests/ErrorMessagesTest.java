@@ -287,6 +287,44 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     // =========================================================================
+    // Commas: after the last element only in literals, no empty elements
+    // =========================================================================
+
+    @Test
+    public void testACommaAfterTheLastElementOfALiteral() {
+        // As in Javascript, multi-line literals can have a comma after each element
+        String code = "const digits = [\n    \"abc\",\n    \"cf\",\n];\n"
+                + "const point = { x: 1, y: 2, };\n"
+                + "print(digits.length, digits, point, [], {});";
+        assertEquals("2 [\"abc\", \"cf\"] {x: 1, y: 2} [] {}\n", interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testACommaAfterTheLastElementOnlyInLiterals() {
+        String message = "A comma after the last element is only allowed in array and object literals";
+        assertEquals(message, firstError("print(Math.max(1, 2,));"));
+        assertEquals(message, firstError("function f(a, b,) { return a; }"));
+        assertEquals(message, firstError("const f = (a, b,) => a;"));
+        assertEquals(message, firstError("const [a, b,] = [1, 2];"));
+        assertEquals(message, firstError("const { a, } = { a: 1 };"));
+    }
+
+    @Test
+    public void testNoEmptyElements() {
+        // Javascript's empty elements (holes): [1, , 2] has length 3, [, 1] length 2
+        assertEquals("Arrays have no empty elements in tinyscript: write undefined, e.g. [1, undefined, 2]",
+                firstError("print([1, , 2]);"));
+        assertEquals("Arrays have no empty elements in tinyscript: write undefined, e.g. [1, undefined, 2]",
+                firstError("print([, 1]);"));
+        assertEquals("A pattern cannot skip elements: give each element a name", firstError("const [, b] = [1, 2];"));
+        // These were accepted silently: the comma before the first element was ignored
+        assertEquals("Unexpected ',': an element is missing before it", firstError("print(Math.max(, 3, 4));"));
+        assertEquals("Unexpected ',': an element is missing before it", firstError("function f(, a) { return a; }"));
+        assertEquals("Unexpected ',': an element is missing before it", firstError("print({ , a: 1 });"));
+    }
+
+    // =========================================================================
     // Runtime errors name the expression
     // =========================================================================
 
@@ -322,6 +360,11 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
                 "const x = 1;\nprint(x + true);");
         assertRuntimeError("'+' can only add an array to another array or to a string, but 1 is a number", "print([1] + 1);");
         assertRuntimeError("'<' compares two numbers or two strings, but 1 is a number and \"2\" is a string", "print(1 < \"2\");");
+        // NaN is a number for typeof, but cannot be compared (found with parseInt of an empty line)
+        assertRuntimeError("'<' cannot compare NaN, but ints[1] is NaN (e.g. from parseInt or Number of a text that is no number)",
+                "const ints = [1, parseInt(\"\")];\nprint(ints[0] < ints[1]);");
+        assertRuntimeError("'<' compares two numbers or two strings, but ints[0] is a number and ints[1] is undefined",
+                "const ints = [1];\nprint(ints[0] < ints[1]);");
         assertRuntimeError("'-' needs a number, but s is a string", "const s = \"a\";\nprint(-s);");
         assertRuntimeError("'+=' adds two numbers, two arrays, or a string and a value, but total is undefined and 1 is a number", "let total;\ntotal += 1;");
     }

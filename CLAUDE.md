@@ -225,6 +225,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - One text form: `x.toString()`, `String(x)`, `"" + x` and `print` agree
   (`{x: 1}`, `[1, 2]`, `Point {x: 1}`); the generator replaces
   `Object.prototype.toString` / `Array.prototype.toString` so node does too
+- A comma after the last element only in array and object literals (`[1, 2,]`),
+  not in calls, parameter lists or patterns; arrays have no empty elements
+  (`[1, , 2]` is a syntax error)
 - `++` / `--` only as statements (`i++;`); compound assignments `+=` … `%=` and
   `cond ? a : b` as in JavaScript
 - Arrow functions use `=>` syntax

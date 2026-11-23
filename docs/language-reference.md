@@ -758,7 +758,9 @@ const person = {
 ```
 
 Property keys can be identifiers or string literals. Values can be any
-expression. As in Javascript, there are two short forms:
+expression. As in Javascript, a comma after the last property is allowed
+(`{ a: 1, }`), which helps in literals over several lines. There are two short
+forms:
 
 - `greet() { … }` is short for `greet: function() { … }`, with the same
   parameters (also `...rest` and patterns) and the same `this`. In a stack trace
@@ -838,7 +840,15 @@ Javascript:
 const empty = [];
 const nums = [1, 2, 3];
 const mixed = ["hello", 42, true, null];
+const lines = [
+    "first",
+    "second",     // a comma after the last element is allowed
+];
 ```
+
+Unlike Javascript, an array has no empty elements: `[1, , 2]` is a syntax error
+(write `undefined`). A comma after the last element is only allowed in array and
+object literals, not in calls, parameter lists or patterns.
 
 ### Element access and `length`
 
@@ -1615,6 +1625,8 @@ writing code and for knowing its intentional limitations.
 - **Destructuring** beyond flat patterns in declarations, `for` and parameters —
   no nesting, defaults, renaming, `...rest`, or patterns in assignments
 - **Spread operator** — no `...array` in call sites
+- **Empty array elements** (`[1, , 2]`) and a comma after the last argument or
+  parameter (`f(a, b,)`); in array and object literals it is allowed
 - **`switch` statement**
 - **Getter / setter properties** (`get`/`set` in object literals and classes)
 - **Inheritance between classes** (`extends`, `super`), **`static`** members and

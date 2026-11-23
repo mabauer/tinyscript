@@ -741,16 +741,22 @@ and differential tests run against node.
   Javascript habits fares). All give the originals' answers on the real inputs,
   except day 13, whose bug (points compared by a hash code that is not unique)
   is fixed, like three other bugs of the originals. Findings:
-  - **Bug: misleading message for `NaN` in a comparison.** `1 < NaN` is a
-    `TypeError` (consistent: `isNumber()` excludes `NaN`), but the message says
-    "'<' compares two numbers or two strings, but ints[pos - 1] is a number and
-    ints[pos] is a number"; it should say that one of them is `NaN`. Found with
-    `parseInt("")` of an empty last line.
-  - **Trailing commas** (`[1, 2,]`, `{ a: 1, }`, `f(1, 2,)`) are syntax errors;
-    Javascript allows them, and multi-line literals often have one. The message
-    for an object is misleading ("Unexpected '}', expected an expression").
-    Decide: allow them (grammar and generator), or a hint as for other
-    Javascript habits.
+  - ~~**Bug: misleading message for `NaN` in a comparison.**~~ (fixed
+    2026-11-23: "'<' cannot compare NaN, but ints[1] is NaN (e.g. from parseInt
+    or Number of a text that is no number)"; other messages say "NaN" instead of
+    "a number" too) `1 < NaN` is a `TypeError` (consistent: `isNumber()`
+    excludes `NaN`), but the message says "'<' compares two numbers or two
+    strings, but ints[pos - 1] is a number and ints[pos] is a number"; it should
+    say that one of them is `NaN`. Found with `parseInt("")` of an empty last
+    line.
+  - ~~**Trailing commas**~~ (done 2026-11-23, decided: allowed in array and
+    object literals only, as in Javascript but not in calls, parameter lists and
+    patterns, which get a hint; no empty elements `[1, , 2]`; on the way fixed:
+    a comma before the first element, `[, 1]` or `f(, 1)`, was silently ignored)
+    (`[1, 2,]`, `{ a: 1, }`, `f(1, 2,)`) are syntax errors; Javascript allows
+    them, and multi-line literals often have one. The message for an object is
+    misleading ("Unexpected '}', expected an expression"). Decide: allow them
+    (grammar and generator), or a hint as for other Javascript habits.
   - **Missing, with workarounds** (by frequency in the port): default parameters
     (15 parameters in 10 functions, `x = x ?? default`), getters (4 classes,
     `hashCode()` as a method), field declarations (4, in the constructor),

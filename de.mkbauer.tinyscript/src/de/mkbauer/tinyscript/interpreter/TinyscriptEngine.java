@@ -877,6 +877,11 @@ public class TinyscriptEngine {
     		comparison = Double.compare(left.asDouble(), right.asDouble());
     	else if (left.isString() && right.isString())
     		comparison = left.asString().compareTo(right.asString());
+    	else if (isNaN(left) || isNaN(right))
+    		// Javascript gives false; NaN usually comes from a mistake, e.g. parseInt("")
+    		throw new TinyscriptTypeError("'" + op.getLiteral() + "' cannot compare NaN, but "
+    				+ (isNaN(left) ? operand(expr.getLeft(), left) : operand(expr.getRight(), right))
+    				+ " (e.g. from parseInt or Number of a text that is no number)", expr);
     	else
     		throw new TinyscriptTypeError("'" + op.getLiteral() + "' compares two numbers or two strings, but "
     				+ operand(expr.getLeft(), left) + " and " + operand(expr.getRight(), right), expr);
@@ -1136,11 +1141,16 @@ public class TinyscriptEngine {
     	return key instanceof TSString ? "['" + key.asString() + "']" : "[" + key.asString() + "]";
     }
 
-    // "undefined", "null", "a number", "an array", ... for error messages
+    private static boolean isNaN(TSValue value) {
+    	return value instanceof TSNumber number && Double.isNaN(number.value());
+    }
+
+    // "undefined", "null", "NaN", "a number", "an array", ... for error messages
     private static String describe(TSValue value) {
     	return switch (value) {
     		case TSUndefined u -> "undefined";
     		case TSNull n -> "null";
+    		case TSNumber number when Double.isNaN(number.value()) -> "NaN";
     		case ArrayObject a -> "an array";
     		case Function f -> "a function";
     		default -> article(value);
