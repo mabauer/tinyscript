@@ -1,0 +1,56 @@
+// Advent of Code 2022, day 18: Boiling Boulders
+// https://adventofcode.com/2022/day/18
+//
+// Usage: tinyscript day18.tys -- input.txt
+
+import inputLines from "./aoc";
+import integers from "std:string";
+import max from "std:array";
+
+const cubes = inputLines().map(integers);
+
+// The space around the droplet: one unit more on each side than its cubes need
+const size = max(cubes.flat()) + 3;
+function key(x, y, z) {
+    return ((x + 1) * size + y + 1) * size + z + 1;
+}
+const droplet = new Set(cubes.map(([x, y, z]) => key(x, y, z)));
+
+const SIDES = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+
+// The neighbors of a cube in the space around the droplet
+function neighbors([x, y, z]) {
+    return SIDES.map(([dx, dy, dz]) => [x + dx, y + dy, z + dz])
+        .filter(cube => cube.every(c => c >= -1 && c <= size - 2));
+}
+
+// The number of sides of the droplet's cubes that touch a cube for which free(cube) is true
+function surface(free) {
+    let count = 0;
+    for (const cube : cubes) {
+        count += neighbors(cube).filter(free).length;
+    }
+    return count;
+}
+
+// Part 1: all sides that do not touch another cube of the droplet
+print("Part 1: " + surface(([x, y, z]) => !droplet.has(key(x, y, z))));
+
+// Part 2: only the sides that steam reaches from outside: fill the space around the droplet,
+// starting at a corner (breadth first search)
+const outside = new Set([key(-1, -1, -1)]);
+let queue = [[-1, -1, -1]];
+while (queue.length > 0) {
+    const next = [];
+    for (const cube : queue) {
+        for (const neighbor : neighbors(cube)) {
+            const k = key(...neighbor);
+            if (!droplet.has(k) && !outside.has(k)) {
+                outside.add(k);
+                next.push(neighbor);
+            }
+        }
+    }
+    queue = next;
+}
+print("Part 2: " + surface(([x, y, z]) => outside.has(key(x, y, z))));

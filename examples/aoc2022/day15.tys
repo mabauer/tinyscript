@@ -1,0 +1,80 @@
+// Advent of Code 2022, day 15: Beacon Exclusion Zone
+// https://adventofcode.com/2022/day/15
+//
+// Usage: tinyscript day15.tys -- input.txt [row] [max]
+// (by default row 2000000 and coordinates 0 to 4000000; the example uses 10 and 20)
+
+import inputLines from "./aoc";
+import integers from "std:string";
+
+const row = System.args.length > 1 ? Number(System.args[1]) : 2000000;
+const max = System.args.length > 2 ? Number(System.args[2]) : 4000000;
+
+// A sensor sees the beacon closest to it, so there is no other beacon within this distance
+// (the Manhattan distance)
+class Sensor {
+    constructor(line) {
+        const [x, y, beaconX, beaconY] = integers(line);
+        this.x = x;
+        this.y = y;
+        this.beacon = { x: beaconX, y: beaconY };
+        this.radius = Math.abs(x - beaconX) + Math.abs(y - beaconY);
+    }
+    covers(x, y) {
+        return Math.abs(this.x - x) + Math.abs(this.y - y) <= this.radius;
+    }
+}
+
+const sensors = inputLines().map(line => new Sensor(line));
+
+// Part 1: the positions in the row where no beacon can be: the sensors' intervals in the row,
+// merged, without the beacons that are there
+function positionsWithoutBeacon(y) {
+    const intervals = [];
+    for (const sensor : sensors) {
+        const width = sensor.radius - Math.abs(sensor.y - y);
+        if (width >= 0) {
+            intervals.push([sensor.x - width, sensor.x + width]);
+        }
+    }
+    intervals.sort((a, b) => a[0] - b[0]);
+    let count = 0;
+    let end = -Infinity;   // the last position counted so far
+    for (const [low, high] : intervals) {
+        if (high > end) {
+            count += high - Math.max(low, end + 1) + 1;
+            end = high;
+        }
+    }
+    const beacons = new Set(sensors.filter(sensor => sensor.beacon.y == y).map(sensor => sensor.beacon.x));
+    return count - beacons.size;
+}
+print("Part 1: " + positionsWithoutBeacon(row));
+
+// Part 2: the only position in the area that no sensor covers. Its neighbors are covered, so
+// it lies just outside the range of sensors, on lines x + y = c and x - y = c along the edges
+// of their ranges: try where these lines cross.
+function distressBeacon() {
+    const sums = new Set();          // lines x + y = c
+    const differences = new Set();   // lines x - y = c
+    for (const sensor : sensors) {
+        const r = sensor.radius + 1;
+        sums.add(sensor.x + sensor.y - r);
+        sums.add(sensor.x + sensor.y + r);
+        differences.add(sensor.x - sensor.y - r);
+        differences.add(sensor.x - sensor.y + r);
+    }
+    for (const sum : sums) {
+        for (const difference : differences) {
+            const x = (sum + difference) / 2;
+            const y = (sum - difference) / 2;
+            if (Number.isInteger(x) && x >= 0 && x <= max && y >= 0 && y <= max
+                    && !sensors.some(sensor => sensor.covers(x, y))) {
+                return { x, y };
+            }
+        }
+    }
+    throw new Error("Every position is covered");
+}
+const beacon = distressBeacon();
+print("Part 2: " + (beacon.x * 4000000 + beacon.y));

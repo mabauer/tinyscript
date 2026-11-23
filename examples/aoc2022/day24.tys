@@ -1,0 +1,70 @@
+// Advent of Code 2022, day 24: Blizzard Basin
+// https://adventofcode.com/2022/day/24
+//
+// Usage: tinyscript day24.tys -- input.txt
+
+import inputLines from "./aoc";
+
+// The valley inside the walls, height × width; the entrance is above its top left position,
+// the exit below its bottom right one
+const valley = inputLines().slice(1, -1).map(line => line.slice(1, -1));
+const height = valley.length;
+const width = valley[0].length;
+
+function mod(a, b) {
+    return (a % b + b) % b;
+}
+
+// Whether no blizzard is at the position at the given minute. A blizzard goes straight and
+// wraps around, so the one that is there came from as many positions back as minutes passed.
+function isFree(row, col, minute) {
+    if (row < 0 || row >= height) {
+        // Only the entrance and the exit are outside the valley
+        return row == -1 && col == 0 || row == height && col == width - 1;
+    }
+    if (col < 0 || col >= width) {
+        return false;
+    }
+    return valley[row][mod(col - minute, width)] != ">"
+        && valley[row][mod(col + minute, width)] != "<"
+        && valley[mod(row - minute, height)][col] != "v"
+        && valley[mod(row + minute, height)][col] != "^";
+}
+
+const MOVES = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]];
+
+// The minute at which the expedition, starting at the given minute, first reaches the goal: all
+// positions where it can be after each minute (breadth first search over the minutes). Waiting
+// is a move too; positions are row * width + col, the entrance and exit included.
+function travel(start, goal, minute) {
+    let positions = new Set([start[0] * width + start[1]]);
+    while (true) {
+        minute++;
+        const next = new Set();
+        for (const position : positions) {
+            const row = Math.floor(position / width);
+            const col = mod(position, width);
+            for (const [dRow, dCol] : MOVES) {
+                const r = row + dRow;
+                const c = col + dCol;
+                if (isFree(r, c, minute)) {
+                    if (r == goal[0] && c == goal[1]) {
+                        return minute;
+                    }
+                    next.add(r * width + c);
+                }
+            }
+        }
+        positions = next;
+    }
+}
+
+const entrance = [-1, 0];
+const exit = [height, width - 1];
+
+// Part 1: from the entrance to the exit
+const there = travel(entrance, exit, 0);
+print("Part 1: " + there);
+
+// Part 2: there, back to fetch the snacks and there again
+print("Part 2: " + travel(entrance, exit, travel(exit, entrance, there)));

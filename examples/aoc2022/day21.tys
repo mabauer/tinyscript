@@ -1,0 +1,81 @@
+// Advent of Code 2022, day 21: Monkey Math
+// https://adventofcode.com/2022/day/21
+//
+// Usage: tinyscript day21.tys -- input.txt
+
+import inputLines from "./aoc";
+import parse from "std:string";
+
+// The monkeys by name: a number ("dbpl: 5") or an operation on the numbers of two other
+// monkeys ("root: pppw + sjmn")
+const monkeys = new Map();
+for (const line : inputLines()) {
+    const operation = parse("{:w}: {:w} {} {:w}", line);
+    if (operation != null) {
+        const [name, left, operator, right] = operation;
+        monkeys.set(name, { left, operator, right });
+    }
+    else {
+        const [name, number] = parse("{:w}: {:d}", line);
+        monkeys.set(name, { number });
+    }
+}
+
+const OPERATIONS = new Map([
+    ["+", (a, b) => a + b],
+    ["-", (a, b) => a - b],
+    ["*", (a, b) => a * b],
+    ["/", (a, b) => a / b],
+]);
+
+// The number a monkey yells
+function yell(name) {
+    const monkey = monkeys.get(name);
+    if (monkey.number != null) {
+        return monkey.number;
+    }
+    return OPERATIONS.get(monkey.operator)(yell(monkey.left), yell(monkey.right));
+}
+
+// Part 1: the number root yells
+print("Part 1: " + yell("root"));
+
+// Whether the number of a monkey depends on humn (that is me)
+function needsHuman(name) {
+    const monkey = monkeys.get(name);
+    return name == "humn" || monkey.number == null && (needsHuman(monkey.left) || needsHuman(monkey.right));
+}
+
+// Undoing an operation: if wanted = x op other, x is LEFT_INVERSES op (wanted, other); if
+// wanted = other op x, x is RIGHT_INVERSES op (wanted, other)
+const LEFT_INVERSES = new Map([
+    ["+", (wanted, other) => wanted - other],
+    ["-", (wanted, other) => wanted + other],
+    ["*", (wanted, other) => wanted / other],
+    ["/", (wanted, other) => wanted * other],
+]);
+const RIGHT_INVERSES = new Map([
+    ["+", (wanted, other) => wanted - other],
+    ["-", (wanted, other) => other - wanted],
+    ["*", (wanted, other) => wanted / other],
+    ["/", (wanted, other) => other / wanted],
+]);
+
+// The number humn must yell so that the monkey yells the wanted number: going down from the
+// monkey towards humn, undo each operation with the number of the other side
+function solve(name, wanted) {
+    if (name == "humn") {
+        return wanted;
+    }
+    const { left, operator, right } = monkeys.get(name);
+    if (needsHuman(left)) {
+        return solve(left, LEFT_INVERSES.get(operator)(wanted, yell(right)));
+    }
+    return solve(right, RIGHT_INVERSES.get(operator)(wanted, yell(left)));
+}
+
+// Part 2: root checks whether its two numbers are equal: humn must make the side that needs it
+// yell the number of the other side
+const root = monkeys.get("root");
+const answer = needsHuman(root.left) ? solve(root.left, yell(root.right)) : solve(root.right, yell(root.left));
+print("Part 2: " + answer);

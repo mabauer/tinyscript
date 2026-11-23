@@ -1,0 +1,76 @@
+// Advent of Code 2022, day 13: Distress Signal
+// https://adventofcode.com/2022/day/13
+//
+// Usage: tinyscript day13.tys -- input.txt
+
+import inputLines from "./aoc";
+import isDigit from "std:string";
+import sum from "std:array";
+
+// A packet is a list of integers and lists: "[1,[2,[]]]" gives [1, [2, []]]. A recursive
+// descent parser (Javascript would use JSON.parse).
+function parsePacket(text) {
+    let pos = 0;
+    function value() {
+        if (text[pos] == "[") {
+            pos++;
+            const list = [];
+            while (text[pos] != "]") {
+                list.push(value());
+                if (text[pos] == ",") {
+                    pos++;
+                }
+            }
+            pos++;
+            return list;
+        }
+        const start = pos;
+        while (isDigit(text[pos])) {
+            pos++;
+        }
+        if (pos == start) {
+            throw new Error("Unexpected " + (text[pos] ?? "end") + " at " + pos + " in " + text);
+        }
+        return Number(text.slice(start, pos));
+    }
+    const packet = value();
+    if (pos != text.length) {
+        throw new Error("Unexpected " + text[pos] + " at " + pos + " in " + text);
+    }
+    return packet;
+}
+
+// Compares two packets: negative if left comes first, positive if right comes first, 0 if
+// they are equal. Integers compare as numbers, lists element by element, and an integer
+// compared with a list counts as a list with only this integer.
+function compare(left, right) {
+    const leftIsList = Array.isArray(left);
+    const rightIsList = Array.isArray(right);
+    if (!leftIsList && !rightIsList) {
+        return left - right;
+    }
+    if (!leftIsList) {
+        return compare([left], right);
+    }
+    if (!rightIsList) {
+        return compare(left, [right]);
+    }
+    for (const i : range(Math.min(left.length, right.length))) {
+        const result = compare(left[i], right[i]);
+        if (result != 0) {
+            return result;
+        }
+    }
+    return left.length - right.length;
+}
+
+const packets = inputLines().map(parsePacket);
+
+// Part 1: the sum of the (1-based) indices of the pairs that are in the right order
+const ordered = range(packets.length / 2).toArray().filter(i => compare(packets[2 * i], packets[2 * i + 1]) < 0);
+print("Part 1: " + sum(ordered.map(i => i + 1)));
+
+// Part 2: sort all packets with two divider packets; the product of their (1-based) positions
+const dividers = [[[2]], [[6]]];
+const sorted = [...packets, ...dividers].sort(compare);
+print("Part 2: " + dividers.map(divider => sorted.indexOf(divider) + 1).reduce((a, b) => a * b));

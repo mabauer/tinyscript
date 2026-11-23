@@ -1,0 +1,87 @@
+// Advent of Code 2022, day 16: Proboscidea Volcanium
+// https://adventofcode.com/2022/day/16
+//
+// Usage: tinyscript day16.tys -- input.txt
+
+import inputLines from "./aoc";
+import parse, words from "std:string";
+import max from "std:array";
+
+// The valves by name: { rate, tunnels }. "Valve BB has flow rate=13; tunnels lead to valves
+// CC, AA" (or "tunnel leads to valve GG")
+const valves = new Map();
+for (const line : inputLines()) {
+    const [name, rate, tunnels] = parse("Valve {:w} has flow rate={:d}; {}", line);
+    valves.set(name, { rate, tunnels: words(tunnels).slice(4).map(word => word.replace(",", "")) });
+}
+
+// The number of minutes from a valve to each other one (breadth first search)
+function distancesFrom(start) {
+    const distances = new Map([[start, 0]]);
+    let queue = [start];
+    while (queue.length > 0) {
+        const next = [];
+        for (const name : queue) {
+            for (const tunnel : valves.get(name).tunnels) {
+                if (!distances.has(tunnel)) {
+                    distances.set(tunnel, distances.get(name) + 1);
+                    next.push(tunnel);
+                }
+            }
+        }
+        queue = next;
+    }
+    return distances;
+}
+
+// Only the valves with a flow rate are worth going to; each gets a bit in a set of opened
+// valves. distances[i][j] is the time from useful valve i to j, start[i] from AA to i.
+const useful = [...valves.keys()].filter(name => valves.get(name).rate > 0);
+const rates = useful.map(name => valves.get(name).rate);
+const distances = useful.map(name => {
+    const reached = distancesFrom(name);
+    return useful.map(other => reached.get(other));
+});
+const fromStart = distancesFrom("AA");
+const start = useful.map(name => fromStart.get(name));
+
+// The most pressure that can be released in the given minutes for each set of opened valves
+// (the index is the set as bits; -1 if no order of moves opens exactly this set)
+function bestPerSet(minutes) {
+    const best = new Array(1 << useful.length).fill(-1);
+    // Valve i was just opened with the given minutes left
+    function visit(i, opened, left, pressure) {
+        best[opened] = Math.max(best[opened], pressure);
+        for (const j : range(useful.length)) {
+            const leftAfter = left - distances[i][j] - 1;
+            if ((opened & (1 << j)) == 0 && leftAfter > 0) {
+                visit(j, opened | (1 << j), leftAfter, pressure + leftAfter * rates[j]);
+            }
+        }
+    }
+    best[0] = 0;
+    for (const j : range(useful.length)) {
+        const left = minutes - start[j] - 1;
+        if (left > 0) {
+            visit(j, 1 << j, left, left * rates[j]);
+        }
+    }
+    return best;
+}
+
+// Part 1: alone in 30 minutes
+print("Part 1: " + max(bestPerSet(30)));
+
+// Part 2: with an elephant in 26 minutes, each opening other valves. bestWithin[set] is the
+// best of all subsets of a set; the answer is the best split of the valves in two.
+const best = bestPerSet(26);
+const bestWithin = best.slice();
+for (const bit : range(useful.length)) {
+    for (const set : range(best.length)) {
+        if ((set & (1 << bit)) != 0) {
+            bestWithin[set] = Math.max(bestWithin[set], bestWithin[set ^ (1 << bit)]);
+        }
+    }
+}
+const all = best.length - 1;
+print("Part 2: " + max(range(best.length).map(set => best[set] + bestWithin[all ^ set])));

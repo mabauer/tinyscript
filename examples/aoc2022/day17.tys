@@ -1,0 +1,99 @@
+// Advent of Code 2022, day 17: Pyroclastic Flow
+// https://adventofcode.com/2022/day/17
+//
+// Usage: tinyscript day17.tys -- input.txt
+
+import inputText from "./aoc";
+
+// The jets of hot gas: -1 pushes a rock left, 1 right
+const jets = inputText().trim().split("").map(c => c == "<" ? -1 : 1);
+
+// The five rocks as they appear: two units from the left wall of the chamber, which is seven
+// units wide
+const PICTURES = [
+    ["..####."],
+    ["...#...", "..###..", "...#..."],
+    ["....#..", "....#..", "..###.."],
+    ["..#....", "..#....", "..#....", "..#...."],
+    ["..##...", "..##..."],
+];
+
+// A rock as numbers, one per row from the bottom up, with a bit for each unit; bit 0 is the
+// rightmost column
+const ROCKS = PICTURES.map(rows => rows.map(row => parseInt(row.replaceAll(".", "0").replaceAll("#", "1"), 2)).reverse());
+
+// The chamber: one number per row with a bit for each column taken by rock
+class Chamber {
+    constructor() {
+        this.rows = [];
+        this.jet = 0;   // the next jet
+    }
+    // Whether the rock fits with its lowest row at height y
+    fits(rock, y) {
+        return y >= 0 && rock.every((bits, i) => ((this.rows[y + i] ?? 0) & bits) == 0);
+    }
+    // Lets the rock fall until it comes to rest
+    drop(rock) {
+        let y = this.rows.length + 3;
+        while (true) {
+            const push = jets[this.jet];
+            this.jet = (this.jet + 1) % jets.length;
+            // Pushed left, a rock must not touch the left wall (bit 6), pushed right not the
+            // right wall (bit 0)
+            const pushed = push < 0
+                ? (rock.some(bits => (bits & 64) != 0) ? rock : rock.map(bits => bits << 1))
+                : (rock.some(bits => (bits & 1) != 0) ? rock : rock.map(bits => bits >> 1));
+            if (this.fits(pushed, y)) {
+                rock = pushed;
+            }
+            if (!this.fits(rock, y - 1)) {
+                break;
+            }
+            y--;
+        }
+        for (const i : range(rock.length)) {
+            this.rows[y + i] = (this.rows[y + i] ?? 0) | rock[i];
+        }
+    }
+    height() {
+        return this.rows.length;
+    }
+    // The top rows, as a key for finding the cycle
+    top(count) {
+        return this.rows.slice(-count).join(",");
+    }
+}
+
+// The height of the tower after the given number of rocks. The falling repeats: when the
+// next rock, the next jet and the top of the tower were the same before, the rocks since then
+// form a cycle, which can be skipped as often as it fits.
+function towerHeight(rocks) {
+    const chamber = new Chamber();
+    const seen = new Map();   // key -> [rocks so far, height]
+    let skipped = 0;          // the height of the skipped cycles
+    let n = 0;
+    while (n < rocks) {
+        chamber.drop(ROCKS[n % ROCKS.length]);
+        n++;
+        if (skipped == 0) {
+            const key = n % ROCKS.length + "/" + chamber.jet + "/" + chamber.top(30);
+            if (seen.has(key)) {
+                const [before, heightBefore] = seen.get(key);
+                const cycle = n - before;
+                const cycles = Math.floor((rocks - n) / cycle);
+                skipped = cycles * (chamber.height() - heightBefore);
+                n += cycles * cycle;
+            }
+            else {
+                seen.set(key, [n, chamber.height()]);
+            }
+        }
+    }
+    return chamber.height() + skipped;
+}
+
+// Part 1: after 2022 rocks
+print("Part 1: " + towerHeight(2022));
+
+// Part 2: after a trillion rocks
+print("Part 2: " + towerHeight(1000000000000));
