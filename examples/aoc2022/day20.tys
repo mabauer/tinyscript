@@ -20,11 +20,11 @@ function groveCoordinates(key, rounds) {
     const values = numbers.map(n => n * key);
     const mixed = range(values.length).toArray();
     for (const round : range(rounds)) {
-        for (const i : range(values.length)) {
+        for (const [i, value] : values.entries()) {
             const position = mixed.indexOf(i);
             mixed.splice(position, 1);
             // Without the number itself, the circle has one place less
-            mixed.splice(mod(position + values[i], mixed.length), 0, i);
+            mixed.splice(mod(position + value, mixed.length), 0, i);
         }
     }
     const zero = mixed.indexOf(values.indexOf(0));

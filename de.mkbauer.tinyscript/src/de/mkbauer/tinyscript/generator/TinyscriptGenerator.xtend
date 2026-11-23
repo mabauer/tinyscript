@@ -121,6 +121,11 @@ class TinyscriptGenerator   {
 				writable: true, configurable: true, enumerable: false
 			});
 		}
+		// Like the interpreter (and the entries of a Map): an array of [index, element] pairs
+		Object.defineProperty(Array.prototype, "entries", {
+			value: function entries() { return this.map((item, i) => [i, item]); },
+			writable: true, configurable: true, enumerable: false
+		});
 		const __ts_builtinToStrings = new globalThis.Set([Object.prototype.toString, Array.prototype.toString,
 			Function.prototype.toString, Error.prototype.toString, __ts_JsString.prototype.toString]);
 
