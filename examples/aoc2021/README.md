@@ -43,7 +43,7 @@ directory):
   in calls (`f.apply(null, array)`), no rest elements in patterns
   (`items.slice(1)`), no `extends`, getters, field declarations or `enum`s, no
   `in` operator, no regular expressions (`parse` and `words` of `std:string`),
-  no trailing comma in array literals, `from` is a reserved word.
+  `from` is a reserved word.
 - Javascript forgives what tinyscript does not: a comparison with `undefined` or
   `NaN` is `false` in Javascript but a `TypeError` in tinyscript (day 1), as is
   a string as a condition (day 4) or destructuring too short an array (day 2).

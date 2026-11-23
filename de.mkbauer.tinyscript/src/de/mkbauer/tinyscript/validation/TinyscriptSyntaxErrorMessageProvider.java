@@ -111,6 +111,13 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			return "++ and -- are statements, not expressions: write i" + text + "; on its own";
 		if (text.equals("..."))
 			return spreadOrRest(tokens, index);
+		if ((text.equals(")") || text.equals("]") || text.equals("}")) && before.equals(","))
+			return "A comma after the last element is only allowed in array and object literals";
+		if (text.equals(",") && Set.of(",", "[", "(", "{").contains(before))
+			return emptyElement(tokens, index);
+		// function f(, a): the parser reports the "(" before the comma
+		if (text.equals("(") && next != null && next.getText().equals(","))
+			return emptyElement(tokens, next.getTokenIndex());
 		if (text.equals("/") && (previous == null || BEFORE_EXPRESSION.contains(before)))
 			return "Regular expressions are not supported (std:string has parse, findAll, words and integers)";
 		// The ';' is missing at the end of the previous line (the error is reported at the next token)
@@ -270,6 +277,22 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		if (bracket.equals("{"))
 			return "Spread (...) in object literals is not supported: copy the properties, e.g. for (const key : Object.keys(o))";
 		return "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)";
+	}
+
+	/**
+	 * A comma without an element before it: [1, , 2] or [, 2] (an empty element of an array in
+	 * Javascript), const [, b] = … (skipping an element in a pattern) or f(, 1).
+	 */
+	private static String emptyElement(TokenStream tokens, int index) {
+		int open = openingBracket(tokens, index);
+		String bracket = open >= 0 ? tokens.get(open).getText() : "";
+		Token before = open >= 0 ? previous(tokens, open) : null;
+		boolean inDeclaration = before != null && Set.of("let", "const").contains(before.getText());
+		if (bracket.equals("[") && inDeclaration)
+			return "A pattern cannot skip elements: give each element a name";
+		if (bracket.equals("["))
+			return "Arrays have no empty elements in tinyscript: write undefined, e.g. [1, undefined, 2]";
+		return "Unexpected ',': an element is missing before it";
 	}
 
 	// The index of the bracket ( [ or { that encloses the token at index, -1 if there is none

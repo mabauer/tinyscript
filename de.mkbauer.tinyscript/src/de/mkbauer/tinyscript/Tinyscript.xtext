@@ -53,7 +53,7 @@ BlockStatement:
 FunctionDeclaration returns FunctionDefinition:
 	{FunctionDeclaration}
 	(exported ?= 'export')? 'function' ( id=Identifier ) 
-	( '(' (params += Parameter)? (',' params += Parameter)* (',' '...' rest=Identifier)? ')' 
+	( '(' (params += Parameter (',' params += Parameter)* (',' '...' rest=Identifier)?)? ')' 
 		| '(' '...' rest=Identifier ')'  )
 	block=Block 
 ;
@@ -91,7 +91,7 @@ ConditionalExpression returns Expression:
 ArrowFunctionDefinition returns FunctionDefinition:
 	{ArrowFunction}
 	( (params+=Identifier) 
-		| ( '(' params += Parameter? (',' params += Parameter)* (',' '...' rest=Identifier)? ')')
+		| ( '(' (params += Parameter (',' params += Parameter)* (',' '...' rest=Identifier)?)? ')')
 		| ( '(' '...' rest=Identifier ')' )
 	)  '=>' block=ArrowFunctionBlock 
 ;
@@ -183,7 +183,7 @@ Atomic:
 
 FunctionExpression returns FunctionDefinition:
 	'function' ( id=Identifier )? 
-		( '(' (params += Parameter)? (',' params += Parameter)* (',' '...' rest=Identifier)? ')' 
+		( '(' (params += Parameter (',' params += Parameter)* (',' '...' rest=Identifier)?)? ')' 
 		| '(' '...' rest=Identifier ')'  )
 	block=Block 
 ;
@@ -286,7 +286,7 @@ CallOrPropertyAccessSuffix:
 
 CallSuffix:
 	{CallSuffix}
-	'(' (arguments += AssignmentExpression)? (',' arguments += AssignmentExpression)* ')' 
+	'(' (arguments += AssignmentExpression (',' arguments += AssignmentExpression)*)? ')' 
 ;
 
 PropertyAccessSuffix:
@@ -302,9 +302,10 @@ DotPropertyAccessSuffix:
 	('.' | optional?='?.') key=PropertyName 
 ;
 
+// Like Javascript, a comma after the last property is allowed: { a: 1, b: 2, }
 ObjectInitializer:
 	{ObjectInitializer}
-	'{' (propertyassignments+=PropertyAssignment)? (',' propertyassignments+=PropertyAssignment)* '}'
+	'{' (propertyassignments+=PropertyAssignment (',' propertyassignments+=PropertyAssignment)* ','?)? '}'
 ;
 
 // key: value, the method shorthand { greet() { ... } } for { greet: function() { ... } },
@@ -316,7 +317,7 @@ PropertyAssignment:
 // The parameters and body of a method in an object literal: greet(name) { ... }
 MethodDefinition returns FunctionDefinition:
 	{FunctionDefinition}
-	( '(' (params += Parameter)? (',' params += Parameter)* (',' '...' rest=Identifier)? ')'
+	( '(' (params += Parameter (',' params += Parameter)* (',' '...' rest=Identifier)?)? ')'
 	| '(' '...' rest=Identifier ')'  )
 	block=Block
 ;
@@ -326,9 +327,11 @@ PropertyName:
 	name=(ID | Keyword)
 ;
 
+// Like Javascript, a comma after the last element is allowed: [1, 2, ]; unlike Javascript,
+// there are no empty elements ([1, , 2])
 ArrayInitializer:
 	{ArrayInitializer}
-	'[' (values+=AssignmentExpression)? (',' values += AssignmentExpression)* ']'
+	'[' (values+=AssignmentExpression (',' values += AssignmentExpression)* ','?)? ']'
 ;
 
 NullObject returns Expression:
