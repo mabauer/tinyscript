@@ -94,6 +94,7 @@ import de.mkbauer.tinyscript.runtime.collection.SetConstructor;
 import de.mkbauer.tinyscript.runtime.collection.SetObject;
 import de.mkbauer.tinyscript.runtime.string.StringObject;
 import de.mkbauer.tinyscript.runtime.function.FunctionConstructor;
+import de.mkbauer.tinyscript.runtime.json.JsonObject;
 import de.mkbauer.tinyscript.runtime.math.MathObject;
 import de.mkbauer.tinyscript.runtime.object.ObjectConstructor;
 import de.mkbauer.tinyscript.runtime.string.StringConstructor;
@@ -193,6 +194,7 @@ public class TinyscriptEngine {
 		addToGlobalObject("parseFloat", NumberFunctions.createParseFloat(this));
 		addToGlobalObject("isNaN", NumberFunctions.createIsNaN(this));
 		addToGlobalObject("Math", new MathObject(this));
+		addToGlobalObject("JSON", new JsonObject(this));
 		addToGlobalObject("range", RangeFunction.create(this));
 		addValueToGlobalObject("Infinity", Double.POSITIVE_INFINITY);
 		addValueToGlobalObject("NaN", Double.NaN);
@@ -799,7 +801,7 @@ public class TinyscriptEngine {
 
     /**
      * try { ... } catch (e) { ... }: catches only the errors a script may expect, those thrown with
-     * throw and failed input / output. Programming errors (TypeError, unknown names ...), failed
+     * throw, failed input / output and JSON.parse of a text that is no JSON. Programming errors (TypeError, unknown names ...), failed
      * asserts, a stack overflow and violated resource limits are not caught: they end the script.
      */
     public TSValue caseTryStatement(TryStatement object) {
@@ -807,20 +809,21 @@ public class TinyscriptEngine {
     	try {
     		return executeInBlockContext("try", object.getBlock());
     	}
-    	catch (TinyscriptError | TinyscriptIOError e) {
+    	catch (TinyscriptError | TinyscriptIOError | TinyscriptJsonError e) {
     		CatchClause handler = object.getHandler();
     		return executeInBlockContext("catch", handler.getBlock(), handler.getParam(), caughtError(e));
     	}
     }
 
-    // The Error object a catch gets: the thrown one, or one named IOError for failed input / output
+    // The Error object a catch gets: the thrown one, or one named IOError for failed input / output,
+    // SyntaxError for JSON.parse of a text that is no JSON
     private ErrorObject caughtError(TinyscriptRuntimeException e) {
     	ErrorObject error;
     	if (e instanceof TinyscriptError thrown)
     		error = (ErrorObject) thrown.getThrownValue();
     	else {
     		error = (ErrorObject) getConstructor(ErrorConstructor.NAME).createObject();
-    		error.defineDefaultProperty("name", "IOError");
+    		error.defineDefaultProperty("name", e instanceof TinyscriptJsonError ? "SyntaxError" : "IOError");
     		error.defineDefaultProperty("message", e.getMessage());
     	}
     	error.setOrigin(e);

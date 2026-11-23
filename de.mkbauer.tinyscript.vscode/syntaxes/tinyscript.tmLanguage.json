@@ -113,7 +113,7 @@
     },
     "builtins": {
       "patterns": [
-        { "name": "support.class.builtin.tinyscript", "match": "(?<!\\.)\\b(Object|Function|Array|Map|Set|Error|String|Number|Math|System)\\b" },
+        { "name": "support.class.builtin.tinyscript", "match": "(?<!\\.)\\b(Object|Function|Array|Map|Set|Error|String|Number|Math|JSON|System)\\b" },
         { "name": "support.function.builtin.tinyscript", "match": "(?<!\\.)\\b(print|range|parseInt|parseFloat|isNaN)\\b" }
       ]
     },

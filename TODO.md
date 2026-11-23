@@ -23,9 +23,9 @@ TypeScript (`examples/aoc20xx`).
 3. **Library:** a priority queue in a `std:` module (days 16 of 2024 and 17 of
    2023 have a binary heap of their own); `findAll` with the positions of the
    matches; a single-character field in `parse` (`a<2006`); possibly `readAll()`
-   in `std:io`, `toPrecision` / `toExponential`; `JSON.parse` (AoC 2022 day 13
-   reads nested lists with a parser of its own; in Javascript a one-liner) and
-   `JSON.stringify`, as far as they fit tinyscript's values.
+   in `std:io`, `toPrecision` / `toExponential`; `JSON.stringify` (as far as it
+   fits tinyscript's values: `undefined` and functions, `Map` / `Set`, cycles,
+   indentation).
 4. **Regular expressions as a library**, if ever (`parse` / `findAll` of
    `std:string` cover reading input so far): `new RegExp("…")` as in Javascript,
    no `/…/` literals; immutable, only stateless operations (`test`, `match`,

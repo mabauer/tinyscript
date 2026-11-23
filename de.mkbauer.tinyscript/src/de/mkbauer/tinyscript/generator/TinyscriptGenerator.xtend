@@ -144,7 +144,7 @@ class TinyscriptGenerator   {
 		// own: the value itself, without its toString (for Object.prototype.toString)
 		function __ts_display(value, path, own) {
 			if (typeof value === "string") {
-				return JSON.stringify(value);
+				return __ts_JsJSON.stringify(value);
 			}
 			if (value === null || (typeof value !== "object" && typeof value !== "function")) {
 				return __ts_JsString(value);
@@ -229,6 +229,25 @@ class TinyscriptGenerator   {
 			return obj1 + obj2;
 		}
 		
+		// Like the interpreter: JSON has only parse, which needs a string; a text that is no JSON is
+		// an Error named SyntaxError, which catch gets (a SyntaxError of node would end the script)
+		const __ts_JsJSON = globalThis.JSON;
+		var JSON = {
+			parse(text) {
+				if (typeof text !== "string") {
+					throw new TypeError("JSON.parse() needs a string, not " + (text === null ? "object" : typeof text));
+				}
+				try {
+					return __ts_JsJSON.parse(text);
+				}
+				catch (e) {
+					const error = new Error("JSON.parse: " + e.message);
+					error.name = "SyntaxError";
+					throw error;
+				}
+			}
+		};
+
 		// Like the interpreter: keys(), values() and entries() of Maps and Sets return arrays
 		var Map = (function (JsMap) {
 			return class Map extends JsMap {

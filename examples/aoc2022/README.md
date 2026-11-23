@@ -10,7 +10,7 @@ default parameters, spread and rest elements). The other years are in
 | --------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------- |
 | [7](day07.tys)  | No Space Left On Device  | a tree of directories as a class, `Map`s of children and files, a rest element for lines of different lengths   |
 | [11](day11.tys) | Monkey in the Middle     | a class built from a block of lines, operations as arrow functions, worry levels modulo the `lcm` of divisors   |
-| [13](day13.tys) | Distress Signal          | a recursive descent parser for nested lists, a comparison function for `sort`, `Array.isArray`                  |
+| [13](day13.tys) | Distress Signal          | packets read with `JSON.parse`, a recursive comparison function for `sort`, `Array.isArray`                     |
 | [15](day15.tys) | Beacon Exclusion Zone    | merging intervals, finding the one free position where the edges of the sensors' ranges cross                   |
 | [16](day16.tys) | Proboscidea Volcanium    | distances by breadth first search, the best pressure for each set of opened valves as bits, the best of subsets |
 | [17](day17.tys) | Pyroclastic Flow         | rocks drawn as pictures and turned into bits, a falling simulation, skipping the repeating cycle to 10^12 rocks |
