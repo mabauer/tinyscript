@@ -68,7 +68,7 @@
       }
     },
     "class-declaration": {
-      "match": "\\b(class)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+      "match": "\\b(class|interface)\\s+([A-Za-z_][A-Za-z0-9_]*)",
       "captures": {
         "1": { "name": "storage.type.class.tinyscript" },
         "2": { "name": "entity.name.type.class.tinyscript" }
@@ -79,7 +79,7 @@
         {
           "comment": "Reserved, but not supported: the compiler reports them with a hint",
           "name": "invalid.illegal.reserved.tinyscript",
-          "match": "(?<!\\.)\\b(finally|switch|case|var|interface|implements)\\b"
+          "match": "(?<!\\.)\\b(finally|switch|case|var)\\b"
         },
         {
           "name": "keyword.control.tinyscript",
@@ -91,7 +91,7 @@
         },
         {
           "name": "storage.type.tinyscript",
-          "match": "(?<!\\.)\\b(let|const|function|class)\\b"
+          "match": "(?<!\\.)\\b(let|const|function|class|interface|implements)\\b"
         },
         {
           "name": "keyword.operator.expression.tinyscript",

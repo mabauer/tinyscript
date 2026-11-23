@@ -567,7 +567,9 @@ Violations become error markers (red squiggles). The checks cover:
   declaration, a `const` with a function, `new` of a class); function
   declarations cannot be assigned, so that this stays sound;
 - classes (only at top level, each method only once, a field must not hide a
-  method) and modules (`export` only at top level, imported names unique and
+  method), interfaces (a class has the methods of an interface of the same file
+  it implements; for an imported one the interpreter checks when the class is
+  declared) and modules (`export` only at top level, imported names unique and
   read-only).
 
 These checks are compile-time only — the interpreter does not re-run them at

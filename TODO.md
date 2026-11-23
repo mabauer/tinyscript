@@ -94,12 +94,6 @@ functions about 0.35 µs.
   (the constructor is the one place where fields get their values;
   `constructor(x = 0)` covers default values), no value semantics (`==` would
   mean two things), no frozen prototypes.
-- **`interface` / `implements`: parked** (2026-11-22; reserved words with a
-  hint). Without types at the places of use and without validation across files
-  an interface only checks that a class of the same file has all methods, and a
-  missing method is reported when it is called. Look at it again if checking
-  across files exists (the language server). Dropped: `instanceof` with
-  interfaces, class names after parameters (`f(l: Listener)`).
 - **Spread and rest for objects** (`{ ...o }`, `const { a, ...others } = o;`;
   2026-11-23, when spread in calls and array literals and rest elements in array
   patterns came): `{ ...point }` is no longer a `Point`, and which properties

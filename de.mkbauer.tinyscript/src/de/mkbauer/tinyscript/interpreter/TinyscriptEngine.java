@@ -77,6 +77,7 @@ import de.mkbauer.tinyscript.ts.WhileStatement;
 import de.mkbauer.tinyscript.ts.TryStatement;
 import de.mkbauer.tinyscript.ts.CatchClause;
 import de.mkbauer.tinyscript.ts.ClassDeclaration;
+import de.mkbauer.tinyscript.ts.InterfaceDeclaration;
 import de.mkbauer.tinyscript.ts.ClassMethod;
 import de.mkbauer.tinyscript.runtime.Print;
 import de.mkbauer.tinyscript.scoping.SharedGlobals;
@@ -387,6 +388,8 @@ public class TinyscriptEngine {
     		return caseTryStatement((TryStatement) object);
 		case TsPackage.CLASS_DECLARATION:
     		return caseClassDeclaration((ClassDeclaration) object);
+		case TsPackage.INTERFACE_DECLARATION:
+    		return caseInterfaceDeclaration((InterfaceDeclaration) object);
 		case TsPackage.CONDITIONAL_EXPRESSION:
     		return caseConditionalExpression((ConditionalExpression) object);
 		case TsPackage.FUNCTION_DEFINITION:
@@ -598,7 +601,34 @@ public class TinyscriptEngine {
     		else
     			prototype.defineDefaultProperty(name, caseFunctionDefinition(method.getFunction()));
     	}
+    	for (Reference reference : declaration.getInterfaces())
+    		checkImplements(declaration, prototype, execute(reference), reference);
     	declare(declaration.getId(), cls);
+    	return TSValue.UNDEFINED;
+    }
+
+    // class Circle implements Shape: Circle has a method for each one of Shape, checked once when
+    // the class is declared (the validator checks an interface of the same file before the run)
+    private void checkImplements(ClassDeclaration declaration, TSObject prototype, TSValue value, Reference reference) {
+    	String className = declaration.getId().getName();
+    	String name = reference.getId() != null ? reference.getId().getName() : "this";
+    	if (!(value instanceof InterfaceObject anInterface))
+    		throw new TinyscriptTypeError(className + " implements " + name + ", but " + name + " is "
+    				+ (value instanceof ClassObject ? "a class" : article(value)) + ", not an interface", reference);
+    	List<String> missing = anInterface.getMethods().stream()
+    			.filter(method -> !(prototype.get(method) instanceof Function))
+    			.toList();
+    	if (!missing.isEmpty())
+    		throw new TinyscriptTypeError(TinyscriptModelUtil.missingMethods(className, anInterface.getName(), missing), reference);
+    }
+
+    // interface Shape { area(); }: a value with the names of the methods
+    public TSValue caseInterfaceDeclaration(InterfaceDeclaration declaration) {
+    	recordStatement();
+    	List<String> methods = declaration.getMethods().stream()
+    			.map(method -> TinyscriptModelUtil.propertyKey(method.getName()))
+    			.toList();
+    	declare(declaration.getId(), new InterfaceObject(this, declaration.getId().getName(), methods));
     	return TSValue.UNDEFINED;
     }
 

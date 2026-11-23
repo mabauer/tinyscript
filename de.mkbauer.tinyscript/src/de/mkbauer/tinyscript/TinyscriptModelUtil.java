@@ -15,6 +15,7 @@ import de.mkbauer.tinyscript.ts.Block;
 import de.mkbauer.tinyscript.ts.Expression;
 import de.mkbauer.tinyscript.ts.CatchClause;
 import de.mkbauer.tinyscript.ts.ClassDeclaration;
+import de.mkbauer.tinyscript.ts.InterfaceDeclaration;
 import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
@@ -77,7 +78,8 @@ public class TinyscriptModelUtil {
 	 * @return
 	 */
 	/**
-	 * The names a module exports: its top-level functions and variables marked with export.
+	 * The names a module exports: its top-level functions, variables, classes and interfaces marked
+	 * with export.
 	 */
 	public static List<Identifier> exportedIdentifiers(Tinyscript script) {
 		List<Identifier> result = new ArrayList<Identifier>();
@@ -88,18 +90,22 @@ public class TinyscriptModelUtil {
 				result.addAll(declaredIdentifiers(variables));
 			if (stmt instanceof ClassDeclaration declaration && declaration.isExported())
 				result.add(declaration.getId());
+			if (stmt instanceof InterfaceDeclaration declaration && declaration.isExported())
+				result.add(declaration.getId());
 		}
 		return result;
 	}
 
 	/**
 	 * The variables a statement declares in its block: those of let / const, or the name of a
-	 * class (which, like a const, can be used from its declaration on).
+	 * class or an interface (which, like a const, can be used from its declaration on).
 	 */
 	public static List<Identifier> declaredIdentifiers(Statement statement) {
 		if (statement instanceof VariableStatement variables)
 			return declaredIdentifiers(variables);
 		if (statement instanceof ClassDeclaration declaration && declaration.getId() != null)
+			return List.of(declaration.getId());
+		if (statement instanceof InterfaceDeclaration declaration && declaration.getId() != null)
 			return List.of(declaration.getId());
 		return List.of();
 	}
@@ -110,7 +116,8 @@ public class TinyscriptModelUtil {
 	 */
 	public static boolean isLexicalDeclaration(Identifier identifier) {
 		for (EObject container = identifier.eContainer(); container != null; container = container.eContainer()) {
-			if (container instanceof VariableStatement || container instanceof ClassDeclaration)
+			if (container instanceof VariableStatement || container instanceof ClassDeclaration
+					|| container instanceof InterfaceDeclaration)
 				return true;
 			if (!(container instanceof Pattern) && !(container instanceof BinaryExpression))
 				return false;
@@ -397,4 +404,13 @@ public class TinyscriptModelUtil {
 		return  ((stmt != null) && (stmt instanceof VariableStatement));
 	}
 	
-} 
+
+	/**
+	 * The message for a class without some methods of an interface (the interpreter and the
+	 * validator say the same): "Circle implements Shape but has no method perimeter".
+	 */
+	public static String missingMethods(String className, String interfaceName, List<String> missing) {
+		return className + " implements " + interfaceName + " but has no method" + (missing.size() > 1 ? "s " : " ")
+				+ String.join(", ", missing);
+	}
+}

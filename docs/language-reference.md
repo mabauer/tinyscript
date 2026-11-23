@@ -1123,9 +1123,46 @@ print(p instanceof Point, Object.keys(p));   // true ["x", "y"]
   but `new Point(1, 2)` at the top level before `class Point` is an error.
 - Not supported: `extends` and `super`, `static` members (write a function or a
   constant next to the class), getters and setters, field declarations in the
-  class body (fields get their values in the constructor), and interfaces
-  (`interface` and `implements` are reserved words). The compiler says so with a
-  hint.
+  class body (fields get their values in the constructor). The compiler says so
+  with a hint.
+
+### Interfaces
+
+Objects of different classes can be used alike if they have the same methods. An
+interface names these methods, and a class that `implements` it must have them:
+
+```
+interface Shape {
+    area();
+    scale(factor);
+}
+
+class Square implements Shape {
+    constructor(side) { this.side = side; }
+    area() { return this.side * this.side; }
+    scale(factor) { return new Square(this.side * factor); }
+}
+
+class Circle implements Shape { area() { return 3; } }
+// Error: Circle implements Shape but has no method scale
+```
+
+- The check is made once, when the class is declared, not for each object. For
+  an interface of the same file the compiler reports a missing method before the
+  run; for an imported one (`export interface Shape { … }`,
+  `import Shape from "./shapes";`) it is a `TypeError` when the class
+  declaration runs.
+- Only the names count: the parameters in the interface are for the reader
+  (`scale(factor);`), and a method with other parameters fits as well. Methods
+  only: a field (`this.area = …` in the constructor) does not count, and an
+  interface cannot list the constructor.
+- A class can implement several interfaces
+  (`class Square implements Shape, Named`); it may have more methods than they
+  list.
+- An interface is a value of its own (`print(Shape)` shows `[interface Shape]`),
+  declared at the top level only; its name is a constant. There is no
+  `new Shape()`, no `instanceof Shape`, no `extends` between interfaces and no
+  interface for object literals.
 
 ### Methods and `this`
 
@@ -1931,13 +1968,13 @@ print(sum);
 ### Keywords
 
 ```
-let  const  function  class  return  if  else  for  while  break  continue
-throw  try  catch  new  this  null  undefined  true  false  typeof  instanceof
-delete  assert  import  export  from  as
+let  const  function  class  interface  implements  return  if  else  for
+while  break  continue  throw  try  catch  new  this  null  undefined  true
+false  typeof  instanceof  delete  assert  import  export  from  as
 ```
 
 Reserved (a syntax error with a hint what to write instead): `var`, `finally`,
-`switch`, `case`, `interface`, `implements`.
+`switch`, `case`.
 
 ### Literals
 

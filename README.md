@@ -210,7 +210,7 @@ of primitive datatypes in Javascript is a mine-field on its own.
   With a string on either side, `+` concatenates strings (`"arr: " + arr`); an
   array plus anything else is a `TypeError`.
 - **Catching errors:** `try { … } catch (e) { … }` catches only what a script
-  can expect: errors thrown with `throw` (only `Error` objects can be thrown)
+  can expect: errors thrown with `throw` (only `Error` objects can be thrown),
   failed file access (`e.name == "IOError"`) and invalid JSON in `JSON.parse`
   (`"SyntaxError"`). Programming errors such as a `TypeError` or a failed
   `assert` end the script even inside `try`, so a broad `catch` cannot hide
@@ -234,8 +234,12 @@ of primitive datatypes in Javascript is a mine-field on its own.
   function with methods on its prototype, as in Javascript; a class can only be
   created with `new`. There is no `extends`, no `static` and no getters: code is
   shared by composition or in functions, and objects with the same methods can
-  be used alike. Object literals have the method shorthand `{ area() { … } }`.
-  See [Classes and objects](docs/language-reference.md#9-classes-and-objects).
+  be used alike. An `interface Shape { area(); }` names such methods; a class
+  with `implements Shape` is checked when it is declared (before the run if the
+  interface is in the same file), not each object, as Python's abstract classes
+  do at each instantiation. Object literals have the method shorthand
+  `{ area() { … } }`. See
+  [Classes and objects](docs/language-reference.md#9-classes-and-objects).
 - **Sandboxing:** in sandboxed mode every loop iteration counts against the
   statement limit, so even endless loops cannot exceed the resource limits (see
   [Sandboxing](#sandboxing)).

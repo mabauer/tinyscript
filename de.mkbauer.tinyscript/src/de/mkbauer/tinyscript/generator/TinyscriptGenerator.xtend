@@ -13,6 +13,7 @@ import de.mkbauer.tinyscript.ts.AssertStatement
 import de.mkbauer.tinyscript.ts.BreakStatement
 import de.mkbauer.tinyscript.ts.ContinueStatement
 import de.mkbauer.tinyscript.ts.ClassDeclaration
+import de.mkbauer.tinyscript.ts.InterfaceDeclaration
 import de.mkbauer.tinyscript.ts.Pattern
 import de.mkbauer.tinyscript.ts.ArrayPattern
 import de.mkbauer.tinyscript.ts.SpreadElement
@@ -229,6 +230,27 @@ class TinyscriptGenerator   {
 			return obj1 + obj2;
 		}
 		
+		// Like the interpreter: an interface is a value with the names of its methods; a class that
+		// implements it is checked when it is declared
+		class __ts_Interface {
+			constructor(name, methods) {
+				this.name = name;
+				this.methods = methods;
+			}
+			toString() { return "[interface " + this.name + "]"; }
+		}
+		function __ts_implements(cls, className, anInterface, interfaceName) {
+			if (!(anInterface instanceof __ts_Interface)) {
+				const what = __ts_isClass(anInterface) ? "a class" : anInterface == null ? String(anInterface)
+					: (typeof anInterface === "object" ? "an " : "a ") + typeof anInterface;
+				throw new TypeError(className + " implements " + interfaceName + ", but " + interfaceName + " is " + what + ", not an interface");
+			}
+			const missing = anInterface.methods.filter(method => typeof cls.prototype[method] !== "function");
+			if (missing.length > 0) {
+				throw new TypeError(className + " implements " + anInterface.name + " but has no method" + (missing.length > 1 ? "s " : " ") + missing.join(", "));
+			}
+		}
+
 		// Like the interpreter: JSON has only parse, which needs a string; a text that is no JSON is
 		// an Error named SyntaxError, which catch gets (a SyntaxError of node would end the script)
 		const __ts_JsJSON = globalThis.JSON;
@@ -639,7 +661,8 @@ class TinyscriptGenerator   {
 		
 	''' 
 	
-	// A Javascript class: the same constructor and methods (tinyscript's classes have no extends)
+	// A Javascript class: the same constructor and methods (tinyscript's classes have no extends);
+	// implements becomes a check right after the class, as in the interpreter
 	def dispatch generate(ClassDeclaration cls) '''
 		class «cls.id.generate» {
 			«FOR method : cls.methods»
@@ -648,6 +671,15 @@ class TinyscriptGenerator   {
 				}
 			«ENDFOR»
 		}
+		«FOR reference : cls.interfaces»
+			__ts_implements(«cls.id.generate», "«cls.id.name»", «reference.generate», "«reference.id.name»");
+		«ENDFOR»
+		
+	'''
+
+	// interface Shape { area(); }: a value with the names of the methods
+	def dispatch generate(InterfaceDeclaration declaration) '''
+		const «declaration.id.generate» = new __ts_Interface("«declaration.id.name»", [«FOR method : declaration.methods SEPARATOR ', '»"«TinyscriptModelUtil.propertyKey(method.name)»"«ENDFOR»]);
 		
 	'''
 

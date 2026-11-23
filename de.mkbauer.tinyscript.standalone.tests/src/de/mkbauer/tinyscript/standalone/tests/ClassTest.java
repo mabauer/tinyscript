@@ -177,10 +177,6 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
                 onlyError("class A {\n  get area() { return 1; }\n}"));
         assertEquals("A class has no field declarations: fields get their values in the constructor, this.count = …;",
                 onlyError("class A {\n  count = 0;\n}"));
-        String noInterfaces = "interface and implements are not supported in tinyscript: "
-                + "describe the methods in a comment; a missing method is reported when it is called";
-        assertEquals(noInterfaces, onlyError("interface Shape {\n  area();\n}"));
-        assertEquals(noInterfaces, onlyError("class Circle implements Shape { }"));
     }
 
     @Test
