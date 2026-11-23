@@ -1,0 +1,74 @@
+// Advent of Code 2021, day 12: Passage Pathing
+// https://adventofcode.com/2021/day/12
+//
+// Usage: tinyscript day12.tys -- input.txt
+
+import inputLines from "./aoc";
+import stripEmptyLines from "./utils";
+
+// A graph is an object: for each node the array of its neighbours
+
+const START = "start";
+const END = "end";
+
+function isSmall(node) {
+    return (node == node.toLowerCase());
+}
+
+// A depth first search: the number of paths from node to END
+function dfs(g, node, allow2ndVisitOnce, visited) {
+    allow2ndVisitOnce = allow2ndVisitOnce ?? false;
+    visited = visited ?? new Set();
+
+    if (node == END) {
+        return 1;
+    }
+    // TypeScript: new Set([...visited])
+    visited = new Set(visited);
+    if (isSmall(node)) {
+        visited.add(node);
+    }
+    let paths = 0;
+    for (const neighbour : g[node]) {
+        if (!visited.has(neighbour)) {
+            paths += dfs(g, neighbour, allow2ndVisitOnce, visited);
+        } else if (neighbour != START && allow2ndVisitOnce) {
+            paths += dfs(g, neighbour, false, visited);
+        }
+    }
+    return paths;
+}
+
+// TypeScript: const [from, to] = …, and !(from in g); tinyscript has no in operator, and
+// from is a reserved word (import … from)
+function createGraph(edges) {
+    const g = {};
+    for (const edge : edges) {
+        const [source, target] = edge.split("-");
+        if (g[source] == undefined) {
+            g[source] = [];
+        }
+        if (g[target] == undefined) {
+            g[target] = [];
+        }
+        g[source].push(target);
+        g[target].push(source);
+    }
+    return g;
+}
+
+function part1(lines) {
+    const g = createGraph(stripEmptyLines(lines));
+    const result = dfs(g, START);
+    return result;
+}
+
+function part2(lines) {
+    const g = createGraph(stripEmptyLines(lines));
+    const result = dfs(g, START, true);
+    return result;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

@@ -1,0 +1,231 @@
+// Advent of Code 2021, day 19: Beacon Scanner
+// https://adventofcode.com/2021/day/19
+//
+// Usage: tinyscript day19.tys -- input.txt
+
+import inputLines from "./aoc";
+import listIncludes, listIntersect, stripEmptyLines from "./utils";
+import rotations from "./day19/rotations";
+
+class Point3 {
+
+    constructor(x, y, z) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    // TypeScript: throw new RangeError(); tinyscript only has Error
+    get(i) {
+        if (i < 0 || i > 2) {
+            throw new Error("index " + i + " out of range");
+        }
+        return ((i == 0) ? this.x : (i == 1) ? this.y : this.z);
+    }
+
+    set(i, value) {
+        if (i == 0) {
+            this.x = value;
+        } else if (i == 1) {
+            this.y = value;
+        } else if (i == 2) {
+            this.z = value;
+        } else {
+            throw new Error("index " + i + " out of range");
+        }
+    }
+
+    equals(other) {
+        return (other && this.x == other.x && this.y == other.y && this.z == other.z);
+    }
+
+    // TypeScript: get hashCode(); tinyscript has no getters
+    hashCode() {
+        return 31 * (31 * (31 * 7 + this.x) + this.y) + this.z;
+    }
+
+    // TypeScript: a template string
+    toString() {
+        return "(" + this.x + "," + this.y + "," + this.z + ")";
+    }
+}
+
+function createPointFromList(coords) {
+    const [x, y, z] = coords;
+    return new Point3(x, y, z);
+}
+
+function vectorPlus(p1, p2) {
+    return new Point3(p1.x + p2.x, p1.y + p2.y, p1.z + p2.z);
+}
+
+function vectorMinus(p1, p2) {
+    return new Point3(p1.x - p2.x, p1.y - p2.y, p1.z - p2.z);
+}
+
+function manhattanDistance(p1, p2) {
+    return Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) + Math.abs(p1.z - p2.z);
+}
+
+function rotate(p, rot) {
+    const result = new Point3(0, 0, 0);
+    for (const y : range(3)) {
+        let sum = 0;
+        for (const x : range(3)) {
+            sum += rot[y][x] * p.get(x);
+        }
+        result.set(y, sum);
+    }
+    return result;
+}
+
+// A scanner (TypeScript: interface Scanner) is an object { position, orientation }
+function convertToAbsolute(points, scanner) {
+    return points.map(p => vectorPlus(rotate(p, scanner.orientation), scanner.position));
+}
+
+function allRelativeCoordinates(beacons) {
+    const result = [];
+    const todo = beacons.slice();
+    while (todo.length > 0) {
+        const p1 = todo.pop();
+        if (p1) {
+            for (const p2 : todo) {
+                result.push(vectorMinus(p1, p2));
+                result.push(vectorMinus(p2, p1));
+            }
+        }
+    }
+    return result;
+}
+
+function compareScanners(beacons1, beacons2, minOverlap) {
+    minOverlap = minOverlap ?? 12;
+    const relCoords1 = allRelativeCoordinates(beacons1);
+    for (const rot : rotations) {
+        const rotatedBeacons = beacons2.map(p => rotate(p, rot));
+        const relCoords2 = allRelativeCoordinates(rotatedBeacons);
+        const overlap = listIntersect(relCoords1, relCoords2);
+        if (overlap.length >= minOverlap * (minOverlap - 1)) {
+            const diff = overlap[0];
+            let r1 = new Point3(0, 0, 0);
+            for (const p1 : beacons1) {
+                for (const p2 : beacons1) {
+                    if (vectorMinus(p1, diff).equals(p2)) {
+                        r1 = p1;
+                    }
+                }
+            }
+            let r2 = new Point3(0, 0, 0);
+            for (const p1 : beacons2) {
+                for (const p2 : beacons2) {
+                    if (vectorMinus(rotate(p1, rot), diff).equals(rotate(p2, rot))) {
+                        r2 = p1;
+                    }
+                }
+            }
+            const shift = vectorMinus(r1, rotate(r2, rot));
+            const result = { orientation: rot, position: shift };
+            return result;
+        }
+    }
+    return null;
+}
+
+function readScanners(lines) {
+    const beacons = [];
+    let current = [];
+    for (const line : stripEmptyLines(lines)) {
+        if (line.startsWith("---")) {
+            if (current.length > 0) {
+                beacons.push(current);
+                current = [];
+            }
+        } else {
+            const beacon = createPointFromList(line.trim().split(",").map(s => parseInt(s)));
+            current.push(beacon);
+        }
+    }
+    if (current.length > 0) {
+        beacons.push(current);
+    }
+    return beacons;
+}
+
+// (TypeScript also prints which scanners it tries)
+function computeScanners(beacons) {
+    const scanners = [];
+    const N = beacons.length;
+    for (const i : range(N)) {
+        scanners.push(null);
+    }
+    scanners[0] = { position: new Point3(0, 0, 0), orientation: rotations[0] };
+
+    while (scanners.includes(null)) {
+        for (const s1 : range(N)) {
+            const scanner1 = scanners[s1];
+            if (!scanner1) {
+                continue;
+            }
+            for (const s2 : range(N)) {
+                if (s1 == s2 || scanners[s2]) {
+                    continue;
+                }
+                // s1 known, s2 unknown
+                const result = compareScanners(convertToAbsolute(beacons[s1], scanner1), beacons[s2]);
+                if (result) {
+                    scanners[s2] = {
+                        position: result.position,
+                        orientation: result.orientation
+                    };
+                }
+            }
+        }
+    }
+    return scanners;
+}
+
+let beacons = [];
+let scanners = [];
+
+function part1(lines) {
+    if (scanners.length == 0) {
+        beacons = readScanners(lines);
+        scanners = computeScanners(beacons);
+    }
+    const uniques = [];
+    for (const s : range(beacons.length)) {
+        const scanner = scanners[s];
+        if (scanner) {
+            const bs = convertToAbsolute(beacons[s], scanner);
+            for (const b : bs) {
+                if (!listIncludes(uniques, b)) {
+                    uniques.push(b);
+                }
+            }
+        } else {
+            throw new Error("Scanner " + s + " was not correctly determined!");
+        }
+    }
+    return uniques.length;
+}
+
+function part2(lines) {
+    if (scanners.length == 0) {
+        beacons = readScanners(lines);
+        scanners = computeScanners(beacons);
+    }
+    const distances = [];
+    for (const s1 : scanners) {
+        for (const s2 : scanners) {
+            if (s1 && s2 && s1 != s2) {
+                distances.push(manhattanDistance(s1.position, s2.position));
+            }
+        }
+    }
+    return Math.max.apply(null, distances);
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

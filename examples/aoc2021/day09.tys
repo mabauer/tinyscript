@@ -1,0 +1,140 @@
+// Advent of Code 2021, day 9: Smoke Basin
+// https://adventofcode.com/2021/day/9
+//
+// Usage: tinyscript day09.tys -- input.txt
+
+import inputLines from "./aoc";
+import sum, listIncludes, stripEmptyLines from "./utils";
+
+class Point {
+
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    equals(other) {
+        return (other && this.x == other.x && this.y == other.y);
+    }
+
+    // TypeScript: get hashCode(); tinyscript has no getters
+    hashCode() {
+        return 31 * (31 * 7 + this.x) + this.y;
+    }
+}
+
+class HeightMap {
+
+    constructor(rows) {
+        this.dimX = rows[0].length;
+        this.dimY = rows.length;
+        this.cells = [];
+        for (const y : range(this.dimY)) {
+            this.cells[y] = [];
+            for (const x : range(this.dimX)) {
+                this.cells[y][x] = rows[y][x];
+            }
+        }
+    }
+
+    getxy(x, y) {
+        return this.cells[y][x];
+    }
+
+    setxy(x, y, value) {
+        this.cells[y][x] = value;
+    }
+
+    getNeighbours(x, y) {
+        const neighbours = [];
+        if (x - 1 >= 0) {
+            neighbours.push(this.getxy(x - 1, y));
+        }
+        if (x + 1 < this.dimX) {
+            neighbours.push(this.getxy(x + 1, y));
+        }
+        if (y - 1 >= 0) {
+            neighbours.push(this.getxy(x, y - 1));
+        }
+        if (y + 1 < this.dimY) {
+            neighbours.push(this.getxy(x, y + 1));
+        }
+        return neighbours;
+    }
+
+    findLows() {
+        const result = [];
+        for (const y : range(this.dimY)) {
+            for (const x : range(this.dimX)) {
+                const value = this.getxy(x, y);
+                if (this.getNeighbours(x, y).filter(n => n <= value).length == 0) {
+                    result.push(value);
+                }
+            }
+        }
+        return result;
+    }
+
+    expandBasin(x, y, basin) {
+        basin = basin ?? [];
+        const coords = new Point(x, y);
+        if (listIncludes(basin, coords)) {
+            return 0;
+        }
+        basin.push(coords);
+        let size = 1;
+        const value = this.getxy(x, y);
+        if ((x - 1 >= 0) && (this.getxy(x - 1, y) > value) && this.getxy(x - 1, y) < 9) {
+            size += this.expandBasin(x - 1, y, basin);
+        }
+        if ((x + 1 < this.dimX) && (this.getxy(x + 1, y) > value) && this.getxy(x + 1, y) < 9) {
+            size += this.expandBasin(x + 1, y, basin);
+        }
+        if ((y - 1 >= 0) && (this.getxy(x, y - 1) > value) && this.getxy(x, y - 1) < 9) {
+            size += this.expandBasin(x, y - 1, basin);
+        }
+        if ((y + 1 < this.dimY) && (this.getxy(x, y + 1) > value) && this.getxy(x, y + 1) < 9) {
+            size += this.expandBasin(x, y + 1, basin);
+        }
+        return size;
+    }
+
+    findBasins() {
+        const result = [];
+        for (const y : range(this.dimY)) {
+            for (const x : range(this.dimX)) {
+                const value = this.getxy(x, y);
+                if (this.getNeighbours(x, y).filter(n => n <= value).length == 0) {
+                    const size = this.expandBasin(x, y);
+                    result.push(size);
+                }
+            }
+        }
+        return result;
+    }
+}
+
+function part1(lines) {
+    const map = new HeightMap(stripEmptyLines(lines)
+        .map(r => r.split("").map(c => parseInt(c))));
+    const lows = map.findLows();
+    const risks = lows.map(n => n + 1);
+    const result = sum(risks);
+    return result;
+}
+
+function part2(lines) {
+    const map = new HeightMap(stripEmptyLines(lines)
+        .map(r => r.split("").map(c => parseInt(c))));
+    const basins = map.findBasins();
+    basins.sort((a, b) => b - a);
+    if (basins.length >= 3) {
+        return basins[0] * basins[1] * basins[2];
+    } else {
+        return 0;
+    }
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

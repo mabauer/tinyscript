@@ -1,0 +1,137 @@
+// Advent of Code 2021, day 5: Hydrothermal Venture
+// https://adventofcode.com/2021/day/5
+//
+// Usage: tinyscript day05.tys -- input.txt
+
+import inputLines from "./aoc";
+import parse from "std:string";
+
+const CANVAS_SIZE = 1000;
+
+class Point {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+class Canvas {
+
+    constructor(x_max, y_max) {
+        this.x_max = x_max;
+        this.y_max = y_max;
+        this.cells = [];
+        for (const y : range(y_max)) {
+            const row = [];
+            for (const x : range(x_max)) {
+                row.push(0);
+            }
+            this.cells.push(row);
+        }
+    }
+
+    getxy(x, y) {
+        return this.cells[y][x];
+    }
+
+    setxy(x, y, value) {
+        this.cells[y][x] = value;
+    }
+
+    drawLine(line, diagonals) {
+        diagonals = diagonals ?? false;
+        const origin = line[0];
+        const dest = line[1];
+        const deltax = dest.x - origin.x;
+        const deltay = dest.y - origin.y;
+        let dx = 0;
+        let dy = 0;
+        if (deltax == 0) {
+            dx = 0;
+            dy = (deltay > 0) ? 1 : -1;
+        }
+        if (deltay == 0) {
+            dx = (deltax > 0) ? 1 : -1;
+            dy = 0;
+        }
+        if (diagonals && (Math.abs(deltax) == Math.abs(deltay))) {
+            dx = (deltax > 0) ? 1 : -1;
+            dy = (deltay > 0) ? 1 : -1;
+        }
+        if (dx != 0 || dy != 0) {
+            let x = origin.x;
+            let y = origin.y;
+            while (x != dest.x || y != dest.y) {
+                this.setxy(x, y, this.getxy(x, y) + 1);
+                x += dx;
+                y += dy;
+            }
+            this.setxy(x, y, this.getxy(x, y) + 1);
+        }
+    }
+
+    toString() {
+        let result = "";
+        for (const y : range(this.y_max)) {
+            let line = "";
+            for (const x : range(this.x_max)) {
+                line += this.getxy(x, y).toString();
+            }
+            line += "\n";
+            result += line;
+        }
+        return result;
+    }
+
+    countCells(condition) {
+        let result = 0;
+        for (const y : range(this.y_max)) {
+            for (const x : range(this.x_max)) {
+                if (condition(this.getxy(x, y))) {
+                    result += 1;
+                }
+            }
+        }
+        return result;
+    }
+}
+
+// TypeScript: the regular expression /(\d+),(\d+)\s*\-\>\s*(\d+),(\d+)/
+function parseLine(s) {
+    const values = parse("{:d},{:d} -> {:d},{:d}", s);
+    if (values != null) {
+        const result = [new Point(values[0], values[1]), new Point(values[2], values[3])];
+        return result;
+    }
+    return [];
+}
+
+function part1(lines) {
+    lines = lines.filter(l => l.length > 0);
+    const seamap = new Canvas(CANVAS_SIZE, CANVAS_SIZE);
+    for (const s : lines) {
+        const line = parseLine(s);
+        if (line && line.length == 2) {
+            seamap.drawLine(line);
+        }
+    }
+    const result = seamap.countCells(value => value >= 2);
+    return result;
+}
+
+function part2(lines) {
+    lines = lines.filter(l => l.length > 0);
+    const seamap = new Canvas(CANVAS_SIZE, CANVAS_SIZE);
+    for (const s : lines) {
+        const line = parseLine(s);
+        if (line && line.length == 2) {
+            seamap.drawLine(line, true);
+        }
+    }
+    const result = seamap.countCells(value => value >= 2);
+    return result;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

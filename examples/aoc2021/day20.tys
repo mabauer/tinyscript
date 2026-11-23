@@ -1,0 +1,136 @@
+// Advent of Code 2021, day 20: Trench Map
+// https://adventofcode.com/2021/day/20
+//
+// Usage: tinyscript day20.tys -- input.txt
+
+import inputLines from "./aoc";
+import stripEmptyLines from "./utils";
+
+// An image of infinite size: the pixels in cells, all others have the value edge
+class Image {
+
+    constructor(rows) {
+        this.dimX = rows[0].length;
+        this.dimY = rows.length;
+        this.cells = [];
+        for (const y : range(this.dimY)) {
+            this.cells[y] = [];
+            for (const x : range(this.dimX)) {
+                this.cells[y][x] = rows[y][x];
+            }
+        }
+        this.edge = 0;
+    }
+
+    getxy(x, y) {
+        if ((y >= 0) && (y < this.dimY)
+                && (x >= 0) && (x < this.dimX)) {
+            return this.cells[y][x];
+        } else {
+            return this.edge;
+        }
+    }
+
+    setxy(x, y, value) {
+        this.cells[y][x] = value;
+    }
+
+    getBinaryStringForPixel(x, y) {
+        const result = [];
+        for (const j : range(y - 1, y + 2)) {
+            for (const i : range(x - 1, x + 2)) {
+                const value = this.getxy(i, j);
+                if (value > 0) {
+                    result.push("1");
+                } else {
+                    result.push("0");
+                }
+            }
+        }
+        return result.join("");
+    }
+
+    computeEnhancedImage(enhancementString) {
+        const result = createBlankImage(this.dimX + 2, this.dimY + 2);
+
+        // Compute new edge
+        let binaryString = this.getBinaryStringForPixel(-10, -10);
+        let index = parseInt(binaryString, 2);
+        let value = (enhancementString[index] == "#") ? 1 : 0;
+        result.edge = value;
+
+        // Compute inner part
+        for (const y : range(this.dimY + 2)) {
+            for (const x : range(this.dimY + 2)) {
+                binaryString = this.getBinaryStringForPixel(x - 1, y - 1);
+                index = parseInt(binaryString, 2);
+                value = (enhancementString[index] == "#") ? 1 : 0;
+                result.setxy(x, y, value);
+            }
+        }
+        return result;
+    }
+
+    countLitPixels() {
+        let result = 0;
+        for (const row : this.cells) {
+            for (const pixel : row) {
+                if (pixel > 0) {
+                    result += 1;
+                }
+            }
+        }
+        return result;
+    }
+
+    toString() {
+        const rows = this.cells.map(row => row.map(v => (v > 0) ? "#" : " ").join(""));
+        return rows.join("\n");
+    }
+}
+
+function createBlankImage(dimX, dimY) {
+    const rows = [];
+    for (const j : range(dimY)) {
+        rows.push(new Array(dimX).fill(0));
+    }
+    return new Image(rows);
+}
+
+function createImageFromInput(rows) {
+    const image = new Image(stripEmptyLines(rows)
+        .map(r => r.split("").map(c => c == "#" ? 1 : 0)));
+    return image;
+}
+
+// (TypeScript also prints the image after each step)
+function applyEnhancements(enhancementString, image, n) {
+    let enhancedImage = image;
+    for (const i : range(1, n + 1)) {
+        enhancedImage = enhancedImage.computeEnhancedImage(enhancementString);
+    }
+    return enhancedImage;
+}
+
+// TypeScript: const [enhancementString, ...data] = lines;
+function part1(lines) {
+    const enhancementString = lines[0];
+    const data = lines.slice(1);
+    const image = createImageFromInput(stripEmptyLines(data));
+    const enhancedImage = applyEnhancements(enhancementString, image, 2);
+    const result = enhancedImage.countLitPixels();
+    return result;
+}
+
+function part2(lines) {
+    const enhancementString = lines[0];
+    const data = lines.slice(1);
+    const image = createImageFromInput(stripEmptyLines(data));
+    const enhancedImage = applyEnhancements(enhancementString, image, 50);
+    const result = enhancedImage.countLitPixels();
+    return result;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

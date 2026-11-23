@@ -1,0 +1,15 @@
+// Helpers for the Advent of Code 2021 solutions in this directory
+
+import * as fs from "std:fs";
+
+// The puzzle input: the file given after --, e.g. tinyscript day01.tys -- input.txt
+// (input.txt if there is none)
+function inputFile() {
+    return System.args.length > 0 ? System.args[0] : "input.txt";
+}
+
+// The lines of the puzzle input, read as the TypeScript originals read them: split at
+// "\n", so the last line is empty if the file ends with a line break
+export function inputLines() {
+    return fs.readFile(inputFile()).split("\n");
+}

@@ -1,0 +1,146 @@
+// Advent of Code 2021, day 4: Giant Squid
+// https://adventofcode.com/2021/day/4
+//
+// Usage: tinyscript day04.tys -- input.txt
+
+import inputLines from "./aoc";
+import words from "std:string";
+
+class Board {
+
+    constructor(rows) {
+        this.cells = rows;
+    }
+
+    getxy(x, y) {
+        return this.cells[y][x];
+    }
+
+    winningRowOrColumn(numbers_drawn) {
+        const size = this.cells.length;
+        let result = [];
+        for (const y : range(size)) {
+            result = [];
+            for (const x : range(size)) {
+                const value = this.getxy(x, y);
+                if (numbers_drawn.has(value)) {
+                    result.push(value);
+                } else {
+                    result = [];
+                    break;
+                }
+            }
+            if (result.length > 0) {
+                return result;
+            }
+        }
+        for (const x : range(size)) {
+            result = [];
+            for (const y : range(size)) {
+                const value = this.getxy(x, y);
+                if (numbers_drawn.has(value)) {
+                    result.push(value);
+                } else {
+                    result = [];
+                    break;
+                }
+            }
+            if (result.length > 0) {
+                return result;
+            }
+        }
+        return [];
+    }
+
+    wins(numbers_drawn) {
+        const winning_sequence = this.winningRowOrColumn(numbers_drawn);
+        return (winning_sequence && winning_sequence.length > 0);
+    }
+
+    score(numbers_drawn) {
+        const size = this.cells.length;
+        let sum = 0;
+        for (const y : range(size)) {
+            for (const x : range(size)) {
+                const value = this.getxy(x, y);
+                if (!numbers_drawn.has(value)) {
+                    sum += value;
+                }
+            }
+        }
+        return sum;
+    }
+}
+
+function createBoards(lines) {
+    const boards = [];
+    let rows = [];
+    for (const s : lines) {
+        // TypeScript: s && s.length > 0; a string is no condition in tinyscript
+        if (s.length > 0) {
+            const row = words(s).map(s => parseInt(s));
+            rows.push(row);
+        } else {
+            boards.push(new Board(rows));
+            rows = [];
+        }
+    }
+    return boards;
+}
+
+function playPart1(boards, numbers_to_draw) {
+    const numbers_drawn = new Set();
+    for (const num : numbers_to_draw) {
+        numbers_drawn.add(num);
+        for (const board : boards) {
+            if (board.wins(numbers_drawn)) {
+                return num * board.score(numbers_drawn);
+            }
+        }
+    }
+    return 0;
+}
+
+function part1(lines) {
+    // TypeScript: const [fst, ...rest] = lines;
+    const fst = lines[0];
+    const rest = lines.slice(1);
+    const numbers_to_draw = fst.split(",").map(s => parseInt(s));
+    const boards = createBoards(rest);
+    const result = playPart1(boards, numbers_to_draw);
+    return result;
+}
+
+function playPart2(boards, numbers_to_draw) {
+    let boards_remaining = boards.slice();
+    const boards_won = [];
+    let last_winning_round = 0;
+    for (const round : range(numbers_to_draw.length)) {
+        for (const board : boards_remaining) {
+            if (board.wins(new Set(numbers_to_draw.slice(0, round + 1)))) {
+                last_winning_round = round;
+                boards_won.push(board);
+            }
+        }
+        boards_remaining = boards_remaining.filter(b => !boards_won.includes(b));
+        if (boards_remaining.length == 0) {
+            break;
+        }
+    }
+    const last_board = boards_won[boards_won.length - 1];
+    const last_winning_number = numbers_to_draw[last_winning_round];
+    return last_winning_number * last_board.score(new Set(numbers_to_draw.slice(0, last_winning_round + 1)));
+}
+
+function part2(lines) {
+    const fst = lines[0];
+    const rest = lines.slice(1);
+    const numbers_to_draw = fst.split(",").map(s => parseInt(s));
+    const boards = createBoards(rest);
+    const result = playPart2(boards, numbers_to_draw);
+    return result;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

@@ -1,0 +1,101 @@
+// Advent of Code 2021, day 2: Dive!
+// https://adventofcode.com/2021/day/2
+//
+// Usage: tinyscript day02.tys -- input.txt
+
+import inputLines from "./aoc";
+import stripEmptyLines from "./utils";
+
+class Submarine {
+
+    constructor(position, depth) {
+        this.position = position ?? 0;
+        this.depth = depth ?? 0;
+    }
+
+    forward(units) {
+        this.position += units;
+    }
+
+    down(units) {
+        this.depth += units;
+    }
+
+    up(units) {
+        this.depth -= units;
+    }
+
+    getPosition() {
+        return this.position * this.depth;
+    }
+}
+
+// TypeScript: class Submarine2 extends Submarine. A class in tinyscript cannot extend
+// another one, so Submarine2 has getPosition as well.
+class Submarine2 {
+
+    constructor(position, depth, aim) {
+        this.position = position ?? 0;
+        this.depth = depth ?? 0;
+        this.aim = aim ?? 0;
+    }
+
+    down(units) {
+        this.aim += units;
+    }
+
+    up(units) {
+        this.aim -= units;
+    }
+
+    forward(units) {
+        this.position += units;
+        this.depth += this.aim * units;
+    }
+
+    getPosition() {
+        return this.position * this.depth;
+    }
+}
+
+// TypeScript goes through all lines; for the empty last line, const [cmd, operand] = ...
+// gives an undefined operand there, but is a TypeError in tinyscript
+function part1(lines) {
+    const submarine = new Submarine(0, 0);
+    for (const line : stripEmptyLines(lines)) {
+        const [cmd, operand] = line.split(" ");
+        const units = parseInt(operand);
+        if (cmd == "forward") {
+            submarine.forward(units);
+        }
+        if (cmd == "down") {
+            submarine.down(units);
+        }
+        if (cmd == "up") {
+            submarine.up(units);
+        }
+    }
+    return submarine.getPosition();
+}
+
+function part2(lines) {
+    const submarine = new Submarine2(0, 0, 0);
+    for (const line : stripEmptyLines(lines)) {
+        const [cmd, operand] = line.split(" ");
+        const units = parseInt(operand);
+        if (cmd == "forward") {
+            submarine.forward(units);
+        }
+        if (cmd == "down") {
+            submarine.down(units);
+        }
+        if (cmd == "up") {
+            submarine.up(units);
+        }
+    }
+    return submarine.getPosition();
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

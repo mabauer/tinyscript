@@ -1,0 +1,38 @@
+// Advent of Code 2021, day 1: Sonar Sweep
+// https://adventofcode.com/2021/day/1
+//
+// Usage: tinyscript day01.tys -- input.txt
+
+import inputLines from "./aoc";
+import integers, stripEmptyLines from "./utils";
+
+// TypeScript reads all lines: the empty last line gives NaN, and pos <= ints.length also
+// compares with ints[ints.length], i.e. undefined. Both comparisons are false in Javascript,
+// but TypeErrors in tinyscript, so the empty lines go and the loop stops one earlier.
+function part1(lines) {
+    const ints = integers(stripEmptyLines(lines));
+    let result = 0;
+    for (const pos : range(1, ints.length)) {
+        if (ints[pos - 1] < ints[pos]) {
+            result += 1;
+        }
+    }
+    return result;
+}
+
+function part2(lines) {
+    const ints = integers(stripEmptyLines(lines));
+    let result = 0;
+    // Comparing the measurements with sliding windows can be reduced to
+    // comparing the 1st element of the "previous" windows with the 3rd element of the current window!
+    for (const pos : range(3, ints.length)) {
+        if (ints[pos - 3] < ints[pos]) {
+            result += 1;
+        }
+    }
+    return result;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));
