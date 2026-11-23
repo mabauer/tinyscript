@@ -37,6 +37,9 @@ public final class NumberFunctions {
 		number.defineBuiltinMethod("isFinite", (self, args) -> TSValue.of(args[0] instanceof TSNumber n && Double.isFinite(n.value())), 1);
 		number.defineDefaultProperty("MAX_SAFE_INTEGER", 9007199254740991.0);
 		number.defineDefaultProperty("MIN_SAFE_INTEGER", -9007199254740991.0);
+		number.defineDefaultProperty("MAX_VALUE", Double.MAX_VALUE);
+		number.defineDefaultProperty("MIN_VALUE", Double.MIN_VALUE);
+		number.defineDefaultProperty("EPSILON", Math.ulp(1.0));
 		TSObject prototype = new TSObject(engine, engine.getDefaultPrototype());
 		prototype.defineDefaultProperty("constructor", number);
 		prototype.defineBuiltinMethod("toFixed", (self, args) -> toFixed(engine, thisNumber(self, "toFixed"), args), 0, 1);
