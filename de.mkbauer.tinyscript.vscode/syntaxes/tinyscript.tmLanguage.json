@@ -58,7 +58,7 @@
     },
     "numbers": {
       "name": "constant.numeric.decimal.tinyscript",
-      "match": "(?<![\\w.])(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?"
+      "match": "(?<![\\w.])(?:0[xX][0-9A-Fa-f_]+|0[bBoO][0-9_]+|(?:\\d[\\d_]*(?:\\.[\\d_]*)?|\\.\\d[\\d_]*)(?:[eE][+-]?[\\d_]+)?)"
     },
     "function-declaration": {
       "match": "\\b(function)\\s+([A-Za-z_][A-Za-z0-9_]*)",

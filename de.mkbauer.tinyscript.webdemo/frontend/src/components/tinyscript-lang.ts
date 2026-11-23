@@ -87,7 +87,7 @@ export function tokenizeLine(line: string): Array<{ text: string; type: string |
 
     // Numbers
     if (/\d/.test(ch)) {
-      while (pos < line.length && /[\d.]/.test(line[pos])) pos++
+      while (pos < line.length && /[\w.]/.test(line[pos])) pos++
       return { text: line.slice(start, pos), type: 'number' }
     }
 
@@ -171,7 +171,7 @@ export const tinyscriptLanguage = StreamLanguage.define<State>({
 
     // Numbers
     if (/\d/.test(ch)) {
-      stream.eatWhile(/[\d.]/)
+      stream.eatWhile(/[\w.]/)
       return 'number'
     }
 

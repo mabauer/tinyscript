@@ -476,9 +476,15 @@ terminal BOOLEAN returns ecore::EBoolean:
 	'true' | 'false'
 ;
 
+// Numbers as in Javascript: 42, 3.14, .5, 1e-9, 0xff, 0b1010, 0o17, and with separators
+// between digits, 1_000_000. The lexer takes digits and _ generously, so that
+// TinyscriptValueConverter can say what is wrong (1__000, 0b102) and computes the value.
 terminal DOUBLE returns ecore::EDouble:
-    (('0'..'9')+ ('.' ('0'..'9')*)? | '.' ('0'..'9')+)
-    (('e' | 'E') ('+' | '-')? ('0'..'9')+)?;
+    '0' ('x' | 'X') ('0'..'9' | 'a'..'f' | 'A'..'F' | '_')*
+    | '0' ('b' | 'B' | 'o' | 'O') ('0'..'9' | '_')*
+    | (DIGITS ('.' DIGITS?)? | '.' DIGITS) (('e' | 'E') ('+' | '-')? ('0'..'9' | '_')+)?;
+
+terminal fragment DIGITS: ('0'..'9') ('0'..'9' | '_')*;
     
 terminal ID  		: '^'?('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9')*;
 

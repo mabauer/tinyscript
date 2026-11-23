@@ -41,7 +41,7 @@ class Chamber {
             // Pushed left, a rock must not touch the left wall (bit 6), pushed right not the
             // right wall (bit 0)
             const pushed = push < 0
-                ? (rock.some(bits => (bits & 64) != 0) ? rock : rock.map(bits => bits << 1))
+                ? (rock.some(bits => (bits & 0b1000000) != 0) ? rock : rock.map(bits => bits << 1))
                 : (rock.some(bits => (bits & 1) != 0) ? rock : rock.map(bits => bits >> 1));
             if (this.fits(pushed, y)) {
                 rock = pushed;
@@ -96,4 +96,4 @@ function towerHeight(rocks) {
 print("Part 1: " + towerHeight(2022));
 
 // Part 2: after a trillion rocks
-print("Part 2: " + towerHeight(1000000000000));
+print("Part 2: " + towerHeight(1_000_000_000_000));

@@ -73,6 +73,12 @@ Tinyscript has six types:
 | `undefined` | `undefined`                     | Value of uninitialized variables and missing properties; a literal like `null` |
 | `object`    | `{ }`, `[ ]`, functions         | All objects and arrays; functions are objects                                  |
 
+Number literals are written as in Javascript: decimal (`42`, `3.14`, `.5`,
+`1e-9`), hexadecimal (`0xff`), binary (`0b1010`) and octal (`0o17`), with `_`
+between digits as a separator (`1_000_000`, `0b1111_0000`). Unlike Javascript
+outside of strict mode, a decimal number cannot start with `0` (`017`, which
+Javascript reads as the octal number 15, is an error: write `17` or `0o17`).
+
 Unlike Javascript, where `undefined` is a global variable (which a function can
 even redeclare), `undefined` is a literal like `null`: it cannot be declared,
 assigned or shadowed (`let undefined = 1;` is an error). To check for "no
