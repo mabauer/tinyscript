@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.mkbauer.tinyscript.repl</groupId>
 	<artifactId>de.mkbauer.tinyscript.repl</artifactId>
-	<version>0.27.0</version>
+	<version>0.27.1-SNAPSHOT</version>
 	<name>TinyscriptREPL</name>
 
 	<properties>
@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>de.mkbauer.tinyscript</groupId>
 			<artifactId>de.mkbauer.tinyscript</artifactId>
-			<version>0.27.0</version>
+			<version>0.27.1-SNAPSHOT</version>
 			<!-- OSGi runtime / Eclipse UI libraries pulled in by the Tycho-generated core POM; not needed standalone -->
 			<exclusions>
 				<exclusion>
