@@ -22,7 +22,7 @@ function parseDots(lines) {
 }
 
 function foldDots(axis, pos, dots) {
-    const copy = dots.slice();
+    const copy = [...dots];
     for (const dot : copy) {
         const foldedDot = new Point(dot.x, dot.y);
         if ((axis == "x") && (dot.x > pos)) {
@@ -58,8 +58,8 @@ function part1(lines) {
 }
 
 function display(dots) {
-    const dimX = Math.max.apply(null, dots.map(d => d.x)) + 1;
-    const dimY = Math.max.apply(null, dots.map(d => d.y)) + 1;
+    const dimX = Math.max(...dots.map(d => d.x)) + 1;
+    const dimY = Math.max(...dots.map(d => d.y)) + 1;
     const rows = [];
     for (const y : range(dimY)) {
         const row = [];

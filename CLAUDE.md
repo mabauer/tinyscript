@@ -234,6 +234,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - Default parameters (`function f(a, step = 1)`) as in Javascript (used for a
   missing argument or `undefined`, evaluated at each call), but only at the end
   of the parameters and only for names, not patterns
+- Spread in calls and array literals (`f(...items)`, `[...a, x]`) for what the
+  `for` loop goes through; a rest element only at the end of an array pattern
+  (`[first, ...rest]`); no spread or rest for objects
 - `class` without inheritance (only at the top level; a `constructor` and
   methods, no `extends` / `static` / getters / field declarations); a class
   needs `new`, and its instances print with the class name (`Point {x: 1}`);

@@ -114,6 +114,10 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			return "++ and -- are statements, not expressions: write i" + text + "; on its own";
 		if (text.equals("..."))
 			return spreadOrRest(tokens, index);
+		// function f(...rest, a) or const [...rest, a]
+		if (text.equals(",") && previous != null && "...".equals(textBefore(tokens, previous.getTokenIndex())))
+			return "The rest " + (openingBracket(tokens, index) >= 0 && tokens.get(openingBracket(tokens, index)).getText().equals("[")
+					? "element" : "parameter") + " (..." + before + ") must be the last one";
 		if ((text.equals(")") || text.equals("]") || text.equals("}")) && before.equals(","))
 			return TRAILING_COMMA;
 		if (text.equals(",") && Set.of(",", "[", "(", "{").contains(before))
@@ -273,13 +277,11 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 		String bracket = open >= 0 ? tokens.get(open).getText() : "";
 		Token before = open >= 0 ? previous(tokens, open) : null;
 		boolean inDeclaration = before != null && Set.of("let", "const").contains(before.getText());
-		if ((bracket.equals("[") || bracket.equals("{")) && inDeclaration)
-			return "Rest elements (...) in patterns are not supported (for an array, use slice: items.slice(1))";
-		if (bracket.equals("["))
-			return "Spread (...) in array literals is not supported: concatenate arrays with +, e.g. a + b";
+		if (bracket.equals("{") && inDeclaration)
+			return "Rest elements (...) in object patterns are not supported: take the properties you need, e.g. const { x, y } = o;";
 		if (bracket.equals("{"))
-			return "Spread (...) in object literals is not supported: copy the properties, e.g. for (const key : Object.keys(o))";
-		return "... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)";
+			return "Spread (...) in object literals is not supported: copy the properties with Object.assign, e.g. Object.assign({}, o, { y: 2 })";
+		return "... is only allowed in calls (f(...items)), array literals ([...a, x]), and as the last parameter or the last element of an array pattern ([first, ...rest])";
 	}
 
 	/**
@@ -421,6 +423,11 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			}
 		}
 		return -1;
+	}
+
+	private static String textBefore(TokenStream tokens, int index) {
+		Token token = previous(tokens, index);
+		return token != null ? token.getText() : null;
 	}
 
 	private static Token previous(TokenStream tokens, int index) {

@@ -9,18 +9,17 @@ function sum(...values) {
     return values.reduce((sum, current) => sum + current, 0);
 }
 
-// TypeScript: Math.min(...crabs), sum(...costs) and Number.MAX_VALUE; tinyscript has no
-// spread in calls (f.apply(null, array) instead); Infinity is the clearer start value
+// TypeScript: Number.MAX_VALUE; Infinity is the clearer start value
 function optimizeMoves(crabs, costFunction) {
     let best = Infinity;
 
-    const min = Math.min.apply(null, crabs);
-    const max = Math.max.apply(null, crabs);
+    const min = Math.min(...crabs);
+    const max = Math.max(...crabs);
 
     for (const pos : range(min, max + 1)) {
         const moves = crabs.map(c => Math.abs(c - pos));
         const costs = moves.map(m => costFunction(m));
-        const cost = sum.apply(null, costs);
+        const cost = sum(...costs);
         if (cost < best) {
             best = cost;
         }

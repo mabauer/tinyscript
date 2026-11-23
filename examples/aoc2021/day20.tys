@@ -113,10 +113,8 @@ function applyEnhancements(enhancementString, image, n) {
     return enhancedImage;
 }
 
-// TypeScript: const [enhancementString, ...data] = lines;
 function part1(lines) {
-    const enhancementString = lines[0];
-    const data = lines.slice(1);
+    const [enhancementString, ...data] = lines;
     const image = createImageFromInput(stripEmptyLines(data));
     const enhancedImage = applyEnhancements(enhancementString, image, 2);
     const result = enhancedImage.countLitPixels();
@@ -124,8 +122,7 @@ function part1(lines) {
 }
 
 function part2(lines) {
-    const enhancementString = lines[0];
-    const data = lines.slice(1);
+    const [enhancementString, ...data] = lines;
     const image = createImageFromInput(stripEmptyLines(data));
     const enhancedImage = applyEnhancements(enhancementString, image, 50);
     const result = enhancedImage.countLitPixels();

@@ -133,7 +133,7 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 				ids.add(varId);
 			}
 			if (foreach.getPattern() != null) {
-				ids.addAll(foreach.getPattern().getNames());
+				ids.addAll(TinyscriptModelUtil.patternIdentifiers(foreach.getPattern()));
 			}
 		}
 		// catch (e) { ... }: the error is a variable of the catch block

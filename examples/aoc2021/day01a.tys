@@ -13,9 +13,7 @@ if (Array.prototype.reduce_pairs == undefined) {
         if (this.length < 2) {
             return initialValue;
         } else {
-            // TypeScript: const [fst, ...rest] = this;
-            const fst = this[0];
-            const rest = this.slice(1);
+            const [fst, ...rest] = this;
             const snd = rest[0];
             const result = reducerFunction(initialValue, fst, snd);
             return rest.reduce_pairs(result, reducerFunction);

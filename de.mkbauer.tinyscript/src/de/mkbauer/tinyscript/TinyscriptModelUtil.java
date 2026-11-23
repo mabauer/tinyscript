@@ -19,6 +19,7 @@ import de.mkbauer.tinyscript.ts.ForStatement;
 import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
+import de.mkbauer.tinyscript.ts.ArrayPattern;
 import de.mkbauer.tinyscript.ts.Pattern;
 import de.mkbauer.tinyscript.ts.PropertyName;
 import de.mkbauer.tinyscript.ts.StringLiteral;
@@ -151,9 +152,21 @@ public class TinyscriptModelUtil {
 			if (target instanceof Identifier identifier)
 				result.add(identifier);
 			if (target instanceof Pattern pattern)
-				result.addAll(pattern.getNames());
+				result.addAll(patternIdentifiers(pattern));
 		}
 		return result;
+	}
+
+	/**
+	 * The names a pattern declares: [a, b, ...rest] declares a, b and rest.
+	 */
+	public static List<Identifier> patternIdentifiers(Pattern pattern) {
+		if (pattern instanceof ArrayPattern array && array.getRest() != null) {
+			List<Identifier> result = new ArrayList<Identifier>(pattern.getNames());
+			result.add(array.getRest());
+			return result;
+		}
+		return pattern.getNames();
 	}
 
 	public static List<Identifier> declaredVariablesInBlock(Block block) {
@@ -293,7 +306,7 @@ public class TinyscriptModelUtil {
 			if (param instanceof Identifier identifier)
 				result.add(identifier);
 			if (param instanceof Pattern pattern)
-				result.addAll(pattern.getNames());
+				result.addAll(patternIdentifiers(pattern));
 		}
 		return result;
 	}
@@ -328,7 +341,7 @@ public class TinyscriptModelUtil {
 		if (loop.getId() != null)
 			return List.of(loop.getId());
 		if (loop.getPattern() != null)
-			return loop.getPattern().getNames();
+			return patternIdentifiers(loop.getPattern());
 		return List.of();
 	}
 	

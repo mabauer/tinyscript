@@ -204,10 +204,13 @@ of primitive datatypes in Javascript is a mine-field on its own.
 - **Functions** are declarations, function expressions and arrow functions
   (`x => x * 2`), with rest parameters (`...args`) and default parameters
   (`step = 1`, used for a missing argument or `undefined`). Stricter than
-  Javascript, defaults come last and only names have them, not patterns.
+  Javascript, defaults come last and only names have them, not patterns. Spread
+  (`Math.max(...values)`, `[...a, x]`) takes what the `for` loop goes through;
+  there is no spread in object literals.
 - **Destructuring** takes apart arrays and objects in declarations, `for` loops
   and parameters (`const [a, b] = pair;`, `({ x, y }) => x * y`), but only flat
-  patterns of names. An array that is too short is a `TypeError` instead of
+  patterns of names; an array pattern can end with a rest element
+  (`[first, ...rest]`). An array that is too short is a `TypeError` instead of
   giving `undefined`.
 - **Commas:** a comma after the last element is allowed in array and object
   literals (`[1, 2,]`), not in calls, parameter lists or patterns; arrays have
@@ -231,8 +234,7 @@ usable one!). Some Javascript features are simply missing, for example:
 - There is no support for _regular expressions_; to read structured text,
   `std:string` has `parse` (`parse("{:d},{:d}", line)`), `findAll`, `words` and
   `integers`.
-- There is no `switch`, no template strings and no spread in calls
-  (`f.apply(null, values)`), and classes have no inheritance.
+- There is no `switch` and no template strings, and classes have no inheritance.
 
 See [TODO.md](TODO.md) for what's planned and what was decided against.
 

@@ -396,7 +396,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	@Check
 	public void checkPattern(Pattern pattern) {
 		Set<String> names = new HashSet<String>();
-		for (Identifier name : pattern.getNames()) {
+		for (Identifier name : TinyscriptModelUtil.patternIdentifiers(pattern)) {
 			if (!names.add(name.getName()))
 				error("Duplicate identifier", name, TsPackage.Literals.IDENTIFIER__NAME);
 		}
