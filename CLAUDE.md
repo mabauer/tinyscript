@@ -253,8 +253,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   `docs/language-reference.md`, section 13)
 - `try { … } catch (e) { … }` (no `finally`) catches only errors thrown with
   `throw` (which takes only `Error` objects) and failed `std:fs` / `std:io`
-  input / output (`e.name == "IOError"`); `TypeError`s, failed `assert`s, stack
-  overflows and resource limits are not caught
+  input / output (`e.name == "IOError"`) and `JSON.parse` of invalid JSON
+  (`"SyntaxError"`); `TypeError`s, failed `assert`s, stack overflows and
+  resource limits are not caught
 - `this` as in Javascript's strict mode: set by a method call, `undefined` in a
   plain call and outside functions (`this` there is a compile-time error)
 

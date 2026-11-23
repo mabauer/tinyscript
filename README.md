@@ -211,9 +211,10 @@ of primitive datatypes in Javascript is a mine-field on its own.
   array plus anything else is a `TypeError`.
 - **Catching errors:** `try { … } catch (e) { … }` catches only what a script
   can expect: errors thrown with `throw` (only `Error` objects can be thrown)
-  and failed file access (`e.name == "IOError"`). Programming errors such as a
-  `TypeError` or a failed `assert` end the script even inside `try`, so a broad
-  `catch` cannot hide them. There is no `finally`.
+  failed file access (`e.name == "IOError"`) and invalid JSON in `JSON.parse`
+  (`"SyntaxError"`). Programming errors such as a `TypeError` or a failed
+  `assert` end the script even inside `try`, so a broad `catch` cannot hide
+  them. There is no `finally`.
 - **Functions** are declarations, function expressions and arrow functions
   (`x => x * 2`), with rest parameters (`...args`) and default parameters
   (`step = 1`, used for a missing argument or `undefined`). Stricter than

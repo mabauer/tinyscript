@@ -561,6 +561,7 @@ Only the errors a script can expect are caught:
 - failed input / output of `std:fs` (a missing file, a directory that cannot be
   listed, …) and `std:io`: an `Error` named `IOError`, e.g. `e.message` is
   `Cannot read file "data.txt": not found`.
+- `JSON.parse` of a text that is no JSON: an `Error` named `SyntaxError`.
 
 Everything else is a programming error and ends the script, also inside `try`: a
 `TypeError` (wrong types, wrong arguments of a builtin, accessing a property of
@@ -1412,6 +1413,25 @@ The arguments must be numbers. `Math.round` rounds halves up, as in Javascript
 (`Math.round(-2.5)` is `-2`). The results agree with node, the transcendental
 functions (`sin`, `exp`, `pow` …) in rare cases only to the last digit but one.
 
+### `JSON`
+
+`JSON.parse(text)` reads a text in JSON as in Javascript: objects, arrays,
+strings, numbers, `true`, `false` and `null`.
+
+```
+const packet = JSON.parse("[1, [2, 3], { \"a\": null }]");
+print(packet[1].length, packet[2]);   // 2 {a: null}
+```
+
+Unlike Javascript, the text must be a string (`JSON.parse(5)` is a `TypeError`),
+and there is no second argument (reviver). A text that is no JSON is an `Error`
+named `SyntaxError` that `catch` gets, since data from outside may be broken;
+the message says where
+(`JSON.parse: expected a key in double quotes, not 'a' at position 1`; the
+messages of node differ). Nesting deeper than 1000 levels is such an error too.
+There is no `JSON.stringify` yet; `print` and `String(x)` quote strings inside
+arrays and objects as it does.
+
 ### `Number`, `parseInt`, `isNaN`
 
 Conversions to numbers are explicit (no operator or builtin converts silently):
@@ -1631,8 +1651,8 @@ Calling something that is not a function is a `TypeError` that names it:
 `e.message`, `e.name` (`"Error"`) and `e.toString()` (`"Error: message"`) as in
 Javascript; the message must be a string. There are no subclasses like
 `TypeError` and no stack property. `catch` gets thrown errors and failed input /
-output (`e.name` is `"IOError"`), not programming errors (see
-[`try` / `catch`](#try--catch)).
+output (`e.name` is `"IOError"`) and `JSON.parse` of a text that is no JSON
+(`"SyntaxError"`), not programming errors (see [`try` / `catch`](#try--catch)).
 
 A too deep (or endless) recursion is a `TinyscriptStackOverflowError` ("Stack
 overflow: too many nested calls"); its stack trace shows only the innermost and
