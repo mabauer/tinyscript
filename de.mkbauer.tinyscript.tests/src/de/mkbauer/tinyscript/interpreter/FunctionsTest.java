@@ -80,8 +80,9 @@ public class FunctionsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testCallWithTooManyArgs() {
-		executeScriptFromString("function f(a, b) { return a*b; }; assert(f(2, 3, 4)==6);");	
-		
+		// The validator rejects f(2, 3, 4) for a declared f; a function as a value (e.g. a
+		// callback) ignores extra arguments, as in Javascript
+		executeScriptFromString("function f(a, b) { return a*b; }; const g = f; assert(g(2, 3, 4)==6);");
 	}
 	
 	@Test

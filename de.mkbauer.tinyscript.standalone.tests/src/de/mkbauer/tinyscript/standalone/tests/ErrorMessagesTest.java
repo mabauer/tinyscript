@@ -165,6 +165,39 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testTooManyArgumentsForKnownFunctions() {
+        assertEquals("f takes 2 arguments, not 3", firstError("function f(a, b) { return a; }\nf(1, 2, 3);"));
+        assertEquals("f takes no arguments, not 1", firstError("function f() { return 1; }\nf(1);"));
+        assertEquals("g takes 1 argument, not 2", firstError("const g = (a) => a;\ng(1, 2);"));
+        assertEquals("new Point takes 2 arguments, not 3",
+                firstError("class Point { constructor(x, y) { this.x = x; this.y = y; } }\nconst p = new Point(1, 2, 3);"));
+        assertEquals("new Empty takes no arguments, not 1", firstError("class Empty { }\nconst e = new Empty(1);"));
+        assertEquals("new P takes 1 argument, not 2", firstError("function P(x) { this.x = x; }\nconst p = new P(1, 2);"));
+        // Defaults count as parameters; fewer arguments, a rest parameter, spread and methods are fine
+        assertEquals(List.of(), reportedErrors("function f(a, b = 1) { return a; }\nf(1, 2); f(1); f();\n"
+                + "function r(a, ...rest) { return a; }\nr(1, 2, 3);\n"
+                + "const xs = [1, 2, 3]; f(...xs);\n"
+                + "class C { m(a) { return a; } }\nnew C().m(1, 2);\n"
+                + "let h = (a) => a; h(1, 2);"));
+    }
+
+    @Test
+    public void testFunctionDeclarationsCannotBeAssigned() {
+        assertEquals("Cannot assign to the function f (to replace a function, declare it with let f = …)",
+                firstError("function f(a) { return a; }\nf = (a, b) => a + b;"));
+    }
+
+    @Test
+    public void testAFieldMustNotHideAMethod() {
+        assertEquals("this.area hides the method area of Square: give the field another name",
+                firstError("class Square {\n    constructor(s) { this.area = s * s; }\n    area() { return 0; }\n}"));
+        assertEquals("this.area hides the method area of Square: give the field another name",
+                firstError("class Square {\n    reset() { [1].forEach(x => { this.area = x; }); }\n    area() { return 0; }\n}"));
+        // this of another function is not the instance
+        assertEquals(List.of(), reportedErrors("class Square {\n    make() { return function() { this.area = 1; }; }\n    area() { return 0; }\n}"));
+    }
+
+    @Test
     public void testRestMustBeLast() {
         assertEquals("The rest element (...rest) must be the last one", firstError("const [...rest, last] = [1, 2];"));
         assertEquals("The rest parameter (...args) must be the last one", firstError("function f(...args, last) { return last; }"));

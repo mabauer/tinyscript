@@ -631,7 +631,9 @@ A lone `;` is a valid no-op statement.
 ### Function declaration
 
 Function declarations are hoisted to the top of their enclosing block, so they
-can be called before the declaration appears in the source.
+can be called before the declaration appears in the source. The name of a
+function declaration cannot be assigned (to replace a function, declare it with
+`let f = …`).
 
 ```
 function add(a, b) {
@@ -744,6 +746,15 @@ functionName(arg1, arg2)
 object.method(arg)
 object["method"](arg)
 ```
+
+Missing arguments are `undefined` (or get their default). Too many arguments are
+an error before the script runs where the called function is known: a function
+declaration, a `const` with a function (`const f = (x) => …`), and `new` of a
+class or constructor function of the same file (`new Point(1, 2, 3)`: "new Point
+takes 2 arguments, not 3"); not with a rest parameter. Elsewhere, extra
+arguments are ignored, as in Javascript: methods (`p.len(1, 2)`; the type of `p`
+is known only at run time) and functions as values, e.g. callbacks, which often
+get more arguments than they use (`map` passes `(item, index, array)`).
 
 ### Spread
 
@@ -1088,7 +1099,9 @@ print(p instanceof Point, Object.keys(p));   // true ["x", "y"]
 - A class without `constructor` creates empty objects. `new Point(…)` always
   gives the new object, so a constructor cannot `return` a value.
 - The methods are not fields of the objects: they are not in `Object.keys` and
-  not printed. Parameters work as in functions (`...rest`, patterns).
+  not printed. Parameters work as in functions (`...rest`, patterns). A field
+  with the name of a method would hide it, so `this.area = …` in a class with a
+  method `area()` is an error.
 - `print` shows an object of a class with the class name (`Point {x: 3, y: 4}`),
   unless the class has a `toString` method; `print(Point)` shows
   `[class Point]`.
@@ -1517,8 +1530,7 @@ one with more arguments than it takes is a `TypeError`
 (`"abc".startsWith("a", 0, 1)`: "startsWith() takes at most 2 arguments, not
 3"), where Javascript would ignore them. A builtin used as a callback, e.g.
 `lines.map(Number)`, gets `(item, index, array)` like any callback and uses what
-it needs. Your own functions are not checked: extra arguments are ignored, as in
-Javascript.
+it needs. For your own functions, see [Calling functions](#calling-functions).
 
 `String.fromCharCode(c1, c2, ...)` builds a string from UTF-16 codes.
 

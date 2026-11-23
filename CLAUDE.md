@@ -231,6 +231,10 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - `++` / `--` only as statements (`i++;`); compound assignments `+=` … `%=` and
   `cond ? a : b` as in JavaScript
 - Arrow functions use `=>` syntax
+- Too many arguments are a compile-time error where the callee is known (a
+  function declaration, a `const` with a function, `new` of a class of the same
+  file); methods and callbacks ignore extra arguments. Function declarations
+  cannot be assigned; in a class, `this.x = …` must not hide a method `x`
 - Default parameters (`function f(a, step = 1)`) as in Javascript (used for a
   missing argument or `undefined`, evaluated at each call), but only at the end
   of the parameters and only for names, not patterns

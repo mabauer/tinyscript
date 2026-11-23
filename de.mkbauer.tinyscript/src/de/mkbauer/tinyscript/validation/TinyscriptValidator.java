@@ -32,6 +32,7 @@ import de.mkbauer.tinyscript.ts.ImportStatement;
 import de.mkbauer.tinyscript.ts.Reference;
 import de.mkbauer.tinyscript.ts.ReturnStatement;
 import de.mkbauer.tinyscript.ts.Statement;
+import de.mkbauer.tinyscript.ts.SpreadElement;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
@@ -253,24 +254,36 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	@Check
 	public void checkNoAssignmentToConstant(BinaryExpression assignment) {
 		if (isAssignment(assignment) && isConstant(assignment.getLeft()))
-			error("Cannot assign to the " + constantKind(assignment.getLeft()) + " " + name(assignment.getLeft()), TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+			error(cannotAssign(assignment.getLeft()), TsPackage.Literals.BINARY_EXPRESSION__LEFT);
 	}
 
 	@Check
 	public void checkNoAssignmentToConstant(ExpressionStatement statement) {
 		if (Operators.increment(statement) != null && isConstant(statement.getExpr()))
-			error("Cannot assign to the " + constantKind(statement.getExpr()) + " " + name(statement.getExpr()), TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
+			error(cannotAssign(statement.getExpr()), TsPackage.Literals.EXPRESSION_STATEMENT__EXPR);
 	}
 
 	@Check
 	public void checkNoAssignmentToConstant(ForStatement forStatement) {
 		if (forStatement.getRef() != null && isConstant(forStatement.getRef()))
-			error("Cannot assign to the " + constantKind(forStatement.getRef()) + " " + name(forStatement.getRef()), TsPackage.Literals.FOR_STATEMENT__REF);
+			error(cannotAssign(forStatement.getRef()), TsPackage.Literals.FOR_STATEMENT__REF);
 	}
 
-	// "class" for the name of a class, otherwise "constant"
+	private static String cannotAssign(Expression reference) {
+		String kind = constantKind(reference);
+		String message = "Cannot assign to the " + kind + " " + name(reference);
+		return kind.equals("function") ? message + " (to replace a function, declare it with let " + name(reference) + " = …)" : message;
+	}
+
+	// "class", "function" or "constant", for the message
 	private static String constantKind(Expression reference) {
-		return ((Reference) reference).getId().eContainer() instanceof ClassDeclaration ? "class" : "constant";
+		EObject declaration = ((Reference) reference).getId().eContainer();
+		return declaration instanceof ClassDeclaration ? "class" : isFunctionName(((Reference) reference).getId()) ? "function" : "constant";
+	}
+
+	// The name of a function declaration (not one of its parameters)
+	private static boolean isFunctionName(Identifier id) {
+		return id.eContainer() instanceof FunctionDeclaration declaration && declaration.getId() == id;
 	}
 
 	private static boolean isConstantDeclaration(String kind) {
@@ -282,7 +295,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 		if (!(expression instanceof Reference reference) || reference.getId() == null)
 			return false;
 		// The name of a class cannot be assigned either
-		if (reference.getId().eContainer() instanceof ClassDeclaration)
+		if (reference.getId().eContainer() instanceof ClassDeclaration || isFunctionName(reference.getId()))
 			return true;
 		for (EObject container = reference.getId().eContainer(); container != null; container = container.eContainer()) {
 			if (container instanceof VariableStatement statement)
@@ -340,6 +353,98 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	public void checkShorthandProperty(PropertyAssignment property) {
 		if (property.getShorthand() != null && property.getShorthand().isThis())
 			error("this needs a key: { self: this }", TsPackage.Literals.PROPERTY_ASSIGNMENT__SHORTHAND);
+	}
+
+	/**
+	 * Too many arguments for a function or class whose parameters are known before the run: a
+	 * function declaration, a const with a function, new of a class of the same script. Like the
+	 * builtins, more arguments than parameters are an error; fewer are fine (undefined or the
+	 * default). Methods (p.len(1, 2)) cannot be checked: the type of p is known only at run time.
+	 */
+	@Check
+	public void checkNumberOfArguments(CallOrPropertyAccess call) {
+		List<Expression> arguments;
+		Expression callee;
+		boolean constructor = call.getExpr() instanceof NewExpression;
+		if (call.getSuffix() instanceof CallSuffix suffix) {
+			arguments = suffix.getArguments();
+			callee = constructor ? ((NewExpression) call.getExpr()).getExpr() : call.getExpr();
+		}
+		else
+			return;
+		if (!(callee instanceof Reference reference) || reference.isThis() || reference.getId() == null
+				|| reference.getId().eIsProxy() || arguments.stream().anyMatch(a -> a instanceof SpreadElement))
+			return;
+		Identifier id = reference.getId();
+		FunctionDefinition function = knownFunction(id, constructor);
+		int max;
+		if (function != null) {
+			if (function.getRest() != null)
+				return;
+			max = function.getParams().size();
+		}
+		else if (constructor && id.eContainer() instanceof ClassDeclaration)
+			max = 0; // a class without a constructor
+		else
+			return;
+		if (arguments.size() > max) {
+			String name = (constructor ? "new " : "") + id.getName();
+			error(name + " takes " + (max == 0 ? "no arguments" : max == 1 ? "1 argument" : max + " arguments")
+					+ ", not " + arguments.size(), null);
+		}
+	}
+
+	// The function that a name stands for, if it cannot change: a function declaration, a const
+	// with a function expression or arrow function, or (after new) the constructor of a class
+	private static FunctionDefinition knownFunction(Identifier id, boolean constructor) {
+		EObject container = id.eContainer();
+		if (container instanceof FunctionDeclaration declaration && declaration.getId() == id)
+			return declaration;
+		if (container instanceof ClassDeclaration declaration && declaration.getId() == id) {
+			if (!constructor)
+				return null;
+			return declaration.getMethods().stream()
+					.filter(m -> "constructor".equals(TinyscriptModelUtil.propertyKey(m.getName())))
+					.map(ClassMethod::getFunction).findFirst().orElse(null);
+		}
+		if (container instanceof BinaryExpression declaration && declaration.getLeft() == id
+				&& declaration.getRight() instanceof FunctionDefinition function && !(function instanceof FunctionDeclaration)
+				&& declaration.eContainer() instanceof VariableStatement statement && isConstantDeclaration(statement.getKind()))
+			return function;
+		return null;
+	}
+
+	/**
+	 * In a class, this.area = … must not hide the method area(): the next this.area() would fail
+	 * far from the cause.
+	 */
+	@Check
+	public void checkFieldDoesNotHideAMethod(BinaryExpression assignment) {
+		if (!isAssignment(assignment) || !(assignment.getLeft() instanceof CallOrPropertyAccess access)
+				|| !(access.getExpr() instanceof Reference reference) || !reference.isThis()
+				|| !(access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix) || suffix.getCall() != null
+				|| !(suffix.getProperty() instanceof DotPropertyAccessSuffix dot))
+			return;
+		String name = TinyscriptModelUtil.propertyKey(dot.getKey());
+		ClassDeclaration declaration = enclosingClass(assignment);
+		if (name == null || declaration == null || name.equals("constructor"))
+			return;
+		for (ClassMethod method : declaration.getMethods()) {
+			if (name.equals(TinyscriptModelUtil.propertyKey(method.getName())))
+				error("this." + name + " hides the method " + name + " of " + declaration.getId().getName()
+						+ ": give the field another name", TsPackage.Literals.BINARY_EXPRESSION__LEFT);
+		}
+	}
+
+	// The class whose method contains the element, where this is its instance: arrow functions
+	// keep this, other functions have their own
+	private static ClassDeclaration enclosingClass(EObject element) {
+		for (EObject container = element.eContainer(); container != null; container = container.eContainer()) {
+			if (container instanceof FunctionDefinition && !(container instanceof ArrowFunction))
+				return container.eContainer() instanceof ClassMethod method
+						&& method.eContainer() instanceof ClassDeclaration declaration ? declaration : null;
+		}
+		return null;
 	}
 
 	/**
