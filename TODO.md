@@ -10,8 +10,8 @@ the [README](README.md#design-decisions) (the language),
 2026-11-20). It stays deliberately stricter than Javascript; every addition is
 Javascript-compatible where it exists there, so the generator passes it through
 and differential tests run against node. The priorities come from solving all of
-AoC 2024, ten days of 2023 and porting 15 days of 2021 from TypeScript
-(`examples/aoc20xx`).
+AoC 2024, ten days each of 2023 and 2022 and porting 15 days of 2021 from
+TypeScript (`examples/aoc20xx`).
 
 ## Language
 
@@ -19,11 +19,16 @@ AoC 2024, ten days of 2023 and porting 15 days of 2021 from TypeScript
    `("" + (i + 1)).padStart(4)`; the most everyday addition, and
    Javascript-compatible. The lexer for `${…}` is real work in Xtext.
 2. **Smaller:** assignment with a pattern (`[a, b] = [b, a];`), renaming in
-   imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`.
+   imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`;
+   number literals in binary, hex and octal (`0b0011110`, `0xff`, `0o17`) and
+   with separators (`1_000_000_000_000`), all Javascript-compatible (AoC 2022
+   day 17 draws its rocks as bits).
 3. **Library:** a priority queue in a `std:` module (days 16 of 2024 and 17 of
    2023 have a binary heap of their own); `findAll` with the positions of the
    matches; a single-character field in `parse` (`a<2006`); possibly `readAll()`
-   in `std:io`, `toPrecision` / `toExponential`.
+   in `std:io`, `toPrecision` / `toExponential`; `JSON.parse` (AoC 2022 day 13
+   reads nested lists with a parser of its own; in Javascript a one-liner) and
+   `JSON.stringify`, as far as they fit tinyscript's values.
 4. **Regular expressions as a library**, if ever (`parse` / `findAll` of
    `std:string` cover reading input so far): `new RegExp("…")` as in Javascript,
    no `/…/` literals; immutable, only stateless operations (`test`, `match`,
