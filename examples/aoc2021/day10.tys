@@ -14,12 +14,12 @@ const EOL = "\n";
 // A recursive descent parser for the brackets
 class ChunkChecker {
 
-    constructor(input, applyFixes) {
+    constructor(input, applyFixes = false) {
         this.input = input;
         this.pos = 0;
         this.token = EOL;
         this.fixes = [];
-        this.applyFixes = applyFixes ?? false;
+        this.applyFixes = applyFixes;
     }
 
     nextToken() {

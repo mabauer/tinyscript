@@ -37,6 +37,9 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 		// We want to define the Scope for the Reference's Identifier cross-reference
 		if (context instanceof Reference
 				&& reference == TsPackage.Literals.REFERENCE__ID) {
+			Identifier parameter = TinyscriptModelUtil.enclosingParameterDefault(context);
+			if (parameter != null)
+				return parameterScope((FunctionDefinition) parameter.eContainer());
 			return createBlockScope(context, true);
 		}
 		// For content assist, references sometimes need to be resolved with other contexts.
@@ -46,6 +49,26 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 			return createBlockScope(context, false);
 		}
 		return IScope.NULLSCOPE; // super.getScope(context, reference);
+	}
+
+	/**
+	 * The scope of a parameter's default: all parameters of the function (the validator reports
+	 * a default that uses its own or a later one), then what the function sees.
+	 */
+	private IScope parameterScope(FunctionDefinition function) {
+		List<Identifier> ids = new ArrayList<Identifier>(TinyscriptModelUtil.parameterIdentifiers(function));
+		if (function.getRest() != null)
+			ids.add(function.getRest());
+		return Scopes.scopeFor(ids, outerScope(function));
+	}
+
+	// What a function sees around it: its block, or the parameters of the function in whose
+	// default it is written, f(a, g = () => a)
+	private IScope outerScope(FunctionDefinition function) {
+		Identifier parameter = TinyscriptModelUtil.enclosingParameterDefault(function);
+		if (parameter != null)
+			return parameterScope((FunctionDefinition) parameter.eContainer());
+		return createBlockScope(TinyscriptModelUtil.containingBlock(function), false);
 	}
 
 	public IScope createScopeFromAllIdentifers(Reference reference) {
@@ -100,8 +123,7 @@ public class TinyscriptScopeProvider extends SimpleLocalScopeProvider {
 			Identifier rest = function.getRest();
 			if (rest != null)
 				ids.add(rest);
-			EObject parent = TinyscriptModelUtil.containingBlock(function);
-			return Scopes.scopeFor(ids, createBlockScope(parent, false));
+			return Scopes.scopeFor(ids, outerScope(function));
 		}
 		// Is the block part of a for statement? Add the (optional) variable declaration to the scope (if present)
 		if (container instanceof ForStatement) {

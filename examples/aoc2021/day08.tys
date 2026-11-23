@@ -54,9 +54,7 @@ function updateMapping(mapping, digit, signal) {
     }
 }
 
-function find_mapping(signals, pos, digits) {
-    pos = pos ?? 0;
-    digits = digits ?? [];
+function find_mapping(signals, pos = 0, digits = []) {
     if (pos == 10) {
         // Build an check mapping
         const mapping = {};

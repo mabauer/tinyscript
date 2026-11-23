@@ -59,8 +59,7 @@ class HeightMap {
         return result;
     }
 
-    expandBasin(x, y, basin) {
-        basin = basin ?? [];
+    expandBasin(x, y, basin = []) {
         const coords = new Point(x, y);
         if (listIncludes(basin, coords)) {
             return 0;

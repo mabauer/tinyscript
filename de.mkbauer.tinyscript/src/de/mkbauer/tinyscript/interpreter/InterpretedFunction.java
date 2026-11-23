@@ -2,6 +2,8 @@ package de.mkbauer.tinyscript.interpreter;
 
 import java.util.stream.Collectors;
 
+import org.eclipse.emf.ecore.EObject;
+
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.runtime.array.ArrayConstructor;
 import de.mkbauer.tinyscript.runtime.array.ArrayObject;
@@ -77,11 +79,17 @@ public class InterpretedFunction extends Function {
 			}
 			currentContext.setFunctionContext(true);
 
-			// Put the arguments into the context
-			// (a name, or a pattern that takes the argument apart; missing arguments are undefined)
+			// Put the arguments into the context (a name, or a pattern that takes the argument apart;
+			// missing arguments are undefined). A default replaces undefined; it is evaluated in this
+			// context, so it sees the parameters before it.
 			if (args != null) {
-				for (int i = 0; i < ast.getParams().size(); i++)
-					engine.declare(ast.getParams().get(i), i < args.length ? args[i] : TSValue.UNDEFINED);
+				for (int i = 0; i < ast.getParams().size(); i++) {
+					EObject param = ast.getParams().get(i);
+					TSValue value = i < args.length ? args[i] : TSValue.UNDEFINED;
+					if (value == TSValue.UNDEFINED && param instanceof Identifier name && name.getDefaultValue() != null)
+						value = engine.execute(name.getDefaultValue());
+					engine.declare(param, value);
+				}
 			}
 
 			// Special case ...rest parameter
@@ -140,8 +148,14 @@ public class InterpretedFunction extends Function {
 	@Override
 	public int getLength() {
 		if (ast != null) {
-			if (ast.getParams() != null) 
-				return ast.getParams().size();
+			// As in Javascript: the parameters before the first one with a default
+			int length = 0;
+			for (EObject param : ast.getParams()) {
+				if (param instanceof Identifier name && name.getDefaultValue() != null)
+					break;
+				length++;
+			}
+			return length;
 		}
 		return 0;
 	}

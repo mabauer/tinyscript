@@ -11,7 +11,7 @@ and [`../aoc2024`](../aoc2024).
 | Day                              | Puzzle                  | Shows                                                                                               |
 | -------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
 | [1](day01.tys), [1a](day01a.tys) | Sonar Sweep             | comparing neighbors; in 1a a method `reduce_pairs` added to `Array.prototype`                       |
-| [2](day02.tys)                   | Dive!                   | two classes with the same methods (TypeScript: `extends`), default values with `??`                 |
+| [2](day02.tys)                   | Dive!                   | two classes with the same methods (TypeScript: `extends`), default parameters                       |
 | [3](day03.tys)                   | Binary Diagnostic       | columns of bits, `parseInt(s, 2)`, an object instead of an `enum`                                   |
 | [4](day04.tys)                   | Giant Squid             | a class for a bingo board, `Set`s of drawn numbers, `words` of `std:string`                         |
 | [5](day05.tys)                   | Hydrothermal Venture    | drawing lines on a 1000×1000 canvas, `parse` of `std:string` instead of a regular expression        |
@@ -39,11 +39,10 @@ directory):
 ## Notes on the port
 
 - Comments starting with "TypeScript:" mark where the original is written
-  differently and why: no default parameters (`x ?? default` instead), no spread
-  in calls (`f.apply(null, array)`), no rest elements in patterns
-  (`items.slice(1)`), no `extends`, getters, field declarations or `enum`s, no
-  `in` operator, no regular expressions (`parse` and `words` of `std:string`),
-  `from` is a reserved word.
+  differently and why: no spread in calls (`f.apply(null, array)`), no rest
+  elements in patterns (`items.slice(1)`), no `extends`, getters, field
+  declarations or `enum`s, no `in` operator, no regular expressions (`parse` and
+  `words` of `std:string`), `from` is a reserved word.
 - Javascript forgives what tinyscript does not: a comparison with `undefined` or
   `NaN` is `false` in Javascript but a `TypeError` in tinyscript (day 1), as is
   a string as a condition (day 4) or destructuring too short an array (day 2).

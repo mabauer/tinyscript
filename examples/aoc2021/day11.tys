@@ -89,8 +89,7 @@ class Swarm {
         return flashes;
     }
 
-    play(n, flashes) {
-        flashes = flashes ?? 0;
+    play(n, flashes = 0) {
         for (const i : range(1, n + 1)) {
             flashes += this.nextGeneration();
         }

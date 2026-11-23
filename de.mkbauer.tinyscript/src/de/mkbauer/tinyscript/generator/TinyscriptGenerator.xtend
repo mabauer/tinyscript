@@ -630,17 +630,30 @@ class TinyscriptGenerator   {
 	}
 
 	// An array pattern as parameter becomes a temporary parameter, taken apart at the start of the
-	// body with the same check as in the interpreter; object patterns stay as they are
+	// body with the same check as in the interpreter; object patterns stay as they are. A default
+	// stays in the parameter list, unless there is such a pattern: then it is set in the body,
+	// after the patterns before it, which it may use
 	def generateParams(FunctionDefinition func)
-		'''«FOR i: 0 ..< func.params.size SEPARATOR ', '»«IF func.params.get(i) instanceof ArrayPattern»__ts_param«i»«ELSE»«func.params.get(i).generate»«ENDIF»«ENDFOR»«IF func.rest !== null»«IF !func.params.empty», «ENDIF»...«func.rest.generate»«ENDIF»'''
-	
+		'''«FOR i: 0 ..< func.params.size SEPARATOR ', '»«func.generateParam(i)»«ENDFOR»«IF func.rest !== null»«IF !func.params.empty», «ENDIF»...«func.rest.generate»«ENDIF»'''
+
+	def CharSequence generateParam(FunctionDefinition func, int i) {
+		val param = func.params.get(i)
+		if (param instanceof ArrayPattern)
+			'''__ts_param«i»'''
+		else if (param instanceof Identifier && (param as Identifier).defaultValue !== null && !func.hasArrayPatternParameter)
+			'''«param.generate» = «(param as Identifier).defaultValue.generate»'''
+		else
+			param.generate
+	}
+
 	def boolean hasArrayPatternParameter(FunctionDefinition func) {
 		func.params.exists[it instanceof ArrayPattern]
 	}
 
 	def CharSequence parameterPrologue(FunctionDefinition func)
-		'''«FOR i: 0 ..< func.params.size»«IF func.params.get(i) instanceof ArrayPattern»let «func.params.get(i).generate» = __ts_pattern(__ts_param«i», «(func.params.get(i) as ArrayPattern).names.size»);
-		«ENDIF»«ENDFOR»'''
+		'''«IF func.hasArrayPatternParameter»«FOR i: 0 ..< func.params.size»«IF func.params.get(i) instanceof ArrayPattern»let «func.params.get(i).generate» = __ts_pattern(__ts_param«i», «(func.params.get(i) as ArrayPattern).names.size»);
+		«ELSEIF func.params.get(i) instanceof Identifier && (func.params.get(i) as Identifier).defaultValue !== null»if («func.params.get(i).generate» === undefined) «func.params.get(i).generate» = «(func.params.get(i) as Identifier).defaultValue.generate»;
+		«ENDIF»«ENDFOR»«ENDIF»'''
 
 	def dispatch generate(FunctionDefinition func) '''
 		function «IF (func.id !== null)»«func.id.name»«ENDIF»(«func.generateParams») {

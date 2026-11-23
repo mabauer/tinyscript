@@ -104,15 +104,18 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 					+ before.substring(0, before.length() - 1) + ")." + text + "(…)";
 		if (text.equals("`"))
 			return "Template strings (`…`) are not supported: build strings with +, e.g. \"Hello \" + name";
-		if (text.equals("=") && context.getCurrentContext() instanceof FunctionDefinition && isInParentheses(tokens, index)) {
-			return "Parameters cannot have default values: write " + before + " ?? " + (next != null ? next.getText() : "…") + " in the function";
-		}
+		String arrowParametersHint = arrowParametersHint(tokens, index, text, before);
+		if (arrowParametersHint != null)
+			return arrowParametersHint;
+		if (text.equals("=") && (before.equals("]") || before.equals("}"))
+				&& context.getCurrentContext() instanceof FunctionDefinition && isInParentheses(tokens, index))
+			return PATTERN_DEFAULT;
 		if (text.equals("++") || text.equals("--"))
 			return "++ and -- are statements, not expressions: write i" + text + "; on its own";
 		if (text.equals("..."))
 			return spreadOrRest(tokens, index);
 		if ((text.equals(")") || text.equals("]") || text.equals("}")) && before.equals(","))
-			return "A comma after the last element is only allowed in array and object literals";
+			return TRAILING_COMMA;
 		if (text.equals(",") && Set.of(",", "[", "(", "{").contains(before))
 			return emptyElement(tokens, index);
 		// function f(, a): the parser reports the "(" before the comma
@@ -340,6 +343,82 @@ public class TinyscriptSyntaxErrorMessageProvider extends SyntaxErrorMessageProv
 			}
 			else if (depth == 0 && (text.equals("{") || text.equals("}")))
 				return -1;
+		}
+		return -1;
+	}
+
+	private static final String TRAILING_COMMA = "A comma after the last element is only allowed in array and object literals";
+	private static final String PATTERN_DEFAULT = "Only a name can have a default, not a pattern: give the parameter a name and take it apart in the function";
+
+	/**
+	 * Mistakes in the parameters of an arrow function, (a, b,) => … or ({ x } = {}) => …: the
+	 * parser tries an arrow function only if its parameters are correct, otherwise it reads them
+	 * as an expression in parentheses and reports an error somewhere in it, or at the =>.
+	 */
+	private static String arrowParametersHint(TokenStream tokens, int index, String text, String before) {
+		int open = text.equals("=>") && before.equals(")")
+				? matchingBracket(tokens, previous(tokens, index).getTokenIndex(), -1)
+				: enclosingParenthesis(tokens, index);
+		if (open < 0)
+			return null;
+		int close = matchingBracket(tokens, open, 1);
+		Token arrow = close >= 0 ? next(tokens, close) : null;
+		if (arrow == null || !"=>".equals(arrow.getText()))
+			return null;
+		if (",".equals(previous(tokens, close).getText()))
+			return TRAILING_COMMA;
+		int depth = 0;
+		for (int i = open + 1; i < close; i++) {
+			String t = tokens.get(i).getChannel() == Token.DEFAULT_CHANNEL ? tokens.get(i).getText() : "";
+			if (OPENING.contains(t))
+				depth++;
+			else if (CLOSING.contains(t)) {
+				depth--;
+				Token after = next(tokens, i);
+				if (depth == 0 && !t.equals(")") && after != null && "=".equals(after.getText()))
+					return PATTERN_DEFAULT;
+			}
+		}
+		return null;
+	}
+
+	private static final Set<String> OPENING = Set.of("(", "[", "{");
+	private static final Set<String> CLOSING = Set.of(")", "]", "}");
+
+	// The index of the bracket that matches the one at index, searching forward (direction 1) or
+	// backward (-1) over all kinds of brackets; -1 if there is none
+	private static int matchingBracket(TokenStream tokens, int index, int direction) {
+		int depth = 0;
+		for (int i = index; i >= 0 && i < tokens.size(); i += direction) {
+			if (tokens.get(i).getChannel() != Token.DEFAULT_CHANNEL || tokens.get(i).getText() == null)
+				continue;
+			String t = tokens.get(i).getText();
+			if ((direction > 0 ? OPENING : CLOSING).contains(t))
+				depth++;
+			else if ((direction > 0 ? CLOSING : OPENING).contains(t)) {
+				depth--;
+				if (depth == 0)
+					return i;
+			}
+		}
+		return -1;
+	}
+
+	// The index of the "(" around the token at index, over all kinds of brackets; -1 if the
+	// innermost bracket around it is no "("
+	private static int enclosingParenthesis(TokenStream tokens, int index) {
+		int depth = 0;
+		for (int i = index - 1; i >= 0; i--) {
+			if (tokens.get(i).getChannel() != Token.DEFAULT_CHANNEL || tokens.get(i).getText() == null)
+				continue;
+			String t = tokens.get(i).getText();
+			if (CLOSING.contains(t))
+				depth++;
+			else if (OPENING.contains(t)) {
+				if (depth == 0)
+					return t.equals("(") ? i : -1;
+				depth--;
+			}
 		}
 		return -1;
 	}

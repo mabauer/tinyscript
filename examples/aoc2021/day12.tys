@@ -16,10 +16,7 @@ function isSmall(node) {
 }
 
 // A depth first search: the number of paths from node to END
-function dfs(g, node, allow2ndVisitOnce, visited) {
-    allow2ndVisitOnce = allow2ndVisitOnce ?? false;
-    visited = visited ?? new Set();
-
+function dfs(g, node, allow2ndVisitOnce = false, visited = new Set()) {
     if (node == END) {
         return 1;
     }
