@@ -4,16 +4,10 @@
 // Usage: tinyscript day05.tys -- input.txt
 
 import inputLines from "./aoc";
+import Point from "./point";
 import parse from "std:string";
 
 const CANVAS_SIZE = 1000;
-
-class Point {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-}
 
 class Canvas {
 

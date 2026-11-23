@@ -28,7 +28,8 @@ and [`../aoc2024`](../aoc2024).
 
 [aoc.tys](aoc.tys) reads the puzzle input as the TypeScript originals did (all
 lines, also the empty last one); [utils.tys](utils.tys) has the helpers of
-`utils.ts` that the days use.
+`utils.ts` that the days use, [point.tys](point.tys) the class `Point` that days
+5, 9, 11 and 13 share (each TypeScript day had its own copy).
 
 Run a day with your puzzle input (by default `input.txt` in the working
 directory):

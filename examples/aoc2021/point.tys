@@ -1,0 +1,22 @@
+// A point of a grid, shared by days 5, 9, 11 and 13 (in TypeScript, each day had its own
+// copy of the class)
+
+export class Point {
+
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    equals(other) {
+        return (other && this.x == other.x && this.y == other.y);
+    }
+
+    // TypeScript: get hashCode(), which returns 31 * (31 * 7 + x) + y. That number is
+    // not unique ((x, y) and (x + 1, y - 31) have the same), and listIncludes compares
+    // only hash codes, so a different point counted as equal. Fixed: a string, which is
+    // unique. (tinyscript has no getters.)
+    hashCode() {
+        return this.x + "," + this.y;
+    }
+}
