@@ -18,9 +18,12 @@ class Point {
         return (other && this.x == other.x && this.y == other.y);
     }
 
-    // TypeScript: get hashCode(); tinyscript has no getters
+    // TypeScript: get hashCode(), which returns 31 * (31 * 7 + x) + y. That number is
+    // not unique ((x, y) and (x + 1, y - 31) have the same), and listIncludes compares
+    // only hash codes, so a different point counted as equal. Fixed: a string, which is
+    // unique. (tinyscript has no getters.)
     hashCode() {
-        return 31 * (31 * 7 + this.x) + this.y;
+        return this.x + "," + this.y;
     }
 }
 

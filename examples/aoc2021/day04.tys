@@ -72,6 +72,8 @@ class Board {
     }
 }
 
+// Fixed: TypeScript also adds an empty board for the blank line after the numbers, and
+// adds the last board only if the input ends with a blank line
 function createBoards(lines) {
     const boards = [];
     let rows = [];
@@ -80,10 +82,13 @@ function createBoards(lines) {
         if (s.length > 0) {
             const row = words(s).map(s => parseInt(s));
             rows.push(row);
-        } else {
+        } else if (rows.length > 0) {
             boards.push(new Board(rows));
             rows = [];
         }
+    }
+    if (rows.length > 0) {
+        boards.push(new Board(rows));
     }
     return boards;
 }

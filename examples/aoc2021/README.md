@@ -50,10 +50,12 @@ directory):
 - One change for speed only: `listIntersect` in `utils.tys` uses a `Set` of the
   hash codes instead of comparing each element with each other one. The result
   is the same, but day 19 takes 53 s instead of about 50 minutes.
-- The answers on real inputs are the same as those of the originals, including a
-  wrong one: day 13 compares points by a hash code that is not unique
-  (`31 * (31 * 7 + x) + y`), so a few dots get lost when folding (part 1: 712
-  instead of 720).
+- Bugs of the originals are fixed, marked with "Fixed:": points were compared by
+  a hash code that is not unique (`31 * (31 * 7 + x) + y`; days 9, 11, 13, 19),
+  so in day 13 a few dots got lost when folding (part 1: 712 instead of 720);
+  day 4 added an empty board and relied on a blank line at the end of the input;
+  day 20 only worked for square images. Otherwise, the answers on real inputs
+  are the same as those of the originals.
 
 On real inputs, days 1–13 take 0.5–5.4 s each (day 5 the most, for its large
 canvas), day 20 45 s and day 19 53 s; node takes at most 0.25 s for the

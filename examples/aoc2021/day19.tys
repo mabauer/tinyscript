@@ -39,9 +39,10 @@ class Point3 {
         return (other && this.x == other.x && this.y == other.y && this.z == other.z);
     }
 
-    // TypeScript: get hashCode(); tinyscript has no getters
+    // TypeScript: get hashCode(), which returns 31 * (31 * (31 * 7 + x) + y) + z, a number
+    // that is not unique. Fixed: a string, which is unique. (tinyscript has no getters.)
     hashCode() {
-        return 31 * (31 * (31 * 7 + this.x) + this.y) + this.z;
+        return this.x + "," + this.y + "," + this.z;
     }
 
     // TypeScript: a template string
