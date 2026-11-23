@@ -231,6 +231,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - `++` / `--` only as statements (`i++;`); compound assignments `+=` … `%=` and
   `cond ? a : b` as in JavaScript
 - Arrow functions use `=>` syntax
+- Default parameters (`function f(a, step = 1)`) as in Javascript (used for a
+  missing argument or `undefined`, evaluated at each call), but only at the end
+  of the parameters and only for names, not patterns
 - `class` without inheritance (only at the top level; a `constructor` and
   methods, no `extends` / `static` / getters / field declarations); a class
   needs `new`, and its instances print with the class name (`Point {x: 1}`);

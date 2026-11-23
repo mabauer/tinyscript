@@ -690,6 +690,33 @@ const oneArg = x => x + 1;
 const twoArgs = (x, y) => x + y;
 ```
 
+### Default parameters
+
+A parameter can have a default, used when the argument is missing or `undefined`
+(not `null`), as in Javascript:
+
+```
+function slice(items, start = 0, end = items.length) {
+    return items.slice(start, end);
+}
+
+class Point {
+    constructor(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
+const scale = (v, factor = 2) => v * factor;
+```
+
+The default is evaluated at each call (`function add(x, list = [])` gets a new
+array every time) and can use the parameters before it, not itself or later
+ones. Stricter than Javascript, parameters with defaults come last
+(`function f(a = 1, b)` is an error: a caller would have to pass `undefined` to
+get the default), and only a name can have a default, not a pattern. A
+function's `length` counts the parameters before the first default.
+
 ### Rest parameters
 
 The last parameter can be a rest parameter, collecting all extra arguments into
@@ -1613,7 +1640,7 @@ writing code and for knowing its intentional limitations.
 - `class` with a `constructor` and methods (without inheritance)
 - `new`, `instanceof`, `typeof`
 - Arrow functions with lexical `this`
-- Rest parameters (`...args`)
+- Rest parameters (`...args`) and default parameters (`step = 1`)
 - Immediately-invoked function expressions (IIFEs)
 
 ### Things not supported

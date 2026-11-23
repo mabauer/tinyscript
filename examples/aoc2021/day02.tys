@@ -8,9 +8,9 @@ import stripEmptyLines from "./utils";
 
 class Submarine {
 
-    constructor(position, depth) {
-        this.position = position ?? 0;
-        this.depth = depth ?? 0;
+    constructor(position = 0, depth = 0) {
+        this.position = position;
+        this.depth = depth;
     }
 
     forward(units) {
@@ -34,10 +34,10 @@ class Submarine {
 // another one, so Submarine2 has getPosition as well.
 class Submarine2 {
 
-    constructor(position, depth, aim) {
-        this.position = position ?? 0;
-        this.depth = depth ?? 0;
-        this.aim = aim ?? 0;
+    constructor(position = 0, depth = 0, aim = 0) {
+        this.position = position;
+        this.depth = depth;
+        this.aim = aim;
     }
 
     down(units) {

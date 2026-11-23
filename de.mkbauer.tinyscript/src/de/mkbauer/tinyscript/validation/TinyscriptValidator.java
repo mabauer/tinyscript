@@ -355,6 +355,42 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	}
 
 	/**
+	 * Defaults only at the end: function f(a, b = 1, c = 2), not f(a = 1, b), where a caller
+	 * would have to pass undefined to get the default (Javascript allows it).
+	 */
+	@Check
+	public void checkParameterDefaultsAtTheEnd(FunctionDefinition function) {
+		Identifier withDefault = null;
+		for (Expression param : function.getParams()) {
+			boolean hasDefault = param instanceof Identifier name && name.getDefaultValue() != null;
+			if (hasDefault && withDefault == null)
+				withDefault = (Identifier) param;
+			else if (!hasDefault && withDefault != null) {
+				error("A parameter without a default cannot follow one with a default (" + withDefault.getName()
+						+ "): put the parameters with defaults last", param, null);
+				return;
+			}
+		}
+	}
+
+	/**
+	 * A default can use the parameters before it, f(a, b = a), not itself or a later one
+	 * (f(a = b, b)); in Javascript that is a ReferenceError when the call runs.
+	 */
+	@Check
+	public void checkParameterDefaultUsesOnlyEarlierParameters(Reference reference) {
+		Identifier parameter = TinyscriptModelUtil.enclosingParameterDefault(reference);
+		if (parameter == null || reference.getId() == null || reference.getId().eIsProxy())
+			return;
+		FunctionDefinition function = (FunctionDefinition) parameter.eContainer();
+		List<Identifier> names = TinyscriptModelUtil.parameterIdentifiers(function);
+		int index = names.indexOf(reference.getId());
+		if (index >= 0 && index >= names.indexOf(parameter) || reference.getId() == function.getRest())
+			error(reference.getId().getName() + " is used before its declaration: the default of "
+					+ parameter.getName() + " can only use the parameters before it", null);
+	}
+
+	/**
 	 * Destructuring patterns: each name only once (let [a, b] = pair; for (const [key, value] : map)).
 	 */
 	@Check

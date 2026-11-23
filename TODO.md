@@ -395,7 +395,12 @@ and differential tests run against node.
             "header or constructor" and nothing new to learn.
           - **No field declarations with an initial value** (`open = new Map();`
             in the class body): without a header the constructor is the one
-            place where fields get their values.
+            place where fields get their values. Confirmed 2026-11-23 with
+            default parameters: `constructor(x = 0, y = 0)` covers the usual
+            reason for initializers (a field with a standard value); fields
+            would bring their own questions (order with the constructor, `this`
+            in an initializer, declared fields that are then expected to be
+            checked).
           - **No value semantics** for data classes (`==` by value, objects as
             keys of `Map` / `Set`, frozen fields): `==` would mean two things,
             and node would need its own `Map` / `Set`; keys stay strings.
@@ -757,15 +762,16 @@ and differential tests run against node.
     them, and multi-line literals often have one. The message for an object is
     misleading ("Unexpected '}', expected an expression"). Decide: allow them
     (grammar and generator), or a hint as for other Javascript habits.
-  - **Missing, with workarounds** (by frequency in the port): default parameters
-    (15 parameters in 10 functions, `x = x ?? default`), getters (4 classes,
-    `hashCode()` as a method), field declarations (4, in the constructor),
-    regular expressions (5, `parse` / `words`), rest elements in patterns (4,
-    `slice(1)`), spread in calls (4, `f.apply(null, array)`), `Number.MAX_VALUE`
-    (`Infinity`; added 2026-11-23), `in` (`g[key] == undefined`), `extends` (a
-    second class with the same methods), `enum` (an object), template strings,
-    `RangeError`, `from` as a name. The messages said what to write instead each
-    time.
+  - **Missing, with workarounds** (by frequency in the port): ~~default
+    parameters~~ (15 parameters in 10 functions, `x = x ?? default`; done
+    2026-11-23: as in Javascript, but only at the end of the parameters and only
+    for names, not patterns), getters (4 classes, `hashCode()` as a method),
+    field declarations (4, in the constructor), regular expressions (5, `parse`
+    / `words`), rest elements in patterns (4, `slice(1)`), spread in calls (4,
+    `f.apply(null, array)`), `Number.MAX_VALUE` (`Infinity`; added 2026-11-23),
+    `in` (`g[key] == undefined`), `extends` (a second class with the same
+    methods), `enum` (an object), template strings, `RangeError`, `from` as a
+    name. The messages said what to write instead each time.
   - **Javascript forgives, tinyscript does not:** comparisons with `undefined`
     or `NaN` (an off-by-one loop bound and the empty last line in day 1), a
     string as a condition (`s && s.length > 0`), destructuring an array that is

@@ -31,7 +31,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNoFollowUpErrorsOfAnUnsupportedConstruct() {
-        assertEquals(1, reportedErrors("function f(a, b = 2) { return a + b; }\nprint(f(1));").size());
+        assertEquals(1, reportedErrors("function f([a, b] = [1, 2]) { return a + b; }\nprint(f());").size());
         assertEquals(1, reportedErrors("try {\n    print(1);\n} catch (e) {\n    print(e);\n} finally {\n    print(2);\n}").size());
         assertEquals(1, reportedErrors("const r = /a+/;").size());
     }
@@ -140,8 +140,16 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testDefaultParameter() {
-        assertEquals("Parameters cannot have default values: write b ?? 2 in the function",
-                firstError("function f(a, b = 2) { return a + b; }"));
+        assertEquals("Only a name can have a default, not a pattern: give the parameter a name and take it apart in the function",
+                firstError("function f(a, [b, c] = [1, 2]) { return a + b; }"));
+        assertEquals("Only a name can have a default, not a pattern: give the parameter a name and take it apart in the function",
+                firstError("const f = ({ x } = {}) => x;"));
+        assertEquals("A parameter without a default cannot follow one with a default (a): put the parameters with defaults last",
+                firstError("function f(a = 1, b) { return a + b; }"));
+        assertEquals("b is used before its declaration: the default of a can only use the parameters before it",
+                firstError("function f(a = b, b = 1) { return a; }"));
+        assertEquals("a is used before its declaration: the default of a can only use the parameters before it",
+                firstError("const a = 1;\nfunction f(a = a) { return a; }"));
     }
 
     @Test
@@ -306,6 +314,8 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         assertEquals(message, firstError("print(Math.max(1, 2,));"));
         assertEquals(message, firstError("function f(a, b,) { return a; }"));
         assertEquals(message, firstError("const f = (a, b,) => a;"));
+        assertEquals(message, firstError("const f = (a = [1, 2,], b,) => a;"));
+        assertEquals(message, firstError("print([1].map((x,) => x));"));
         assertEquals(message, firstError("const [a, b,] = [1, 2];"));
         assertEquals(message, firstError("const { a, } = { a: 1 };"));
     }

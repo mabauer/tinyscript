@@ -80,14 +80,17 @@ Increment:
 ;
 
 AssignmentExpression returns Expression:
-	(ConditionalExpression|ArrowFunctionDefinition) ({BinaryExpression.left=current} op=AssignmentOperator right=AssignmentExpression)?	
+	(=>ArrowFunctionDefinition|ConditionalExpression) ({BinaryExpression.left=current} op=AssignmentOperator right=AssignmentExpression)?	
 ;
 
 // cond ? a : b; unlike Javascript, b cannot be an assignment (c ? a : b = 1 is (c ? a : b) = 1, an error)
 ConditionalExpression returns Expression:
-	CoalesceExpression ({ConditionalExpression.cond=current} '?' then=AssignmentExpression ':' else=(ConditionalExpression|ArrowFunctionDefinition))?
+	CoalesceExpression ({ConditionalExpression.cond=current} '?' then=AssignmentExpression ':' (=>else=ArrowFunctionDefinition | else=ConditionalExpression))?
 ;
 
+// Where an arrow function can stand, it is tried first (=>, a syntactic predicate): only the =>
+// tells (a = 1) => a (a parameter with a default) from the assignment in parentheses (a = 1).
+// The parser tries it only where the tokens so far allow both, i.e. after ( name =
 ArrowFunctionDefinition returns FunctionDefinition:
 	{ArrowFunction}
 	( (params+=Identifier) 
@@ -103,7 +106,7 @@ ArrowFunctionBlock returns Block:
 ;
 
 ExpressionStatementWithoutSemicolon returns ExpressionStatement:
-	expr=(ConditionalExpression | ArrowFunctionDefinition)
+	(=>expr=ArrowFunctionDefinition | expr=ConditionalExpression)
 ;
 
 // a ?? b: b if a is null or undefined. Like Javascript, it cannot be mixed with && or ||
@@ -253,9 +256,14 @@ VariableDeclaration returns Expression:
 	Pattern {BinaryExpression.left=current} op=PlainAssignmentOperator right=AssignmentExpression
 ;
 
-// A parameter: a name, or a pattern like function f([x, y]) or ({ row, col }) => row + col
+// A parameter: a name, or a pattern like function f([x, y]) or ({ row, col }) => row + col.
+// A name can have a default, function f(x, step = 1), used when the argument is undefined
 Parameter returns Expression:
-	Identifier | Pattern
+	ParameterName | Pattern
+;
+
+ParameterName returns Identifier:
+	name=ID ('=' defaultValue=AssignmentExpression)?
 ;
 
 // Destructuring, only flat: var [a, b] = pair; var { row, col } = position;

@@ -32,8 +32,7 @@ class Canvas {
         this.cells[y][x] = value;
     }
 
-    drawLine(line, diagonals) {
-        diagonals = diagonals ?? false;
+    drawLine(line, diagonals = false) {
         const origin = line[0];
         const dest = line[1];
         const deltax = dest.x - origin.x;

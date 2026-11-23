@@ -46,8 +46,7 @@ function part1(lines) {
 // TypeScript: enum STRATEGY
 const STRATEGY = { MOST_COMMON: 0, LEAST_COMMON: 1 };
 
-function computeRating(lines, strategy) {
-    strategy = strategy ?? STRATEGY.MOST_COMMON;
+function computeRating(lines, strategy = STRATEGY.MOST_COMMON) {
     let remaining = lines.filter(l => l.length > 0);
     const len = remaining[0].length;
     for (const i : range(len)) {

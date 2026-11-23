@@ -100,8 +100,7 @@ function allRelativeCoordinates(beacons) {
     return result;
 }
 
-function compareScanners(beacons1, beacons2, minOverlap) {
-    minOverlap = minOverlap ?? 12;
+function compareScanners(beacons1, beacons2, minOverlap = 12) {
     const relCoords1 = allRelativeCoordinates(beacons1);
     for (const rot : rotations) {
         const rotatedBeacons = beacons2.map(p => rotate(p, rot));

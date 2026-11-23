@@ -298,6 +298,22 @@ public class TinyscriptModelUtil {
 		return result;
 	}
 
+	/**
+	 * The parameter whose default contains elem (the a = … in function f(a = …)), or null:
+	 * the nearest one, so that in f(a = () => { … }) the body of the arrow function is not in it.
+	 */
+	public static Identifier enclosingParameterDefault(EObject elem) {
+		for (EObject e = elem; e != null; e = e.eContainer()) {
+			if (e instanceof Block)
+				return null;
+			if (e instanceof Identifier parameter && parameter.getDefaultValue() != null
+					&& parameter.eContainer() instanceof FunctionDefinition function
+					&& function.getParams().contains(parameter))
+				return parameter;
+		}
+		return null;
+	}
+
 	// Whether block is that of catch (e) { ... } with an error variable of this name
 	private static boolean declaresCatchParameter(Block block, String name) {
 		return block.eContainer() instanceof CatchClause handler && handler.getParam() != null
