@@ -738,8 +738,9 @@ and differential tests run against node.
 - **Advent of Code 2021, ported from TypeScript** (2026-11-23, with 0.26: days
   1–13, 19, 20 of [mabauer/aoc2021](https://github.com/mabauer/aoc2021) in
   `examples/aoc2021`, as literally as possible, to see how code written with
-  Javascript habits fares). All give the originals' answers on the real inputs
-  (including a wrong one, a bug of the original). Findings:
+  Javascript habits fares). All give the originals' answers on the real inputs,
+  except day 13, whose bug (points compared by a hash code that is not unique)
+  is fixed, like three other bugs of the originals. Findings:
   - **Bug: misleading message for `NaN` in a comparison.** `1 < NaN` is a
     `TypeError` (consistent: `isNumber()` excludes `NaN`), but the message says
     "'<' compares two numbers or two strings, but ints[pos - 1] is a number and

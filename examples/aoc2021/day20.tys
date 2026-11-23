@@ -59,9 +59,10 @@ class Image {
         let value = (enhancementString[index] == "#") ? 1 : 0;
         result.edge = value;
 
-        // Compute inner part
+        // Compute inner part (fixed: TypeScript has dimY in both loops, which only works for
+        // square images)
         for (const y : range(this.dimY + 2)) {
-            for (const x : range(this.dimY + 2)) {
+            for (const x : range(this.dimX + 2)) {
                 binaryString = this.getBinaryStringForPixel(x - 1, y - 1);
                 index = parseInt(binaryString, 2);
                 value = (enhancementString[index] == "#") ? 1 : 0;
