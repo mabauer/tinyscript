@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
- * continue, the conditional operator, compound assignments and ++ / -- statements
- * (step 3 of the Advent of Code plan in TODO.md).
+ * continue, the conditional operator, compound assignments and ++ / -- statements.
  */
 public class SyntaxTest extends TinyscriptTranspilerTestBase {
 

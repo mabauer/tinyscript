@@ -11,7 +11,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
  * tinyscript is deliberately stricter than Javascript: no silent conversions
- * (see "Conversions & strictness" in TODO.md and the README).
+ * (see "Design decisions" in the README).
  */
 public class StrictnessTest extends TinyscriptTranspilerTestBase {
 

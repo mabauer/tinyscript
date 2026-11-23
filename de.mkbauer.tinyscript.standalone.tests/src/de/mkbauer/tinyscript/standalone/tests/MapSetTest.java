@@ -11,7 +11,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptResourceLimitViolation;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
- * Map and Set (step 4 of the Advent of Code plan in TODO.md).
+ * Map and Set, as in Javascript (keys of any type).
  */
 public class MapSetTest extends TinyscriptTranspilerTestBase {
 
