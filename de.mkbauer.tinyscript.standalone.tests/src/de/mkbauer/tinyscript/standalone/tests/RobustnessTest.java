@@ -13,8 +13,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptStackOverflowError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
- * Errors a script can run into should be tinyscript errors with a helpful message
- * (step 5 of the Advent of Code plan in TODO.md).
+ * Errors a script can run into should be tinyscript errors with a helpful message.
  */
 public class RobustnessTest extends TinyscriptTranspilerTestBase {
 

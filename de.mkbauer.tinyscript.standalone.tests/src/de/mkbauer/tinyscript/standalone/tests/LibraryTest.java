@@ -8,7 +8,7 @@ import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
- * The library functions added on 2026-11-21 (TODO.md: language review, gaps 4 and 5): Math,
+ * Library functions: Math,
  * arrays, Object.values / entries / fromEntries / assign, parseFloat, Number.isFinite, strings.
  * As in Javascript, so each test also runs against node.
  */

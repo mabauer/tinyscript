@@ -11,7 +11,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptResourceLimitViolation;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
- * Array methods (step 2 of the Advent of Code plan in TODO.md).
+ * Array methods, as in Javascript.
  */
 public class ArraysTest extends TinyscriptTranspilerTestBase {
 

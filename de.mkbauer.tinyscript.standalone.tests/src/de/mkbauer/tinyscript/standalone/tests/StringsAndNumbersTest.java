@@ -11,7 +11,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptResourceLimitViolation;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
- * String methods and number conversion (step 1 of the Advent of Code plan in TODO.md).
+ * String methods and number conversion.
  */
 public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
 

@@ -826,7 +826,9 @@ implementation class made the interpreter 5–15 % faster (measured on Advent of
 Code programs, 2026-11-20). A Java pattern switch over the node interfaces was
 not faster. Dispatch is still the largest cost of the tree walk; faster designs
 (variables in slots, compiling the tree to closures) were deliberately not
-chosen, to keep the engine easy to understand (see `TODO.md`).
+chosen, to keep the engine easy to understand: a name is looked up in a chain of
+contexts, just as scoping is explained. If a program is ever too slow, lighter
+contexts that stay name-based come first (see `TODO.md`).
 
 **Why exception-based control flow?** `TSReturnValue` as a thrown exception
 cleanly unwinds arbitrarily nested recursive `execute()` calls without threading
@@ -842,6 +844,19 @@ over a value is checked for exhaustiveness by the compiler, and the common
 builtins are properties of one global object, as in ECMAScript, and the
 top-level variables of a script or REPL session live next to them. Scripts
 cannot reach the object itself (`this` is `undefined` outside functions).
+
+**Why node as the reference, and no Javascript engine in the JVM?** The
+generated Javascript is checked against node in the differential tests; GraalJS
+or Nashorn would be other implementations (e.g. of `Math`), and a runner for
+them had no users (removed 2026-11-22). Embedding tinyscript in Java means
+`TinyscriptEngine`: a transpiled script would lose tinyscript's checks, its
+error locations and the resource limits.
+
+**Why are most `std:` modules written in tinyscript?** `std:array` and
+`std:string` (`parse`, `words`, `integers`, …) are `.tys` files, so they run the
+same in the interpreter and, bundled by the generator, in node, and the
+differential tests cover them. Only what needs the host is native: `std:fs` and
+`std:io`. Errors inside a `std:` module are reported at the caller.
 
 **Why a `WeakHashMap` for object tracking?** The resource monitor needs to track
 live object count and memory without preventing GC. A `WeakHashMap`

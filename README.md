@@ -179,7 +179,9 @@ of primitive datatypes in Javascript is a mine-field on its own.
 - **Globals vs. modules:** what is a standard global in Javascript and needs no
   privileges stays global (`Math`, `Object`, `print`, …); modules are for
   additions Javascript does not have (`std:array`) and for privileged things
-  (`std:fs`, `std:io`).
+  (`std:fs`, `std:io`). Each module runs once; imported names are read-only
+  snapshots (simpler than Javascript's live bindings), and files share names
+  only via imports.
 - **File access is a module:** there is no global `fs`; use
   `import * as fs from "std:fs";` (not available in the sandboxed web demo).
 - **Few methods on primitives:** strings have their methods (`length`, `charAt`,
@@ -199,8 +201,17 @@ of primitive datatypes in Javascript is a mine-field on its own.
   and failed file access (`e.name == "IOError"`). Programming errors such as a
   `TypeError` or a failed `assert` end the script even inside `try`, so a broad
   `catch` cannot hide them. There is no `finally`.
-- **Arrow functions** are supported. These are part of Javascript starting with
-  Ecmascript 6 :-)
+- **Functions** are declarations, function expressions and arrow functions
+  (`x => x * 2`), with rest parameters (`...args`) and default parameters
+  (`step = 1`, used for a missing argument or `undefined`). Stricter than
+  Javascript, defaults come last and only names have them, not patterns.
+- **Destructuring** takes apart arrays and objects in declarations, `for` loops
+  and parameters (`const [a, b] = pair;`, `({ x, y }) => x * y`), but only flat
+  patterns of names. An array that is too short is a `TypeError` instead of
+  giving `undefined`.
+- **Commas:** a comma after the last element is allowed in array and object
+  literals (`[1, 2,]`), not in calls, parameter lists or patterns; arrays have
+  no empty elements (`[1, , 2]`).
 - **Objects: literals, factory functions and classes, without inheritance.**
   `class Point { constructor(x, y) { … } … }` is short for a constructor
   function with methods on its prototype, as in Javascript; a class can only be
@@ -217,10 +228,13 @@ of primitive datatypes in Javascript is a mine-field on its own.
 Certainly, _tinyscript_ is not perfect. It's just a proof-of-concept (but a
 usable one!). Some Javascript features are simply missing, for example:
 
-- There is no support for _regular expressions_.
-- There is no `switch`, and classes have no inheritance.
+- There is no support for _regular expressions_; to read structured text,
+  `std:string` has `parse` (`parse("{:d},{:d}", line)`), `findAll`, `words` and
+  `integers`.
+- There is no `switch`, no template strings and no spread in calls
+  (`f.apply(null, values)`), and classes have no inheritance.
 
-See [TODO.md](TODO.md) for what's planned.
+See [TODO.md](TODO.md) for what's planned and what was decided against.
 
 ## Performance
 
@@ -228,8 +242,11 @@ _tinyscript_'s interpreter walks the syntax tree directly, so it is slow
 compared with the highly-optimized Javascript engines. A simulation of 8 million
 steps (part 2 of day 6 of Advent of Code 2024, on a test grid) takes 19 s in
 _tinyscript_ and 1.9 s in _CPython_; _node.js_ is faster still. For most scripts
-and the Advent of Code puzzles, this is fast enough. Ideas for a faster
-interpreter are in [TODO.md](TODO.md).
+and the Advent of Code puzzles, this is fast enough: most days of 2023 and 2024
+take a few seconds on real inputs. Calls of small functions and methods in inner
+loops are the biggest cost; such code is up to about 300 times slower than in
+node. The engine deliberately stays a plain tree walk that is easy to
+understand; measurements and the next ideas are in [TODO.md](TODO.md#speed).
 
 When I measured in 2015 (Java 8), _tinyscript_ was slower than _V8_ by a factor
 of 10 and than _Nashorn_ by a factor of 5–7, but often twice as fast as the Java
