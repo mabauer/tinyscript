@@ -19,10 +19,7 @@ TypeScript (`examples/aoc20xx`).
    `("" + (i + 1)).padStart(4)`; the most everyday addition, and
    Javascript-compatible. The lexer for `${…}` is real work in Xtext.
 2. **Smaller:** assignment with a pattern (`[a, b] = [b, a];`), renaming in
-   imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`;
-   number literals in binary, hex and octal (`0b0011110`, `0xff`, `0o17`) and
-   with separators (`1_000_000_000_000`), all Javascript-compatible (AoC 2022
-   day 17 draws its rocks as bits).
+   imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`.
 3. **Library:** a priority queue in a `std:` module (days 16 of 2024 and 17 of
    2023 have a binary heap of their own); `findAll` with the positions of the
    matches; a single-character field in `parse` (`a<2006`); possibly `readAll()`

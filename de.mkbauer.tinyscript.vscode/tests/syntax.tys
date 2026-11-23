@@ -5,6 +5,12 @@ const x = 1.5e3;
 //        ^^^^^ constant.numeric.decimal.tinyscript
 //             ^ punctuation.terminator.statement.tinyscript
 
+const mask = 0xff_ff | 0b1010 | 0o17 | 1_000_000;
+//           ^^^^^^^ constant.numeric.decimal.tinyscript
+//                     ^^^^^^ constant.numeric.decimal.tinyscript
+//                              ^^^^ constant.numeric.decimal.tinyscript
+//                                     ^^^^^^^^^ constant.numeric.decimal.tinyscript
+
 let s = "say \"hi\"\n";
 //      ^ string.quoted.double.tinyscript
 //           ^^ constant.character.escape.tinyscript

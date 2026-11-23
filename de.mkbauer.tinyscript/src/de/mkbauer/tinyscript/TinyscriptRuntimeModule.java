@@ -3,10 +3,12 @@
  */
 package de.mkbauer.tinyscript;
 
+import org.eclipse.xtext.conversion.IValueConverterService;
 import org.eclipse.xtext.linking.ILinkingDiagnosticMessageProvider;
 import org.eclipse.xtext.naming.IQualifiedNameProvider;
 import org.eclipse.xtext.parser.antlr.ISyntaxErrorMessageProvider;
 
+import de.mkbauer.tinyscript.conversion.TinyscriptValueConverter;
 import de.mkbauer.tinyscript.scoping.TinyscriptGlobalScopeProvider;
 import de.mkbauer.tinyscript.scoping.TinyscriptQualifiedNameProvider;
 import de.mkbauer.tinyscript.validation.TinyscriptLinkingDiagnosticMessageProvider;
@@ -36,5 +38,11 @@ public class TinyscriptRuntimeModule extends AbstractTinyscriptRuntimeModule {
 	// "Unknown name 'valeus' (did you mean 'values'?)"
 	public Class<? extends ILinkingDiagnosticMessageProvider> bindILinkingDiagnosticMessageProvider() {
 		return TinyscriptLinkingDiagnosticMessageProvider.class;
+	}
+
+	// Number literals as in Javascript: 0xff, 0b1010, 0o17, 1_000_000
+	@Override
+	public Class<? extends IValueConverterService> bindIValueConverterService() {
+		return TinyscriptValueConverter.class;
 	}
 }

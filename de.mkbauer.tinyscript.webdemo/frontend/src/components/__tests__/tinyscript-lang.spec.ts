@@ -58,6 +58,9 @@ describe('tinyscript-lang tokenizer', () => {
   it('numeric literals tokenize as number', () => {
     expect(typeOf('42', '42')).toBe('number')
     expect(typeOf('3.14', '3.14')).toBe('number')
+    expect(typeOf('0xff_ff', '0xff_ff')).toBe('number')
+    expect(typeOf('0b1010', '0b1010')).toBe('number')
+    expect(typeOf('1_000_000', '1_000_000')).toBe('number')
   })
 
   it('identifiers tokenize as variableName', () => {
