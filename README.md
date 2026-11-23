@@ -24,7 +24,9 @@ _tinyscript_ code:
     print(fibonacci(50)); // 20365011074
 
 You can play with it online in your browser
-[here](https://tinyscript.mkbauer.de).
+[here](https://tinyscript.mkbauer.de). The
+[language reference](docs/language-reference.md) describes the whole language,
+its built-in objects and its differences from Javascript.
 
 _tinyscript_ offers quite a complete set of interesting language features:
 
@@ -81,6 +83,13 @@ interpreter for it in Java for a couple of reasons:
 - I wanted to have a look at the
   [Xtext framework](https://www.eclipse.org/Xtext/) for language engineering. So
   I used tinyscript as an example project to get my hands dirty with that.
+
+In 2026, more than ten years later, I took the project up again. I used
+[Claude Code](https://claude.com/claude-code) to modernize the project and to
+add a few language features, among other things modules and classes (including a
+handy way to define methods). We also extended the standard library, so that
+programming puzzles like [Advent of Code](https://adventofcode.com) can be
+solved with _tinyscript_ (see [`examples`](examples)).
 
 ## What did I do?
 
