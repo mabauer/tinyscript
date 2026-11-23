@@ -57,6 +57,10 @@ directory):
   day 4 added an empty board and relied on a blank line at the end of the input;
   day 20 only worked for square images. Otherwise, the answers on real inputs
   are the same as those of the originals.
+- Day 19 is "Changed:" in one place: the original caches the expensive result of
+  `computeScanners` in variables of the module, so `part1(lines)` and
+  `part2(lines)` ignore their argument after the first call. Here the caller
+  computes it once and passes it.
 
 On real inputs, days 1–13 take 0.5–5.4 s each (day 5 the most, for its large
 canvas), day 20 45 s and day 19 53 s; node takes at most 0.25 s for the

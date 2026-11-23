@@ -186,14 +186,13 @@ function computeScanners(beacons) {
     return scanners;
 }
 
-let beacons = [];
-let scanners = [];
+// Changed: TypeScript keeps beacons and scanners in variables of the module, which part1
+// and part2 fill on their first call (as a cache for the expensive computeScanners).
+// Then they ignore their argument lines, and part2 depends on whether part1 ran. Here the
+// caller computes the scanners once and passes them.
 
-function part1(lines) {
-    if (scanners.length == 0) {
-        beacons = readScanners(lines);
-        scanners = computeScanners(beacons);
-    }
+// The number of different beacons, in the coordinates of scanner 0
+function part1(beacons, scanners) {
     const uniques = [];
     for (const s : range(beacons.length)) {
         const scanner = scanners[s];
@@ -211,11 +210,8 @@ function part1(lines) {
     return uniques.length;
 }
 
-function part2(lines) {
-    if (scanners.length == 0) {
-        beacons = readScanners(lines);
-        scanners = computeScanners(beacons);
-    }
+// The largest Manhattan distance between two scanners
+function part2(scanners) {
     const distances = [];
     for (const s1 : scanners) {
         for (const s2 : scanners) {
@@ -227,6 +223,7 @@ function part2(lines) {
     return Math.max.apply(null, distances);
 }
 
-const lines = inputLines();
-print("Part 1: " + part1(lines));
-print("Part 2: " + part2(lines));
+const beacons = readScanners(inputLines());
+const scanners = computeScanners(beacons);
+print("Part 1: " + part1(beacons, scanners));
+print("Part 2: " + part2(scanners));
