@@ -103,6 +103,10 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
         assertTypeError("Car has no method 'drive'", "function Car() { } let c = new Car(); c.drive();");
         assertTypeError("Object has no method 'g'", "let o = {}; o[\"g\"]();");
         assertTypeError("Point has no method 'move'", "class Point { } new Point().move();");
+        // A range has only some of the methods of arrays: the message says how to get the others
+        assertTypeError("range has no method 'filter': for the methods of arrays, make it an array with toArray(): range(…).toArray().filter(…)",
+                "range(5).filter(i => i > 2);");
+        assertTypeError("range has no method 'foo'", "range(5).foo();");
         // A method that is only called constructor does not name the object
         assertTypeError("Object has no method 'f'", "const o = { constructor() { } }; o.f();");
         assertTypeError("Object has no method 'f'", "const base = { constructor() { } }; Object.create(base).f();");
