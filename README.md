@@ -57,7 +57,9 @@ _tinyscript_ offers quite a complete set of interesting language features:
 
 Larger examples: [Advent of Code 2024](examples/aoc2024), solutions of all 25
 days, and [ten days of 2023](examples/aoc2023), written with classes; all meant
-to be read as examples of tinyscript.
+to be read as examples of tinyscript. [Fifteen days of 2021](examples/aoc2021)
+are ported as literally as possible from TypeScript, to show how code written
+with Javascript habits looks in tinyscript.
 
 Around Christmas time 2015, I've designed _tinyscript_ and implemented an
 interpreter for it in Java for a couple of reasons:

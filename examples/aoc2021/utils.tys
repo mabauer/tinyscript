@@ -1,0 +1,32 @@
+// Helpers shared by the days, ported from utils.ts (only the ones the days use)
+
+// The sum of the numbers in values
+export function sum(values) {
+    const result = values.reduce((sum, value) => sum + value, 0);
+    return result;
+}
+
+// Whether l contains an element with the same hash code as value. Objects in l and value
+// need a method hashCode() (TypeScript: a getter of the interface Hashable)
+export function listIncludes(l, value) {
+    return l.filter(o => value.hashCode() == o.hashCode()).length > 0;
+}
+
+// The elements of l1 that are also in l2, by their hash codes. (TypeScript:
+// l1.filter(elem => listIncludes(l2, elem)), which compares each element of l1 with each
+// of l2; a Set of the hash codes gives the same result much faster.)
+export function listIntersect(l1, l2) {
+    const hashCodes = new Set(l2.map(o => o.hashCode()));
+    const result = l1.filter(elem => hashCodes.has(elem.hashCode()));
+    return result;
+}
+
+// The numbers in the strings (NaN for a string that is no number, e.g. "")
+export function integers(inputs) {
+    const result = inputs.map(s => parseInt(s));
+    return result;
+}
+
+export function stripEmptyLines(lines) {
+    return lines.filter(s => s.length > 0);
+}

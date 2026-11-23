@@ -1,0 +1,93 @@
+// Advent of Code 2021, day 3: Binary Diagnostic
+// https://adventofcode.com/2021/day/3
+//
+// Usage: tinyscript day03.tys -- input.txt
+
+import inputLines from "./aoc";
+
+function countChars(s, ch) {
+    return s.split("")
+        .map((elem, i) => {
+            if (elem == ch) {
+                return i;
+            }
+        })
+        .filter(elem => elem != null)
+        .length;
+}
+
+function part1(lines) {
+    lines = lines.filter(l => l.length > 0);
+    let gamma = "";
+    let epsilon = "";
+    const len = lines[0].length;
+    for (const i : range(len)) {
+        let col = "";
+        for (const line : lines) {
+            col += line[i];
+        }
+        const zeros = countChars(col, "0");
+        const ones = countChars(col, "1");
+        if (ones > zeros) {
+            gamma = gamma + "1";
+            epsilon = epsilon + "0";
+        } else {
+            gamma = gamma + "0";
+            epsilon = epsilon + "1";
+        }
+    }
+    const gamma_rate = parseInt(gamma, 2);
+    const epsilon_rate = parseInt(epsilon, 2);
+    const result = gamma_rate * epsilon_rate;
+
+    return result;
+}
+
+// TypeScript: enum STRATEGY
+const STRATEGY = { MOST_COMMON: 0, LEAST_COMMON: 1 };
+
+function computeRating(lines, strategy) {
+    strategy = strategy ?? STRATEGY.MOST_COMMON;
+    let remaining = lines.filter(l => l.length > 0);
+    const len = remaining[0].length;
+    for (const i : range(len)) {
+        let col = "";
+        for (const line : remaining) {
+            col += line[i];
+        }
+        const zeros = col.split("")
+            .map((elem, i) => (elem == "0") ? i : -1)
+            .filter(elem => (elem >= 0));
+        const ones = col.split("")
+            .map((elem, i) => (elem == "1") ? i : -1)
+            .filter(elem => (elem >= 0));
+        const temp = [];
+        if ((strategy == STRATEGY.MOST_COMMON) == (ones.length >= zeros.length)) {
+            // keep ones
+            for (const one : ones) {
+                temp.push(remaining[one]);
+            }
+        } else {
+            // keep zeros
+            for (const zero : zeros) {
+                temp.push(remaining[zero]);
+            }
+        }
+        remaining = temp;
+        if (remaining.length == 1) {
+            break;
+        }
+    }
+    const rate = parseInt(remaining[0], 2);
+    return rate;
+}
+
+function part2(lines) {
+    const o2_generator_rate = computeRating(lines, STRATEGY.MOST_COMMON);
+    const co2_scrubber_rate = computeRating(lines, STRATEGY.LEAST_COMMON);
+    return o2_generator_rate * co2_scrubber_rate;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

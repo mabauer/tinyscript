@@ -697,6 +697,7 @@ and differential tests run against node.
   day 20 with the same methods and no inheritance); `parse`, `?.` / `??`,
   destructuring parameters, `min` / `max` and `Map.values()` as an array were
   used a lot. Findings:
+
   - ~~**Bug: `Object.keys` order differs from node.**~~ (fixed 2026-11-22:
     integer keys first, as in Javascript; only objects that have had an integer
     key are sorted) For integer-like keys Javascript lists them first, in
@@ -733,6 +734,40 @@ and differential tests run against node.
     three other statements); in day 17, replacing a heap's `swap` method by
     inline code, a `for` over a two-element array literal, and a `Map` by an
     array each saved about 1.5 of 8.5 s.
+
+- **Advent of Code 2021, ported from TypeScript** (2026-11-23, with 0.26: days
+  1–13, 19, 20 of [mabauer/aoc2021](https://github.com/mabauer/aoc2021) in
+  `examples/aoc2021`, as literally as possible, to see how code written with
+  Javascript habits fares). All give the originals' answers on the real inputs
+  (including a wrong one, a bug of the original). Findings:
+  - **Bug: misleading message for `NaN` in a comparison.** `1 < NaN` is a
+    `TypeError` (consistent: `isNumber()` excludes `NaN`), but the message says
+    "'<' compares two numbers or two strings, but ints[pos - 1] is a number and
+    ints[pos] is a number"; it should say that one of them is `NaN`. Found with
+    `parseInt("")` of an empty last line.
+  - **Trailing commas** (`[1, 2,]`, `{ a: 1, }`, `f(1, 2,)`) are syntax errors;
+    Javascript allows them, and multi-line literals often have one. The message
+    for an object is misleading ("Unexpected '}', expected an expression").
+    Decide: allow them (grammar and generator), or a hint as for other
+    Javascript habits.
+  - **Missing, with workarounds** (by frequency in the port): default parameters
+    (15 parameters in 10 functions, `x = x ?? default`), getters (4 classes,
+    `hashCode()` as a method), field declarations (4, in the constructor),
+    regular expressions (5, `parse` / `words`), rest elements in patterns (4,
+    `slice(1)`), spread in calls (4, `f.apply(null, array)`), `Number.MAX_VALUE`
+    (`Infinity`), `in` (`g[key] == undefined`), `extends` (a second class with
+    the same methods), `enum` (an object), template strings, `RangeError`,
+    `from` as a name. The messages said what to write instead each time.
+  - **Javascript forgives, tinyscript does not:** comparisons with `undefined`
+    or `NaN` (an off-by-one loop bound and the empty last line in day 1), a
+    string as a condition (`s && s.length > 0`), destructuring an array that is
+    too short (`const [cmd, operand] = "".split(" ")`). Each was found at once
+    by the error message; in Javascript all of them were silent.
+  - **Speed:** code that calls small functions or methods in its inner loops is
+    190–290 times slower than node (node: 50–100 times for typical code): day 19
+    compares all pairs of hash codes (`listIntersect` via `filter` /
+    `listIncludes` / `hashCode()`; about 50 minutes, 53 s with a `Set` of the
+    hash codes), day 20 builds a string per pixel (45 s, node 0.23 s).
 
 ## Interpreter and code quality
 

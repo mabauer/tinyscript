@@ -1,0 +1,152 @@
+// Advent of Code 2021, day 11: Dumbo Octopus
+// https://adventofcode.com/2021/day/11
+//
+// Usage: tinyscript day11.tys -- input.txt
+
+import inputLines from "./aoc";
+import sum, listIncludes, stripEmptyLines from "./utils";
+
+class Point {
+
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    equals(other) {
+        return (other && this.x == other.x && this.y == other.y);
+    }
+
+    // TypeScript: get hashCode(); tinyscript has no getters
+    hashCode() {
+        return 31 * (31 * 7 + this.x) + this.y;
+    }
+}
+
+const FLASHING = 10;
+
+class Swarm {
+
+    constructor(rows) {
+        this.dimX = rows[0].length;
+        this.dimY = rows.length;
+        this.cells = [];
+        for (const y : range(this.dimY)) {
+            this.cells[y] = [];
+            for (const x : range(this.dimX)) {
+                this.cells[y][x] = rows[y][x];
+            }
+        }
+    }
+
+    getxy(x, y) {
+        return this.cells[y][x];
+    }
+
+    setxy(x, y, value) {
+        this.cells[y][x] = value;
+    }
+
+    getNeighbours(x, y) {
+        const neighbours = [];
+        for (const j : range(y - 1, y + 2)) {
+            for (const i : range(x - 1, x + 2)) {
+                if ((j >= 0) && (j < this.dimY)
+                        && (i >= 0) && (i < this.dimX)
+                        && !((i == x) && (j == y))) {
+                    neighbours.push(new Point(i, j));
+                }
+            }
+        }
+        return neighbours;
+    }
+
+    flash(todo) {
+        while (todo.length > 0) {
+            const first = todo.pop();
+            if (first) {
+                const neighbours = this.getNeighbours(first.x, first.y);
+                for (const n : neighbours) {
+                    let level = this.getxy(n.x, n.y);
+                    if (level < FLASHING) {
+                        level += 1;
+                        this.setxy(n.x, n.y, level);
+                        if (level == FLASHING && !listIncludes(todo, n)) {
+                            todo.push(n);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    nextGeneration() {
+        let flashes = 0;
+        const todo = [];
+        for (const y : range(this.dimY)) {
+            for (const x : range(this.dimX)) {
+                let level = this.getxy(x, y);
+                level += 1;
+                this.setxy(x, y, level);
+                if (level >= FLASHING) {
+                    todo.push(new Point(x, y));
+                }
+            }
+        }
+        this.flash(todo);
+        for (const y : range(this.dimY)) {
+            for (const x : range(this.dimX)) {
+                if (this.getxy(x, y) >= FLASHING) {
+                    this.setxy(x, y, 0);
+                    flashes += 1;
+                }
+            }
+        }
+        return flashes;
+    }
+
+    play(n, flashes) {
+        flashes = flashes ?? 0;
+        for (const i : range(1, n + 1)) {
+            flashes += this.nextGeneration();
+        }
+        return flashes;
+    }
+
+    getRows() {
+        return this.cells.map(row => row.map(v => (v >= FLASHING) ? "*" : v.toString()).join(""));
+    }
+
+    isSynchronized() {
+        const s = sum(this.cells.map(row => sum(row)));
+        return s == 0;
+    }
+
+    // (TypeScript also prints each generation and sum)
+    playUntilSynchronized() {
+        let i = 0;
+        while (!this.isSynchronized()) {
+            this.nextGeneration();
+            i += 1;
+        }
+        return i;
+    }
+}
+
+function part1(lines) {
+    const swarm = new Swarm(stripEmptyLines(lines)
+        .map(r => r.split("").map(c => parseInt(c))));
+    const flashes = swarm.play(100);
+    return flashes;
+}
+
+function part2(lines) {
+    const swarm = new Swarm(stripEmptyLines(lines)
+        .map(r => r.split("").map(c => parseInt(c))));
+    const gens = swarm.playUntilSynchronized();
+    return gens;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

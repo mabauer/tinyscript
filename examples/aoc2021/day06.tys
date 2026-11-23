@@ -1,0 +1,61 @@
+// Advent of Code 2021, day 6: Lanternfish
+// https://adventofcode.com/2021/day/6
+//
+// Usage: tinyscript day06.tys -- input.txt
+
+import inputLines from "./aoc";
+
+const MAX_AGE = 8;
+
+class Swarm {
+
+    // Store the number of fishes in each "age"/cycle
+    constructor(fishes) {
+        this.fishes_per_cycle = new Array(MAX_AGE + 1).fill(0);
+        for (const fish : fishes) {
+            this.fishes_per_cycle[fish] += 1;
+        }
+    }
+
+    nextGeneration() {
+        const tmp = this.fishes_per_cycle[0];
+        for (const i : range(MAX_AGE)) {
+            this.fishes_per_cycle[i] = this.fishes_per_cycle[i + 1];
+        }
+        this.fishes_per_cycle[MAX_AGE] = tmp;
+        this.fishes_per_cycle[6] += tmp;
+    }
+
+    // TypeScript prints the swarm after each generation (here left out)
+    play(n) {
+        for (const i : range(1, n + 1)) {
+            this.nextGeneration();
+        }
+    }
+
+    getNumberOfFishes() {
+        const sum = this.fishes_per_cycle.reduce((sum, n) => sum + n, 0);
+        return sum;
+    }
+}
+
+// TypeScript: split(/\s*,\s*/)
+function part1(lines) {
+    const fishes = lines[0].trim().split(",").map(s => parseInt(s));
+    const swarm = new Swarm(fishes);
+    swarm.play(80);
+    const result = swarm.getNumberOfFishes();
+    return result;
+}
+
+function part2(lines) {
+    const fishes = lines[0].trim().split(",").map(s => parseInt(s));
+    const swarm = new Swarm(fishes);
+    swarm.play(256);
+    const result = swarm.getNumberOfFishes();
+    return result;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

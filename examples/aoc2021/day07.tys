@@ -1,0 +1,47 @@
+// Advent of Code 2021, day 7: The Treachery of Whales
+// https://adventofcode.com/2021/day/7
+//
+// Usage: tinyscript day07.tys -- input.txt
+
+import inputLines from "./aoc";
+
+function sum(...values) {
+    return values.reduce((sum, current) => sum + current, 0);
+}
+
+// TypeScript: Math.min(...crabs), sum(...costs) and Number.MAX_VALUE; tinyscript has no
+// spread in calls (f.apply(null, array) instead) and no Number.MAX_VALUE
+function optimizeMoves(crabs, costFunction) {
+    let best = Infinity;
+
+    const min = Math.min.apply(null, crabs);
+    const max = Math.max.apply(null, crabs);
+
+    for (const pos : range(min, max + 1)) {
+        const moves = crabs.map(c => Math.abs(c - pos));
+        const costs = moves.map(m => costFunction(m));
+        const cost = sum.apply(null, costs);
+        if (cost < best) {
+            best = cost;
+        }
+    }
+    return best;
+}
+
+function part1(lines) {
+    const crabs = lines[0].trim().split(",").map(s => parseInt(s));
+    const linearCostFunction = n => n;
+    const result = optimizeMoves(crabs, linearCostFunction);
+    return result;
+}
+
+function part2(lines) {
+    const crabs = lines[0].trim().split(",").map(s => parseInt(s));
+    const triangularCostFunction = n => (n * (n + 1)) / 2;
+    const result = optimizeMoves(crabs, triangularCostFunction);
+    return result;
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

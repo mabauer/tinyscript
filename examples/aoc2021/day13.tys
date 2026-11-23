@@ -1,0 +1,108 @@
+// Advent of Code 2021, day 13: Transparent Origami
+// https://adventofcode.com/2021/day/13
+//
+// Usage: tinyscript day13.tys -- input.txt
+
+import inputLines from "./aoc";
+import listIncludes from "./utils";
+import parse from "std:string";
+
+class Point {
+
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    equals(other) {
+        return (other && this.x == other.x && this.y == other.y);
+    }
+
+    // TypeScript: get hashCode(); tinyscript has no getters
+    hashCode() {
+        return 31 * (31 * 7 + this.x) + this.y;
+    }
+}
+
+// TypeScript: s.match(/(\d+)\s*,\s*(\d+)/)
+function parseDots(lines) {
+    const dots = [];
+    for (const s : lines) {
+        const match = parse("{:d},{:d}", s);
+        if (match != null) {
+            const dot = new Point(match[0], match[1]);
+            dots.push(dot);
+        }
+    }
+    return dots;
+}
+
+function foldDots(axis, pos, dots) {
+    const copy = dots.slice();
+    for (const dot : copy) {
+        const foldedDot = new Point(dot.x, dot.y);
+        if ((axis == "x") && (dot.x > pos)) {
+            foldedDot.x = pos - (foldedDot.x - pos);
+            if (!listIncludes(dots, foldedDot)) {
+                dots.push(foldedDot);
+            }
+            dots.splice(dots.indexOf(dot), 1);
+        }
+        if ((axis == "y") && (dot.y > pos)) {
+            foldedDot.y = pos - (foldedDot.y - pos);
+            if (!listIncludes(dots, foldedDot)) {
+                dots.push(foldedDot);
+            }
+            dots.splice(dots.indexOf(dot), 1);
+        }
+    }
+}
+
+// TypeScript: s.match(/fold along ([xy])=(\d+)/)
+function part1(lines) {
+    const dots = parseDots(lines);
+    for (const s : lines) {
+        const match = parse("fold along {:l}={:d}", s);
+        if (match != null) {
+            const [axis, pos] = match;
+            foldDots(axis, pos, dots);
+            break;
+        }
+    }
+    const result = dots.length;
+    return result;
+}
+
+function display(dots) {
+    const dimX = Math.max.apply(null, dots.map(d => d.x)) + 1;
+    const dimY = Math.max.apply(null, dots.map(d => d.y)) + 1;
+    const rows = [];
+    for (const y : range(dimY)) {
+        const row = [];
+        for (const x : range(dimX)) {
+            row.push(" ");
+        }
+        rows.push(row);
+    }
+    for (const dot : dots) {
+        rows[dot.y][dot.x] = "#";
+    }
+    print(rows.map(row => row.join("")).join("\n"));
+}
+
+function part2(lines) {
+    const dots = parseDots(lines);
+    for (const s : lines) {
+        const match = parse("fold along {:l}={:d}", s);
+        if (match != null) {
+            const [axis, pos] = match;
+            foldDots(axis, pos, dots);
+        }
+    }
+    display(dots);
+    return "See above";
+}
+
+const lines = inputLines();
+print("Part 1: " + part1(lines));
+print("Part 2: " + part2(lines));

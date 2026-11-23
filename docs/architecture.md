@@ -897,9 +897,9 @@ This module is the right place for:
 | 2 — integration   | `TranspilerVerifyTest`     | `assertTranspilerCorrectFromFile(filename)`         | Generated JS + node stderr shown                                              |
 
 Tests run alphabetically: `InterpreterReferenceTest` → `TranspilerTest` →
-`TranspilerVerifyTest`. Whole programs (Advent of Code 2023 and 2024, the OO
-examples and every web demo example) are compared between interpreter and node
-as well.
+`TranspilerVerifyTest`. Whole programs (Advent of Code 2021, 2023 and 2024, the
+OO examples and every web demo example) are compared between interpreter and
+node as well.
 
 ### When to run each module
 
