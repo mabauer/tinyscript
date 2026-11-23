@@ -159,9 +159,15 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    public void testSpreadInACall() {
-        assertEquals("... is only allowed for rest parameters: to call a function with an array, use f.apply(null, array)",
-                firstError("const a = [1, 2];\nprint(Math.max(...a));"));
+    public void testSpreadOutsideOfCallsAndArrays() {
+        assertEquals("... is only allowed in calls (f(...items)), array literals ([...a, x]), and as the last parameter or the last element of an array pattern ([first, ...rest])",
+                firstError("const a = [1, 2];\nconst b = ...a;"));
+    }
+
+    @Test
+    public void testRestMustBeLast() {
+        assertEquals("The rest element (...rest) must be the last one", firstError("const [...rest, last] = [1, 2];"));
+        assertEquals("The rest parameter (...args) must be the last one", firstError("function f(...args, last) { return last; }"));
     }
 
     @Test
@@ -234,14 +240,10 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
-    public void testSpreadAndRestOutsideOfParameters() {
-        assertEquals("Rest elements (...) in patterns are not supported (for an array, use slice: items.slice(1))",
-                firstError("const items = [1, 2, 3];\nconst [first, ...rest] = items;"));
-        assertEquals("Rest elements (...) in patterns are not supported (for an array, use slice: items.slice(1))",
+    public void testSpreadAndRestInObjects() {
+        assertEquals("Rest elements (...) in object patterns are not supported: take the properties you need, e.g. const { x, y } = o;",
                 firstError("const o = { x: 1, y: 2 };\nconst { x, ...others } = o;"));
-        assertEquals("Spread (...) in array literals is not supported: concatenate arrays with +, e.g. a + b",
-                firstError("const a = [1]; const b = [2];\nconst c = [...a, ...b];"));
-        assertEquals("Spread (...) in object literals is not supported: copy the properties, e.g. for (const key : Object.keys(o))",
+        assertEquals("Spread (...) in object literals is not supported: copy the properties with Object.assign, e.g. Object.assign({}, o, { y: 2 })",
                 firstError("const o = { x: 1 };\nconst p = { ...o, y: 2 };"));
     }
 

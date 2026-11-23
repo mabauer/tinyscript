@@ -20,8 +20,7 @@ function dfs(g, node, allow2ndVisitOnce = false, visited = new Set()) {
     if (node == END) {
         return 1;
     }
-    // TypeScript: new Set([...visited])
-    visited = new Set(visited);
+    visited = new Set([...visited]);
     if (isSmall(node)) {
         visited.add(node);
     }

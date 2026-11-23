@@ -151,19 +151,22 @@ for (const x : [1, 2, 3]) { ... }
 ### Destructuring
 
 A declaration can take apart an array or an object; only flat patterns of names
-are supported (no nesting, defaults, renaming or `...rest`):
+are supported (no nesting, defaults or renaming). An array pattern can end with
+a rest element that gets the other elements as an array:
 
 ```
 const [quotient, remainder] = divide(17, 5);   // the first elements of an array
+const [header, ...rows] = lines;               // the first element and the others
 const { row, col } = position;                 // properties of an object
 for (const [key, value] : map) { ... }         // in an iterable for loop
 robots.map(({ x, y }) => x * y);               // as parameters of functions and arrow functions
 ```
 
 Stricter than Javascript, an array pattern needs an array with at least as many
-elements (`const [a, b] = [1]` is a `TypeError`; more elements are fine). An
-object pattern needs an object (or a string); like `o.x`, a missing property
-gives `undefined`.
+elements as it has names before the rest (`const [a, b] = [1]` is a `TypeError`;
+more elements are fine, the rest can be empty). Object patterns have no rest
+element. An object pattern needs an object (or a string); like `o.x`, a missing
+property gives `undefined`.
 
 ### Block scope
 
@@ -741,6 +744,28 @@ functionName(arg1, arg2)
 object.method(arg)
 object["method"](arg)
 ```
+
+### Spread
+
+`...items` in a call or an array literal puts in the elements of `items` one by
+one. It takes what the `for` loop goes through: an array, the characters of a
+string, the values of a `Set`, the `[key, value]` entries of a `Map` or the
+numbers of a range; anything else is a `TypeError`.
+
+```
+Math.max(...values)          // the largest of the values
+list.push(...more)           // appends the elements of more
+new Point(...coords)
+const all = [...a, x, ...b]; // a new array
+[...range(3)]                // [0, 1, 2]
+```
+
+Each element becomes an argument, so in the generated Javascript (node) a call
+with a very large array (from about 100,000 elements, depending on the engine)
+fails with "Maximum call stack size exceeded"; the interpreter has no such
+limit. For the largest or smallest element of a large array, use `max` / `min`
+of `std:array`. Spread in object literals (`{ ...o }`) is not supported: copy
+with `Object.assign({}, o)`.
 
 ### `new` — constructor calls
 
@@ -1640,7 +1665,9 @@ writing code and for knowing its intentional limitations.
 - `class` with a `constructor` and methods (without inheritance)
 - `new`, `instanceof`, `typeof`
 - Arrow functions with lexical `this`
-- Rest parameters (`...args`) and default parameters (`step = 1`)
+- Rest parameters (`...args`), default parameters (`step = 1`), spread in calls
+  and array literals (`f(...items)`, `[...a, x]`), rest elements in array
+  patterns (`[first, ...rest]`)
 - Immediately-invoked function expressions (IIFEs)
 
 ### Things not supported
@@ -1651,8 +1678,9 @@ writing code and for knowing its intentional limitations.
   errors such as a `TypeError`
 - **Template literals** — no backtick strings
 - **Destructuring** beyond flat patterns in declarations, `for` and parameters —
-  no nesting, defaults, renaming, `...rest`, or patterns in assignments
-- **Spread operator** — no `...array` in call sites
+  no nesting, defaults, renaming, rest elements in object patterns, or patterns
+  in assignments
+- **Spread in object literals** (`{ ...o }`) — use `Object.assign({}, o)`
 - **Empty array elements** (`[1, , 2]`) and a comma after the last argument or
   parameter (`f(a, b,)`); in array and object literals it is allowed
 - **`switch` statement**
@@ -1736,7 +1764,7 @@ characters, so `contains("abc", "bc")` is `false` (use `"abc".includes("bc")`);
 the elements of a `Map` are `[key, value]` pairs, which `==` never matches (use
 `m.has(key)`). `min` and `max` compare as `<` does, so the elements must be all
 numbers or all strings; with no elements they throw an `Error`. `max(values)` is
-what Javascript writes `Math.max(...values)`.
+`Math.max(...values)`, but without a limit on the number of elements.
 
 #### `std:string`
 

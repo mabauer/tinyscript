@@ -271,8 +271,10 @@ Pattern:
 	ArrayPattern | ObjectPattern
 ;
 
+// An array pattern can end with a rest element, [first, ...rest], that gets the other elements
 ArrayPattern:
-	'[' names += Identifier (',' names += Identifier)* ']'
+	'[' ( names += Identifier (',' names += Identifier)* (',' '...' rest=Identifier)?
+		| '...' rest=Identifier ) ']'
 ;
 
 ObjectPattern:
@@ -294,7 +296,17 @@ CallOrPropertyAccessSuffix:
 
 CallSuffix:
 	{CallSuffix}
-	'(' (arguments += AssignmentExpression (',' arguments += AssignmentExpression)*)? ')' 
+	'(' (arguments += Argument (',' arguments += Argument)*)? ')' 
+;
+
+// An argument of a call or an element of an array literal: a value, or ...items, the items of an
+// array, a string, a Map, a Set or a range one by one: Math.max(...values), [...a, x]
+Argument returns Expression:
+	SpreadElement | AssignmentExpression
+;
+
+SpreadElement:
+	'...' expr=AssignmentExpression
 ;
 
 PropertyAccessSuffix:
@@ -339,7 +351,7 @@ PropertyName:
 // there are no empty elements ([1, , 2])
 ArrayInitializer:
 	{ArrayInitializer}
-	'[' (values+=AssignmentExpression (',' values += AssignmentExpression)* ','?)? ']'
+	'[' (values+=Argument (',' values += Argument)* ','?)? ']'
 ;
 
 NullObject returns Expression:

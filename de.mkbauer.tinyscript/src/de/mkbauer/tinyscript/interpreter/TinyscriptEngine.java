@@ -38,6 +38,7 @@ import de.mkbauer.tinyscript.ts.ConditionalExpression;
 import de.mkbauer.tinyscript.ts.ContinueStatement;
 import de.mkbauer.tinyscript.ts.ObjectPattern;
 import de.mkbauer.tinyscript.ts.Pattern;
+import de.mkbauer.tinyscript.ts.SpreadElement;
 import de.mkbauer.tinyscript.ts.ThrowStatement;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccess;
 import de.mkbauer.tinyscript.ts.CallOrPropertyAccessSuffix;
@@ -1266,11 +1267,44 @@ public class TinyscriptEngine {
     public TSValue caseArrayInitializer(ArrayInitializer expr) {
     	ArrayObject arr = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject(); 
     	int i = 0;
-    	for (Expression itemExpr : expr.getValues()) {
-    		arr.put(String.valueOf(i), execute(itemExpr));
+    	for (TSValue item : evaluateArguments(expr.getValues())) {
+    		arr.put(String.valueOf(i), item);
     		i++;
     	}
     	return arr;
+    }
+
+    /**
+     * The values of the arguments of a call or the elements of an array literal; ...items puts
+     * in the items one by one (those that the for loop goes through).
+     */
+    private TSValue[] evaluateArguments(List<Expression> exprs) {
+    	// Calls are frequent: without ... no list
+    	for (Expression e : exprs) {
+    		if (e instanceof SpreadElement)
+    			return evaluateArgumentsWithSpread(exprs);
+    	}
+    	TSValue[] values = new TSValue[exprs.size()];
+    	for (int i = 0; i < exprs.size(); i++)
+    		values[i] = execute(exprs.get(i));
+    	return values;
+    }
+
+    private TSValue[] evaluateArgumentsWithSpread(List<Expression> exprs) {
+    	List<TSValue> values = new ArrayList<>();
+    	for (Expression e : exprs) {
+    		if (e instanceof SpreadElement spread) {
+    			TSValue iterable = execute(spread.getExpr());
+    			List<TSValue> items = iterableItems(iterable);
+    			if (items == null)
+    				throw new TinyscriptTypeError("... needs an array, a string, a Map, a Set or a range, but "
+    						+ operand(spread.getExpr(), iterable), spread);
+    			values.addAll(items);
+    		}
+    		else
+    			values.add(execute(e));
+    	}
+    	return values.toArray(new TSValue[0]);
     }
     
     
@@ -1343,6 +1377,13 @@ public class TinyscriptEngine {
     						+ " elements, not " + array.getLength(), pattern);
     			for (int i = 0; i < count; i++)
     				declare(pattern.getNames().get(i), array.item(i));
+    			// [first, ...rest]: the other elements, maybe none
+    			if (pattern.getRest() != null) {
+    				ArrayObject rest = (ArrayObject) getConstructor(ArrayConstructor.NAME).createObject();
+    				for (int i = count; i < array.getLength(); i++)
+    					rest.push(array.item(i));
+    				declare(pattern.getRest(), rest);
+    			}
     		}
     		case ObjectPattern pattern -> {
     			if (value == TSValue.NULL || value == TSValue.UNDEFINED)
@@ -1359,6 +1400,8 @@ public class TinyscriptEngine {
     // [a, b] or { a, b }, for error messages
     private static String patternText(Pattern pattern) {
     	String names = pattern.getNames().stream().map(Identifier::getName).collect(Collectors.joining(", "));
+    	if (pattern instanceof ArrayPattern array && array.getRest() != null)
+    		names = (names.isEmpty() ? "" : names + ", ") + "..." + array.getRest().getName();
     	return pattern instanceof ArrayPattern ? "[" + names + "]" : "{ " + names + " }";
     }
 
@@ -1372,10 +1415,7 @@ public class TinyscriptEngine {
 	
     public TSValue processFunctionCall(CallOrPropertyAccess expr, Function functionObject, TSObject self, List<Expression> argExprs) {
     	currentContext.currentExpression = expr;
-		TSValue[] args = new TSValue[argExprs.size()];
-		for (int i = 0; i < argExprs.size(); i++) {
-			args[i] = execute(argExprs.get(i));
-		}
+		TSValue[] args = evaluateArguments(argExprs);
 		if (functionObject instanceof BuiltinFunction builtin)
 			builtin.checkMaxArgs(args.length, expr);
 		if (isConstructorCall(expr))

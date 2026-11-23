@@ -71,7 +71,7 @@ function find_mapping(signals, pos = 0, digits = []) {
         }
     } else {
         const signal = signals[pos];
-        let new_digits = digits.slice();
+        let new_digits = [...digits];
         if (signal.length == 2) {
             new_digits.push(1);
             return find_mapping(signals, pos + 1, new_digits);
@@ -95,7 +95,7 @@ function find_mapping(signals, pos = 0, digits = []) {
                 if (tmp != null) {
                     return tmp;
                 } else {
-                    new_digits = digits.slice();
+                    new_digits = [...digits];
                 }
             }
         }
@@ -106,7 +106,7 @@ function find_mapping(signals, pos = 0, digits = []) {
                 if (tmp != null) {
                     return tmp;
                 } else {
-                    new_digits = digits.slice();
+                    new_digits = [...digits];
                 }
             }
         }

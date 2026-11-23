@@ -87,7 +87,7 @@ function convertToAbsolute(points, scanner) {
 
 function allRelativeCoordinates(beacons) {
     const result = [];
-    const todo = beacons.slice();
+    const todo = [...beacons];
     while (todo.length > 0) {
         const p1 = todo.pop();
         if (p1) {
@@ -219,7 +219,7 @@ function part2(scanners) {
             }
         }
     }
-    return Math.max.apply(null, distances);
+    return Math.max(...distances);
 }
 
 const beacons = readScanners(inputLines());

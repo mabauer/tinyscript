@@ -15,29 +15,23 @@ AoC 2024, ten days of 2023 and porting 15 days of 2021 from TypeScript
 
 ## Language
 
-1. **Spread in calls and rest elements in patterns** (`Math.max(...values)`,
-   `push(...xs)`, `const [first, ...rest] = items;`): missed in all three AoC
-   rounds (2021: 4 times each). Deferred 2026-11-21 because
-   `f.apply(null, values)`, `min` / `max` of `std:array` and `items.slice(1)` do
-   it; to decide. The messages already say what to write instead.
-2. **Template strings.** `"" + x` occurs 18 times in the examples, e.g.
+1. **Template strings.** `"" + x` occurs 18 times in the examples, e.g.
    `("" + (i + 1)).padStart(4)`; the most everyday addition, and
    Javascript-compatible. The lexer for `${…}` is real work in Xtext.
-3. **Strictness for the script's own code.** Builtins check type and number of
+2. **Strictness for the script's own code.** Builtins check type and number of
    their arguments, the script's own classes and functions nothing:
    `new Point(1, 2, 3)` runs, and `this.m = 1` in a constructor silently hides
    the method `m`. Classes and function declarations are known before the run,
    so the validator could cheaply reject too many arguments for `new Class(…)`
    and calls of declared functions, and a field set in a constructor with the
    name of a method. Not intended: too few arguments (they are `undefined`).
-4. **Smaller:** assignment with a pattern (`[a, b] = [b, a];`), renaming in
-   imports (`import a as x from …`), computed keys and object spread
-   (`{ [k]: 1 }`, `{ ...o }`), `Array.from`.
-5. **Library:** a priority queue in a `std:` module (days 16 of 2024 and 17 of
+3. **Smaller:** assignment with a pattern (`[a, b] = [b, a];`), renaming in
+   imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`.
+4. **Library:** a priority queue in a `std:` module (days 16 of 2024 and 17 of
    2023 have a binary heap of their own); `findAll` with the positions of the
    matches; a single-character field in `parse` (`a<2006`); possibly `readAll()`
    in `std:io`, `toPrecision` / `toExponential`.
-6. **Regular expressions as a library**, if ever (`parse` / `findAll` of
+5. **Regular expressions as a library**, if ever (`parse` / `findAll` of
    `std:string` cover reading input so far): `new RegExp("…")` as in Javascript,
    no `/…/` literals; immutable, only stateless operations (`test`, `match`,
    `matchAll` as an array; `split` / `replace` accept a regex), no `lastIndex`;
@@ -45,7 +39,7 @@ AoC 2024, ten days of 2023 and porting 15 days of 2021 from TypeScript
    raw strings `r"(\d+)"` against `"\\d+"`; in the sandbox, catastrophic
    backtracking must stay interruptible (a `CharSequence` whose `charAt` checks
    the `ResourceMonitor`).
-7. **Possibly later:** `finally`; error classes with `instanceof` (`TypeError`,
+6. **Possibly later:** `finally`; error classes with `instanceof` (`TypeError`,
    `IOError`); patterns in `catch ({ message })`.
 
 ## Speed
@@ -111,6 +105,11 @@ functions about 0.35 µs.
   missing method is reported when it is called. Look at it again if checking
   across files exists (the language server). Dropped: `instanceof` with
   interfaces, class names after parameters (`f(l: Listener)`).
+- **Spread and rest for objects** (`{ ...o }`, `const { a, ...others } = o;`;
+  2026-11-23, when spread in calls and array literals and rest elements in array
+  patterns came): `{ ...point }` is no longer a `Point`, and which properties
+  are copied is a question of its own; `Object.assign({}, o)` does it, and AoC
+  never needed it.
 - **Statements and operators:** `switch`, labels, `do … while`, `**` (`Math.pow`
   and `1 << n` do it, and it brings its own precedence rules). The messages say
   what to write instead.

@@ -15,6 +15,7 @@ import de.mkbauer.tinyscript.ts.ContinueStatement
 import de.mkbauer.tinyscript.ts.ClassDeclaration
 import de.mkbauer.tinyscript.ts.Pattern
 import de.mkbauer.tinyscript.ts.ArrayPattern
+import de.mkbauer.tinyscript.ts.SpreadElement
 import de.mkbauer.tinyscript.ts.ObjectPattern
 import de.mkbauer.tinyscript.ts.ThrowStatement
 import de.mkbauer.tinyscript.ts.TryStatement
@@ -348,6 +349,18 @@ class TinyscriptGenerator   {
 			}
 			delete object[key];
 			return true;
+		}
+
+		// Like the interpreter: ...items in a call or an array literal takes what the for loop goes
+		// through (the characters of a string, the entries of a Map), nothing else
+		function __ts_spread(value) {
+			if (typeof value === "string" || value instanceof String) {
+				return String(value).split("");
+			}
+			if (Array.isArray(value) || value instanceof globalThis.Map || value instanceof globalThis.Set || value instanceof __ts_Range) {
+				return value;
+			}
+			throw new TypeError("... needs an array, a string, a Map, a Set or a range");
 		}
 
 		// Like the interpreter: an array pattern [a, b] needs an array with at least as many elements
@@ -776,8 +789,11 @@ class TinyscriptGenerator   {
 		'''«left.generate» = «helper»«left.generate», «expr.right.generate»)'''
 	}
 
+	def dispatch generate(SpreadElement spread)
+		'''...__ts_spread(«spread.expr.generate»)'''
+
 	def dispatch generate(ArrayPattern pattern)
-		'''[«FOR name: pattern.names SEPARATOR ', '»«name.generate»«ENDFOR»]'''
+		'''[«FOR name: pattern.names SEPARATOR ', '»«name.generate»«ENDFOR»«IF pattern.rest !== null»«IF !pattern.names.empty», «ENDIF»...«pattern.rest.generate»«ENDIF»]'''
 
 	def dispatch generate(ObjectPattern pattern)
 		'''{ «FOR name: pattern.names SEPARATOR ', '»«name.generate»«ENDFOR» }'''

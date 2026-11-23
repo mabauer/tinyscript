@@ -107,9 +107,7 @@ function playPart1(boards, numbers_to_draw) {
 }
 
 function part1(lines) {
-    // TypeScript: const [fst, ...rest] = lines;
-    const fst = lines[0];
-    const rest = lines.slice(1);
+    const [fst, ...rest] = lines;
     const numbers_to_draw = fst.split(",").map(s => parseInt(s));
     const boards = createBoards(rest);
     const result = playPart1(boards, numbers_to_draw);
@@ -117,7 +115,7 @@ function part1(lines) {
 }
 
 function playPart2(boards, numbers_to_draw) {
-    let boards_remaining = boards.slice();
+    let boards_remaining = [...boards];
     const boards_won = [];
     let last_winning_round = 0;
     for (const round : range(numbers_to_draw.length)) {
@@ -138,8 +136,7 @@ function playPart2(boards, numbers_to_draw) {
 }
 
 function part2(lines) {
-    const fst = lines[0];
-    const rest = lines.slice(1);
+    const [fst, ...rest] = lines;
     const numbers_to_draw = fst.split(",").map(s => parseInt(s));
     const boards = createBoards(rest);
     const result = playPart2(boards, numbers_to_draw);

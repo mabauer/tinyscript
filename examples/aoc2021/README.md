@@ -16,7 +16,7 @@ and [`../aoc2024`](../aoc2024).
 | [4](day04.tys)                   | Giant Squid             | a class for a bingo board, `Set`s of drawn numbers, `words` of `std:string`                         |
 | [5](day05.tys)                   | Hydrothermal Venture    | drawing lines on a 1000×1000 canvas, `parse` of `std:string` instead of a regular expression        |
 | [6](day06.tys)                   | Lanternfish             | counting fish per age instead of simulating each one                                                |
-| [7](day07.tys)                   | The Treachery of Whales | cost functions as arrow functions, `f.apply(null, array)` instead of spread                         |
+| [7](day07.tys)                   | The Treachery of Whales | cost functions as arrow functions, spread in calls (`Math.min(...crabs)`)                           |
 | [8](day08.tys)                   | Seven Segment Search    | backtracking over the digits, an object as a mapping                                                |
 | [9](day09.tys)                   | Smoke Basin             | a grid class, recursive flood fill                                                                  |
 | [10](day10.tys)                  | Syntax Scoring          | a recursive descent parser for brackets                                                             |
@@ -39,10 +39,9 @@ directory):
 ## Notes on the port
 
 - Comments starting with "TypeScript:" mark where the original is written
-  differently and why: no spread in calls (`f.apply(null, array)`), no rest
-  elements in patterns (`items.slice(1)`), no `extends`, getters, field
-  declarations or `enum`s, no `in` operator, no regular expressions (`parse` and
-  `words` of `std:string`), `from` is a reserved word.
+  differently and why: no `extends`, getters, field declarations or `enum`s, no
+  `in` operator, no regular expressions (`parse` and `words` of `std:string`),
+  `from` is a reserved word.
 - Javascript forgives what tinyscript does not: a comparison with `undefined` or
   `NaN` is `false` in Javascript but a `TypeError` in tinyscript (day 1), as is
   a string as a condition (day 4) or destructuring too short an array (day 2).
