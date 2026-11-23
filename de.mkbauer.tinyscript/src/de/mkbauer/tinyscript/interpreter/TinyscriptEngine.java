@@ -1067,7 +1067,7 @@ public class TinyscriptEngine {
 			if (!(property instanceof Function method)) {
 				String type = typeName(object);
 				throw new TinyscriptTypeError(property == TSValue.UNDEFINED
-						? type + " has no method '" + key.asString() + "'"
+						? type + " has no method '" + key.asString() + "'" + arrayMethodHint(object, key)
 						: "'" + key.asString() + "' of " + type + " is " + article(property) + ", not a function", expr);
 			}
 			return processFunctionCall(expr, method, object, callOrProp.getCall().getArguments());
@@ -1100,10 +1100,22 @@ public class TinyscriptEngine {
     // The name of the object's constructor (Point, Array), if it really made the object: not a
     // method that is only called constructor, as in { constructor() { … } }
     private static String typeName(TSObject object) {
+    	if (object instanceof RangeObject)
+    		return "range";
     	if (object.get("constructor") instanceof Function constructor && constructor.getName() != null && !constructor.getName().isEmpty()
     			&& constructor.get("prototype") == object.getPrototype())
     		return constructor.getName();
     	return "Object";
+    }
+
+    // A range has only some of the methods of arrays (map, forEach, reverse): for the others, a hint
+    private String arrayMethodHint(TSObject object, TSValue key) {
+    	if (!(object instanceof RangeObject))
+    		return "";
+    	TSObject arrayPrototype = (TSObject) getConstructor(ArrayConstructor.NAME).get("prototype");
+    	return arrayPrototype.get(key.asString()) instanceof Function
+    			? ": for the methods of arrays, make it an array with toArray(): range(…).toArray()." + key.asString() + "(…)"
+    			: "";
     }
 
     // "a number", "an object", "undefined"

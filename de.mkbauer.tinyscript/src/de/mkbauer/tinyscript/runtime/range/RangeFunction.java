@@ -27,7 +27,7 @@ public final class RangeFunction {
 		prototype.defineBuiltinMethod("forEach", (self, args) -> forEach(thisRange(self, "forEach"), callback(args[0], "forEach")), 1);
 		prototype.defineBuiltinMethod("reverse", (self, args) -> reverse(engine, prototype, thisRange(self, "reverse")), 0);
 		BuiltinFunction range = engine.defineBuiltinFunction("range", (self, args) -> range(engine, prototype, args), 1, 3);
-		// So that error messages name the type: "range has no method 'join'"
+		// range(3).constructor is range (messages name the type as "range", see TinyscriptEngine.typeName)
 		prototype.defineDefaultProperty("constructor", range);
 		return range;
 	}
