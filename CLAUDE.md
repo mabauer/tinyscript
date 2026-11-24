@@ -23,11 +23,11 @@ resolver rejects the `system`-scoped p2 dependencies that Tycho 5.0.x injects
 a JDK 25.
 
 ```bash
-# Build everything (runs from repo root)
+# Build everything but the web demo (runs from repo root; includes the REPL)
 ./mvnw clean install
 
-# Build only the REPL fat JAR
-./mvnw clean package -f de.mkbauer.tinyscript.repl/pom.xml
+# Build only the REPL fat JAR (and the core it needs)
+./mvnw clean package -pl de.mkbauer.tinyscript.repl -am
 
 # Build only the web demo fat JAR
 ./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
@@ -343,24 +343,23 @@ published as a GitHub release for the tag. Key commands:
 ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.repl/pom.xml
 ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.webdemo/pom.xml
 ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.standalone.tests/pom.xml
-# Also manually update the de.mkbauer.tinyscript dependency version in repl and webdemo pom.xml
+# Also manually update the de.mkbauer.tinyscript dependency version in webdemo pom.xml
+# (step 1 updates it in repl and standalone.tests, which are in the reactor)
 
 # 3. Commit, tag, push — Docker workflow triggers automatically
 git add -A && git commit -m "Release version X.Y.Z"
 git tag vX.Y.Z && git push && git push --tags
 
 # 4. Bump to next SNAPSHOT (repeat steps 1-2 with X.Y.(Z+1)-SNAPSHOT)
-# Also manually update Bundle-Version in de.mkbauer.tinyscript.repl/META-INF/MANIFEST.MF
-# to X.Y.(Z+1).qualifier
 ```
 
 ## CI/CD
 
 Two GitHub Actions workflows in `.github/workflows/`:
 
-- **`ci.yml`** — runs on every push/PR to `master`: full Tycho build + all
-  tests + REPL + webdemo (Vitest + Spring Boot tests), then builds the Docker
-  image (not pushed) and scans it with Trivy
+- **`ci.yml`** — runs on every push/PR to `master`: full Tycho build (with the
+  REPL) + all tests + webdemo (Vitest + Spring Boot tests), then builds the
+  Docker image (not pushed) and scans it with Trivy
 - **`docker.yml`** — runs on `vX.Y.Z` tags: builds webdemo JAR and image, scans
   it with Trivy, and only then pushes `mkbauer/tinyscript:X.Y.Z` + `:latest` to
   Docker Hub

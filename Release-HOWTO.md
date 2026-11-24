@@ -12,8 +12,9 @@ required.
 
     ./mvnw org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
 
-**Plain Maven modules** — these are outside the Tycho reactor and must be
-updated separately:
+**Plain Maven modules** — `repl` and `standalone.tests` are in the Tycho reactor
+but have no parent, `webdemo` is outside of it; their own version is updated
+separately:
 
     ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
         -f de.mkbauer.tinyscript.repl/pom.xml
@@ -23,17 +24,11 @@ updated separately:
         -f de.mkbauer.tinyscript.standalone.tests/pom.xml
 
 **Core dependency references** — `versions:set` only updates the project's own
-`<version>`, not dependency versions. Manually set the `de.mkbauer.tinyscript`
-dependency version to `X.Y.Z` in:
+`<version>`, not dependency versions. `tycho-versions-plugin` updates the
+`de.mkbauer.tinyscript` dependency in the reactor modules (`repl`,
+`standalone.tests`); manually set it to `X.Y.Z` in:
 
-- `de.mkbauer.tinyscript.repl/pom.xml`
 - `de.mkbauer.tinyscript.webdemo/pom.xml`
-
-**REPL MANIFEST.MF** — the repl module is outside the Tycho reactor, so
-`tycho-versions-plugin` does not touch its `META-INF/MANIFEST.MF`. Update
-`Bundle-Version` manually to `X.Y.Z.qualifier` in:
-
-- `de.mkbauer.tinyscript.repl/META-INF/MANIFEST.MF`
 
 ## 2. Verify no old version remains
 
@@ -86,11 +81,7 @@ Monitor progress at: https://github.com/mabauer/tinyscript/actions
         -f de.mkbauer.tinyscript.standalone.tests/pom.xml
 
 Then manually update the `de.mkbauer.tinyscript` dependency version in
-`repl/pom.xml` and `webdemo/pom.xml` to `X.Y.(Z+1)-SNAPSHOT`.
-
-Also update `Bundle-Version` in
-`de.mkbauer.tinyscript.repl/META-INF/MANIFEST.MF` to `X.Y.(Z+1).qualifier`
-(tycho-versions-plugin does not touch the REPL module).
+`webdemo/pom.xml` to `X.Y.(Z+1)-SNAPSHOT`.
 
     git add -A
     git commit -m "Bump to X.Y.(Z+1)-SNAPSHOT"

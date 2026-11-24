@@ -305,18 +305,17 @@ own version of _tinyscript_ or start hacking on it, here is a quick overview.
 The project is built with _Maven_ and requires _Java 25_. It is best developed
 with _Eclipse 2026-09_ and _Xtext 2.44.0_.
 
-The build has two tiers: a _Tycho_ reactor at the root for the OSGi/Eclipse
-plugin modules, and separate plain Maven builds for the runnable applications
-(REPL and web demo). Build in this order:
+The build has two tiers: a _Tycho_ reactor at the root for the core language,
+the Eclipse plugins and the REPL, and a separate plain Maven build for the web
+demo. Build in this order:
 
-1.  Install the core language and Eclipse plugins into the local Maven
-    repository:
+1.  Build the core language, the Eclipse plugins and the REPL fat JAR, and
+    install them into the local Maven repository:
 
         ./mvnw clean install
 
-2.  Build the REPL and web demo fat JARs:
+2.  Build the web demo fat JAR:
 
-        ./mvnw clean package -f de.mkbauer.tinyscript.repl/pom.xml
         ./mvnw clean package -f de.mkbauer.tinyscript.webdemo/pom.xml
 
 The web demo build also runs the Vue 3 frontend through Vite (npm install → test
