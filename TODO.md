@@ -48,16 +48,49 @@ at all; the generated code checks hardly any of them (`"a" - 1` is `NaN`,
 `if (1)` runs, `[10, 9, 1].sort()` sorts as text). Modules (not found, cyclic,
 missing exports, invalid imported files) are checked the same way in both.
 
+**What "equal" means:** a program without errors prints the same; a program with
+an error fails in both, with the same error class in the same line; the same
+message only for errors that tinyscript itself throws (V8's own, such as a
+property of `undefined`, a call of a non-function or a stack overflow, keep
+their text: wrapping every access and call would cost the speed that is the
+reason for node). Not equal by design: the sandbox, the depth of recursion,
+`Math.random`, time.
+
 1. **Fixes first (small PR):** emit `"use strict"` (today `this` in a plain call
    is `globalThis` in node but `undefined` in tinyscript, and `Math.PI = 3` is
    ignored silently); members of builtin objects read-only in both
    (`Math.PI = 3` works in the interpreter); `new` of an arrow function an error
-   in the interpreter too (node: `TypeError`).
+   in the interpreter too (node: `TypeError`). In the generator:
+   - the prelude must be strict itself (`print = function …` assigns to an
+     undeclared variable);
+   - the program in a block of its own, so that `const Map = …` hides the
+     prelude's `var Map` (`String`, `Set`, `JSON`, `System`, `assert`) instead
+     of being a `SyntaxError` in node, as already solved for `range`;
+   - names that are reserved in Javascript but not in tinyscript (`enum`,
+     `default`, `do`, `in`, `void`, `with`, `super`, `extends`, `debugger`; in
+     strict mode also `static`, `package`, `private`, `public`, `yield`, `eval`,
+     `arguments`): rename them in the generator.
 2. **Same errors, tested:** `assertSameError(code)`: both backends fail with the
-   same error class and message. Move the error tests
-   (`assertInterpreterThrows`, about 100 places that throw a `TypeError`) to it
-   step by step; the number of cases that still differ measures the gap.
-3. **Static checks, level 1 (sound, no type inference):**
+   same error class in the same line, and with the same message where tinyscript
+   throws the error. Move the error tests (`assertInterpreterThrows`, about 100
+   places that throw a `TypeError`) to it step by step; the number of cases that
+   still differ measures the gap.
+3. **Same values, tested:** the AoC programs cover only what works.
+   - a matrix of every builtin with edge values (`NaN`, `-0`, `""`, negative,
+     not an integer, too few arguments), generated from the builtin objects of
+     the runtime (`defineBuiltinMethod`): both backends give the same value or
+     the same error;
+   - the members of the builtin objects and prototypes compared in both
+     directions: node knows more than tinyscript (`flatMap`, `Object.entries`,
+     `f.constructor`, `o.__proto__`), and such a program runs only there; the
+     prelude deletes what tinyscript does not have;
+   - suspects to check first: the order of keys that are integers (`o["10"]`
+     before `o["9"]`; Javascript sorts them), `$1` / `$&` in the replacement of
+     `replace`, gaps in arrays (`a[10] = 1`, `a.length = …`), `NaN` and `-0` as
+     keys of a `Map` and in `indexOf` / `includes`, `trim` and `toUpperCase`
+     with Unicode, a `RangeError` of node where the interpreter throws a
+     `TypeError` (`"x".repeat(-1)`).
+4. **Static checks, level 1 (sound, no type inference):**
    - builtins (`Math`, `JSON`, `Number`, `parseInt` …): unknown members with a
      suggestion (`Math.sqr`, `Math.PIE`, which gives `undefined` today), the
      number of arguments in both directions (too few is a
@@ -71,21 +104,30 @@ missing exports, invalid imported files) are checked the same way in both.
      function or a non-function, `throw` of anything but `new Error(…)`,
      duplicate keys in object literals, code after `return` / `break` /
      `continue` / `throw`, too short array literals in patterns.
-4. **Checked code in the generator** where types are not proven: `__ts_` helpers
+5. **Checked code in the generator** where types are not proven: `__ts_` helpers
    for `-`, `*`, `<`, conditions, `&&` / `||` (as `__ts_add` and `__ts_eq`
    already do); builtins replaced in the prelude to check as the interpreter
    does (argument counts, integers for `substring` / `at` / `range`, `sort()`
-   without comparison only for strings, no properties on arrays). Costs speed in
-   node; measured against item 2.
-5. **Static checks, level 2 (kinds):** a light local inference from literals,
+   without comparison only for strings). Measured against items 2 and 3.
+   - **Measure the speed first:** two or three AoC days with the checks written
+     by hand, before building them. A helper shared by all places sees all
+     types; probably the check belongs inline, with the helper only for the
+     error
+     (`typeof a === "number" && typeof b === "number" ? a - b : __ts_sub(a, b)`).
+     If the checks cost most of the factor to the interpreter, the backend stays
+     a fast mode with documented differences instead of one of equal rank.
+   - Not possible at a reasonable price in node: no properties on arrays, an
+     error for reading an unknown property (it would need a `Proxy` or a helper
+     for every access). These stay with the static checks of item 6.
+6. **Static checks, level 2 (kinds):** a light local inference from literals,
    `new C(…)`, `range(…)`, the fixed result kinds of builtins (`split`, `map` →
    array, `length` → number) and `const` variables: `parts.lenght`,
    `range(n).filter`, `s.push` on a string, `new P().lenth()` on a known class
    (methods of a class only in its body, so this is sound; fields stay dynamic).
    The interpreter should then also reject reading an unknown property of an
    array, string, `Map`, `Set` or range (today `undefined`). The generator uses
-   the kinds to leave out the checks of item 4.
-6. **Error locations in node (source maps):** today an error in the generated
+   the kinds to leave out the checks of item 5.
+7. **Error locations in node (source maps):** today an error in the generated
    code points into the generated bundle, not to the `.tys` file. A source map
    (v3, inline as `//# sourceMappingURL=data:…`) maps the generated positions to
    the tinyscript file, line, column and name, and node uses it with
@@ -94,6 +136,7 @@ missing exports, invalid imported files) are checked the same way in both.
    (class, message, the line with `^`, the stack without the `__ts_` helpers).
    Side effect: debugging the generated program with breakpoints in the `.tys`
    file. Two ways, to be decided:
+
    - **Xtext's tracing** (`@Traced`, `TracingSugar`, `CompositeGeneratorNode`):
      each generated piece knows its AST element; clean, but a larger rebuild of
      the templates;
@@ -101,13 +144,26 @@ missing exports, invalid imported files) are checked the same way in both.
      statement and call, a pass afterwards turns them into the map (Base64 VLQ)
      and removes them; little change to the generator, about a day, as exact as
      the markers are placed.
-7. **Warnings, later:** unused variables, parameters and imports; `let` never
+
+   Either way: the line with `^` needs the source text (`sourcesContent`); the
+   names the generator changed belong into `names`; an error inside a `std:`
+   module is reported at the caller, as in the interpreter; with source maps
+   enabled, errors that are thrown and caught often get slow (measure).
+
+8. **Running it:** `tinyscript --node file.tys` (generate, start node, pass
+   arguments, standard input and the exit code on) and `--emit-js`; a minimal
+   version of node, checked at the start; in CI the differential tests fail
+   without node instead of being skipped.
+9. **Warnings, later:** unused variables, parameters and imports; `let` never
    assigned again; fits the language server.
 
-Stays with the interpreter by design: the sandbox (resource limits) and the
-exact error locations (source maps later, if needed). Limits: parameters,
-fields, return values of the script's own functions and `JSON.parse` data have
-no static type; there only the runtime checks of item 4 help.
+Stays with the interpreter by design: the sandbox (resource limits; generated
+code never runs foreign scripts on a server), embedding in Java with objects of
+the host, the interactive REPL, and the exact error locations (source maps
+later, if needed). Limits: parameters, fields, return values of the script's own
+functions and `JSON.parse` data have no static type; there only the runtime
+checks of item 5 help. The price of a second backend: every language feature,
+builtin and native module is written and tested twice.
 
 ## Speed
 
