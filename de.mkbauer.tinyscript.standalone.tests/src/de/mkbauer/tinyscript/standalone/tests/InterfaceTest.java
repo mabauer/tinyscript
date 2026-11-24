@@ -94,7 +94,7 @@ public class InterfaceTest extends TinyscriptTranspilerTestBase {
                 onlyError("function f() {\n  interface I { }\n}"));
         assertEquals("Cannot assign to the interface Shape", onlyError("interface Shape { }\nShape = 1;"));
         assertEquals("Duplicate identifier", onlyError("const Shape = 1;\ninterface Shape { }"));
-        assertInterpreterThrows(TinyscriptTypeError.class, "interface Shape { }\nconst s = new Shape();");
+        assertSameFailure(TinyscriptTypeError.class, "interface Shape { }\nconst s = new Shape();");
     }
 
     @Test

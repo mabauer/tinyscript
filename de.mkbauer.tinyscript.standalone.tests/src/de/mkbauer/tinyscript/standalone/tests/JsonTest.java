@@ -69,9 +69,9 @@ public class JsonTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testOnlyStrings() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "JSON.parse(5);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "JSON.parse(null);");
+        assertSameFailure(TinyscriptTypeError.class, "JSON.parse(5);");
+        assertSameFailure(TinyscriptTypeError.class, "JSON.parse(null);");
         // No reviver
-        assertInterpreterThrows(TinyscriptTypeError.class, "JSON.parse(\"1\", (k, v) => v);");
+        assertKnownGap(TinyscriptTypeError.class, "JSON.parse(\"1\", (k, v) => v);");
     }
 }

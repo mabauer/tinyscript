@@ -56,9 +56,9 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
     public void testAnArrayPatternNeedsAnArrayThatIsLongEnough() {
         TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("let [a, b, c] = [1, 2];"));
         assertEquals("[a, b, c] needs an array with at least 3 elements, not 2", e.getMessage());
-        assertInterpreterThrows(TinyscriptTypeError.class, "let [a, b] = \"ab\";");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let [a] = null;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "for (let [a, b] : [[1, 2], [3]]) { }");
+        assertSameFailure(TinyscriptTypeError.class, "let [a, b] = \"ab\";");
+        assertSameFailure(TinyscriptTypeError.class, "let [a] = null;");
+        assertSameFailure(TinyscriptTypeError.class, "for (let [a, b] : [[1, 2], [3]]) { }");
         // More elements are fine
         assertEquals("1\n", interpreterOutput("let [a] = [1, 2, 3]; print(a);"));
     }
@@ -73,9 +73,9 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testAnObjectPatternNeedsAnObject() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "let { a } = null;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let u; let { a } = u;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let { a } = 42;");
+        assertSameFailure(TinyscriptTypeError.class, "let { a } = null;");
+        assertSameFailure(TinyscriptTypeError.class, "let u; let { a } = u;");
+        assertKnownGap(TinyscriptTypeError.class, "let { a } = 42;");
     }
 
     @Test

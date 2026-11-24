@@ -72,8 +72,8 @@ public class NullishTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testOnlyTheOptionalPartIsOptional() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "let o = {}; print(o?.a.b);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let u; print((u?.a).b);");
+        assertSameFailure(TinyscriptTypeError.class, "let o = {}; print(o?.a.b);");
+        assertSameFailure(TinyscriptTypeError.class, "let u; print((u?.a).b);");
     }
 
     @Test

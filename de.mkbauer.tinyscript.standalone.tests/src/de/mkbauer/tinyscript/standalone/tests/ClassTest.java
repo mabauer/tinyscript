@@ -112,12 +112,12 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
         TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class,
                 () -> interpreterOutput(POINT + "const p = Point(1, 2);"));
         assertEquals("Point is a class: use new Point(…)", e.getMessage());
-        assertInterpreterThrows(TinyscriptTypeError.class, POINT + "print([1, 2].map(Point));");
+        assertSameFailure(TinyscriptTypeError.class, POINT + "print([1, 2].map(Point));");
     }
 
     @Test
     public void testAMethodTakenOffItsObjectHasNoThis() {
-        assertInterpreterThrows(TinyscriptTypeError.class, POINT + "const f = new Point(1, 2).length;\nprint(f());");
+        assertSameFailure(TinyscriptTypeError.class, POINT + "const f = new Point(1, 2).length;\nprint(f());");
     }
 
     @Test
@@ -159,7 +159,7 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
         TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class,
                 () -> interpreterOutput("function f() { return limit; }\nprint(f());\nconst limit = 3;"));
         assertEquals("limit is used before its declaration (line 3)", e.getMessage());
-        assertInterpreterThrows(TinyscriptReferenceError.class,
+        assertSameFailure(TinyscriptReferenceError.class,
                 "function g() {\n  const read = () => [a, b];\n  const r = read();\n  let [a, b] = [1, 2];\n  return r;\n}\ng();");
         // Declared, but without a value, is fine; and so is a function that runs after the statement
         String code = "function h() { let x; return x; }\nfunction later() { return limit * 2; }\nconst limit = 3;\nprint(h(), later());";
