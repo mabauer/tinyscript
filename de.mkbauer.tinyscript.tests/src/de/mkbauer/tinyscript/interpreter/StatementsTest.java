@@ -57,9 +57,9 @@ public class StatementsTest extends TinyscriptInterpreterTestHelper {
 	
 	@Test
 	public void testIfConditionMustBeABooleanNullOrAnObject() {
-		// Numbers are no conditions; this also catches the typo "=" for "=="
-		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("let i=1; if (2) {i=2;} else {i=3;}"));
-		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("let i=1; if (i=0) {i=2;} else {i=3;}"));
+		// Numbers are no conditions (with a literal, if (2) or if (i=0), already before the run)
+		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("let i=1; let two=2; if (two) {i=2;} else {i=3;}"));
+		assertThrows(TinyscriptTypeError.class, () -> executeScriptFromString("let i=1; let zero=0; if ((i=zero)) {i=2;} else {i=3;}"));
 		TSValue value = executeScriptFromString("let i=1; let o={}; if (o) {i=2;} else {i=3;} assert(i==2);");
 		assertTrue(value.asBoolean());
 		value = executeScriptFromString("let i=1; if (null) {i=2;} else {i=3;} assert(i==3);");

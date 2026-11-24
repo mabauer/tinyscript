@@ -415,8 +415,8 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         assertRuntimeError("'-' needs two numbers, but a is a string and b is an array", "const a = \"x\"; const b = [];\nprint(a - b);");
         assertRuntimeError("'+' adds two numbers, two arrays, or a string and a value, but x is a number and true is a boolean",
                 "const x = 1;\nprint(x + true);");
-        assertRuntimeError("'+' can only add an array to another array or to a string, but 1 is a number", "print([1] + 1);");
-        assertRuntimeError("'<' compares two numbers or two strings, but 1 is a number and \"2\" is a string", "print(1 < \"2\");");
+        assertRuntimeError("'+' can only add an array to another array or to a string, but 1 is a number", "const a = [1];\nprint(a + 1);");
+        assertRuntimeError("'<' compares two numbers or two strings, but one is a number and \"2\" is a string", "const one = 1;\nprint(one < \"2\");");
         // NaN is a number for typeof, but cannot be compared (found with parseInt of an empty line)
         assertRuntimeError("'<' cannot compare NaN, but ints[1] is NaN (e.g. from parseInt or Number of a text that is no number)",
                 "const ints = [1, parseInt(\"\")];\nprint(ints[0] < ints[1]);");

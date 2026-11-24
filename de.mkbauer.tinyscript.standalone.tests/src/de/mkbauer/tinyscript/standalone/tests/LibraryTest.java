@@ -35,8 +35,8 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testMathChecksItsArguments() {
-        assertSameFailure(TinyscriptTypeError.class, "Math.pow(\"2\", 3);");
-        assertSameFailure(TinyscriptTypeError.class, "Math.hypot(3, \"4\");");
+        assertSameFailure(TinyscriptTypeError.class, "const s = \"2\";\nMath.pow(s, 3);");
+        assertSameFailure(TinyscriptTypeError.class, "const s = \"4\";\nMath.hypot(3, s);");
         assertEquals(java.util.List.of("1:1: pow() needs 2 arguments, not 1"), reportedErrors("Math.pow(2);"));
     }
 

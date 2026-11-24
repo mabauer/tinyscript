@@ -52,7 +52,7 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
                 + "}\n"
                 + "function h(x) {\n"
                 + "    for (const i : range(1)) {\n"
-                + "        return x * \"a\";\n"
+                + "        return x * g;\n"
                 + "    }\n"
                 + "}\n"
                 + "if (true) {\n"

@@ -106,7 +106,7 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
     public void testProgrammingErrorsAreNotCaught() {
         assertSameFailure(TinyscriptTypeError.class, "const o = null;\ntry { print(o.x); } catch (e) { print(\"caught\"); }");
         assertSameFailure(TinyscriptTypeError.class, "try { [1].splice(\"a\"); } catch (e) { print(\"caught\"); }");
-        assertSameFailure(TinyscriptTypeError.class, "try { print(1 + \"a\" < 2); } catch { print(\"caught\"); }");
+        assertSameFailure(TinyscriptTypeError.class, "const s = \"a\";\ntry { print(1 + s < 2); } catch { print(\"caught\"); }");
         assertSameFailure(TinyscriptAssertationError.class, "try { assert 1 == 2; } catch (e) { print(\"caught\"); }");
     }
 
