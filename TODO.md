@@ -85,7 +85,23 @@ missing exports, invalid imported files) are checked the same way in both.
    The interpreter should then also reject reading an unknown property of an
    array, string, `Map`, `Set` or range (today `undefined`). The generator uses
    the kinds to leave out the checks of item 4.
-6. **Warnings, later:** unused variables, parameters and imports; `let` never
+6. **Error locations in node (source maps):** today an error in the generated
+   code points into the generated bundle, not to the `.tys` file. A source map
+   (v3, inline as `//# sourceMappingURL=data:…`) maps the generated positions to
+   the tinyscript file, line, column and name, and node uses it with
+   `process.setSourceMapsEnabled(true)` / `--enable-source-maps`. A handler in
+   the prelude (`uncaughtException`) then prints errors as the interpreter does
+   (class, message, the line with `^`, the stack without the `__ts_` helpers).
+   Side effect: debugging the generated program with breakpoints in the `.tys`
+   file. Two ways, to be decided:
+   - **Xtext's tracing** (`@Traced`, `TracingSugar`, `CompositeGeneratorNode`):
+     each generated piece knows its AST element; clean, but a larger rebuild of
+     the templates;
+   - **markers:** the generator writes `/*@ts:main.tys:70:5*/` before each
+     statement and call, a pass afterwards turns them into the map (Base64 VLQ)
+     and removes them; little change to the generator, about a day, as exact as
+     the markers are placed.
+7. **Warnings, later:** unused variables, parameters and imports; `let` never
    assigned again; fits the language server.
 
 Stays with the interpreter by design: the sandbox (resource limits) and the
