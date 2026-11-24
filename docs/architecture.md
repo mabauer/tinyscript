@@ -573,6 +573,11 @@ Violations become error markers (red squiggles). The checks cover:
   the minimum and maximum of arguments come from the builtin objects of the
   runtime: `runtime/BuiltinSignatures` makes a `TinyscriptEngine` once and reads
   them, so there is no second list;
+- operators and conditions whose operands can never fit, by the syntax alone
+  (`validation/Kinds`: the kind of literals and of the results of operators that
+  check their operands): `"a" - 1`, `[1] + 1`, `1 < "2"`, `-"a"`, `if (1)`,
+  `while (n - 1)`, `if (x = 2)`, numbers for `Math`; warnings for `x == NaN` and
+  `typeof x == "numbr"`;
 - classes (only at top level, each method only once, a field must not hide a
   method), interfaces (a class has the methods of an interface of the same file
   it implements; for an imported one the interpreter checks when the class is
