@@ -361,6 +361,7 @@ class TinyscriptReplMain  {
 		String javascript;
 		try {
 			TinyscriptGenerator generator = injector.getInstance(TinyscriptGenerator.class);
+			generator.setSourceMaps(true);
 			javascript = generator.generate((Tinyscript) resource.getContents().get(0), true,
 					new FileSystemModuleLoader(modulePath(file.toAbsolutePath().getParent()))).toString();
 		}

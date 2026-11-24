@@ -118,6 +118,7 @@ de.mkbauer.tinyscript.repl/tinyscript example.tys     # run a file
 de.mkbauer.tinyscript.repl/tinyscript --help
 de.mkbauer.tinyscript.repl/tinyscript --node example.tys     # run with node (experimental)
 de.mkbauer.tinyscript.repl/tinyscript --emit-js example.tys  # write the Javascript
+                                                             # (run it with node --enable-source-maps)
 java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar example.tys
 ```
 

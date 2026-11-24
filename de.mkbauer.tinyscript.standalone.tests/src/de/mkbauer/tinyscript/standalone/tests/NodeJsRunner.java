@@ -100,6 +100,8 @@ public class NodeJsRunner {
             ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
             CommandLine cmd = new CommandLine("node");
+            // The generated programs have source maps (see TinyscriptTranspilerTestBase)
+            cmd.addArgument("--enable-source-maps");
             cmd.addArgument(tmpFile.getAbsolutePath());
             for (String arg : args)
                 cmd.addArgument(arg, false);

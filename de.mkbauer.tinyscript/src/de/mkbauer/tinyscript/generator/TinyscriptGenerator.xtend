@@ -64,6 +64,9 @@ import java.util.ArrayDeque
 import java.util.HashMap
 import java.util.LinkedHashMap
 import org.eclipse.emf.common.util.URI
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils
 import de.mkbauer.tinyscript.ts.Expression
 import de.mkbauer.tinyscript.ts.IncrementOperator
 import de.mkbauer.tinyscript.ts.PropertyAccessSuffix
@@ -106,7 +109,7 @@ class TinyscriptGenerator   {
 
 	// A condition: checked by __ts_cond unless it is a boolean anyway
 	def CharSequence condition(Expression e) {
-		if (isBoolean(e)) e.generate else '''__ts_cond(«e.generate»)'''
+		if (isBoolean(e)) e.generate else '''«mark(e)»__ts_cond(«e.generate»)'''
 	}
 
 	// The helper that checks a binary operator, or null for the others
@@ -127,6 +130,52 @@ class TinyscriptGenerator   {
 	// Counter for unique names of temporary variables (loop bounds, iterables, indexes)
 	int tempCounter = 0;
 	
+	// With source maps: an error that ends the program is printed as by the interpreter, with the
+	// tinyscript line (from the source map) and a stack of the tinyscript functions; the frames
+	// of the prelude (__ts_ helpers) and of the standard library are left out
+	def uncaughtErrorHandler() '''
+		// (the checked String.prototype methods of the prelude take no regular expressions: only exec here)
+		process.on("uncaughtException", function (error) {
+			process.exitCode = 1;
+			const name = error instanceof Error ? error.name : "Error";
+			const message = error instanceof Error ? error.message : String(error);
+			const frames = [];
+			for (const line of globalThis.String(error && error.stack || "").split("\n")) {
+				const frame = /^\s*at (?:(.*?) \()?(.*?):(\d+):(\d+)\)?$/.exec(line);
+				if (frame === null || !frame[2].endsWith(".tys") || frame[2].startsWith("std:")) {
+					continue;
+				}
+				const fn = frame[1] === undefined || frame[1] === "Object.<anonymous>" ? "global"
+					: frame[1].startsWith("Object.") ? frame[1].slice(7) : frame[1];
+				frames.push({ fn: fn, file: frame[2], line: +frame[3], column: +frame[4] });
+			}
+			if (frames.length === 0) {
+				process.stderr.write((error && error.stack || String(error)) + "\n");
+				return;
+			}
+			// node shows the files of the source map as paths, the map has their URIs
+			const path = file => file.startsWith("file:") ? require("url").fileURLToPath(file) : file;
+			let excerpt = "";
+			try {
+				const map = require("module").findSourceMap(__filename);
+				const index = map.payload.sources.findIndex(source => path(source) === path(frames[0].file));
+				const text = index >= 0 ? map.payload.sourcesContent[index] : null;
+				let source = text === null ? undefined : text.split("\n")[frames[0].line - 1];
+				if (source !== undefined) {
+					source = source.endsWith("\r") ? source.slice(0, -1) : source;
+					// Tabs stay, so that the marker lines up (the checked replace of the prelude takes no regex)
+					const before = Array.from(source.slice(0, frames[0].column - 1), c => c === "\t" ? "\t" : " ").join("");
+					excerpt = "    " + source + "\n    " + before + "^\n";
+				}
+			}
+			catch (e) {
+				// Without the source map, no excerpt
+			}
+			process.stderr.write(name + ": " + message + "\n" + excerpt
+				+ frames.map(frame => "    at " + frame.fn + "(" + path(frame.file) + ":" + frame.line + ")\n").join(""));
+		});
+	'''
+
 	def generateBuiltins() '''
 
 		// A failed assert is a programming error: catch does not get it (see __ts_catchable)
@@ -982,13 +1031,68 @@ class TinyscriptGenerator   {
 	 */
 	def generate(Tinyscript script, boolean includeBuiltins, ModuleLoader loader) {
 		tempCounter = 0
+		sources = new LinkedHashMap
 		modules = new LinkedHashMap
 		moduleVariables = new HashMap
 		importedModules = new HashMap
 		val loading = new ArrayDeque<URI>
 		loading.push(script.eResource.URI)
 		collectModules(script, loader, loading)
-		generateScript(script, includeBuiltins)
+		val code = generateScript(script, includeBuiltins).toString
+		if (!sourceMaps)
+			return code
+		if (!includeBuiltins)
+			return SourceMaps.strip(code)
+		SourceMaps.attach(code, sources.keySet.map[sourceName].toList, sources.keySet.map[sourceText].toList)
+	}
+
+	// Source maps (TinyscriptGenerator.setSourceMaps): a marker with the tinyscript position before
+	// each statement, call or property access and checked operator, see SourceMaps
+	boolean sourceMaps = false
+
+	/**
+	 * With source maps, a program (with the builtins) gets an inline source map, and errors that
+	 * end it are printed with the tinyscript line, as by the interpreter; node needs
+	 * --enable-source-maps for it.
+	 */
+	def void setSourceMaps(boolean sourceMaps) {
+		this.sourceMaps = sourceMaps
+	}
+
+	// The resources of the markers, numbered in the order of their first marker
+	LinkedHashMap<Resource, Integer> sources = new LinkedHashMap
+
+	def String mark(EObject element) {
+		if (!sourceMaps || element === null)
+			return ""
+		val node = NodeModelUtils.findActualNodeFor(element)
+		val resource = element.eResource
+		if (node === null || resource === null)
+			return ""
+		var index = sources.get(resource)
+		if (index === null) {
+			index = sources.size
+			sources.put(resource, index)
+		}
+		val text = node.rootNode.text
+		val offset = node.offset
+		SourceMaps.marker(index, node.startLine - 1, offset - (text.lastIndexOf('\n', offset - 1) + 1))
+	}
+
+	// A file as its URI (as node shows it), a module of the standard library as std:name (it may
+	// be inside a jar), so that the error handler leaves its frames out
+	def private String sourceName(Resource resource) {
+		val uri = resource.URI
+		if (Modules.isStandardLibrary(uri))
+			"std:" + uri.lastSegment.substring(0, uri.lastSegment.length - ".tys".length)
+		else
+			uri.toString
+	}
+
+	def private String sourceText(Resource resource) {
+		val root = resource.contents.head
+		val node = if (root === null) null else NodeModelUtils.getNode(root)
+		if (node === null) null else node.rootNode.text
 	}
 	
 	// The modules in dependency order, their variable names, and the module of each import
@@ -1035,6 +1139,9 @@ class TinyscriptGenerator   {
 	def private generateScript(Tinyscript script, boolean includeBuiltins) '''
 		«IF includeBuiltins»
 			"use strict";
+			«IF sourceMaps»
+				«uncaughtErrorHandler»
+			«ENDIF»
 			«generateBuiltins»
 		«ENDIF»
 		«FOR entry : modules.entrySet.filter[value === null]»
@@ -1177,7 +1284,7 @@ class TinyscriptGenerator   {
 			
 	def dispatch generate(Tinyscript script) '''
 		«FOR stmt: script.global.statements»
-			«stmt.generate»
+			«mark(stmt)»«stmt.generate»
 		«ENDFOR»
 	'''
 
@@ -1189,7 +1296,7 @@ class TinyscriptGenerator   {
 	
 	def dispatch generate(Block block) '''
 		«FOR stmt: block.statements»
-			«stmt.generate»
+			«mark(stmt)»«stmt.generate»
 		«ENDFOR»
 	'''
 
@@ -1400,7 +1507,7 @@ class TinyscriptGenerator   {
 		if (!(expr.left instanceof Pattern)) {
 			val helper = checkingHelper(expr.op)
 			if (helper !== null && !(isNumber(expr.left) && isNumber(expr.right)))
-				return '''«helper»(«expr.left.generate», «expr.right.generate»)'''
+				return '''«mark(expr)»«helper»(«expr.left.generate», «expr.right.generate»)'''
 			val base = Operators.baseOf(expr.op)
 			if (base !== null && checkingHelper(base) !== null)
 				return expr.generateHelperAssignment(checkingHelper(base) + "(")
@@ -1474,7 +1581,7 @@ class TinyscriptGenerator   {
 	// Unary - is checked unless its operand is a number anyway; ! checks its operand as a condition
 	def dispatch generate(Unary expr) {
 		if (expr.op == UnaryOperator.NEGATE && !isNumber(expr.expr))
-			return '''__ts_neg(«expr.expr.generate»)'''
+			return '''«mark(expr)»__ts_neg(«expr.expr.generate»)'''
 		if (expr.op == UnaryOperator.NOT)
 			return '''!«IF isBoolean(expr.expr)»«expr.expr.generate»«ELSE»__ts_cond(«expr.expr.generate»)«ENDIF»'''
 		generateUnchecked(expr)
@@ -1490,7 +1597,7 @@ class TinyscriptGenerator   {
 		'''(«expr.expr.generate»)'''
 
 	def dispatch generate(CallOrPropertyAccess expr) 
-		'''«expr.expr.generate»«IF (expr.suffix !== null)»«expr.suffix.generate»«ENDIF»'''
+		'''«mark(expr)»«expr.expr.generate»«IF (expr.suffix !== null)»«expr.suffix.generate»«ENDIF»'''
 	
 	def dispatch generate(CallOrPropertyAccessSuffix suffix) 
 		'''«suffix.property.generate»«IF (suffix.call !== null)»«suffix.call.generate»«ENDIF»'''

@@ -343,7 +343,8 @@ To run:
 
   `tinyscript --node example.tys` runs the file with _node.js_ (20 or later)
   instead of the interpreter, after the same checks; this is experimental.
-  `tinyscript --emit-js example.tys` writes the Javascript.
+  `tinyscript --emit-js example.tys` writes the Javascript, with a source map:
+  with `node --enable-source-maps`, errors show the tinyscript lines.
 
 - The web demo as a _Spring Boot_ application:
 

@@ -456,7 +456,11 @@ public class TinyscriptReplMainTest {
         Path file = script("error.tys", "print(\"before\");\nlet f = x => x;\nconst o = new f(1);\nprint(\"never\");");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run("--node", file.toString()));
         assertEquals("before\n", out.toString());
-        assertTrue(err.toString().contains("TypeError"), err.toString());
+        // With the source map, the error shows the tinyscript line, as the interpreter does
+        assertTrue(err.toString().endsWith("TypeError: f is not a constructor\n"
+                + "    const o = new f(1);\n"
+                + "              ^\n"
+                + "    at global(" + file + ":3)\n"), err.toString());
     }
 
     @Test
