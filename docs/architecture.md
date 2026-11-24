@@ -916,6 +916,29 @@ them had no users (removed 2026-11-22). Embedding tinyscript in Java means
 `TinyscriptEngine`: a transpiled script would lose tinyscript's checks, its
 error locations and the resource limits.
 
+**What does "equal" mean for the two backends?** (decided 2026-11-24) The
+generated Javascript (`tinyscript --node`) is meant as a second backend of equal
+rank. Equal is the same behavior, not the same diagnostics: a program without
+errors prints the same; a program with an error fails in the same phase (before
+the run: the front end is shared; or while it runs), at the same point (the same
+output up to the error) and in the same category for `catch` (caught: `throw`,
+`IOError`, the `SyntaxError` of `JSON.parse`; not caught: programming errors,
+failed `assert`s). A `TypeError` of the interpreter and a `RangeError` of node
+are equal; class and message differences are only reported
+(`target/backend-differences.txt`). The tests say it with `assertSameFailure`;
+`assertKnownGap` marks where node still goes on and fails once the gap is
+closed. Not equal by design: the sandbox, the depth of recursion, `Math.random`,
+time.
+
+**Why are the checks of the generated code helpers, and only where the kind is
+open?** Measured on AoC days with full input (2026-11-24): helpers for every
+operator and condition cost up to 2.25 times the time of unchecked code in node;
+leaving them out where the operator already guarantees the kind, by the syntax
+alone, up to 1.8 times (most days 1.0 to 1.3), while the interpreter stays 4 to
+57 times slower. Writing the checks inline gained nothing measurable: V8 inlines
+the small helpers. The checked builtins cost 1.35 times in a microbenchmark of
+hot builtins and nothing measurable on AoC days.
+
 **Why are most `std:` modules written in tinyscript?** `std:array` and
 `std:string` (`parse`, `words`, `integers`, …) are `.tys` files, so they run the
 same in the interpreter and, bundled by the generator, in node, and the

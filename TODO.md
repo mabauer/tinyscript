@@ -39,106 +39,42 @@ TypeScript (`examples/aoc20xx`).
 
 ## Checking scripts, and code generation as a second backend
 
-**Goal** (2026-11-24): keep the option open to run scripts by generating
-Javascript for node, as a second backend of equal rank next to the interpreter.
-Today the generator mainly keeps the interpreter honest (differential tests); as
-a backend it must keep tinyscript's semantics, errors included. A probe of 41
-typical mistakes: 1 was found before the run, 38 only by the interpreter or not
-at all; the generated code checks hardly any of them (`"a" - 1` is `NaN`,
-`if (1)` runs, `[10, 9, 1].sort()` sorts as text). Modules (not found, cyclic,
-missing exports, invalid imported files) are checked the same way in both.
-
-**What "equal" means** (2026-11-24): the same behavior, not the same
-diagnostics. A program without errors prints the same. A program with an error
-fails in the same phase (before the run: syntax, validator, modules, the same
-front end in both; or while it runs), at the same point (the output up to the
-error is the same) and in the same category for `catch` (caught: errors thrown
-with `throw`, `IOError`, the `SyntaxError` of `JSON.parse`; not caught:
-programming errors, failed `assert`s). So a `TypeError` of the interpreter and a
-`RangeError` of node (`"x".repeat(-1)`) are equal: neither is caught. The gap is
-a program that fails in one backend and goes on in the other (`"a" - 1` is `NaN`
-in node). Error class, message and line are goals for good messages, not part of
-equality: the same message only where tinyscript throws the error itself (V8's
-own, such as a property of `undefined`, a call of a non-function or a stack
-overflow, keep their text: wrapping every access and call would cost the speed
-that is the reason for node), the line once there are source maps (item 5). Not
-equal by design: the sandbox, the depth of recursion, `Math.random`, time.
+**Goal** (2026-11-24): code generation for node (`tinyscript --node`,
+experimental) as a second backend of equal rank next to the interpreter; what
+"equal" means is in `docs/architecture.md` §15. State: the generated code runs
+in strict mode and checks builtins, operators and conditions as the interpreter
+does; many mistakes are errors before the run, for both backends. Of the error
+tests, 16 still go on in node (`assertKnownGap`), all of them properties of
+primitives, arrays, Maps and Sets (item 3).
 
 1. **Same values, tested:** the AoC programs cover only what works.
    - a matrix of every builtin with edge values (`NaN`, `-0`, `""`, negative,
      not an integer, too few arguments), generated from the builtin objects of
-     the runtime (`defineBuiltinMethod`): both backends give the same value or
-     the same error;
+     the runtime (`BuiltinSignatures`): both backends give the same value or the
+     same error;
    - the members of the builtin objects and prototypes compared in both
-     directions: node knows more than tinyscript (`flatMap`, `Object.entries`,
-     `f.constructor`, `o.__proto__`), and such a program runs only there; the
-     prelude deletes what tinyscript does not have;
-   - checked 2026-11-24 and equal: the order of keys that are integers, `$1` /
-     `$&` in the replacement of `replace`, gaps in arrays (`a[10] = 1`,
-     `a.length = …`; printed as `undefined`), `NaN` and `-0` as keys of a `Map`,
-     `trim` and `toUpperCase` / `toLowerCase` with Unicode; `includes` with
-     `NaN` and `new Number(5)` (fixed 2026-11-24).
-2. **Static checks, level 1 (sound, no type inference):**
-   - builtins: done 2026-11-24 for unknown members with a suggestion
-     (`Math.sqr`, `Math.PIE`), methods of literals (`"a".splitt`) and the number
-     of arguments in both directions, from the builtin objects of the runtime
-     (`BuiltinSignatures`), and numbers for `Math` (`Math.sqrt("4")`); open:
-     literal arguments of the wrong type for the other builtins
-     (`"a".repeat("2")`, `parseInt(42)`: the types are only in the
-     implementations);
-   - operators and conditions: done 2026-11-24 by the syntax alone (`Kinds`:
-     literals and the results of operators): errors for `"a" - 1`, `[1] + 1`,
-     `1 < "2"`, `-"a"`, `if (1)`, `while (n - 1)`, `!0`, `if (x = 2)`; warnings
-     for `x == NaN` and `typeof x == "numbr"`;
-   - calls and structure: done 2026-11-24: errors for a class of the script
-     without `new`, `new` of an arrow function in a `const` or of a builtin that
-     is no constructor, `throw` of a literal, an array literal too short for its
-     pattern; warnings for duplicate keys in object literals and code after
-     `return` / `break` / `continue` / `throw`. Open: `new` of a non-function
-     (needs kinds, item 4).
-3. **Checked code in the generator** where types are not proven. The gap,
-   measured with `assertKnownGap` (each closed gap turns into
-   `assertSameFailure`) and item 1: of 174 error tests, 157 fail the same in
-   node and 19 go on there (2026-11-24; 16 since the checks of builtins before
-   the run, item 2). Done: the builtins are replaced in the prelude and check
-   their arguments as the interpreter does (types, integers, the minimum number;
-   in a microbenchmark of hot builtins 1.35 times slower, on AoC days not
-   measurable); operators and conditions are checked by helpers where the
-   operator does not already guarantee the kind (smart, see below; `&&` / `||`
-   give booleans now, as in the interpreter). Open: properties of primitives,
-   arrays, Maps and Sets 16 (`n.x`, `a.x = 5`, `a[-1] = 5`, `m["a"] = 1`,
-   `true.toString()`).
-   - **Operators and conditions, measured 2026-11-24** with the checks generated
-     by an experimental switch (34 of the 48 gaps closed, all tests and AoC
-     programs unchanged), AoC days with full input, node's start (100 ms)
-     subtracted: helpers for every `-` `*` `/` `%` `<` `<=` `>` `>=`, unary `-`,
-     `++` / `--`, the compound assignments, `+` of numbers and every condition
-     (`if`, `while`, `?:`, `!`, `&&` / `||`, `assert`, the callbacks of `filter`
-     / `find` / `some` / `every`) cost 1.05 to 2.25 times the time in node;
-     **smart** (no check where the operator already guarantees the kind: a
-     comparison, `==`, `!`, `&&` / `||` is a boolean, `-` `*` `/` `%`, unary `-`
-     and number literals are numbers; no type inference, variables, properties
-     and calls stay checked) 0.99 to 1.9 times (day09 of 2024, with comparisons
-     of properties and a `find` callback, 88 → 167 ms; day20 211 → 290 ms; most
-     days 1.0 to 1.3). The interpreter stays 4 to 57 times slower than node with
-     checks, so they cost a small part of the factor: equal rank is possible.
-     Writing the check inline
-     (`typeof a === "number" && typeof b === "number" ? a - b : __ts_sub(a, b)`)
-     gains nothing measurable over the helpers (V8 inlines them). Built as smart
-     with the helpers: day09 101 → 183 ms, day20 219 → 311 ms, the others 0.94
-     to 1.33 times (`__ts_add` tests numbers first). Item 4 removes more checks
-     (comparisons of properties, callbacks that return a comparison).
-   - Not possible at a reasonable price in node: no properties on arrays, an
-     error for reading an unknown property (it would need a `Proxy` or a helper
-     for every access). These stay with the static checks of item 4.
+     directions: node knows more than tinyscript (`f.constructor`, `o.__proto__`
+     of builtins …), and such a program runs only there; the prelude deletes
+     what tinyscript does not have.
+2. **Checks before the run, rest of level 1:** literal arguments of the wrong
+   type for builtins other than `Math` (`"a".repeat("2")`, `parseInt(42)`: the
+   types are only in the implementations, so they would need to be declared with
+   `defineBuiltinMethod`).
+3. **Properties in node:** reading or setting a property of a number, boolean,
+   array, `Map` or `Set` (`n.x`, `true.toString()`, `a.x = 5`, `a[-1] = 5`,
+   `m["a"] = 1`) is a `TypeError` in the interpreter and goes on in node; a
+   check for every access (or a `Proxy`) would cost too much there. Static
+   checks with kinds (item 4) cover what they can see.
 4. **Static checks, level 2 (kinds):** a light local inference from literals,
    `new C(…)`, `range(…)`, the fixed result kinds of builtins (`split`, `map` →
    array, `length` → number) and `const` variables: `parts.lenght`,
    `range(n).filter`, `s.push` on a string, `new P().lenth()` on a known class
-   (methods of a class only in its body, so this is sound; fields stay dynamic).
-   The interpreter should then also reject reading an unknown property of an
-   array, string, `Map`, `Set` or range (today `undefined`). The generator uses
-   the kinds to leave out the checks of item 3.
+   (methods of a class only in its body, so this is sound; fields stay dynamic),
+   `new` of a non-function in a `const`. The interpreter should then also reject
+   reading an unknown property of an array, string, `Map`, `Set` or range (today
+   `undefined`). The generator uses the kinds to leave out more checks
+   (comparisons of properties, callbacks that return a comparison: day09 of 2024
+   takes 1.8 times the unchecked time today).
 5. **Error locations in node (source maps):** today an error in the generated
    code points into the generated bundle, not to the `.tys` file. A source map
    (v3, inline as `//# sourceMappingURL=data:…`) maps the generated positions to
@@ -169,9 +105,9 @@ Stays with the interpreter by design: the sandbox (resource limits; generated
 code never runs foreign scripts on a server), embedding in Java with objects of
 the host, the interactive REPL, and the exact error locations (source maps
 later, if needed). Limits: parameters, fields, return values of the script's own
-functions and `JSON.parse` data have no static type; there only the runtime
-checks of item 3 help. The price of a second backend: every language feature,
-builtin and native module is written and tested twice.
+functions and `JSON.parse` data have no static type; there only the checks of
+the generated code at run time help. The price of a second backend: every
+language feature, builtin and native module is written and tested twice.
 
 ## Speed
 
