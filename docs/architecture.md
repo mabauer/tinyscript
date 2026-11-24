@@ -615,26 +615,15 @@ Transpiles the Tinyscript AST to modern JavaScript source text for node (it uses
 **Used by:**
 
 - `/xcompile` REST endpoint (`TinyscriptCrossCompilingService`)
-- source maps (`setSourceMaps(true)`, used by `tinyscript --node` / `--emit-js`
-  and the tests): the generator writes a marker with the tinyscript position
-  (`SourceMaps.marker`: a control character never written otherwise, source,
-  line, column) before each statement, call or property access, checked operator
-  and condition; `SourceMaps.attach` removes the markers and appends an inline
-  source map (version 3, `sources` the file URIs, `std:name` for the standard
-  library, `sourcesContent` the texts). A handler in the prelude
-  (`uncaughtException`) prints an error that ends the program as the interpreter
-  does: the message, the tinyscript line with `^`, and the stack of the
-  tinyscript functions without the `__ts_` helpers and the standard library.
-  node needs `--enable-source-maps`; it costs nothing measurable (AoC days,
-  `throw` / `catch` in a loop: node maps a stack only when it is read)
 - `tinyscript --node` / `--emit-js` (`TinyscriptReplMain`, `NodeRunner`): the
   same checks before the run as the interpreter (parser, validator, imports),
   then the program is written to a temporary `.cjs` file and run with the node
   on the `PATH` (20 or later), with the arguments, the standard input and output
   of the command; a failed node run exits with 1, as a runtime error of the
-  interpreter
+  interpreter; both with source maps (see below), `--node` runs node with
+  `--enable-source-maps`
 - the differential tests, which run the generated code with `node` and compare
-  its output with the interpreter's
+  its output with the interpreter's (with source maps as well)
 
 **Not used by the interpreter** — the interpreter walks the AST directly without
 a JavaScript intermediate.
@@ -730,6 +719,22 @@ statements) is a block of its own: its declarations hide the prelude's `var`s
 (`const Map = …`, `String`, `JSON`, `System`) instead of being a `SyntaxError`.
 The method shorthand of object literals stays a method (`{ area() { … } }`), so
 that `new` of it fails in both backends.
+
+### Source maps
+
+With `setSourceMaps(true)` (off by default, so `/xcompile` is unchanged), a
+program gets an inline source map, so that node shows errors with the tinyscript
+lines. The generator writes a marker with the tinyscript position
+(`SourceMaps.marker`: a control character never written otherwise, source, line,
+column) before each statement, call or property access, checked operator and
+condition; `SourceMaps.attach` removes the markers and appends the map (version
+3, `sources` the file URIs, `std:name` for the standard library,
+`sourcesContent` the texts). A handler in the prelude (`uncaughtException`)
+prints an error that ends the program as the interpreter does: the message, the
+tinyscript line with `^`, and the stack of the tinyscript functions without the
+`__ts_` helpers and the standard library (an error inside `std:` is shown at the
+call). node needs `--enable-source-maps`; it costs nothing measurable (AoC days,
+`throw` / `catch` in a loop: node maps a stack only when it is read).
 
 ---
 
