@@ -75,39 +75,16 @@ primitives, arrays, Maps and Sets (item 3).
    `undefined`). The generator uses the kinds to leave out more checks
    (comparisons of properties, callbacks that return a comparison: day09 of 2024
    takes 1.8 times the unchecked time today).
-5. **Error locations in node (source maps):** today an error in the generated
-   code points into the generated bundle, not to the `.tys` file. A source map
-   (v3, inline as `//# sourceMappingURL=data:…`) maps the generated positions to
-   the tinyscript file, line, column and name, and node uses it with
-   `process.setSourceMapsEnabled(true)` / `--enable-source-maps`. A handler in
-   the prelude (`uncaughtException`) then prints errors as the interpreter does
-   (class, message, the line with `^`, the stack without the `__ts_` helpers).
-   Side effect: debugging the generated program with breakpoints in the `.tys`
-   file. Two ways, to be decided:
-
-   - **Xtext's tracing** (`@Traced`, `TracingSugar`, `CompositeGeneratorNode`):
-     each generated piece knows its AST element; clean, but a larger rebuild of
-     the templates;
-   - **markers:** the generator writes `/*@ts:main.tys:70:5*/` before each
-     statement and call, a pass afterwards turns them into the map (Base64 VLQ)
-     and removes them; little change to the generator, about a day, as exact as
-     the markers are placed.
-
-   Either way: the line with `^` needs the source text (`sourcesContent`); the
-   names the generator changed belong into `names`; an error inside a `std:`
-   module is reported at the caller, as in the interpreter; with source maps
-   enabled, errors that are thrown and caught often get slow (measure).
-
-6. **Warnings, later:** unused variables, parameters and imports; `let` never
+5. **Warnings, later:** unused variables, parameters and imports; `let` never
    assigned again; fits the language server.
 
 Stays with the interpreter by design: the sandbox (resource limits; generated
 code never runs foreign scripts on a server), embedding in Java with objects of
-the host, the interactive REPL, and the exact error locations (source maps
-later, if needed). Limits: parameters, fields, return values of the script's own
-functions and `JSON.parse` data have no static type; there only the checks of
-the generated code at run time help. The price of a second backend: every
-language feature, builtin and native module is written and tested twice.
+the host, and the interactive REPL. Limits: parameters, fields, return values of
+the script's own functions and `JSON.parse` data have no static type; there only
+the checks of the generated code at run time help. The price of a second
+backend: every language feature, builtin and native module is written and tested
+twice.
 
 ## Speed
 

@@ -61,7 +61,8 @@ final class NodeRunner {
 		Path file = Files.createTempFile("tinyscript-", ".cjs");
 		try {
 			Files.writeString(file, javascript, StandardCharsets.UTF_8);
-			List<String> command = new ArrayList<>(List.of("node", file.toString()));
+			// The generated program has an inline source map: errors show the tinyscript lines
+			List<String> command = new ArrayList<>(List.of("node", "--enable-source-maps", file.toString()));
 			command.addAll(arguments);
 			ProcessBuilder builder = new ProcessBuilder(command);
 			if (inherit)
