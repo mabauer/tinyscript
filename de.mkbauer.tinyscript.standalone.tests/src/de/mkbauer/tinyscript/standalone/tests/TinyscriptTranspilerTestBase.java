@@ -89,6 +89,9 @@ public abstract class TinyscriptTranspilerTestBase {
      * {@code @BeforeEach} method.
      */
     protected void assumeNodeAvailable() {
+        // In CI (GitHub sets CI=true), node must be there: the differential tests fail instead
+        if (System.getenv("CI") != null && !NodeJsRunner.isAvailable())
+            throw new AssertionError("node.js is needed in CI, but not found on PATH");
         Assumptions.assumeTrue(NodeJsRunner.isAvailable(), "Skipping: node.js not found on PATH");
     }
 

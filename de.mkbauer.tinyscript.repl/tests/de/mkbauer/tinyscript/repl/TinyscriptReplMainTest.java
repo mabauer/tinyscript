@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -417,4 +418,79 @@ public class TinyscriptReplMainTest {
         String output = out.toString();
         assertTrue(output.contains("> true\n"), output);
     }
+    // --node and --emit-js
+
+    private static final String EXPERIMENTAL = "tinyscript --node is experimental: the generated Javascript does not yet find all errors the interpreter finds\n";
+
+    // Without node the tests are skipped, but not in CI (GitHub sets CI=true), where node must be there
+    private static void assumeNode() {
+        boolean available = NodeRunner.checkNode() == null;
+        if (System.getenv("CI") != null)
+            assertTrue(available, "node " + NodeRunner.MINIMUM_VERSION + " or later is needed in CI: " + NodeRunner.checkNode());
+        Assumptions.assumeTrue(available, "node not found");
+    }
+
+    @Test
+    public void testNodeRunsAFileWithArgumentsAndInput() throws IOException {
+        assumeNode();
+        Path file = script("sum.tys", "import lines from \"std:io\";\nimport sum from \"std:array\";\n"
+                + "const numbers = [];\nfor (const line : lines()) { numbers.push(Number(line)); }\n"
+                + "print(System.args, sum(numbers));");
+        assertEquals(TinyscriptReplMain.EXIT_OK, runWithInput("1\n2\n3\n", "--node", file.toString(), "--", "a", "b c"));
+        assertEquals("[\"a\", \"b c\"] 6\n", out.toString());
+        assertEquals(EXPERIMENTAL, err.toString());
+    }
+
+    @Test
+    public void testNodeImportsModules() throws IOException {
+        assumeNode();
+        script("shapes.tys", "export function area(w, h) { return w * h; }\n");
+        Path file = script("main.tys", "import area from \"./shapes\";\nprint(area(2, 3));");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run("--node", file.toString()));
+        assertEquals("6\n", out.toString());
+    }
+
+    @Test
+    public void testNodeRuntimeErrorExitsWithOneAfterTheOutputBefore() throws IOException {
+        assumeNode();
+        Path file = script("error.tys", "print(\"before\");\nconst f = x => x;\nconst o = new f(1);\nprint(\"never\");");
+        assertEquals(TinyscriptReplMain.EXIT_ERROR, run("--node", file.toString()));
+        assertEquals("before\n", out.toString());
+        assertTrue(err.toString().contains("TypeError"), err.toString());
+    }
+
+    @Test
+    public void testNodeChecksBeforeTheRunAsTheInterpreter() throws IOException {
+        assumeNode();
+        Path file = script("syntax.tys", "print(1);\nMath = 2;");
+        assertEquals(TinyscriptReplMain.EXIT_ERROR, run("--node", file.toString()));
+        assertEquals("", out.toString());
+        assertTrue(err.toString().contains("TinyscriptSyntaxError: Cannot assign to the builtin Math in " + file + ":2"), err.toString());
+        // An import that is not found is reported before node runs, as by the interpreter
+        out.reset();
+        err.reset();
+        Path missing = script("missing.tys", "import x from \"./nowhere\";\nprint(1);");
+        assertEquals(TinyscriptReplMain.EXIT_ERROR, run("--node", missing.toString()));
+        assertEquals("", out.toString());
+        assertTrue(err.toString().contains("nowhere"), err.toString());
+    }
+
+    @Test
+    public void testEmitJs() throws IOException {
+        Path file = script("hello.tys", "print(\"Hello\");");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run("--emit-js", file.toString()));
+        assertTrue(out.toString().startsWith("\"use strict\";"), out.toString());
+        assertTrue(out.toString().contains("print(\"Hello\");"), out.toString());
+        assertEquals("", err.toString());
+    }
+
+    @Test
+    public void testNodeAndEmitJsNeedAFileAndExcludeEachOther() throws IOException {
+        assertEquals(TinyscriptReplMain.EXIT_USAGE, run("--node"));
+        assertTrue(err.toString().contains("--node needs a file"), err.toString());
+        Path file = script("hello.tys", "print(1);");
+        assertEquals(TinyscriptReplMain.EXIT_USAGE, run("--node", "--emit-js", file.toString()));
+        assertTrue(err.toString().contains("--node and --emit-js cannot be combined"), err.toString());
+    }
+
 }

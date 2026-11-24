@@ -49,8 +49,8 @@ After changing anything in the interpreter (`TinyscriptEngine`) or the generator
 
 This is the fastest feedback loop (< 5 s, no OSGi startup) and catches both
 interpreter regressions and transpiler/interpreter divergence. If node.js is not
-on PATH the differential tests skip cleanly; the interpreter reference tests
-always run.
+on PATH the differential tests skip cleanly (in CI, where `CI` is set, they fail
+instead); the interpreter reference tests always run.
 
 ### Test modules
 
@@ -301,6 +301,9 @@ code blocks are not wrapped.
 ```bash
 # REPL (after building fat JAR): interactive, or run files; see --help
 de.mkbauer.tinyscript.repl/tinyscript [file.tys ...] [-- args ...]
+# The same with node (experimental), or only the generated Javascript
+de.mkbauer.tinyscript.repl/tinyscript --node file.tys [-- args ...]
+de.mkbauer.tinyscript.repl/tinyscript --emit-js file.tys
 java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar [file.tys ...]
 
 # Web demo (after building fat JAR)

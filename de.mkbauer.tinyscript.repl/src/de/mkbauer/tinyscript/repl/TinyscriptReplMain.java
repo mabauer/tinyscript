@@ -49,6 +49,7 @@ import de.mkbauer.tinyscript.validation.TinyscriptSyntaxErrorMessageProvider;
 import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
+import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
 import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
 import de.mkbauer.tinyscript.interpreter.StandardInput;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
@@ -93,13 +94,19 @@ class TinyscriptReplMain  {
 			are the scripts' System.args.
 
 			Options:
+			  --node                 run the files with node instead of the interpreter
+			                         (experimental: the generated Javascript does not yet
+			                         find all errors the interpreter finds)
+			  --emit-js              write the Javascript for node to the standard output
+			                         instead of running the files
 			  --module-path <dirs>   where imports of bare paths ("x", "lib/y") are searched,
 			                         separated by ":" (default: $TINYSCRIPT_PATH, otherwise
 			                         the directory of each file / the working directory)
 			  -h, --help             show this help
 			  --version              show the version
 
-			Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage
+			Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage (also: no
+			node 20 or later on the PATH for --node)
 			""";
 
 	private static final String INTERACTIVE_HELP = """
@@ -133,6 +140,11 @@ class TinyscriptReplMain  {
 
 	/** The arguments after --, the scripts' System.args. */
 	private List<String> scriptArguments = List.of();
+
+	/** How files run: with the interpreter, with node (--node), or only generated (--emit-js). */
+	private enum Backend { INTERPRETER, NODE, EMIT_JS }
+
+	private Backend backend = Backend.INTERPRETER;
 
 	private final Injector injector;
 
@@ -230,6 +242,14 @@ class TinyscriptReplMain  {
 					}
 					moduleOption = args[++i];
 				}
+				case "--node", "--emit-js" -> {
+					Backend chosen = arg.equals("--node") ? Backend.NODE : Backend.EMIT_JS;
+					if (backend != Backend.INTERPRETER && backend != chosen) {
+						err.println("--node and --emit-js cannot be combined");
+						return EXIT_USAGE;
+					}
+					backend = chosen;
+				}
 				case "-h", "--help" -> {
 					out.print(USAGE);
 					return EXIT_OK;
@@ -252,6 +272,11 @@ class TinyscriptReplMain  {
 				}
 			}
 		}
+		if (files.isEmpty() && backend != Backend.INTERPRETER) {
+			err.println((backend == Backend.NODE ? "--node" : "--emit-js") + " needs a file");
+			err.print(USAGE);
+			return EXIT_USAGE;
+		}
 		if (files.isEmpty())
 			return interactive();
 		// Check all files before running any of them
@@ -265,9 +290,17 @@ class TinyscriptReplMain  {
 				return EXIT_USAGE;
 			}
 		}
+		if (backend == Backend.NODE) {
+			String problem = NodeRunner.checkNode();
+			if (problem != null) {
+				err.println("tinyscript --node: " + problem);
+				return EXIT_USAGE;
+			}
+			err.println("tinyscript --node is experimental: the generated Javascript does not yet find all errors the interpreter finds");
+		}
 		// Each file runs on its own (fresh engine); files share names only via import / export
 		for (Path file : files) {
-			int exitCode = executeFile(file);
+			int exitCode = backend == Backend.INTERPRETER ? executeFile(file) : generateFile(file);
 			if (exitCode != EXIT_OK)
 				return exitCode;
 		}
@@ -302,6 +335,54 @@ class TinyscriptReplMain  {
 			return EXIT_ERROR;
 		}
 		return EXIT_OK;
+	}
+
+	/**
+	 * --node and --emit-js: the same checks before the run as the interpreter (syntax, validator,
+	 * the imported modules), then the Javascript for node, run or written to the standard output.
+	 */
+	private int generateFile(Path file) {
+		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
+		Resource resource = resourceSet.createResource(URI.createFileURI(file.toAbsolutePath().toString()));
+		try {
+			resource.load(null);
+		}
+		catch (IOException e) {
+			err.println("Cannot read " + file + ": " + e.getMessage());
+			return EXIT_USAGE;
+		}
+		List<Issue> issues = getValidator(resource).validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+		List<Issue> errors = TinyscriptDiagnostics.relevantErrors(issues);
+		if (!errors.isEmpty()) {
+			err.print(describeSyntaxErrors(errors, file));
+			return EXIT_ERROR;
+		}
+		err.print(describeWarnings(issues, file));
+		String javascript;
+		try {
+			TinyscriptGenerator generator = injector.getInstance(TinyscriptGenerator.class);
+			javascript = generator.generate((Tinyscript) resource.getContents().get(0), true,
+					new FileSystemModuleLoader(modulePath(file.toAbsolutePath().getParent()))).toString();
+		}
+		catch (TinyscriptRuntimeException e) {
+			// An import that is not found, cyclic or not exported, as the interpreter reports it
+			err.println(e.getClass().getSimpleName() + ": " + e.getMessage());
+			err.print(TinyscriptDiagnostics.excerpt(e));
+			return EXIT_ERROR;
+		}
+		if (backend == Backend.EMIT_JS) {
+			out.print(javascript);
+			out.flush();
+			return EXIT_OK;
+		}
+		try {
+			return NodeRunner.run(javascript, scriptArguments, in, out, err, in == System.in && out == System.out && err == System.err)
+					== 0 ? EXIT_OK : EXIT_ERROR;
+		}
+		catch (IOException e) {
+			err.println("tinyscript --node: cannot run node: " + e.getMessage());
+			return EXIT_USAGE;
+		}
 	}
 
 	/**
