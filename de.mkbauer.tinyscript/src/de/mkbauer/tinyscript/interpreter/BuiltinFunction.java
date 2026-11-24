@@ -55,6 +55,11 @@ public class BuiltinFunction extends Function {
 		this.maxArgs = maxArgs;
 	}
 
+	/** The maximum number of arguments ({@link #VARIADIC}: any number). */
+	public int getMaxArgs() {
+		return maxArgs;
+	}
+
 	/**
 	 * Checks the number of arguments of a call written in a script: more than the builtin
 	 * takes is a TypeError (they would be ignored silently). Callbacks, e.g. of map, are not

@@ -566,6 +566,13 @@ Violations become error markers (red squiggles). The checks cover:
 - calls: too many arguments where the callee is known before the run (a function
   declaration, a `const` with a function, `new` of a class); function
   declarations cannot be assigned, so that this stays sound;
+- builtins (where the receiver is a builtin or a literal): unknown members
+  (`Math.sqr`, `Math.PIE`, `"a".splitt()`, with a suggestion), calls of members
+  that are no functions, and the number of arguments in both directions (also
+  `parseInt()`, `range(1, 2, 3, 4)`); assigning to a builtin. The members and
+  the minimum and maximum of arguments come from the builtin objects of the
+  runtime: `runtime/BuiltinSignatures` makes a `TinyscriptEngine` once and reads
+  them, so there is no second list;
 - classes (only at top level, each method only once, a field must not hide a
   method), interfaces (a class has the methods of an interface of the same file
   it implements; for an imported one the interpreter checks when the class is

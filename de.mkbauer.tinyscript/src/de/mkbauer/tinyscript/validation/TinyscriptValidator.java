@@ -50,7 +50,13 @@ import java.util.Set;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.validation.Check;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+
+import de.mkbauer.tinyscript.runtime.BuiltinSignatures;
 
 /**
  * Validation rules for Tinyscript.
@@ -59,6 +65,117 @@ import org.eclipse.xtext.validation.Check;
  */
 @SuppressWarnings("all")
 public class TinyscriptValidator extends AbstractTinyscriptValidator {
+
+	@Inject
+	private Provider<XtextResourceSet> resourceSetProvider;
+
+	// The members and signatures of the builtins, from the runtime
+	private BuiltinSignatures signatures() {
+		return BuiltinSignatures.get(resourceSetProvider::get);
+	}
+
+	/**
+	 * A member of a builtin that does not exist (Math.sqr(2), Math.PIE, JSON.stringify) or a
+	 * method of a literal that does not exist ("abc".lenght()), with a suggestion; and a call of
+	 * a builtin method with too few or too many arguments (Math.sqrt(), JSON.parse(s, f),
+	 * (1).toFixed(1, 2)). Reading an unknown member of a builtin gives undefined at run time, but
+	 * is always a mistake; adding one (Math.TAU = …) is allowed, and then it can be read.
+	 */
+	@Check
+	public void checkBuiltinMembers(CallOrPropertyAccess access) {
+		if (!(access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix)
+				|| !(suffix.getProperty() instanceof DotPropertyAccessSuffix dot) || dot.isOptional()
+				|| dot.getKey() == null || dot.getKey().getName() == null)
+			return;
+		String name = dot.getKey().getName();
+		boolean call = suffix.getCall() != null;
+		Expression receiver = access.getExpr();
+		while (receiver instanceof GroupingExpression grouping)
+			receiver = grouping.getExpr();
+		BuiltinSignatures.Members members;
+		String what;
+		String builtin = null;
+		if (receiver instanceof Reference reference && !reference.isThis() && reference.getId() != null
+				&& !reference.getId().eIsProxy() && isBuiltin(reference.getId())) {
+			builtin = reference.getId().getName();
+			members = signatures().global(builtin);
+			what = builtin;
+		}
+		else if (call && literalKind(receiver) != null) {
+			String kind = literalKind(receiver);
+			members = signatures().literal(kind);
+			what = kind.equals(BuiltinSignatures.ARRAY) ? "an array" : "a " + kind;
+		}
+		else
+			return;
+		if (members == null)
+			return;
+		if (!members.has(name)) {
+			// typeof Math.TAU asks whether it is there
+			if (builtin != null && !call && (isChanged(access) || isAddedInScript(access, builtin, name)
+					|| access.eContainer() instanceof Unary unary && unary.getOp() == UnaryOperator.TYPEOF))
+				return;
+			String suggestion = TinyscriptLinkingDiagnosticMessageProvider.suggestion(name, members.members().keySet());
+			error(what + " has no " + (call ? "method" : "member") + " '" + name + "'"
+					+ (suggestion != null ? " (did you mean '" + suggestion + "'?)" : ""), null);
+			return;
+		}
+		// A member the script replaces (Math.sqrt = …) may be anything
+		if (!call || (builtin != null && isAddedInScript(access, builtin, name)))
+			return;
+		if (members.signature(name) == null)
+			error("'" + name + "' of " + what + " is not a function", null);
+		else
+			checkBuiltinArguments(name, members.signature(name), suffix.getCall().getArguments());
+	}
+
+	// "number", "string" or "array" for a literal whose methods are known, otherwise null
+	private static String literalKind(Expression expression) {
+		return expression instanceof NumberLiteral ? BuiltinSignatures.NUMBER
+				: expression instanceof StringLiteral ? BuiltinSignatures.STRING
+				: expression instanceof ArrayInitializer ? BuiltinSignatures.ARRAY : null;
+	}
+
+	// The target of an assignment, ++ / -- or delete
+	private static boolean isChanged(CallOrPropertyAccess access) {
+		EObject container = access.eContainer();
+		return (container instanceof BinaryExpression assignment && isAssignment(assignment) && assignment.getLeft() == access)
+				|| (container instanceof ExpressionStatement statement && Operators.increment(statement) != null)
+				|| (container instanceof Unary unary && unary.getOp() == UnaryOperator.DELETE);
+	}
+
+	// Whether the script assigns builtin.name somewhere (Math.TAU = 2 * Math.PI)
+	private static boolean isAddedInScript(CallOrPropertyAccess access, String builtin, String name) {
+		Resource resource = access.eResource();
+		if (resource == null)
+			return false;
+		for (var iterator = resource.getAllContents(); iterator.hasNext();) {
+			if (iterator.next() instanceof CallOrPropertyAccess other && other != access && isChanged(other)
+					&& other.getExpr() instanceof Reference reference && reference.getId() != null && !reference.getId().eIsProxy()
+					&& builtin.equals(reference.getId().getName()) && isBuiltin(reference.getId())
+					&& other.getSuffix() instanceof CallOrPropertyAccessSuffix suffix && suffix.getProperty() instanceof DotPropertyAccessSuffix dot
+					&& dot.getKey() != null && name.equals(dot.getKey().getName()))
+				return true;
+		}
+		return false;
+	}
+
+	// The number of arguments of a call of a builtin: at least min, at most max (spread: unknown)
+	private void checkBuiltinArguments(String name, BuiltinSignatures.Signature signature, List<Expression> arguments) {
+		if (signature == null || arguments.stream().anyMatch(argument -> argument instanceof SpreadElement))
+			return;
+		int count = arguments.size();
+		if (count < signature.min())
+			error(name + "() needs " + (signature.min() == signature.max() ? "" : "at least ") + arguments(signature.min())
+					+ ", not " + count, null);
+		else if (count > signature.max())
+			error(name + "() takes " + (signature.max() == 0 ? "no arguments" : "at most " + arguments(signature.max()))
+					+ ", not " + count, null);
+	}
+
+	private static String arguments(int count) {
+		return count == 1 ? "1 argument" : count + " arguments";
+	}
 	
 	/**
 	 * Checks if a variable declaration conflicts with other declared identifiers of the same name in the same block
@@ -446,6 +563,12 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 				|| reference.getId().eIsProxy() || arguments.stream().anyMatch(a -> a instanceof SpreadElement))
 			return;
 		Identifier id = reference.getId();
+		// A builtin function (parseInt, range, print): its signature from the runtime
+		if (isBuiltin(id)) {
+			if (!constructor)
+				checkBuiltinArguments(id.getName(), signatures().function(id.getName()), arguments);
+			return;
+		}
 		FunctionDefinition function = knownFunction(id, constructor);
 		int max;
 		if (function != null) {

@@ -71,7 +71,7 @@ public class JsonTest extends TinyscriptTranspilerTestBase {
     public void testOnlyStrings() {
         assertSameFailure(TinyscriptTypeError.class, "JSON.parse(5);");
         assertSameFailure(TinyscriptTypeError.class, "JSON.parse(null);");
-        // No reviver
-        assertKnownGap(TinyscriptTypeError.class, "JSON.parse(\"1\", (k, v) => v);");
+        // No reviver: an error before the run
+        assertEquals(java.util.List.of("1:1: parse() takes at most 1 argument, not 2"), reportedErrors("JSON.parse(\"1\", (k, v) => v);"));
     }
 }

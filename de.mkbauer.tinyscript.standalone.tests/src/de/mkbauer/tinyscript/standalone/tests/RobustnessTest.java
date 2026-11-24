@@ -96,8 +96,8 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testCallingAMissingMethod() {
-        assertTypeError("String has no method 'splitt'", "\"a,b\".splitt(\",\");");
-        assertTypeError("Array has no method 'foo'", "[1].foo();");
+        assertTypeError("String has no method 'splitt'", "const s = \"a,b\";\ns.splitt(\",\");");
+        assertTypeError("Array has no method 'foo'", "const a = [1];\na.foo();");
         assertTypeError("Object has no method 'f'", "let o = {}; o.f();");
         assertTypeError("Map has no method 'push'", "new Map().push(1);");
         assertTypeError("Car has no method 'drive'", "function Car() { } let c = new Car(); c.drive();");
@@ -124,7 +124,7 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testCallingAPropertyThatIsNoFunction() {
         assertTypeError("'x' of Object is a number, not a function", "let o = { x: 1 }; o.x();");
-        assertTypeError("'length' of String is a number, not a function", "\"abc\".length();");
+        assertTypeError("'length' of String is a number, not a function", "const s = \"abc\";\ns.length();");
     }
 
     @Test

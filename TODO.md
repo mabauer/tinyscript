@@ -79,12 +79,11 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      `trim` and `toUpperCase` / `toLowerCase` with Unicode; `includes` with
      `NaN` and `new Number(5)` (fixed 2026-11-24).
 2. **Static checks, level 1 (sound, no type inference):**
-   - builtins (`Math`, `JSON`, `Number`, `parseInt` …): unknown members with a
-     suggestion (`Math.sqr`, `Math.PIE`, which gives `undefined` today), the
-     number of arguments in both directions (too few is a
-     `TinyscriptArgumentError` with a weak message today), literal arguments of
-     the wrong type; the signatures come from the builtin objects of the runtime
-     (`defineBuiltinMethod` knows minimum and maximum), not a second list;
+   - builtins: done 2026-11-24 for unknown members with a suggestion
+     (`Math.sqr`, `Math.PIE`), methods of literals (`"a".splitt`) and the number
+     of arguments in both directions, from the builtin objects of the runtime
+     (`BuiltinSignatures`); open: literal arguments of the wrong type
+     (`Math.sqrt("4")`);
    - operators and conditions on literals or obvious types (`"a" - 1`,
      `[1] + 1`, `1 < "2"`, `if (1)`, `if (x = 2)`, `x == NaN`,
      `typeof x == "numbr"`), generalizing the check for `options || {}`;
@@ -95,16 +94,15 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
 3. **Checked code in the generator** where types are not proven. The gap,
    measured with `assertKnownGap` (each closed gap turns into
    `assertSameFailure`) and item 1: of 174 error tests, 157 fail the same in
-   node and 19 go on there (2026-11-24). Done: the builtins are replaced in the
-   prelude and check their arguments as the interpreter does (types, integers,
-   the minimum number; in a microbenchmark of hot builtins 1.35 times slower, on
-   AoC days not measurable); operators and conditions are checked by helpers
-   where the operator does not already guarantee the kind (smart, see below;
-   `&&` / `||` give booleans now, as in the interpreter). Open: properties of
-   primitives, arrays, Maps and Sets 17 (`n.x`, `a.x = 5`, `a[-1] = 5`,
-   `m["a"] = 1`), too many arguments of a builtin 2 (`(1).toFixed(1, 2)`; a
-   check at the call, not in the builtin, since callbacks get more arguments:
-   item 2).
+   node and 19 go on there (2026-11-24; 16 since the checks of builtins before
+   the run, item 2). Done: the builtins are replaced in the prelude and check
+   their arguments as the interpreter does (types, integers, the minimum number;
+   in a microbenchmark of hot builtins 1.35 times slower, on AoC days not
+   measurable); operators and conditions are checked by helpers where the
+   operator does not already guarantee the kind (smart, see below; `&&` / `||`
+   give booleans now, as in the interpreter). Open: properties of primitives,
+   arrays, Maps and Sets 16 (`n.x`, `a.x = 5`, `a[-1] = 5`, `m["a"] = 1`,
+   `true.toString()`).
    - **Operators and conditions, measured 2026-11-24** with the checks generated
      by an experimental switch (34 of the 48 gaps closed, all tests and AoC
      programs unchanged), AoC days with full input, node's start (100 ms)

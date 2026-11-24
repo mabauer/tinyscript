@@ -222,12 +222,14 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   there is no `===` / `!==`)
 - No silent conversions: arithmetic needs numbers, `+` adds numbers, arrays, or
   a string and a value; builtins check their argument types and count
-  (JavaScript's optional arguments are supported, more is a `TypeError`).
-  Conditions accept booleans, `null` / `undefined` (false) and objects (true),
-  not numbers or strings; `&&` / `||` give booleans, and a literal operand that
-  can never be a condition (`options || {}`) is a compile-time error; `<`, `<=`,
-  `>`, `>=` compare number with number or string with string, anything else is a
-  `TypeError`
+  (JavaScript's optional arguments are supported, more is a `TypeError`; before
+  the run where the builtin is known: `Math.sqrt(1, 2)`, `parseInt()`,
+  `"a".repeat()`, and unknown members such as `Math.sqr` or `"a".splitt()`, from
+  the builtins of the runtime, `BuiltinSignatures`). Conditions accept booleans,
+  `null` / `undefined` (false) and objects (true), not numbers or strings; `&&`
+  / `||` give booleans, and a literal operand that can never be a condition
+  (`options || {}`) is a compile-time error; `<`, `<=`, `>`, `>=` compare number
+  with number or string with string, anything else is a `TypeError`
 - `+` concatenates two arrays; with a string on either side it concatenates
   strings; an array plus anything else is a `TypeError`
 - One text form: `x.toString()`, `String(x)`, `"" + x` and `print` agree
