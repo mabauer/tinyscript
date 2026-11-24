@@ -43,39 +43,79 @@ TypeScript (`examples/aoc20xx`).
 experimental) as a second backend of equal rank next to the interpreter; what
 "equal" means is in `docs/architecture.md` §15. State: the generated code runs
 in strict mode and checks builtins, operators and conditions as the interpreter
-does; many mistakes are errors before the run, for both backends. Of the error
-tests, 16 still go on in node (`assertKnownGap`), all of them properties of
-primitives, arrays, Maps and Sets (item 3).
+does; many mistakes are errors before the run, for both backends; errors show
+the tinyscript line (source maps). 165 error tests require both backends to fail
+alike; 16 still go on in node (`assertKnownGap`), all of them properties of
+primitives, arrays, Maps and Sets. Of the messages, 84 differ (80 only in the
+text, 4 `TypeError` against `RangeError`; `target/backend-differences.txt`).
 
-1. **Same values, tested:** the AoC programs cover only what works.
-   - a matrix of every builtin with edge values (`NaN`, `-0`, `""`, negative,
-     not an integer, too few arguments), generated from the builtin objects of
-     the runtime (`BuiltinSignatures`): both backends give the same value or the
-     same error;
-   - the members of the builtin objects and prototypes compared in both
-     directions: node knows more than tinyscript (`f.constructor`, `o.__proto__`
-     of builtins …), and such a program runs only there; the prelude deletes
-     what tinyscript does not have.
-2. **Checks before the run, rest of level 1:** literal arguments of the wrong
-   type for builtins other than `Math` (`"a".repeat("2")`, `parseInt(42)`: the
-   types are only in the implementations, so they would need to be declared with
-   `defineBuiltinMethod`).
-3. **Properties in node:** reading or setting a property of a number, boolean,
-   array, `Map` or `Set` (`n.x`, `true.toString()`, `a.x = 5`, `a[-1] = 5`,
-   `m["a"] = 1`) is a `TypeError` in the interpreter and goes on in node; a
-   check for every access (or a `Proxy`) would cost too much there. Static
-   checks with kinds (item 4) cover what they can see.
-4. **Static checks, level 2 (kinds):** a light local inference from literals,
-   `new C(…)`, `range(…)`, the fixed result kinds of builtins (`split`, `map` →
-   array, `length` → number) and `const` variables: `parts.lenght`,
-   `range(n).filter`, `s.push` on a string, `new P().lenth()` on a known class
-   (methods of a class only in its body, so this is sound; fields stay dynamic),
-   `new` of a non-function in a `const`. The interpreter should then also reject
-   reading an unknown property of an array, string, `Map`, `Set` or range (today
-   `undefined`). The generator uses the kinds to leave out more checks
-   (comparisons of properties, callbacks that return a comparison: day09 of 2024
-   takes 1.8 times the unchecked time today).
-5. **Warnings, later:** unused variables, parameters and imports; `let` never
+**Plan** (2026-11-24), in this order: phase 2.1, then 1, the rest of 2, 3 and 5;
+phase 4 is put back for now. `--node` stops being experimental after phases 1
+and 2 (no known gaps left, or only documented ones that phase 3 finds before the
+run); phase 3 then makes it stricter and faster.
+
+1. **Phase 1: equality proven by tests.**
+   1. **Interpreter-only tests in both backends:** `InterpreterReferenceTest`
+      (82 cases) and the `assertEquals(…, interpreterOutput(…))` of the other
+      classes become `assertSameOutput` with the expected value; only what node
+      cannot do (the sandbox) stays interpreter-only, with the reason. New
+      differences are fixed or marked with `assertKnownGap`.
+   2. **Same values for every builtin:** a matrix of every builtin with edge
+      values (`NaN`, `-0`, `""`, negative, not an integer, too few arguments),
+      generated from the builtin objects of the runtime (`BuiltinSignatures`):
+      both backends give the same value or the same error.
+   3. **The members of the builtin objects and prototypes compared in both
+      directions:** node knows more than tinyscript (`f.constructor`,
+      `o.__proto__` of builtins …), and such a program runs only there; the
+      prelude deletes what tinyscript does not have, or makes it an error.
+2. **Phase 2: the gaps in behavior closed.**
+   1. **Depth of recursion (first):** node stops at fewer than 30,000 nested
+      calls (`RangeError`), the interpreter at about 450,000; a recursive
+      depth-first search (a flood fill in AoC) then runs only in the
+      interpreter. `--node` runs the program in a `Worker` with
+      `resourceLimits: { stackSizeMb: 256 }` (tried: 200,000 calls in 0.13 s;
+      `node --stack-size` on the main thread crashes silently instead). Check in
+      the worker: the standard input (`fs.readSync(0)` of `std:io`), the exit
+      code, the prelude's handler of uncaught errors, the source maps. A test
+      with 100,000 nested calls in both backends.
+   2. **Properties in node:** reading a property of a number or boolean (`n.x`,
+      `n.length`, `true.toString()`) and setting one on an array, `Map` or `Set`
+      (`a.x = 5`, `a[-1] = 5`, `m["a"] = 1`) is a `TypeError` in the interpreter
+      and goes on in node (the 16 known gaps; setting one on a primitive already
+      fails in strict mode). First measure a cheap check on the AoC days: for
+      reads, a fast path for objects (`typeof o === "object"`); for writes, only
+      on arrays, `Map`s and `Set`s. What costs at most about 10 % goes in; the
+      rest waits for the kinds of phase 3.
+3. **Phase 3: static checks, level 2 (kinds).**
+   - A light local inference from literals, `new C(…)`, `range(…)`, the fixed
+     result kinds of builtins (`split`, `map` → array, `length` → number) and
+     `const` variables: `parts.lenght`, `range(n).filter`, `s.push` on a string,
+     `new P().lenth()` on a known class (methods of a class only in its body, so
+     this is sound; fields stay dynamic), `new` of a non-function in a `const`;
+     errors before the run, for both backends.
+   - The generator uses the kinds to leave out more checks (comparisons of
+     properties, callbacks that return a comparison: day09 of 2024 takes 1.8
+     times the unchecked time today).
+   - Literal arguments of the wrong type for builtins other than `Math`
+     (`"a".repeat("2")`, `parseInt(42)`): the types are only in the
+     implementations, so they need to be declared with `defineBuiltinMethod`.
+   - Decide on the way: should the interpreter reject reading an unknown
+     property of an array, string, `Map`, `Set` or range (today `undefined`)?
+4. **Phase 4 (put back for now): messages as in the interpreter.** The
+   interpreter names the expression
+   (`'*' needs two numbers, but r.height is undefined`,
+   `Cannot read 'c' of o.b: it is undefined`), node does not
+   (`not number and undefined`, `Cannot read properties of undefined`). Idea:
+   each check site gets a number, and a table of the expressions' texts is read
+   only when an error is reported, so it costs nothing on the normal path; align
+   the most frequent texts of the 84 differences. Not needed for "equal" (the
+   same behavior, not the same diagnostics).
+5. **Phase 5: official.** `--node` without the note "experimental"; README and
+   language reference describe the second backend; CI runs the example programs
+   once through the command line with `--node` (a smoke test) and the
+   differential tests with node 20, 22 and 24 (locally node 26; 20 is the
+   minimum); then a release.
+6. **Warnings, later:** unused variables, parameters and imports; `let` never
    assigned again; fits the language server.
 
 Stays with the interpreter by design: the sandbox (resource limits; generated
