@@ -48,19 +48,29 @@ at all; the generated code checks hardly any of them (`"a" - 1` is `NaN`,
 `if (1)` runs, `[10, 9, 1].sort()` sorts as text). Modules (not found, cyclic,
 missing exports, invalid imported files) are checked the same way in both.
 
-**What "equal" means:** a program without errors prints the same; a program with
-an error fails in both, with the same error class in the same line; the same
-message only for errors that tinyscript itself throws (V8's own, such as a
-property of `undefined`, a call of a non-function or a stack overflow, keep
-their text: wrapping every access and call would cost the speed that is the
-reason for node). Not equal by design: the sandbox, the depth of recursion,
-`Math.random`, time.
+**What "equal" means** (2026-11-24): the same behavior, not the same
+diagnostics. A program without errors prints the same. A program with an error
+fails in the same phase (before the run: syntax, validator, modules, the same
+front end in both; or while it runs), at the same point (the output up to the
+error is the same) and in the same category for `catch` (caught: errors thrown
+with `throw`, `IOError`, the `SyntaxError` of `JSON.parse`; not caught:
+programming errors, failed `assert`s). So a `TypeError` of the interpreter and a
+`RangeError` of node (`"x".repeat(-1)`) are equal: neither is caught. The gap is
+a program that fails in one backend and goes on in the other (`"a" - 1` is `NaN`
+in node). Error class, message and line are goals for good messages, not part of
+equality: the same message only where tinyscript throws the error itself (V8's
+own, such as a property of `undefined`, a call of a non-function or a stack
+overflow, keep their text: wrapping every access and call would cost the speed
+that is the reason for node), the line once there are source maps (item 7). Not
+equal by design: the sandbox, the depth of recursion, `Math.random`, time.
 
 1. **Fixes first (small PR):** emit `"use strict"` (today `this` in a plain call
    is `globalThis` in node but `undefined` in tinyscript, and `Math.PI = 3` is
    ignored silently); members of builtin objects read-only in both
    (`Math.PI = 3` works in the interpreter); `new` of an arrow function an error
-   in the interpreter too (node: `TypeError`). In the generator:
+   in the interpreter too (node: `TypeError`); `includes` finds `NaN` as in
+   Javascript (`[NaN].includes(NaN)` is `false` in the interpreter, `true` in
+   node; `Map` keys already agree). In the generator:
    - the prelude must be strict itself (`print = function …` assigns to an
      undeclared variable);
    - the program in a block of its own, so that `const Map = …` hides the
@@ -70,11 +80,12 @@ reason for node). Not equal by design: the sandbox, the depth of recursion,
      `default`, `do`, `in`, `void`, `with`, `super`, `extends`, `debugger`; in
      strict mode also `static`, `package`, `private`, `public`, `yield`, `eval`,
      `arguments`): rename them in the generator.
-2. **Same errors, tested:** `assertSameError(code)`: both backends fail with the
-   same error class in the same line, and with the same message where tinyscript
-   throws the error. Move the error tests (`assertInterpreterThrows`, about 100
-   places that throw a `TypeError`) to it step by step; the number of cases that
-   still differ measures the gap.
+2. **Same failures, tested:** `assertSameFailure(code)`: both backends fail,
+   with the same output up to the error and the same category for `catch`; class
+   and message are compared only as a goal (reported, not failed), the line once
+   there are source maps (item 7). Move the error tests
+   (`assertInterpreterThrows`, about 100 places that throw a `TypeError`) to it
+   step by step; the number of cases where node goes on measures the gap.
 3. **Same values, tested:** the AoC programs cover only what works.
    - a matrix of every builtin with edge values (`NaN`, `-0`, `""`, negative,
      not an integer, too few arguments), generated from the builtin objects of
@@ -84,12 +95,11 @@ reason for node). Not equal by design: the sandbox, the depth of recursion,
      directions: node knows more than tinyscript (`flatMap`, `Object.entries`,
      `f.constructor`, `o.__proto__`), and such a program runs only there; the
      prelude deletes what tinyscript does not have;
-   - suspects to check first: the order of keys that are integers (`o["10"]`
-     before `o["9"]`; Javascript sorts them), `$1` / `$&` in the replacement of
-     `replace`, gaps in arrays (`a[10] = 1`, `a.length = …`), `NaN` and `-0` as
-     keys of a `Map` and in `indexOf` / `includes`, `trim` and `toUpperCase`
-     with Unicode, a `RangeError` of node where the interpreter throws a
-     `TypeError` (`"x".repeat(-1)`).
+   - checked 2026-11-24 and equal: the order of keys that are integers, `$1` /
+     `$&` in the replacement of `replace`, gaps in arrays (`a[10] = 1`,
+     `a.length = …`; printed as `undefined`), `NaN` and `-0` as keys of a `Map`,
+     `trim` and `toUpperCase` / `toLowerCase` with Unicode; different:
+     `includes` with `NaN` (item 1).
 4. **Static checks, level 1 (sound, no type inference):**
    - builtins (`Math`, `JSON`, `Number`, `parseInt` …): unknown members with a
      suggestion (`Math.sqr`, `Math.PIE`, which gives `undefined` today), the
