@@ -118,7 +118,7 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testNumbersOnlyHaveMethodsAndBooleansNoProperties() {
         // Numbers have toFixed and toString (see NumberMethodsTest), nothing else
-        assertKnownGap(TinyscriptTypeError.class, "print((5).hasOwnProperty(\"x\"));");
+        assertEquals(java.util.List.of("1:7: a number has no method 'hasOwnProperty'"), reportedErrors("print((5).hasOwnProperty(\"x\"));"));
         assertKnownGap(TinyscriptTypeError.class, "print(true.toString());");
         assertKnownGap(TinyscriptTypeError.class, "let n = 5; print(n.x);");
         assertSameFailure(TinyscriptTypeError.class, "let n = 5; n.x = 1;");

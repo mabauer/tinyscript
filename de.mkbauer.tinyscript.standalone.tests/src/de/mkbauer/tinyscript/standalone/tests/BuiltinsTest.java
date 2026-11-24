@@ -131,7 +131,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
         assertSameFailure(TinyscriptTypeError.class, "[1].at(1.5);");
         assertSameFailure(TinyscriptTypeError.class, "[1].at(\"0\");");
         assertSameFailure(TinyscriptTypeError.class, "\"a\".at(0.5);");
-        assertSameFailure(TinyscriptArgumentError.class, "[1].at();");
+        assertSameFailure(TinyscriptArgumentError.class, "const a = [1];\na.at();");
     }
 
     @Test
@@ -142,8 +142,9 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testBuiltinCalledWithTooFewArgumentsIsAnArgumentError() {
-        assertSameFailure(TinyscriptArgumentError.class, "[1].push();");
-        assertSameFailure(TinyscriptArgumentError.class, "Math.sqrt();");
+        // Where the function is only known at run time ([1].push() is an error before the run)
+        assertSameFailure(TinyscriptArgumentError.class, "const a = [1];\na.push();");
+        assertSameFailure(TinyscriptArgumentError.class, "const sqrt = Math.sqrt;\nsqrt();");
     }
 
     // =========================================================================

@@ -67,15 +67,26 @@ public class BuiltinArgumentsTest extends TinyscriptTranspilerTestBase {
         assertEquals(expectedMessage, e.getMessage());
     }
 
+    private String onlyError(String code) {
+        java.util.List<String> errors = reportedErrors(code);
+        assertEquals(1, errors.size(), errors.toString());
+        return errors.get(0).replaceFirst("^\\d+:\\d+: ", "");
+    }
+
     @Test
     public void testTooManyArgumentsAreATypeError() {
-        assertTooManyArguments("startsWith() takes at most 2 arguments, not 3", "\"abc\".startsWith(\"a\", 0, 1);");
-        assertTooManyArguments("toUpperCase() takes no arguments, not 1", "\"abc\".toUpperCase(\"x\");");
-        assertTooManyArguments("sqrt() takes at most 1 argument, not 2", "Math.sqrt(4, 2);");
-        assertTooManyArguments("map() takes at most 1 argument, not 2", "[1].map(x => x, {});");
+        // Where the receiver is only known at run time
+        assertTooManyArguments("startsWith() takes at most 2 arguments, not 3", "const s = \"abc\";\ns.startsWith(\"a\", 0, 1);");
+        assertTooManyArguments("toUpperCase() takes no arguments, not 1", "const s = \"abc\";\ns.toUpperCase(\"x\");");
+        assertTooManyArguments("map() takes at most 1 argument, not 2", "const a = [1];\na.map(x => x, {});");
         assertTooManyArguments("get() takes at most 1 argument, not 2", "new Map().get(1, 2);");
-        assertTooManyArguments("Number() takes at most 1 argument, not 2", "Number(\"1\", 2);");
-        assertTooManyArguments("replace() takes at most 2 arguments, not 3", "\"a\".replace(\"a\", \"b\", \"c\");");
+        // Where it is known, already before the run
+        assertEquals("startsWith() takes at most 2 arguments, not 3", onlyError("\"abc\".startsWith(\"a\", 0, 1);"));
+        assertEquals("toUpperCase() takes no arguments, not 1", onlyError("\"abc\".toUpperCase(\"x\");"));
+        assertEquals("sqrt() takes at most 1 argument, not 2", onlyError("Math.sqrt(4, 2);"));
+        assertEquals("map() takes at most 1 argument, not 2", onlyError("[1].map(x => x, {});"));
+        assertEquals("Number() takes at most 1 argument, not 2", onlyError("Number(\"1\", 2);"));
+        assertEquals("replace() takes at most 2 arguments, not 3", onlyError("\"a\".replace(\"a\", \"b\", \"c\");"));
     }
 
     @Test

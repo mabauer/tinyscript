@@ -1376,6 +1376,16 @@ To share functions and values between files, use modules (see
 
 ## 11. Built-in Objects and Functions
 
+The builtins are checked before the run where it is clear which one is meant: a
+member of `Math`, `JSON`, `Number` … that does not exist (`Math.sqr(2)`,
+`Math.PIE`, with a suggestion: `did you mean 'sqrt'?`), a method of a string,
+number or array literal that does not exist (`"a,b".splitt(",")`), a call of
+something that is no function (`Math.PI()`) and the wrong number of arguments
+(`Math.sqrt()`, `parseInt("1", 10, 2)`, `"a".repeat()`). Adding a member
+(`Math.TAU = 2 * Math.PI;`) or replacing one is allowed, and `typeof Math.TAU`
+asks whether it is there. Where the object is known only at run time
+(`s.splitt(",")` with a variable `s`), the same mistakes are a `TypeError` then.
+
 ### `print(value, ...)`
 
 Writes its arguments to standard output, separated by spaces and followed by a

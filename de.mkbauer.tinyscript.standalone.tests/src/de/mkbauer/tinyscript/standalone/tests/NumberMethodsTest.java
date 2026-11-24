@@ -55,7 +55,7 @@ public class NumberMethodsTest extends TinyscriptTranspilerTestBase {
         assertSameFailure(TinyscriptTypeError.class, "(1 / 0).toString(2);");
         assertSameFailure(TinyscriptTypeError.class, "(1).toString(37);");
         assertSameFailure(TinyscriptTypeError.class, "(1).toString(1);");
-        assertKnownGap(TinyscriptRuntimeException.class, "(1).toFixed(1, 2);");
+        assertEquals(java.util.List.of("1:1: toFixed() takes at most 1 argument, not 2"), reportedErrors("(1).toFixed(1, 2);"));
         assertSameFailure(TinyscriptTypeError.class, "Number.prototype.toFixed.call({}, 2);");
     }
 
