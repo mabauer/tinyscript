@@ -93,11 +93,11 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testBuiltinsNeedArgumentsOfTheRightType() {
-        assertKnownGap("print(Math.sqrt(\"4\"));");
-        assertKnownGap("print(Math.max(\"3\", 1));");
-        assertKnownGap("let u; print(Math.abs(u));");
-        assertKnownGap("print(\"abc\".charAt(\"1\"));");
-        assertKnownGap("print(\"abc\".substring(1.5));");
+        assertSameFailure("print(Math.sqrt(\"4\"));");
+        assertSameFailure("print(Math.max(\"3\", 1));");
+        assertSameFailure("let u; print(Math.abs(u));");
+        assertSameFailure("print(\"abc\".charAt(\"1\"));");
+        assertSameFailure("print(\"abc\".substring(1.5));");
     }
 
     // =========================================================================

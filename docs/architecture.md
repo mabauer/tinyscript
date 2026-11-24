@@ -627,7 +627,14 @@ behaves like the interpreter and is self-contained: `__ts_add` (`+`), `__ts_eq`
 (destructuring), `__ts_iterate` and the class `__ts_Range` (the `for` loop and
 `range`), `__ts_display` / `__ts_str` (the text form), `__ts_throwable` /
 `__ts_catchable` (`throw` / `catch`), and wrappers for `Map` / `Set`, `System`
-and `print`. Some examples:
+and `print`. The builtins are replaced by functions that check their arguments
+as the interpreter does (types, integers, the minimum number; not the maximum,
+since callbacks get more arguments than they use): `Array.prototype` /
+`String.prototype` / `Number.prototype` methods, `Math`, `Number`, `parseInt`,
+`parseFloat`, `isNaN`, `Object.values` / `entries` / `assign` / `fromEntries`
+and `Error`. Each wrapper is written out by the template (not made in a loop),
+so that V8 sees one original per call site; `Array.prototype.at` accesses the
+element itself, since V8 does not inline a call of the original. Some examples:
 
 ```javascript
 // Tinyscript assert → JS function; its error is not caught by catch (__ts_catchable)

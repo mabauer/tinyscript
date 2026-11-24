@@ -47,12 +47,12 @@ public class NumberMethodsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testWrongArguments() {
-        assertKnownGap(TinyscriptTypeError.class, "(1).toFixed(1.5);");
-        assertKnownGap(TinyscriptTypeError.class, "(1).toFixed(\"2\");");
+        assertSameFailure(TinyscriptTypeError.class, "(1).toFixed(1.5);");
+        assertSameFailure(TinyscriptTypeError.class, "(1).toFixed(\"2\");");
         assertSameFailure(TinyscriptTypeError.class, "(1).toFixed(101);");
         assertSameFailure(TinyscriptTypeError.class, "(1).toFixed(-1);");
-        assertKnownGap(TinyscriptTypeError.class, "(1.5).toString(2);");
-        assertKnownGap(TinyscriptTypeError.class, "(1 / 0).toString(2);");
+        assertSameFailure(TinyscriptTypeError.class, "(1.5).toString(2);");
+        assertSameFailure(TinyscriptTypeError.class, "(1 / 0).toString(2);");
         assertSameFailure(TinyscriptTypeError.class, "(1).toString(37);");
         assertSameFailure(TinyscriptTypeError.class, "(1).toString(1);");
         assertKnownGap(TinyscriptRuntimeException.class, "(1).toFixed(1, 2);");

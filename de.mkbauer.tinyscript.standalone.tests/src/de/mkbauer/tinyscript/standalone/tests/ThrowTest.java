@@ -61,6 +61,6 @@ public class ThrowTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testErrorMessageMustBeAString() {
-        assertKnownGap(TinyscriptTypeError.class, "new Error(42);");
+        assertSameFailure(TinyscriptTypeError.class, "new Error(42);");
     }
 }

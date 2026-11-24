@@ -115,8 +115,8 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testIndexOfNeedsAnIntegerStartIndex() {
-        assertKnownGap(TinyscriptTypeError.class, "[1].indexOf(1, 0.5);");
-        assertKnownGap(TinyscriptTypeError.class, "\"a\".indexOf(\"a\", \"1\");");
+        assertSameFailure(TinyscriptTypeError.class, "[1].indexOf(1, 0.5);");
+        assertSameFailure(TinyscriptTypeError.class, "\"a\".indexOf(\"a\", \"1\");");
     }
 
     @Test
@@ -128,22 +128,22 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testAtNeedsAnIntegerIndex() {
-        assertKnownGap(TinyscriptTypeError.class, "[1].at(1.5);");
-        assertKnownGap(TinyscriptTypeError.class, "[1].at(\"0\");");
-        assertKnownGap(TinyscriptTypeError.class, "\"a\".at(0.5);");
-        assertKnownGap(TinyscriptArgumentError.class, "[1].at();");
+        assertSameFailure(TinyscriptTypeError.class, "[1].at(1.5);");
+        assertSameFailure(TinyscriptTypeError.class, "[1].at(\"0\");");
+        assertSameFailure(TinyscriptTypeError.class, "\"a\".at(0.5);");
+        assertSameFailure(TinyscriptArgumentError.class, "[1].at();");
     }
 
     @Test
     public void testArrayMethodOnNonArrayIsATypeError() {
-        assertKnownGap(TinyscriptTypeError.class,
+        assertSameFailure(TinyscriptTypeError.class,
                 "let o = {};\no.push = [].push;\no.push(1);");
     }
 
     @Test
     public void testBuiltinCalledWithTooFewArgumentsIsAnArgumentError() {
-        assertKnownGap(TinyscriptArgumentError.class, "[1].push();");
-        assertKnownGap(TinyscriptArgumentError.class, "Math.sqrt();");
+        assertSameFailure(TinyscriptArgumentError.class, "[1].push();");
+        assertSameFailure(TinyscriptArgumentError.class, "Math.sqrt();");
     }
 
     // =========================================================================

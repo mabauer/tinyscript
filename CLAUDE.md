@@ -274,7 +274,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   builtins
 - The generated Javascript runs in strict mode, the script in a block of its own
   (its declarations hide the prelude's `Map`, `String` …); names that only
-  Javascript reserves (`default`, `enum`, `yield` …) get the prefix `__ts_`
+  Javascript reserves (`default`, `enum`, `yield` …) get the prefix `__ts_`; its
+  prelude replaces the builtins by ones that check their arguments as the
+  interpreter does
 
 ### TODO markers in the code
 
