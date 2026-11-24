@@ -222,6 +222,16 @@ of `Math` (`Math.PI`, `Math.E`) are read-only, its methods are not.
 
 ## 4. Operators
 
+Where the syntax alone shows that operands can never fit, the mistake is an
+error before the run: a literal or the result of an operator of the wrong kind,
+as in `"a" - 1`, `[1] + 1`, `1 < "2"`, `-"a"`, `x -= "a"`, `Math.sqrt("4")`, and
+conditions that are a number or a string (`if (1)`, `while (n - 1)`, `!0`, see
+[Conditions](#conditions)) or an assignment (`if (x = 2)`; to assign there, put
+it in parentheses: `if ((x = next()) != null)`). With variables, properties and
+calls, the same mistakes are a `TypeError` when they run. `x == NaN` (always
+`false`, use `isNaN(x)`) and `typeof x == "numbr"` (`typeof` never gives that)
+are warnings.
+
 ### Arithmetic
 
 | Operator | Operation                                                                               |

@@ -345,10 +345,11 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testAddingArrayAndOtherNonArrayIsATypeError() {
-        assertSameFailure(TinyscriptTypeError.class, "print([1] + 2);");
-        assertSameFailure(TinyscriptTypeError.class, "print(0 + [1]);");
-        assertSameFailure(TinyscriptTypeError.class, "print([1] + {});");
-        assertSameFailure(TinyscriptTypeError.class, "print(null + [1]);");
+        // With literals on both sides, an error before the run (LiteralChecksTest)
+        assertSameFailure(TinyscriptTypeError.class, "const a = [1];\nprint(a + 2);");
+        assertSameFailure(TinyscriptTypeError.class, "const a = [1];\nprint(0 + a);");
+        assertSameFailure(TinyscriptTypeError.class, "const a = [1];\nprint(a + {});");
+        assertSameFailure(TinyscriptTypeError.class, "const a = [1];\nprint(null + a);");
     }
 
     // =========================================================================
@@ -531,7 +532,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testComparingNumberWithStringIsATypeError() {
-        assertSameFailure(TinyscriptTypeError.class, "print(1 < \"a\");");
+        assertSameFailure(TinyscriptTypeError.class, "const a = \"a\";\nprint(1 < a);");
     }
 
     // =========================================================================

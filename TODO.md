@@ -82,11 +82,14 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
    - builtins: done 2026-11-24 for unknown members with a suggestion
      (`Math.sqr`, `Math.PIE`), methods of literals (`"a".splitt`) and the number
      of arguments in both directions, from the builtin objects of the runtime
-     (`BuiltinSignatures`); open: literal arguments of the wrong type
-     (`Math.sqrt("4")`);
-   - operators and conditions on literals or obvious types (`"a" - 1`,
-     `[1] + 1`, `1 < "2"`, `if (1)`, `if (x = 2)`, `x == NaN`,
-     `typeof x == "numbr"`), generalizing the check for `options || {}`;
+     (`BuiltinSignatures`), and numbers for `Math` (`Math.sqrt("4")`); open:
+     literal arguments of the wrong type for the other builtins
+     (`"a".repeat("2")`, `parseInt(42)`: the types are only in the
+     implementations);
+   - operators and conditions: done 2026-11-24 by the syntax alone (`Kinds`:
+     literals and the results of operators): errors for `"a" - 1`, `[1] + 1`,
+     `1 < "2"`, `-"a"`, `if (1)`, `while (n - 1)`, `!0`, `if (x = 2)`; warnings
+     for `x == NaN` and `typeof x == "numbr"`;
    - calls and structure: a known class without `new`, `new` of an arrow
      function or a non-function, `throw` of anything but `new Error(…)`,
      duplicate keys in object literals, code after `return` / `break` /

@@ -66,7 +66,7 @@ public class SyntaxTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testConditionalOperatorNeedsACondition() {
-        assertSameFailure(TinyscriptTypeError.class, "let x = 1 ? 2 : 3;");
+        assertSameFailure(TinyscriptTypeError.class, "const one = 1;\nlet x = one ? 2 : 3;");
     }
 
     @Test

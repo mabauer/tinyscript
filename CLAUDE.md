@@ -225,9 +225,11 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   (JavaScript's optional arguments are supported, more is a `TypeError`; before
   the run where the builtin is known: `Math.sqrt(1, 2)`, `parseInt()`,
   `"a".repeat()`, and unknown members such as `Math.sqr` or `"a".splitt()`, from
-  the builtins of the runtime, `BuiltinSignatures`). Conditions accept booleans,
-  `null` / `undefined` (false) and objects (true), not numbers or strings; `&&`
-  / `||` give booleans, and a literal operand that can never be a condition
+  the builtins of the runtime, `BuiltinSignatures`; operands and conditions that
+  can never fit by the syntax alone, such as `"a" - 1`, `1 < "2"`, `if (1)`,
+  `if (x = 2)`, see `validation/Kinds`). Conditions accept booleans, `null` /
+  `undefined` (false) and objects (true), not numbers or strings; `&&` / `||`
+  give booleans, and a literal operand that can never be a condition
   (`options || {}`) is a compile-time error; `<`, `<=`, `>`, `>=` compare number
   with number or string with string, anything else is a `TypeError`
 - `+` concatenates two arrays; with a string on either side it concatenates

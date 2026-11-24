@@ -39,6 +39,9 @@ import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
+import de.mkbauer.tinyscript.ts.ConditionalExpression;
+import de.mkbauer.tinyscript.ts.AssertStatement;
+import de.mkbauer.tinyscript.ts.IfStatement;
 import de.mkbauer.tinyscript.ts.UnaryOperator;
 import de.mkbauer.tinyscript.ts.VariableStatement;
 import de.mkbauer.tinyscript.ts.WhileStatement;
@@ -127,6 +130,14 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 			error("'" + name + "' of " + what + " is not a function", null);
 		else
 			checkBuiltinArguments(name, members.signature(name), suffix.getCall().getArguments());
+		// The functions of Math take numbers (MathObject.number)
+		if ("Math".equals(builtin)) {
+			for (Expression argument : suffix.getCall().getArguments()) {
+				String kind = Kinds.kind(argument);
+				if (kind != null && kind != Kinds.NUMBER)
+					error("Math functions need numbers, but " + operand(argument, kind), argument, null);
+			}
+		}
 	}
 
 	// "number", "string" or "array" for a literal whose methods are known, otherwise null
@@ -701,6 +712,171 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	}
 
 	/**
+	 * Operators whose operands can never fit, by the syntax alone (Kinds, no type inference): a
+	 * literal or the result of an operator of the wrong kind. "a" - 1, [1] + 1, 1 < "2", x -= "a"
+	 * fail whenever they run, in both backends, so they are errors before the run.
+	 */
+	@Check
+	public void checkOperandKinds(BinaryExpression expression) {
+		BinaryOperator op = expression.getOp();
+		BinaryOperator base = Operators.baseOf(op);
+		if (base != null) {
+			// x -= "a": the right operand of a compound assignment (x itself is a variable)
+			if (needsNumbers(base))
+				checkNumber(base, expression.getRight());
+			return;
+		}
+		String left = Kinds.kind(expression.getLeft());
+		String right = Kinds.kind(expression.getRight());
+		if (needsNumbers(op)) {
+			if (!checkNumber(op, expression.getLeft()))
+				checkNumber(op, expression.getRight());
+		}
+		else if (op == BinaryOperator.ADD && left != null && right != null && !left.equals(Kinds.STRING) && !right.equals(Kinds.STRING)
+				&& !(left.equals(Kinds.NUMBER) && right.equals(Kinds.NUMBER)) && !(left.equals(Kinds.ARRAY) && right.equals(Kinds.ARRAY))) {
+			if (left.equals(Kinds.ARRAY) || right.equals(Kinds.ARRAY))
+				error("'+' can only add an array to another array or to a string, but "
+						+ (left.equals(Kinds.ARRAY) ? operand(expression.getRight(), right) : operand(expression.getLeft(), left)), null);
+			else
+				error("'+' adds two numbers, two arrays, or a string and a value, but " + operand(expression.getLeft(), left)
+						+ " and " + operand(expression.getRight(), right), null);
+		}
+		else if (isComparison(op)) {
+			boolean leftWrong = left != null && !left.equals(Kinds.NUMBER) && !left.equals(Kinds.STRING);
+			boolean rightWrong = right != null && !right.equals(Kinds.NUMBER) && !right.equals(Kinds.STRING);
+			String compares = "'" + op.getLiteral() + "' compares two numbers or two strings, but ";
+			if (leftWrong)
+				error(compares + operand(expression.getLeft(), left), null);
+			else if (rightWrong)
+				error(compares + operand(expression.getRight(), right), null);
+			else if (left != null && right != null && !left.equals(right))
+				error(compares + operand(expression.getLeft(), left) + " and " + operand(expression.getRight(), right), null);
+		}
+	}
+
+	@Check
+	public void checkOperandKinds(Unary unary) {
+		if (unary.getOp() == UnaryOperator.NEGATE) {
+			String kind = Kinds.kind(unary.getExpr());
+			if (kind != null && kind != Kinds.NUMBER)
+				error("'-' needs a number, but " + operand(unary.getExpr(), kind), null);
+		}
+		if (unary.getOp() == UnaryOperator.NOT)
+			checkCondition(unary.getExpr());
+	}
+
+	// - * / % and the bitwise operators
+	private static boolean needsNumbers(BinaryOperator op) {
+		return switch (op) {
+			case SUBTRACT, MULTIPLY, DIVIDE, REMAINDER -> true;
+			default -> Operators.isBitwise(op);
+		};
+	}
+
+	private static boolean isComparison(BinaryOperator op) {
+		return op == BinaryOperator.LESS || op == BinaryOperator.LESS_OR_EQUAL || op == BinaryOperator.GREATER
+				|| op == BinaryOperator.GREATER_OR_EQUAL;
+	}
+
+	// An operand of - * / % or a bitwise operator that is not a number; true if reported
+	private boolean checkNumber(BinaryOperator op, Expression operand) {
+		String kind = Kinds.kind(operand);
+		if (kind == null || kind == Kinds.NUMBER)
+			return false;
+		error("'" + op.getLiteral() + "' needs " + (Operators.isBitwise(op) ? "integers" : "two numbers") + ", but "
+				+ operand(operand, kind), operand, null);
+		return true;
+	}
+
+	// "\"a\" is a string", for messages
+	private static String operand(Expression expression, String kind) {
+		return TinyscriptModelUtil.sourceText(expression) + " is " + kind;
+	}
+
+	/**
+	 * A condition (if, while, ?:, !, && / ||, assert) is a boolean, null / undefined or an object:
+	 * a number or a string is a TypeError whenever it runs (if (1), while (n - 1)), and = instead
+	 * of == (if (x = 2)) is a mistake; to assign in a condition, write extra parentheses.
+	 */
+	private void checkCondition(Expression condition) {
+		if (condition instanceof BinaryExpression assignment && assignment.getOp() == BinaryOperator.ASSIGN) {
+			error("'=' assigns a value: to compare, write == (or, to assign here, put the assignment in parentheses)", condition, null);
+			return;
+		}
+		String kind = Kinds.kind(condition);
+		if (kind == Kinds.NUMBER || kind == Kinds.STRING) {
+			Expression inner = condition;
+			while (inner instanceof GroupingExpression grouping)
+				inner = grouping.getExpr();
+			String text = TinyscriptModelUtil.sourceText(inner);
+			error("The condition " + text + " is " + kind + ", not a boolean: compare it, e.g. "
+					+ (kind == Kinds.NUMBER ? text + " > 0" : text + " != \"\""), condition, null);
+		}
+	}
+
+	@Check
+	public void checkCondition(IfStatement statement) {
+		checkCondition(statement.getCond());
+	}
+
+	@Check
+	public void checkCondition(WhileStatement statement) {
+		checkCondition(statement.getCond());
+	}
+
+	@Check
+	public void checkCondition(ConditionalExpression expression) {
+		checkCondition(expression.getCond());
+	}
+
+	@Check
+	public void checkCondition(AssertStatement statement) {
+		checkCondition(statement.getCond());
+	}
+
+	/**
+	 * x == NaN is always false (NaN is not equal to itself, as in Javascript), x != NaN always
+	 * true; typeof x == "numbr" is always false. Warnings: they run, but are almost always a
+	 * mistake.
+	 */
+	@Check
+	public void checkComparisonsThatAreAlwaysTheSame(BinaryExpression expression) {
+		if (expression.getOp() != BinaryOperator.EQUALS && expression.getOp() != BinaryOperator.NOT_EQUALS)
+			return;
+		boolean equals = expression.getOp() == BinaryOperator.EQUALS;
+		Expression other = isNaN(expression.getLeft()) ? expression.getRight() : isNaN(expression.getRight()) ? expression.getLeft() : null;
+		if (other != null) {
+			String text = TinyscriptModelUtil.sourceText(other);
+			warning(TinyscriptModelUtil.sourceText(expression) + " is always " + !equals + " (NaN is not equal to itself): use "
+					+ (equals ? "" : "!") + "isNaN(" + text + ")", null);
+			return;
+		}
+		String typeName = typeofComparedWith(expression.getLeft(), expression.getRight());
+		if (typeName == null)
+			typeName = typeofComparedWith(expression.getRight(), expression.getLeft());
+		if (typeName != null && !TYPEOF_RESULTS.contains(typeName)) {
+			String suggestion = TinyscriptLinkingDiagnosticMessageProvider.suggestion(typeName, TYPEOF_RESULTS);
+			warning("typeof never gives \"" + typeName + "\", so this is always " + !equals
+					+ (suggestion != null ? " (did you mean \"" + suggestion + "\"?)" : ""), null);
+		}
+	}
+
+	private static final List<String> TYPEOF_RESULTS = List.of("undefined", "object", "boolean", "number", "string", "function");
+
+	private static boolean isNaN(Expression expression) {
+		return expression instanceof Reference reference && !reference.isThis() && reference.getId() != null
+				&& !reference.getId().eIsProxy() && "NaN".equals(reference.getId().getName()) && isBuiltin(reference.getId());
+	}
+
+	// The string that typeof x is compared with, or null
+	private static String typeofComparedWith(Expression typeofSide, Expression other) {
+		while (typeofSide instanceof GroupingExpression grouping)
+			typeofSide = grouping.getExpr();
+		return typeofSide instanceof Unary unary && unary.getOp() == UnaryOperator.TYPEOF && other instanceof StringLiteral literal
+				? literal.getValue() : null;
+	}
+
+	/**
 	 * Like Javascript, a ?? b cannot be mixed with && or || without parentheses
 	 * (a ?? b || c is ambiguous).
 	 */
@@ -727,6 +903,10 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 			error(message, TsPackage.Literals.BINARY_EXPRESSION__LEFT);
 		else if (isNeverACondition(expression.getRight()))
 			error(message, TsPackage.Literals.BINARY_EXPRESSION__RIGHT);
+		else {
+			checkCondition(expression.getLeft());
+			checkCondition(expression.getRight());
+		}
 	}
 
 	// An operand that is always true (an object) or a TypeError in a condition (a number, a string)
