@@ -146,6 +146,22 @@ public class InterpretedFunction extends Function {
 	}
 	
 	@Override
+	public boolean isConstructor() {
+		return !isArrowFunction() && !isMethod();
+	}
+
+	// A method of a class or the shorthand of an object literal ({ area() { … } })
+	private boolean isMethod() {
+		return ast != null && (ast.eContainer() instanceof ClassMethod && !(this instanceof ClassObject)
+				|| TinyscriptModelUtil.isMethodShorthand(ast));
+	}
+
+	@Override
+	public String kind() {
+		return isArrowFunction() ? "an arrow function" : isMethod() ? "a method" : "a function";
+	}
+
+	@Override
 	public int getLength() {
 		if (ast != null) {
 			// As in Javascript: the parameters before the first one with a default

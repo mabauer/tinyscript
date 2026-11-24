@@ -78,4 +78,9 @@ public class BuiltinFunction extends Function {
 
 
 
+	@Override
+	public String kind() {
+		return "the builtin function " + getName();
+	}
+
 }

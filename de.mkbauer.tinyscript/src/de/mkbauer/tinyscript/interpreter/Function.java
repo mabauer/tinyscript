@@ -50,6 +50,27 @@ public abstract class Function extends TSObject {
 		return super.get(key);
 	}
 
+	// Like Javascript's strict mode: f.length and f.name are read-only
+	@Override
+	public void put(String key, TSValue value) {
+		if ((key.equals("length") || key.equals("name")) && !hasOwnProperty(key))
+			throw new TinyscriptTypeError("Cannot assign to the read-only property '" + key + "' of a function");
+		super.put(key, value);
+	}
+
+	/**
+	 * Whether new can call this function: as in Javascript, classes, functions written with
+	 * function and the builtin constructors, but not arrow functions, methods and other builtins.
+	 */
+	public boolean isConstructor() {
+		return false;
+	}
+
+	// "an arrow function", "a method" ..., for the error of new
+	public String kind() {
+		return "a function";
+	}
+
 	@Override
 	protected String display(Display display) {
 		String result = "";

@@ -260,6 +260,14 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   resource limits are not caught
 - `this` as in Javascript's strict mode: set by a method call, `undefined` in a
   plain call and outside functions (`this` there is a compile-time error)
+- Builtins (`Math`, `print`, `Infinity`) cannot be assigned (compile-time
+  error); read-only properties (`Math.PI`, `f.length`) are a `TypeError` when
+  assigned, as in strict mode; `new` only for classes, functions written with
+  `function` and builtin constructors, not for arrow functions, methods or other
+  builtins
+- The generated Javascript runs in strict mode, the script in a block of its own
+  (its declarations hide the prelude's `Map`, `String` …); names that only
+  Javascript reserves (`default`, `enum`, `yield` …) get the prefix `__ts_`
 
 ### TODO markers in the code
 

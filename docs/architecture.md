@@ -635,8 +635,9 @@ function assert(condition) { if (!condition) throw new __ts_AssertionError("asse
 // System.currentTimeMillis() → Date.now()
 var System = {}; System.currentTimeMillis = Date.now;
 
-// print() polyfill for environments without it (Node.js has console.log, not print)
-if (typeof print !== "function") { print = function(s) { console.log(s); }; }
+// print() for environments without it (Node.js has console.log, not print); a method,
+// so that new print() is a TypeError as in the interpreter (also range, std:fs, std:io)
+if (typeof print !== "function") { globalThis.print = { print(...args) { … } }.print; }
 
 // __ts_add: handles Tinyscript's array+ semantics
 // The + operator in Tinyscript allows array+array and array+element concatenation
@@ -659,7 +660,20 @@ to preserve Tinyscript's array concatenation semantics.
 `getName(Identifier id)` calls `TinyscriptModelUtil.isShadowing(id)` to detect
 name collisions between scopes. Shadowed identifiers are emitted with a
 fully-qualified name (scope path joined with `_`) to prevent JavaScript variable
-collisions.
+collisions. Names that tinyscript allows but Javascript reserves in strict mode
+(`default`, `enum`, `in`, `yield`, `arguments` …) get the prefix `__ts_`; a
+renamed function or class keeps its `name` for `print`.
+
+### Strict mode and the program block
+
+A program (`generate` with the builtins) starts with `"use strict"`, so node
+behaves as the interpreter: `this` in a plain call is `undefined`, assigning to
+a read-only property (`Math.PI`) is a `TypeError`. The prelude is strict itself
+(it assigns `print` and `range` to `globalThis`). The script (its imports and
+statements) is a block of its own: its declarations hide the prelude's `var`s
+(`const Map = …`, `String`, `JSON`, `System`) instead of being a `SyntaxError`.
+The method shorthand of object literals stays a method (`{ area() { … } }`), so
+that `new` of it fails in both backends.
 
 ---
 

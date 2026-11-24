@@ -109,6 +109,19 @@ public non-sealed class TSObject implements TSValue {
 	}
 	
 	/**
+	 * Defines a built-in constant (Math.PI): as in Javascript, it cannot be assigned, deleted or
+	 * redefined.
+	 */
+	public void defineConstant(String key, Object value) {
+		TSPropertyDescriptor desc = new TSPropertyDescriptor();
+		desc.setValue(TSValue.fromJava(value));
+		desc.setConfigurable(false);
+		desc.setEnumerable(false);
+		desc.setWritable(false);
+		setOwnPropertyDescriptor(key, desc);
+	}
+
+	/**
 	 * delete o.key: removes an own property; like Javascript, a missing one is fine. Built-in
 	 * properties (Math.PI, f.prototype, …), which are not enumerable, cannot be deleted.
 	 * Arrays, Maps, Sets and strings refuse (see their overrides).
@@ -185,11 +198,10 @@ public non-sealed class TSObject implements TSValue {
 	public void put(String key, TSValue value) {
 		TSPropertyDescriptor desc = properties.get(key);
 		if (desc != null) {
-			if (desc.isWritable()) 
-				desc.setValue(value);
-			else {
-				// log.debug("Error: assigning to a non-writable key: " + key);
-			}
+			// Like Javascript's strict mode: assigning to a read-only property is an error
+			if (!desc.isWritable())
+				throw new TinyscriptTypeError("Cannot assign to the read-only property '" + key + "'");
+			desc.setValue(value);
 		}
 		else {
 			desc = new TSPropertyDescriptor(value);

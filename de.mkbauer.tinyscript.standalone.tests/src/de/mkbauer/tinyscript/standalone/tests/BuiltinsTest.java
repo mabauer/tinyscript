@@ -272,12 +272,12 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testObjectDefinePropertyReadOnly() {
-        assertEquals("1\nfalse\n", interpreterOutput(
-                "let o = {};\n"
+        String code = "let o = {};\n"
                 + "Object.defineProperty(o, \"a\", { value: 1, writable: false });\n"
-                + "o.a = 2;\n"
-                + "print(o.a);\n"
-                + "print(Object.getOwnPropertyDescriptor(o, \"a\").writable);"));
+                + "print(o.a, Object.getOwnPropertyDescriptor(o, \"a\").writable);\n";
+        assertEquals("1 false\n", interpreterOutput(code));
+        // As in Javascript's strict mode, assigning to it is an error
+        assertInterpreterThrows(TinyscriptTypeError.class, code + "o.a = 2;");
     }
 
     @Test
