@@ -103,16 +103,25 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
    `x += true`, `s++`, `1 < "a"`), conditions about 13 (`if (1)`, `!0`,
    callbacks of `filter` / `find` that return numbers), too many arguments of a
    builtin 2 (`(1).toFixed(1, 2)`; a check at the call, not in the builtin,
-   since callbacks get more arguments: item 2). For operators and conditions:
-   `__ts_` helpers for `-`, `*`, `<`, conditions, `&&` / `||` (as `__ts_add` and
-   `__ts_eq` already do).
-   - **Measure the speed first:** two or three AoC days with the checks written
-     by hand, before building them. A helper shared by all places sees all
-     types; probably the check belongs inline, with the helper only for the
-     error
-     (`typeof a === "number" && typeof b === "number" ? a - b : __ts_sub(a, b)`).
-     If the checks cost most of the factor to the interpreter, the backend stays
-     a fast mode with documented differences instead of one of equal rank.
+   since callbacks get more arguments: item 2).
+   - **Operators and conditions, measured 2026-11-24** with the checks generated
+     by an experimental switch (34 of the 48 gaps closed, all tests and AoC
+     programs unchanged), AoC days with full input, node's start (100 ms)
+     subtracted: helpers for every `-` `*` `/` `%` `<` `<=` `>` `>=`, unary `-`,
+     `++` / `--`, the compound assignments, `+` of numbers and every condition
+     (`if`, `while`, `?:`, `!`, `&&` / `||`, `assert`, the callbacks of `filter`
+     / `find` / `some` / `every`) cost 1.05 to 2.25 times the time in node;
+     **smart** (no check where the operator already guarantees the kind: a
+     comparison, `==`, `!`, `&&` / `||` is a boolean, `-` `*` `/` `%`, unary `-`
+     and number literals are numbers; no type inference, variables, properties
+     and calls stay checked) 0.99 to 1.9 times (day09 of 2024, with comparisons
+     of properties and a `find` callback, 88 → 167 ms; day20 211 → 290 ms; most
+     days 1.0 to 1.3). The interpreter stays 4 to 57 times slower than node with
+     checks, so they cost a small part of the factor: equal rank is possible.
+     Writing the check inline
+     (`typeof a === "number" && typeof b === "number" ? a - b : __ts_sub(a, b)`)
+     gains nothing measurable over the helpers (V8 inlines them). Next: smart,
+     with the helpers; item 4 removes more checks.
    - Not possible at a reasonable price in node: no properties on arrays, an
      error for reading an unknown property (it would need a `Proxy` or a helper
      for every access). These stay with the static checks of item 4.
