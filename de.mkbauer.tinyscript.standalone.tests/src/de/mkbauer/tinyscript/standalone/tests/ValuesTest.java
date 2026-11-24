@@ -71,8 +71,8 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNaNIsNoCondition() {
-        assertKnownGap(TinyscriptTypeError.class, "let nan = 0 / 0; print(!nan);");
-        assertKnownGap(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan || false);");
+        assertSameFailure(TinyscriptTypeError.class, "let nan = 0 / 0; print(!nan);");
+        assertSameFailure(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan || false);");
     }
 
     @Test

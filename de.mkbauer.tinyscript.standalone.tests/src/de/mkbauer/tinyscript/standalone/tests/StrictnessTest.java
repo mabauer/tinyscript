@@ -21,11 +21,11 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testArithmeticNeedsNumbers() {
-        assertKnownGap("print(1 - \"a\");");
-        assertKnownGap("print(1 * true);");
-        assertKnownGap("print(\"a\" * 2);");
-        assertKnownGap("let u; print(u / 2);");
-        assertKnownGap("print(null % 2);");
+        assertSameFailure("print(1 - \"a\");");
+        assertSameFailure("print(1 * true);");
+        assertSameFailure("print(\"a\" * 2);");
+        assertSameFailure("let u; print(u / 2);");
+        assertSameFailure("print(null % 2);");
     }
 
     @Test
@@ -37,10 +37,10 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testPlusNeedsMatchingTypes() {
-        assertKnownGap("print(1 + true);");
-        assertKnownGap("print(1 + null);");
-        assertKnownGap("let u; print(u + 1);");
-        assertKnownGap("print({} + 1);");
+        assertSameFailure("print(1 + true);");
+        assertSameFailure("print(1 + null);");
+        assertSameFailure("let u; print(u + 1);");
+        assertSameFailure("print({} + 1);");
         String code = "let u; print(1 + 2); print(\"a\" + 1); print(1 + \"a\"); print(\"x\" + true); print(\"x\" + u); print(\"x\" + null);";
         assertEquals("3\na1\n1a\nxtrue\nxundefined\nxnull\n", interpreterOutput(code));
         assertSameOutput(code);
@@ -117,14 +117,14 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNumbersAndStringsAreNoConditions() {
-        assertKnownGap("if (1) { print(1); }");
-        assertKnownGap("if (\"\") { print(1); }");
-        assertKnownGap("let a = [1]; while (a.length) { a.pop(); }");
-        assertKnownGap("print(!0);");
-        assertKnownGap("const one = 1; print(true && one);");
-        assertKnownGap("const a = \"a\"; print(a || true);");
-        assertKnownGap("assert(1);");
-        assertKnownGap("print([1, 2].filter(x => x - 1).length);");
+        assertSameFailure("if (1) { print(1); }");
+        assertSameFailure("if (\"\") { print(1); }");
+        assertSameFailure("let a = [1]; while (a.length) { a.pop(); }");
+        assertSameFailure("print(!0);");
+        assertSameFailure("const one = 1; print(true && one);");
+        assertSameFailure("const a = \"a\"; print(a || true);");
+        assertSameFailure("assert(1);");
+        assertSameFailure("print([1, 2].filter(x => x - 1).length);");
         TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("let count = 0;\nif (count) { print(1); }"));
         assertTrue(e.getMessage().contains("The condition count is a number, not a boolean"), e.getMessage());
         assertEquals(2, e.getAffectedLine());

@@ -66,7 +66,7 @@ public class SyntaxTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testConditionalOperatorNeedsACondition() {
-        assertKnownGap(TinyscriptTypeError.class, "let x = 1 ? 2 : 3;");
+        assertSameFailure(TinyscriptTypeError.class, "let x = 1 ? 2 : 3;");
     }
 
     @Test
@@ -105,9 +105,9 @@ public class SyntaxTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testCompoundAssignmentsAreStrict() {
-        assertKnownGap(TinyscriptTypeError.class, "let x = 1; x += true;");
-        assertKnownGap(TinyscriptTypeError.class, "let x = \"a\"; x -= 1;");
-        assertKnownGap(TinyscriptTypeError.class, "let x; x += 1;");
+        assertSameFailure(TinyscriptTypeError.class, "let x = 1; x += true;");
+        assertSameFailure(TinyscriptTypeError.class, "let x = \"a\"; x -= 1;");
+        assertSameFailure(TinyscriptTypeError.class, "let x; x += 1;");
         assertRejected("let x += 1;");
         assertRejected("1 += 2;");
     }
@@ -128,8 +128,8 @@ public class SyntaxTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testIncrementNeedsANumber() {
-        assertKnownGap(TinyscriptTypeError.class, "let s = \"a\"; s++;");
-        assertKnownGap(TinyscriptTypeError.class, "let u; u++;");
+        assertSameFailure(TinyscriptTypeError.class, "let s = \"a\"; s++;");
+        assertSameFailure(TinyscriptTypeError.class, "let u; u++;");
     }
 
     @Test

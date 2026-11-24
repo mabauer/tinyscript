@@ -60,7 +60,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		var result = generateScriptFromString("3*4;")
 		assertEquals("3 * 4;", result.trim())
 		result = generateScriptFromString("(3+4)*5;")
-		assertEquals("(__ts_add(3, 4)) * 5;", result.trim())
+		assertEquals("__ts_mul((__ts_add(3, 4)), 5);", result.trim())
 		result = generateScriptFromString("3 == 4;")
 		assertEquals("__ts_eq(3, 4);", result.trim())
 		result = generateScriptFromString("\"Hello\" + \" World\";")
@@ -76,7 +76,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			let y = -x;''')
 		assertEquals('''
 			let x = 2.25;
-			let y = -x;'''.toString, 
+			let y = __ts_neg(x);'''.toString, 
 			result.trim())
 		result = generateScriptFromString("!false;")
 		assertEquals("!false;", result.trim())
@@ -85,7 +85,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			let true_ = !x;''')
 		assertEquals('''
 			let x = (__ts_eq(3, 4));
-			let true_ = !x;'''.toString, 
+			let true_ = !__ts_cond(x);'''.toString, 
 			result.trim())
 	}
 	
@@ -118,7 +118,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		''')
 		assertEquals('''
 			function f(p1, p2) {
-				return p1 * p2;
+				return __ts_mul(p1, p2);
 			}
 			
 		'''.toString, result)	
@@ -135,7 +135,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		assertEquals('''
 			let f;
 			f = function (p1, p2) {
-				return p1 * p2;
+				return __ts_mul(p1, p2);
 			};
 		'''.toString, result)	
 	}
@@ -151,7 +151,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		assertEquals('''
 			let f;
 			f = function name(p1, p2) {
-				return p1 * p2;
+				return __ts_mul(p1, p2);
 			};
 		'''.toString, result)	
 	}
@@ -170,7 +170,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		''')
 		assertEquals('''
 			let x, y, max;
-			if (x >= y) {
+			if (__ts_ge(x, y)) {
 				max = x;
 			}
 			else {
