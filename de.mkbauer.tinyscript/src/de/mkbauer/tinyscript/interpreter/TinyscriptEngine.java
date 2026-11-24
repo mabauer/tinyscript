@@ -1500,6 +1500,9 @@ public class TinyscriptEngine {
 	 * create their objects with their own createObject() instead.
 	 */
 	private TSObject construct(Function constructor, TSValue[] args) {
+		// Like Javascript, after the arguments are evaluated
+		if (!constructor.isConstructor())
+			throw new TinyscriptTypeError("'new' needs a class or a constructor function, not " + constructor.kind());
 		TSObject self;
 		if (constructor instanceof BuiltinConstructor builtin) {
 			self = builtin.createObject();

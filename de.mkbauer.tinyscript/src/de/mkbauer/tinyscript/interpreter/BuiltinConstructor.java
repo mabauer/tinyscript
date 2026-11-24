@@ -16,4 +16,9 @@ public abstract class BuiltinConstructor extends BuiltinFunction {
 	
 	public abstract TSObject createObject();
 
+	@Override
+	public boolean isConstructor() {
+		return true;
+	}
+
 }

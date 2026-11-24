@@ -211,10 +211,13 @@ class TinyscriptGenerator   {
 		if (typeof print !== "function") {
 			// Like the interpreter: all arguments, separated by spaces, on one line. Node's console
 			// itself, since a script may declare its own console (the webdemo's oo.tys does)
+			// (a method, so that, as in the interpreter, new print() is an error)
 			const __ts_console = globalThis.console;
-			print = function(...args) {
-				__ts_console.log(args.map(__ts_str).join(" "));
-			};
+			globalThis.print = {
+				print(...args) {
+					__ts_console.log(args.map(__ts_str).join(" "));
+				}
+			}.print;
 		}
 
 		function __ts_add(obj1, obj2) {
@@ -322,8 +325,9 @@ class TinyscriptGenerator   {
 			}
 		}
 
-		// A property of the global object, so that a script can declare its own range
-		globalThis.range = function range(...args) {
+		// A property of the global object, so that a script can declare its own range (a method, so
+		// that, as in the interpreter, new range(3) is an error)
+		globalThis.range = { range(...args) {
 			if (args.length < 1 || args.length > 3) {
 				throw new TypeError("range() needs 1 to 3 arguments, not " + args.length);
 			}
@@ -337,7 +341,7 @@ class TinyscriptGenerator   {
 				throw new TypeError("range() needs a step other than 0");
 			}
 			return new __ts_Range(start, end, step);
-		};
+		} }.range;
 
 		// Like the interpreter, what the iterable for loop goes through: an array item by item (seeing
 		// the items the loop adds), the characters of a string, a copy of the entries of a Map or Set,
@@ -488,8 +492,13 @@ class TinyscriptGenerator   {
 		}
 	}
 	
+	// A program (with the builtins) runs in strict mode, as the interpreter (this in a plain call is
+	// undefined, assigning to Math.PI is an error), and the script is a block of its own, so that its
+	// declarations hide the builtins of the prelude (const Map = …; instead of a SyntaxError for
+	// declaring Map twice). Without the builtins, only the code of the script (for tests)
 	def private generateScript(Tinyscript script, boolean includeBuiltins) '''
 		«IF includeBuiltins»
+			"use strict";
 			«generateBuiltins»
 		«ENDIF»
 		«FOR entry : modules.entrySet.filter[value === null]»
@@ -502,12 +511,20 @@ class TinyscriptGenerator   {
 				return Object.freeze({«FOR id : TinyscriptModelUtil.exportedIdentifiers(entry.value) SEPARATOR ', '»«id.name»: «id.generate»«ENDFOR»});
 			})();
 		«ENDFOR»
-		«generateImports(script)»
-		«script.generate»
+		«IF includeBuiltins»
+			{
+				«generateImports(script)»
+				«script.generate»
+			}
+		«ELSE»
+			«generateImports(script)»
+			«script.generate»
+		«ENDIF»
 	'''
 	
 	// std:fs for node, with the same behavior as FileSystemModule (UTF-8; a failed read or write is
-	// an Error named IOError with the same message, wrong arguments a TypeError)
+	// an Error named IOError with the same message, wrong arguments a TypeError). The functions of
+	// the native modules are methods, so that new is an error for them, as in the interpreter
 	def private generateNativeModule(URI module) {
 		switch (module.opaquePart) {
 			case "fs": '''
@@ -528,19 +545,19 @@ class TinyscriptGenerator   {
 					function read(path) { return io("Cannot read file", path, function () { return nodefs.readFileSync(path, "utf8"); }); }
 					function write(path, text) { io("Cannot write file", path, function () { nodefs.writeFileSync(path, text, "utf8"); }); }
 					return Object.freeze({
-						exists: function (path) { return nodefs.existsSync(path); },
-						readFile: function (path) { return read(path); },
-						readLines: function (path) {
+						exists(path) { return nodefs.existsSync(path); },
+						readFile(path) { return read(path); },
+						readLines(path) {
 							var text = read(path);
 							if (text === "") { return []; }
 							var lines = text.split(/\r?\n/);
 							if (lines[lines.length - 1] === "") { lines.pop(); }
 							return lines;
 						},
-						writeFile: function (path, text) { write(path, text); },
-						writeLines: function (path, lines) { write(path, lines.map(function (line) { return line + "\n"; }).join("")); },
-						appendFile: function (path, text) { io("Cannot write file", path, function () { nodefs.appendFileSync(path, text, "utf8"); }); },
-						listDir: function (path) { return io("Cannot list directory", path, function () { return nodefs.readdirSync(path).sort(); }); }
+						writeFile(path, text) { write(path, text); },
+						writeLines(path, lines) { write(path, lines.map(function (line) { return line + "\n"; }).join("")); },
+						appendFile(path, text) { io("Cannot write file", path, function () { nodefs.appendFileSync(path, text, "utf8"); }); },
+						listDir(path) { return io("Cannot list directory", path, function () { return nodefs.readdirSync(path).sort(); }); }
 					});
 				})()'''
 			// std:io like IoModule: lines of the standard input (UTF-8, split at \n, a \r before it
@@ -589,13 +606,13 @@ class TinyscriptGenerator   {
 						}
 					}
 					return Object.freeze({
-						readLine: function (prompt) {
+						readLine(prompt) {
 							if (prompt !== undefined && typeof prompt !== "string") {
 								throw new TypeError("io.readLine: prompt must be a string, not " + typeof prompt);
 							}
 							return read(prompt === undefined ? "" : prompt);
 						},
-						lines: function () {
+						lines() {
 							return {
 								__ts_lines: true,
 								[Symbol.iterator]: function* () {
@@ -614,10 +631,10 @@ class TinyscriptGenerator   {
 		«FOR importStatement : script.imports»
 			«val module = moduleVariables.get(importedModules.get(importStatement))»
 			«IF importStatement.namespace !== null»
-				var «importStatement.namespace.generate» = «module»;
+				const «importStatement.namespace.generate» = «module»;
 			«ENDIF»
 			«FOR name : importStatement.names»
-				var «name.generate» = «module».«name.name»;
+				const «name.generate» = «module».«name.name»;
 			«ENDFOR»
 		«ENDFOR»
 	'''
@@ -658,6 +675,7 @@ class TinyscriptGenerator   {
 		function «IF (func.id !== null)»«func.id.generate»«ENDIF»(«func.generateParams») {
 			«func.parameterPrologue»«func.block.generate»
 		}
+		«func.id.keepName»
 		
 	''' 
 	
@@ -671,6 +689,7 @@ class TinyscriptGenerator   {
 				}
 			«ENDFOR»
 		}
+		«cls.id.keepName»
 		«FOR reference : cls.interfaces»
 			__ts_implements(«cls.id.generate», "«cls.id.name»", «reference.generate», "«reference.id.name»");
 		«ENDFOR»
@@ -724,10 +743,18 @@ class TinyscriptGenerator   {
 		«ELSEIF func.params.get(i) instanceof Identifier && (func.params.get(i) as Identifier).defaultValue !== null»if («func.params.get(i).generate» === undefined) «func.params.get(i).generate» = «(func.params.get(i) as Identifier).defaultValue.generate»;
 		«ENDIF»«ENDFOR»«ENDIF»'''
 
-	def dispatch generate(FunctionDefinition func) '''
-		function «IF (func.id !== null)»«func.id.name»«ENDIF»(«func.generateParams») {
-			«func.parameterPrologue»«func.block.generate»
-		}'''	
+	// A method of an object literal stays a method ({ area() { … } }): as in the interpreter, it is
+	// no constructor. A renamed function keeps its name for print (function await() { … })
+	def dispatch generate(FunctionDefinition func) {
+		val code = '''
+			«IF TinyscriptModelUtil.isMethodShorthand(func)»«ELSE»function «IF (func.id !== null)»«func.id.generate»«ENDIF»«ENDIF»(«func.generateParams») {
+				«func.parameterPrologue»«func.block.generate»
+			}'''
+		if (func.id !== null && getName(func.id) != func.id.name)
+			'''Object.defineProperty(«code», "name", { value: "«func.id.name»" })'''
+		else
+			code
+	}
 		
 	def dispatch generate(ReturnStatement stmt) '''
 		return«IF stmt.expr !== null» «stmt.expr.generate»«ENDIF»;
@@ -851,8 +878,9 @@ class TinyscriptGenerator   {
 	def dispatch generate(ArrayPattern pattern)
 		'''[«FOR name: pattern.names SEPARATOR ', '»«name.generate»«ENDFOR»«IF pattern.rest !== null»«IF !pattern.names.empty», «ENDIF»...«pattern.rest.generate»«ENDIF»]'''
 
+	// { row } takes the property row, also when the generator renames the variable
 	def dispatch generate(ObjectPattern pattern)
-		'''{ «FOR name: pattern.names SEPARATOR ', '»«name.generate»«ENDFOR» }'''
+		'''{ «FOR name: pattern.names SEPARATOR ', '»«IF name.generate != name.name»«name.name»: «ENDIF»«name.generate»«ENDFOR» }'''
 
 	// The value for a declaration: an array pattern checks its value like the interpreter
 	def CharSequence generatePatternValue(Pattern pattern, Object value) {
@@ -912,6 +940,8 @@ class TinyscriptGenerator   {
 	def dispatch generate(PropertyAssignment expr) {
 		if (expr.shorthand !== null)
 			'''«expr.shorthand.id.name»: «expr.shorthand.generate»'''
+		else if (expr.value instanceof FunctionDefinition && TinyscriptModelUtil.isMethodShorthand(expr.value as FunctionDefinition))
+			'''«expr.key.generate»«expr.value.generate»'''
 		else
 			'''«expr.key.generate»: «expr.value.generate»'''
 	}
@@ -961,7 +991,20 @@ class TinyscriptGenerator   {
 		else {
 			name = id.name
 		}
-		return name;
+		return if (JAVASCRIPT_RESERVED.contains(name)) "__ts_" + name else name;
+	}
+
+	// Names that tinyscript allows but Javascript (in strict mode) does not; the generator
+	// renames them (default becomes __ts_default)
+	static val JAVASCRIPT_RESERVED = #{"enum", "default", "do", "in", "void", "with", "super", "extends", "debugger",
+		"static", "package", "private", "public", "protected", "yield", "eval", "arguments", "await"}
+
+	// A renamed function or class keeps its name for print: [Function: default]
+	def CharSequence keepName(Identifier id) {
+		if (id !== null && getName(id) != id.name)
+			'''Object.defineProperty(«getName(id)», "name", { value: "«id.name»" });'''
+		else
+			""
 	}
 	
 }

@@ -337,8 +337,10 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 		return kind.equals("function") ? message + " (to replace a function, declare it with let " + name(reference) + " = …)" : message;
 	}
 
-	// "class", "interface", "function" or "constant", for the message
+	// "builtin", "class", "interface", "function" or "constant", for the message
 	private static String constantKind(Expression reference) {
+		if (isBuiltin(((Reference) reference).getId()))
+			return "builtin";
 		EObject declaration = ((Reference) reference).getId().eContainer();
 		return declaration instanceof ClassDeclaration ? "class" : declaration instanceof InterfaceDeclaration ? "interface" : isFunctionName(((Reference) reference).getId()) ? "function" : "constant";
 	}
@@ -356,8 +358,8 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	private static boolean isConstant(Expression expression) {
 		if (!(expression instanceof Reference reference) || reference.getId() == null)
 			return false;
-		// The name of a class cannot be assigned either
-		if (reference.getId().eContainer() instanceof ClassDeclaration || reference.getId().eContainer() instanceof InterfaceDeclaration
+		// The name of a class or a builtin (Math, print, Infinity) cannot be assigned either
+		if (isBuiltin(reference.getId()) || reference.getId().eContainer() instanceof ClassDeclaration || reference.getId().eContainer() instanceof InterfaceDeclaration
 				|| isFunctionName(reference.getId()))
 			return true;
 		for (EObject container = reference.getId().eContainer(); container != null; container = container.eContainer()) {
@@ -369,6 +371,11 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 				return false;
 		}
 		return false;
+	}
+
+	// A name of the builtins (Math, print), not one of the script or of a REPL session
+	private static boolean isBuiltin(Identifier id) {
+		return id.eResource() != null && BUILTINS.equals(id.eResource().getURI().toString());
 	}
 
 	private static String name(Expression reference) {

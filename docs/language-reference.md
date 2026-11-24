@@ -213,7 +213,10 @@ const counter = { n: 0, get: () => this.n }; // error: use get: function() { …
 
 Unlike in a Javascript script, there is no way to reach the global object (with
 `Math`, `print`, …): builtins cannot be replaced, neither by a script nor by a
-module it imports.
+module it imports. Assigning to a builtin (`Math = …`, `print = …`,
+`Infinity = 1`) is a compile-time error; a declaration may hide one (see
+[Variables and Scope](#3-variables-and-scope)). As in Javascript, the constants
+of `Math` (`Math.PI`, `Math.E`) are read-only, its methods are not.
 
 ---
 
@@ -788,9 +791,13 @@ with `Object.assign({}, o)`.
 
 ### `new` — constructor calls
 
-Any function can be used as a constructor with `new`. Inside the constructor,
-`this` refers to the newly created object. The constructor's return value is
-ignored; the new object is returned.
+A class, a function written with `function` and the builtin constructors (`Map`,
+`Set`, `Error`, `Array`, `Object`, `String`) can be used with `new`. Inside the
+constructor, `this` refers to the newly created object. The constructor's return
+value is ignored; the new object is returned. As in Javascript, arrow functions,
+methods (of a class, or the shorthand `{ area() { … } }`) and the other builtin
+functions (`Math.sqrt`, `print`, `range`) are no constructors: `new` of one is a
+`TypeError`.
 
 ```
 function Point(x, y) {
@@ -947,7 +954,7 @@ Javascript, writing any other key is a `TypeError`, including `nums.x = 1`,
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `arr.at(i)`                                  | Element at index `i`; a negative `i` counts from the end (`arr.at(-1)` is the last element); `undefined` if out of range                                           |
 | `arr.indexOf(x[, start])`                    | Index of the first element `== x` (tinyscript's `==`), or `-1`; searching from `start` (negative: counts from the end)                                             |
-| `arr.includes(x[, start])`                   | `true` if an element `== x`, searching from `start` (negative: counts from the end)                                                                                |
+| `arr.includes(x[, start])`                   | `true` if an element `== x`, searching from `start` (negative: counts from the end); unlike `indexOf` and as in Javascript, it finds `NaN`                         |
 | `arr.push(x)`                                | Appends `x` to the end; returns new element count                                                                                                                  |
 | `arr.pop()`                                  | Removes and returns the last element                                                                                                                               |
 | `arr.shift()`                                | Removes and returns the first element                                                                                                                              |
@@ -1739,6 +1746,8 @@ writing code and for knowing its intentional limitations.
 - Classes (without inheritance) and prototypes (`Object.create`, `__proto__`)
 - First-class functions, closures, and lexical scoping
 - `this` binding in constructors and methods
+- Assigning to a read-only property (`Math.PI`, `f.length`, `f.name`, one
+  defined with `writable: false`) is a `TypeError`, not silently ignored
 - `class` with a `constructor` and methods (without inheritance)
 - `new`, `instanceof`, `typeof`
 - Arrow functions with lexical `this`

@@ -12,8 +12,9 @@ public class MathObject extends TSObject {
 	public MathObject(TinyscriptEngine engine) {
 		super(engine, engine.getDefaultPrototype());
 
-		defineDefaultProperty("PI", java.lang.Math.PI);
-		defineDefaultProperty("E", java.lang.Math.E);
+		// Like Javascript: the constants cannot be assigned (the methods can)
+		defineConstant("PI", java.lang.Math.PI);
+		defineConstant("E", java.lang.Math.E);
 		defineBuiltinMethod("sqrt", this::sqrt, 1);
 		defineBuiltinMethod("round", this::round, 1);
 		defineBuiltinMethod("random", this::random, 0);

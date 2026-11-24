@@ -206,9 +206,23 @@ public class ArrayConstructor extends BuiltinConstructor {
 	}
 
 	// Array.prototype.includes(value[, start]): whether an item from start on == value
-	// (tinyscript's ==); like indexOf, a negative start counts from the end
+	// (tinyscript's ==); like indexOf, a negative start counts from the end. Unlike indexOf and
+	// as in Javascript, includes finds NaN
 	private TSValue includes(TSObject self, TSValue[] args) {
-		return TSValue.of(indexOf(thisArray(self, "includes").getItems(), args) >= 0);
+		List<TSValue> items = thisArray(self, "includes").getItems();
+		if (isNaN(args[0])) {
+			int start = TSObject.toStartIndex(args, 1);
+			for (int i = start < 0 ? Math.max(0, items.size() + start) : start; i < items.size(); i++) {
+				if (isNaN(items.get(i)))
+					return TSValue.of(true);
+			}
+			return TSValue.of(false);
+		}
+		return TSValue.of(indexOf(items, args) >= 0);
+	}
+
+	private static boolean isNaN(TSValue value) {
+		return value instanceof TSNumber number && Double.isNaN(number.value());
 	}
 
 	// Array.prototype.slice([start[, end]]): a copy of the items from start to end;

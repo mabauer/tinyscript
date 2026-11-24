@@ -21,7 +21,9 @@ import de.mkbauer.tinyscript.ts.FunctionDefinition;
 import de.mkbauer.tinyscript.ts.FunctionDeclaration;
 import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.ts.ArrayPattern;
+import de.mkbauer.tinyscript.ts.ArrowFunction;
 import de.mkbauer.tinyscript.ts.Pattern;
+import de.mkbauer.tinyscript.ts.PropertyAssignment;
 import de.mkbauer.tinyscript.ts.PropertyName;
 import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.ImportStatement;
@@ -134,6 +136,23 @@ public class TinyscriptModelUtil {
 		if (key.getExpr() instanceof StringLiteral literal)
 			return literal.getValue();
 		return null;
+	}
+
+	/**
+	 * The method shorthand of an object literal ({ area() { … } }, not { area: function() { … } }):
+	 * as in Javascript, it is no constructor.
+	 */
+	public static boolean isMethodShorthand(FunctionDefinition function) {
+		if (!(function.eContainer() instanceof PropertyAssignment) || function instanceof ArrowFunction)
+			return false;
+		INode node = NodeModelUtils.getNode(function);
+		if (node == null)
+			return false;
+		for (INode leaf : node.getLeafNodes()) {
+			if (leaf instanceof org.eclipse.xtext.nodemodel.ILeafNode token && !token.isHidden())
+				return !"function".equals(token.getText());
+		}
+		return false;
 	}
 
 	/**
