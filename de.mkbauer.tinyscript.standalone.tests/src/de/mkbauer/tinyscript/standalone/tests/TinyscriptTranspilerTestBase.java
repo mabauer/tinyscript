@@ -638,7 +638,7 @@ public abstract class TinyscriptTranspilerTestBase {
                 + "process.on(\"uncaughtException\", e => {\n"
                 + "    let caught = true;\n"
                 + "    try { __ts_catchable(e); } catch (_) { caught = false; }\n"
-                + "    const text = x => String(x).replace(/\\\\/g, \"\\\\\\\\\").replace(/\\n/g, \"\\\\n\").replace(/\\t/g, \"\\\\t\");\n"
+                + "    const text = x => String(x).split(\"\\\\\").join(\"\\\\\\\\\").split(\"\\n\").join(\"\\\\n\").split(\"\\t\").join(\"\\\\t\");\n"
                 + "    process.stderr.write(\"" + FAILURE_MARKER.replace("\t", "\\t") + "\" + caught + \"\\t\" + text(e?.name) + \"\\t\" + text(e?.message) + \"\\n\");\n"
                 + "    process.exitCode = 70;\n"
                 + "});\n"

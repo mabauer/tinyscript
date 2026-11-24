@@ -68,6 +68,7 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
         assertBothFail("'new' needs a class or a constructor function, not the builtin function sqrt", "const o = new Math.sqrt(4);");
         assertBothFail("'new' needs a class or a constructor function, not the builtin function print", "const o = new print(4);");
         assertBothFail("'new' needs a class or a constructor function, not the builtin function range", "const o = new range(4);");
+        assertBothFail("'new' needs a class or a constructor function, not the builtin function Number", "const o = new Number(5);");
         // Classes, functions written with function and builtin constructors
         String code = "function P(x) { this.x = x; }\nconst o = { Q: function (y) { this.y = y; } };\nclass R { }\n"
                 + "print(new P(1), new o.Q(2), new R(), new Map(), new Error(\"e\").message);";
@@ -93,6 +94,22 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
                 + "print(default, yield, enum(4), new static(6), do, eval, o, enum, static, f);";
         assertEquals("1 2 [4] static {do: 6} 3 4 {default: 1, with: 5} [Function: enum] [class static] [Function: await]\n",
                 interpreterOutput(code));
+        assertSameOutput(code);
+    }
+
+    @Test
+    public void testCheckedBuiltinsAsCallbacksAndWithOptionalArguments() {
+        // The checked builtins of the generated code take the extra arguments of callbacks, as the interpreter
+        String code = "print([\"3\", \"1\"].map(Number), [1.5, 2.5].map(Math.round), [\"b\", \"a\"].sort(), [3, 1].sort((a, b) => a - b));\n"
+                + "print(parseInt(\"0x1f\"), parseInt(\"ff\", 16), \"a-b\".split(\"-\").join(\"+\"), [1, [2, [3]]].flat(Infinity), [1, 2].join());\n"
+                + "print((255).toString(16), (1.5).toFixed(), \"x\".padStart(3), \"abc\".slice(-2), [1, 2, 3].splice(1), Number.isInteger(5));\n"
+                + "print(String.fromCharCode(72, 105), Object.fromEntries([[\"a\", 1], [2, 3]]), Object.assign({}, null, { b: 2 }), new Error(\"e\").message);\n"
+                + "print(Math.max(), Math.max(1, 5, 3), Math.hypot(3, 4), isNaN(0 / 0), parseFloat(\"2.5kg\"), new Error() instanceof Error);";
+        assertEquals("[3, 1] [2, 3] [\"a\", \"b\"] [1, 3]\n"
+                + "31 255 a+b [1, 2, 3] 1,2\n"
+                + "ff 2 \"  x\" bc [2, 3] true\n".replace("\"  x\"", "  x")
+                + "Hi {2: 3, a: 1} {b: 2} e\n"
+                + "-Infinity 5 5 true 2.5 true\n", interpreterOutput(code));
         assertSameOutput(code);
     }
 }

@@ -77,8 +77,7 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      `$&` in the replacement of `replace`, gaps in arrays (`a[10] = 1`,
      `a.length = …`; printed as `undefined`), `NaN` and `-0` as keys of a `Map`,
      `trim` and `toUpperCase` / `toLowerCase` with Unicode; `includes` with
-     `NaN` (fixed 2026-11-24); different: `new Number(5)` (a `TypeError` in the
-     interpreter, a `Number` object in node).
+     `NaN` and `new Number(5)` (fixed 2026-11-24).
 2. **Static checks, level 1 (sound, no type inference):**
    - builtins (`Math`, `JSON`, `Number`, `parseInt` …): unknown members with a
      suggestion (`Math.sqr`, `Math.PIE`, which gives `undefined` today), the
@@ -94,18 +93,19 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      duplicate keys in object literals, code after `return` / `break` /
      `continue` / `throw`, too short array literals in patterns.
 3. **Checked code in the generator** where types are not proven. The gap,
-   measured 2026-11-24 with `assertKnownGap`: of 174 error tests, 77 fail the
-   same in node and 97 go on there: arguments of builtins about 50 (types,
-   integers, counts: `"a".repeat(1.5)`, `Math.sqrt()`, `parseInt(42)`, `sort()`
-   of numbers), properties of primitives and arrays about 17 (`n.x`, `a.x = 5`,
-   `a[-1] = 5`), operators about 16 (`1 - "a"`, `x += true`, `s++`, `1 < "a"`)
-   and conditions about 13 (`if (1)`, `!0`, callbacks of `filter` / `find` that
-   return numbers). The parts: `__ts_` helpers for `-`, `*`, `<`, conditions,
-   `&&` / `||` (as `__ts_add` and `__ts_eq` already do); builtins replaced in
-   the prelude to check as the interpreter does (argument counts, integers for
-   `substring` / `at` / `range`, `sort()` without comparison only for strings).
-   Measured with the `assertKnownGap` cases (each closed gap turns into
-   `assertSameFailure`) and item 1.
+   measured with `assertKnownGap` (each closed gap turns into
+   `assertSameFailure`) and item 1: of 174 error tests, 126 fail the same in
+   node and 48 go on there (2026-11-24). Done: the builtins are replaced in the
+   prelude and check their arguments as the interpreter does (types, integers,
+   the minimum number); in a microbenchmark of hot builtins 1.35 times slower,
+   on AoC days not measurable. Open: properties of primitives and arrays about
+   17 (`n.x`, `a.x = 5`, `a[-1] = 5`), operators about 16 (`1 - "a"`,
+   `x += true`, `s++`, `1 < "a"`), conditions about 13 (`if (1)`, `!0`,
+   callbacks of `filter` / `find` that return numbers), too many arguments of a
+   builtin 2 (`(1).toFixed(1, 2)`; a check at the call, not in the builtin,
+   since callbacks get more arguments: item 2). For operators and conditions:
+   `__ts_` helpers for `-`, `*`, `<`, conditions, `&&` / `||` (as `__ts_add` and
+   `__ts_eq` already do).
    - **Measure the speed first:** two or three AoC days with the checks written
      by hand, before building them. A helper shared by all places sees all
      types; probably the check belongs inline, with the helper only for the

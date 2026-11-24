@@ -77,7 +77,7 @@ class TinyscriptGenerator   {
 	def generateBuiltins() '''
 
 		// A failed assert is a programming error: catch does not get it (see __ts_catchable)
-		class __ts_AssertionError extends Error {}
+		class __ts_AssertionError extends globalThis.Error {}
 		__ts_AssertionError.prototype.name = "AssertionError";
 
 		function assert(condition) {
@@ -382,7 +382,7 @@ class TinyscriptGenerator   {
 				const y = operand(b);
 				result = op === "&" ? x & y : op === "|" ? x | y : x ^ y;
 			}
-			const number = Number(result);
+			const number = __ts_JsNumber(result);
 			if (!Number.isSafeInteger(number)) {
 				throw new TypeError("'" + op + "' gives more than 53 bits");
 			}
@@ -431,6 +431,408 @@ class TinyscriptGenerator   {
 			}
 			return obj1 === obj2;
 		}
+
+		// Like the interpreter, the builtins check their arguments: types, integers and the
+		// minimum number of arguments (not the maximum: callbacks such as map's get more arguments
+		// than they use; too many arguments in a call are for the checks before the run). The
+		// prelude itself uses the originals where it needs more (__ts_JsNumber). Replaced on the
+		// global object (node runs the file as a module, where a var would be undefined before
+		// this point), so the prelude above sees the originals while it is set up.
+		const __ts_JsNumber = globalThis.Number;
+		function __ts_type(value) {
+			return value === null ? "object" : typeof value;
+		}
+		function __ts_describe(value) {
+			return typeof value === "number" ? __ts_JsString(value) : __ts_type(value);
+		}
+		function __ts_isInteger(value) {
+			return typeof value === "number" && Math.trunc(value) === value;
+		}
+		function __ts_isString(value) {
+			return typeof value === "string" || value instanceof __ts_JsString;
+		}
+		function __ts_atLeast(count, min, name) {
+			if (count < min) {
+				throw new TypeError("Builtin function " + name + " requires at least " + min + " arguments.");
+			}
+		}
+		function __ts_integer(value, name) {
+			if (!__ts_isInteger(value)) {
+				throw new TypeError(name + "() needs an integer, not " + __ts_describe(value));
+			}
+		}
+		function __ts_string(value, name) {
+			if (!__ts_isString(value)) {
+				throw new TypeError(name + "() needs a string, not " + __ts_type(value));
+			}
+		}
+		function __ts_mathNumber(value) {
+			if (typeof value !== "number") {
+				throw new TypeError("Math functions need numbers, not " + __ts_type(value));
+			}
+		}
+		function __ts_object(value, name) {
+			if (value === null || (typeof value !== "object" && typeof value !== "function")) {
+				throw new TypeError(name + "() needs an object, not " + __ts_type(value));
+			}
+		}
+		function __ts_thisArray(self, name) {
+			if (!Array.isArray(self)) {
+				throw new TypeError("Function Array.prototype." + name + " only works for Array objects.");
+			}
+		}
+		// Replaces target[name] by checked (a method, so new fails as in the interpreter)
+		function __ts_replace(target, name, checked) {
+			Object.defineProperty(target, name, { value: checked, writable: true, configurable: true, enumerable: false });
+		}
+
+		(function () {
+			const A = Array.prototype;
+			const at = A.at, indexOf = A.indexOf, includes = A.includes, lastIndexOf = A.lastIndexOf, push = A.push,
+				unshift = A.unshift, join = A.join, sort = A.sort, slice = A.slice, fill = A.fill, splice = A.splice, flat = A.flat;
+			__ts_replace(A, "at", { at(index) {
+				__ts_atLeast(arguments.length, 1, "at");
+				__ts_thisArray(this, "at");
+				if (!__ts_isInteger(index)) {
+					throw new TypeError("at() needs an integer index, not " + __ts_str(index));
+				}
+				// Not at.call(this, index): V8 inlines an element access, not a call of the original
+				const i = index < 0 ? this.length + index : index;
+				return i >= 0 && i < this.length ? this[i] : undefined;
+			} }.at);
+			// indexOf(x[, start]), includes, lastIndexOf: the index must be an integer. Each wrapper
+			// is a function of its own (not made in a loop), so that V8 sees one original per call
+			«FOR name : #["indexOf", "includes", "lastIndexOf"]»
+				__ts_replace(A, "«name»", { «name»(value, start) {
+					__ts_atLeast(arguments.length, 1, "«name»");
+					__ts_thisArray(this, "«name»");
+					if (arguments.length > 1 && !__ts_isInteger(start)) {
+						throw new TypeError(«IF name == "lastIndexOf"»"lastIndexOf() needs an integer index, not " + __ts_describe(start)«ELSE»"indexOf() needs an integer start index, not " + __ts_str(start)«ENDIF»);
+					}
+					return arguments.length > 1 ? «name».call(this, value, start) : «name».call(this, value);
+				} }.«name»);
+			«ENDFOR»
+			«FOR name : #["push", "unshift"]»
+				__ts_replace(A, "«name»", { «name»(item) {
+					__ts_atLeast(arguments.length, 1, "«name»");
+					__ts_thisArray(this, "«name»");
+					return arguments.length === 1 ? «name».call(this, item) : «name».apply(this, arguments);
+				} }.«name»);
+			«ENDFOR»
+			__ts_replace(A, "join", { join(separator) {
+				__ts_thisArray(this, "join");
+				if (separator !== undefined && typeof separator !== "string") {
+					throw new TypeError("join() needs a string as separator, not " + __ts_type(separator));
+				}
+				return join.call(this, separator === undefined ? "," : separator);
+			} }.join);
+			// Without a comparison function only strings; the comparison function returns numbers
+			__ts_replace(A, "sort", { sort(compare) {
+				__ts_thisArray(this, "sort");
+				if (compare === undefined) {
+					for (const item of this) {
+						if (typeof item !== "string") {
+							throw new TypeError("sort() without a comparison function only sorts strings, not " + __ts_type(item));
+						}
+					}
+					return sort.call(this);
+				}
+				if (typeof compare !== "function") {
+					throw new TypeError("sort() needs a function, not " + __ts_type(compare));
+				}
+				return sort.call(this, (a, b) => {
+					const result = compare(a, b);
+					if (typeof result !== "number") {
+						throw new TypeError("The comparison function of sort() must return a number");
+					}
+					return result;
+				});
+			} }.sort);
+			// slice, fill, splice: integer indexes
+			const indexes = (args, from, to, name) => {
+				for (let i = from; i < Math.min(args.length, to); i++) {
+					if (!__ts_isInteger(args[i])) {
+						throw new TypeError(name + "() needs integer indexes, not " + __ts_describe(args[i]));
+					}
+				}
+			};
+			__ts_replace(A, "slice", { slice(start, end) {
+				__ts_thisArray(this, "slice");
+				if ((arguments.length > 0 && !__ts_isInteger(start)) || (arguments.length > 1 && !__ts_isInteger(end))) {
+					indexes(arguments, 0, 2, "slice");
+				}
+				return arguments.length === 0 ? slice.call(this) : arguments.length === 1 ? slice.call(this, start) : slice.call(this, start, end);
+			} }.slice);
+			__ts_replace(A, "fill", { fill(value) {
+				__ts_atLeast(arguments.length, 1, "fill");
+				__ts_thisArray(this, "fill");
+				indexes(arguments, 1, 3, "fill");
+				return fill.apply(this, arguments);
+			} }.fill);
+			__ts_replace(A, "splice", { splice(start, count) {
+				__ts_thisArray(this, "splice");
+				indexes(arguments, 0, 1, "splice");
+				if (arguments.length > 1 && !__ts_isInteger(count)) {
+					throw new TypeError("splice() needs an integer count, not " + __ts_describe(count));
+				}
+				return arguments.length === 0 ? splice.call(this, this.length) : splice.apply(this, arguments);
+			} }.splice);
+			__ts_replace(A, "flat", { flat(depth) {
+				__ts_thisArray(this, "flat");
+				if (depth !== undefined && (typeof depth !== "number" || depth < 0 || !(__ts_isInteger(depth) || depth === Infinity))) {
+					throw new TypeError("flat() needs a depth of 0 or more, not " + __ts_describe(depth));
+				}
+				return flat.call(this, depth === undefined ? 1 : depth);
+			} }.flat);
+		})();
+
+		(function () {
+			const S = __ts_JsString.prototype;
+			// Methods with an integer and methods with a string as first argument, and an optional
+			// integer position
+			«FOR name : #["at", "charAt", "charCodeAt", "codePointAt"]»
+				const «name» = S.«name»;
+				__ts_replace(S, "«name»", { «name»(index) {
+					__ts_atLeast(arguments.length, 1, "«name»");
+					if (!__ts_isInteger(index)) {
+						throw new TypeError(«IF name == "at"»"at() needs an integer index, not " + __ts_str(index)«ELSE»"«name»() needs an integer, not " + __ts_describe(index)«ENDIF»);
+					}
+					return «name».call(this, index);
+				} }.«name»);
+			«ENDFOR»
+			«FOR name : #["indexOf", "lastIndexOf", "includes", "startsWith", "endsWith"]»
+				const «name» = S.«name»;
+				__ts_replace(S, "«name»", { «name»(search, position) {
+					__ts_atLeast(arguments.length, 1, "«name»");
+					__ts_string(search, "«name»");
+					if (arguments.length > 1 && !__ts_isInteger(position)) {
+						throw new TypeError(«IF name == "indexOf"»"indexOf() needs an integer start index, not " + __ts_str(position)«ELSE»"«name»() needs an integer, not " + __ts_describe(position)«ENDIF»);
+					}
+					return arguments.length > 1 ? «name».call(this, __ts_JsString(search), position) : «name».call(this, __ts_JsString(search));
+				} }.«name»);
+			«ENDFOR»
+			«FOR name : #["substring", "slice"]»
+				const «name» = S.«name»;
+				__ts_replace(S, "«name»", { «name»(start, end) {
+					«IF name == "substring"»
+						__ts_atLeast(arguments.length, 1, "substring");
+					«ENDIF»
+					if (arguments.length > 0) {
+						__ts_integer(start, "«name»");
+					}
+					if (arguments.length > 1) {
+						__ts_integer(end, "«name»");
+					}
+					return «name».apply(this, arguments);
+				} }.«name»);
+			«ENDFOR»
+			const split = S.split;
+			__ts_replace(S, "split", { split(separator, limit) {
+				__ts_atLeast(arguments.length, 1, "split");
+				__ts_string(separator, "split");
+				if (arguments.length > 1) {
+					__ts_integer(limit, "split");
+					if (limit < 0) {
+						throw new TypeError("split() needs a non-negative limit, not " + limit);
+					}
+				}
+				return arguments.length > 1 ? split.call(this, __ts_JsString(separator), limit) : split.call(this, __ts_JsString(separator));
+			} }.split);
+			«FOR name : #["replace", "replaceAll"]»
+				const «name» = S.«name»;
+				__ts_replace(S, "«name»", { «name»(search, replacement) {
+					__ts_atLeast(arguments.length, 2, "«name»");
+					__ts_string(search, "«name»");
+					__ts_string(replacement, "«name»");
+					return «name».call(this, __ts_JsString(search), __ts_JsString(replacement));
+				} }.«name»);
+			«ENDFOR»
+			const repeat = S.repeat;
+			__ts_replace(S, "repeat", { repeat(count) {
+				__ts_atLeast(arguments.length, 1, "repeat");
+				__ts_integer(count, "repeat");
+				if (count < 0) {
+					throw new TypeError("repeat() needs a non-negative count, not " + count);
+				}
+				return repeat.call(this, count);
+			} }.repeat);
+			«FOR name : #["padStart", "padEnd"]»
+				const «name» = S.«name»;
+				__ts_replace(S, "«name»", { «name»(length, padding) {
+					__ts_atLeast(arguments.length, 1, "«name»");
+					__ts_integer(length, "«name»");
+					if (arguments.length > 1) {
+						__ts_string(padding, "«name»");
+						return «name».call(this, length, __ts_JsString(padding));
+					}
+					return «name».call(this, length);
+				} }.«name»);
+			«ENDFOR»
+			const fromCharCode = __ts_JsString.fromCharCode;
+			String.fromCharCode = { fromCharCode(...codes) {
+				for (const code of codes) {
+					__ts_integer(code, "fromCharCode");
+					if (code < 0 || code > 0xFFFF) {
+						throw new TypeError("fromCharCode() needs character codes from 0 to 65535, not " + code);
+					}
+				}
+				return fromCharCode(...codes);
+			} }.fromCharCode;
+		})();
+
+		(function () {
+			const N = __ts_JsNumber.prototype;
+			const toFixed = N.toFixed, toString = N.toString;
+			// An optional integer argument from min to max
+			const optional = (value, min, max, message) => {
+				if (value !== undefined && (!__ts_isInteger(value) || value < min || value > max)) {
+					throw new TypeError(message + ", not " + __ts_describe(value));
+				}
+			};
+			__ts_replace(N, "toFixed", { toFixed(digits) {
+				optional(digits, 0, 100, "toFixed() needs a number of digits from 0 to 100");
+				return toFixed.call(this, digits === undefined ? 0 : digits);
+			} }.toFixed);
+			__ts_replace(N, "toString", { toString(radix) {
+				optional(radix, 2, 36, "toString() needs a radix from 2 to 36");
+				if (radix !== undefined && radix !== 10 && !(Number.isFinite(this.valueOf()) && Math.trunc(this) === this.valueOf())) {
+					throw new TypeError("toString(" + radix + ") needs an integer, not " + __ts_JsString(this.valueOf()));
+				}
+				return radix === undefined ? toString.call(this) : toString.call(this, radix);
+			} }.toString);
+		})();
+
+		// Number(x) only for numbers, strings and booleans (a function, as in the interpreter not a
+		// constructor); parseInt, parseFloat and isNaN without conversions
+		globalThis.Number = (function (JsNumber) {
+			const N = { Number(value) {
+				__ts_atLeast(arguments.length, 1, "Number");
+				if (typeof value !== "number" && typeof value !== "string" && typeof value !== "boolean") {
+					throw new TypeError("Number() needs a string, a number or a boolean, not " + __ts_type(value));
+				}
+				return JsNumber(value);
+			} }.Number;
+			for (const key of Object.getOwnPropertyNames(JsNumber)) {
+				if (!(key in N) || key === "prototype") {
+					Object.defineProperty(N, key, Object.getOwnPropertyDescriptor(JsNumber, key));
+				}
+			}
+			return N;
+		})(__ts_JsNumber);
+		globalThis.parseInt = (function (jsParseInt) {
+			return { parseInt(text, radix) {
+				__ts_atLeast(arguments.length, 1, "parseInt");
+				if (typeof text !== "string") {
+					throw new TypeError("parseInt() needs a string, not " + __ts_type(text));
+				}
+				if (radix !== undefined && (!__ts_isInteger(radix) || radix < 2 || radix > 36)) {
+					throw new TypeError("parseInt() needs a radix from 2 to 36, not " + __ts_str(radix));
+				}
+				return radix === undefined ? jsParseInt(text) : jsParseInt(text, radix);
+			} }.parseInt;
+		})(globalThis.parseInt);
+		globalThis.parseFloat = (function (jsParseFloat) {
+			return { parseFloat(text) {
+				__ts_atLeast(arguments.length, 1, "parseFloat");
+				if (typeof text !== "string") {
+					throw new TypeError("parseFloat() needs a string, not " + __ts_type(text));
+				}
+				return jsParseFloat(text);
+			} }.parseFloat;
+		})(globalThis.parseFloat);
+		globalThis.isNaN = { isNaN(value) {
+			__ts_atLeast(arguments.length, 1, "isNaN");
+			if (typeof value !== "number") {
+				throw new TypeError("isNaN() needs a number, not " + __ts_type(value));
+			}
+			return value !== value;
+		} }.isNaN;
+
+		// Math: numbers only
+		(function () {
+			«FOR name : #["sqrt", "round", "abs", "floor", "ceil", "trunc", "sign", "cbrt", "exp", "log", "log2", "log10", "sin", "cos", "tan", "asin", "acos", "atan"]»
+				const «name» = Math.«name»;
+				Math.«name» = { «name»(x) {
+					__ts_atLeast(arguments.length, 1, "«name»");
+					__ts_mathNumber(x);
+					return «name»(x);
+				} }.«name»;
+			«ENDFOR»
+			«FOR name : #["pow", "atan2"]»
+				const «name» = Math.«name»;
+				Math.«name» = { «name»(x, y) {
+					__ts_atLeast(arguments.length, 2, "«name»");
+					__ts_mathNumber(x);
+					__ts_mathNumber(y);
+					return «name»(x, y);
+				} }.«name»;
+			«ENDFOR»
+			«FOR name : #["min", "max", "hypot"]»
+				const «name» = Math.«name»;
+				Math.«name» = { «name»(a, b) {
+					for (let i = 0; i < arguments.length; i++) {
+						__ts_mathNumber(arguments[i]);
+					}
+					return arguments.length === 2 ? «name»(a, b) : «name».apply(Math, arguments);
+				} }.«name»;
+			«ENDFOR»
+		})();
+
+		// Object.values / entries / assign need objects, fromEntries [key, value] pairs or a Map
+		«FOR name : #["values", "entries"]»
+			Object.«name» = (function («name») {
+				return { «name»(object) {
+					__ts_atLeast(arguments.length, 1, "«name»");
+					__ts_object(object, "«name»");
+					return «name»(object);
+				} }.«name»;
+			})(Object.«name»);
+		«ENDFOR»
+		Object.assign = (function (assign) {
+			return { assign(target) {
+				__ts_atLeast(arguments.length, 1, "assign");
+				__ts_object(target, "assign");
+				for (let i = 1; i < arguments.length; i++) {
+					if (arguments[i] != null) {
+						__ts_object(arguments[i], "assign");
+					}
+				}
+				return assign.apply(Object, arguments);
+			} }.assign;
+		})(Object.assign);
+		Object.fromEntries = (function (fromEntries) {
+			return { fromEntries(pairs) {
+				__ts_atLeast(arguments.length, 1, "fromEntries");
+				if (pairs instanceof globalThis.Map) {
+					return fromEntries(pairs);
+				}
+				if (!Array.isArray(pairs)) {
+					throw new TypeError("fromEntries() needs an array of [key, value] pairs or a Map, not " + __ts_type(pairs));
+				}
+				for (const pair of pairs) {
+					if (!Array.isArray(pair) || pair.length < 2) {
+						throw new TypeError("fromEntries() needs [key, value] pairs");
+					}
+					if (typeof pair[0] !== "string" && typeof pair[0] !== "number") {
+						throw new TypeError("A property key must be a string or a number, not " + __ts_type(pair[0]));
+					}
+				}
+				return fromEntries(pairs);
+			} }.fromEntries;
+		})(Object.fromEntries);
+
+		// new Error(message): the message is a string. The prototype stays Error.prototype, so
+		// instanceof Error holds for all errors, as before
+		globalThis.Error = (function (JsError) {
+			const E = function Error(message) {
+				if (message !== undefined && typeof message !== "string") {
+					throw new TypeError("Error() needs a string as message, not " + __ts_type(message));
+				}
+				return Reflect.construct(JsError, arguments.length > 0 ? [message] : [], new.target || E);
+			};
+			E.prototype = JsError.prototype;
+			return E;
+		})(globalThis.Error);
 		
 	'''
 	
@@ -550,7 +952,7 @@ class TinyscriptGenerator   {
 						readLines(path) {
 							var text = read(path);
 							if (text === "") { return []; }
-							var lines = text.split(/\r?\n/);
+							var lines = text.split("\n").map(function (line) { return line.endsWith("\r") ? line.slice(0, -1) : line; });
 							if (lines[lines.length - 1] === "") { lines.pop(); }
 							return lines;
 						},

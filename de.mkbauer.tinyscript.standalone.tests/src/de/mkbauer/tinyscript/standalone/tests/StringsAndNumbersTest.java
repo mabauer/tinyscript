@@ -79,15 +79,15 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testStringMethodsCheckTheirArguments() {
-        assertKnownGap(TinyscriptTypeError.class, "\"a,b\".split(1);");
+        assertSameFailure(TinyscriptTypeError.class, "\"a,b\".split(1);");
         assertSameFailure(TinyscriptTypeError.class, "\"a\".repeat(-1);");
-        assertKnownGap(TinyscriptTypeError.class, "\"a\".repeat(1.5);");
-        assertKnownGap(TinyscriptTypeError.class, "\"a\".repeat(\"2\");");
-        assertKnownGap(TinyscriptTypeError.class, "\"a\".startsWith(1);");
-        assertKnownGap(TinyscriptTypeError.class, "\"a\".replace(\"a\", 1);");
-        assertKnownGap(TinyscriptTypeError.class, "\"a\".padStart(3, 5);");
-        assertKnownGap(TinyscriptTypeError.class, "\"a\".slice(\"1\");");
-        assertKnownGap(TinyscriptTypeError.class, "String.fromCharCode(\"a\");");
+        assertSameFailure(TinyscriptTypeError.class, "\"a\".repeat(1.5);");
+        assertSameFailure(TinyscriptTypeError.class, "\"a\".repeat(\"2\");");
+        assertSameFailure(TinyscriptTypeError.class, "\"a\".startsWith(1);");
+        assertSameFailure(TinyscriptTypeError.class, "\"a\".replace(\"a\", 1);");
+        assertSameFailure(TinyscriptTypeError.class, "\"a\".padStart(3, 5);");
+        assertSameFailure(TinyscriptTypeError.class, "\"a\".slice(\"1\");");
+        assertSameFailure(TinyscriptTypeError.class, "String.fromCharCode(\"a\");");
     }
 
     @Test
@@ -135,13 +135,13 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testConversionsCheckTheirArguments() {
-        assertKnownGap(TinyscriptTypeError.class, "Number(null);");
-        assertKnownGap(TinyscriptTypeError.class, "let u; Number(u);");
-        assertKnownGap(TinyscriptTypeError.class, "Number({});");
-        assertKnownGap(TinyscriptTypeError.class, "parseInt(42);");
-        assertKnownGap(TinyscriptTypeError.class, "parseInt(\"1\", 1);");
-        assertKnownGap(TinyscriptTypeError.class, "parseInt(\"1\", 37);");
-        assertKnownGap(TinyscriptTypeError.class, "isNaN(\"x\");");
+        assertSameFailure(TinyscriptTypeError.class, "Number(null);");
+        assertSameFailure(TinyscriptTypeError.class, "let u; Number(u);");
+        assertSameFailure(TinyscriptTypeError.class, "Number({});");
+        assertSameFailure(TinyscriptTypeError.class, "parseInt(42);");
+        assertSameFailure(TinyscriptTypeError.class, "parseInt(\"1\", 1);");
+        assertSameFailure(TinyscriptTypeError.class, "parseInt(\"1\", 37);");
+        assertSameFailure(TinyscriptTypeError.class, "isNaN(\"x\");");
     }
 
     @Test

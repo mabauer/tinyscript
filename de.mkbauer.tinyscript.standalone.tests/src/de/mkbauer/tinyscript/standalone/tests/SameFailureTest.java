@@ -48,7 +48,7 @@ public class SameFailureTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testAClosedGap() {
         assumeNodeAvailable();
-        AssertionFailedError e = assertThrows(AssertionFailedError.class, () -> assertKnownGap("const o = new Math.sqrt(4);"));
+        AssertionFailedError e = assertThrows(AssertionFailedError.class, () -> assertKnownGap("const f = x => x;\nconst o = new f(1);"));
         assertEquals(true, e.getMessage().startsWith("node fails now as well"), e.getMessage());
     }
 

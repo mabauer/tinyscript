@@ -31,8 +31,8 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
         assertEquals("a,b,c\n0\n", interpreterOutput(code));
         assertSameOutput(code);
         // Javascript sorts numbers as strings ([1, 10, 9]), a trap
-        assertKnownGap(TinyscriptTypeError.class, "[10, 9, 1].sort();");
-        assertKnownGap(TinyscriptTypeError.class, "[3, 1].sort((x, y) => x < y);");
+        assertSameFailure(TinyscriptTypeError.class, "[10, 9, 1].sort();");
+        assertSameFailure(TinyscriptTypeError.class, "[3, 1].sort((x, y) => x < y);");
         assertSameFailure(TinyscriptTypeError.class, "[3, 1].sort(1);");
     }
 
@@ -125,6 +125,6 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
         String code = "print([1, 2, 3].join()); print([1, 2].join(\"\")); print([].join());";
         assertEquals("1,2,3\n12\n\n", interpreterOutput(code));
         assertSameOutput(code);
-        assertKnownGap(TinyscriptTypeError.class, "[1, 2].join(1);");
+        assertSameFailure(TinyscriptTypeError.class, "[1, 2].join(1);");
     }
 }
