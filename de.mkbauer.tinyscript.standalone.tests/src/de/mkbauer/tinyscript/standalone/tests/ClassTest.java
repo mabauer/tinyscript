@@ -110,7 +110,7 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testAClassNeedsNew() {
         TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class,
-                () -> interpreterOutput(POINT + "const p = Point(1, 2);"));
+                () -> interpreterOutput(POINT + "const P = Point;\nconst p = P(1, 2);"));
         assertEquals("Point is a class: use new Point(…)", e.getMessage());
         assertSameFailure(TinyscriptTypeError.class, POINT + "print([1, 2].map(Point));");
     }

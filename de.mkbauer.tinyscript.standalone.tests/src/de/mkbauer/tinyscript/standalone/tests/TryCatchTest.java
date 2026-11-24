@@ -96,10 +96,11 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testOnlyErrorObjectsCanBeThrown() {
-        assertSameFailure(TinyscriptTypeError.class, "throw \"oops\";");
-        assertSameFailure(TinyscriptTypeError.class, "try { throw 42; } catch (e) { print(e); }");
-        assertSameFailure(TinyscriptTypeError.class, "throw { message: \"x\" };");
-        assertSameFailure(TinyscriptTypeError.class, "throw null;");
+        // With a literal, an error before the run (StructureChecksTest)
+        assertSameFailure(TinyscriptTypeError.class, "const s = \"oops\";\nthrow s;");
+        assertSameFailure(TinyscriptTypeError.class, "const n = 42;\ntry { throw n; } catch (e) { print(e); }");
+        assertSameFailure(TinyscriptTypeError.class, "const o = { message: \"x\" };\nthrow o;");
+        assertSameFailure(TinyscriptTypeError.class, "const n = null;\nthrow n;");
     }
 
     @Test
@@ -116,7 +117,7 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
         for (String code : new String[] {
                 "const o = null;\ntry { print(o.x); } catch (e) { print(\"caught\"); }",
                 "try { assert 1 == 2; } catch (e) { print(\"caught\"); }",
-                "try { throw \"oops\"; } catch (e) { print(\"caught\"); }" }) {
+                "const s = \"oops\";\ntry { throw s; } catch (e) { print(\"caught\"); }" }) {
             String jsCode = transpile(parse(code));
             AssertionError e = assertThrows(AssertionError.class, () -> NodeJsRunner.run(jsCode), code);
             assertTrue(!e.getMessage().contains("caught\n"), e.getMessage());

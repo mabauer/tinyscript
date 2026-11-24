@@ -90,10 +90,12 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      literals and the results of operators): errors for `"a" - 1`, `[1] + 1`,
      `1 < "2"`, `-"a"`, `if (1)`, `while (n - 1)`, `!0`, `if (x = 2)`; warnings
      for `x == NaN` and `typeof x == "numbr"`;
-   - calls and structure: a known class without `new`, `new` of an arrow
-     function or a non-function, `throw` of anything but `new Error(…)`,
-     duplicate keys in object literals, code after `return` / `break` /
-     `continue` / `throw`, too short array literals in patterns.
+   - calls and structure: done 2026-11-24: errors for a class of the script
+     without `new`, `new` of an arrow function in a `const` or of a builtin that
+     is no constructor, `throw` of a literal, an array literal too short for its
+     pattern; warnings for duplicate keys in object literals and code after
+     `return` / `break` / `continue` / `throw`. Open: `new` of a non-function
+     (needs kinds, item 4).
 3. **Checked code in the generator** where types are not proven. The gap,
    measured with `assertKnownGap` (each closed gap turns into
    `assertSameFailure`) and item 1: of 174 error tests, 157 fail the same in

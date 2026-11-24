@@ -60,15 +60,16 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNewNeedsAConstructor() {
-        assertBothFail("'new' needs a class or a constructor function, not an arrow function", "const f = x => x;\nconst o = new f(1);");
+        // Where the callee is known before the run, these are errors then (StructureChecksTest)
+        assertBothFail("'new' needs a class or a constructor function, not an arrow function", "let f = x => x;\nconst o = new f(1);");
         assertBothFail("'new' needs a class or a constructor function, not a method",
                 "class C { m() { } }\nconst c = new C();\nconst o = new c.m();");
         assertBothFail("'new' needs a class or a constructor function, not a method",
                 "const o = { m() { } };\nconst p = new o.m();");
-        assertBothFail("'new' needs a class or a constructor function, not the builtin function sqrt", "const o = new Math.sqrt(4);");
-        assertBothFail("'new' needs a class or a constructor function, not the builtin function print", "const o = new print(4);");
-        assertBothFail("'new' needs a class or a constructor function, not the builtin function range", "const o = new range(4);");
-        assertBothFail("'new' needs a class or a constructor function, not the builtin function Number", "const o = new Number(5);");
+        assertBothFail("'new' needs a class or a constructor function, not the builtin function sqrt", "let f = Math.sqrt;\nconst o = new f(4);");
+        assertBothFail("'new' needs a class or a constructor function, not the builtin function print", "let f = print;\nconst o = new f(4);");
+        assertBothFail("'new' needs a class or a constructor function, not the builtin function range", "let f = range;\nconst o = new f(4);");
+        assertBothFail("'new' needs a class or a constructor function, not the builtin function Number", "let f = Number;\nconst o = new f(5);");
         // Classes, functions written with function and builtin constructors
         String code = "function P(x) { this.x = x; }\nconst o = { Q: function (y) { this.y = y; } };\nclass R { }\n"
                 + "print(new P(1), new o.Q(2), new R(), new Map(), new Error(\"e\").message);";

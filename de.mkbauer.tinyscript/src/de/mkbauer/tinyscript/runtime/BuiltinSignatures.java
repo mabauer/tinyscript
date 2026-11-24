@@ -20,8 +20,11 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
  */
 public final class BuiltinSignatures {
 
-	/** A builtin function takes min to max arguments (max {@link #VARIADIC}: any number). */
-	public record Signature(int min, int max) {
+	/**
+	 * A builtin function takes min to max arguments (max {@link #VARIADIC}: any number); new can
+	 * call it if it is a constructor (Map, Error).
+	 */
+	public record Signature(int min, int max, boolean constructor) {
 		public static final int VARIADIC = BuiltinFunction.VARIADIC;
 	}
 
@@ -110,7 +113,7 @@ public final class BuiltinSignatures {
 	}
 
 	private static Signature signature(BuiltinFunction function) {
-		return new Signature(function.getLength(), function.getMaxArgs());
+		return new Signature(function.getLength(), function.getMaxArgs(), function.isConstructor());
 	}
 
 	// The members of an object and its prototypes

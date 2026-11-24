@@ -578,6 +578,12 @@ Violations become error markers (red squiggles). The checks cover:
   check their operands): `"a" - 1`, `[1] + 1`, `1 < "2"`, `-"a"`, `if (1)`,
   `while (n - 1)`, `if (x = 2)`, numbers for `Math`; warnings for `x == NaN` and
   `typeof x == "numbr"`;
+- calls and structure: a class of the script called without `new`, `new` of an
+  arrow function in a `const` or of a builtin that is no constructor (the
+  signatures know it), `throw` of a literal, an array literal too short for its
+  pattern; warnings for duplicate keys and for code after `return` / `break` /
+  `continue` / `throw` (function declarations after it are hoisted, so they are
+  fine);
 - classes (only at top level, each method only once, a field must not hide a
   method), interfaces (a class has the methods of an interface of the same file
   it implements; for an imported one the interpreter checks when the class is
