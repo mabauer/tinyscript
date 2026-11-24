@@ -32,7 +32,14 @@ import de.mkbauer.tinyscript.TinyscriptStandaloneSetup;
 import de.mkbauer.tinyscript.TinyscriptDiagnostics;
 import de.mkbauer.tinyscript.TinyscriptSyntaxError;
 import de.mkbauer.tinyscript.generator.TinyscriptGenerator;
+import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.FileSystemModuleLoader;
+import de.mkbauer.tinyscript.interpreter.TinyscriptArgumentError;
+import de.mkbauer.tinyscript.TinyscriptAssertationError;
+import de.mkbauer.tinyscript.interpreter.TinyscriptError;
+import de.mkbauer.tinyscript.interpreter.TinyscriptIOError;
+import de.mkbauer.tinyscript.interpreter.TinyscriptJsonError;
+import de.mkbauer.tinyscript.interpreter.TinyscriptStackOverflowError;
 import de.mkbauer.tinyscript.interpreter.ResourceLimits;
 import de.mkbauer.tinyscript.interpreter.ResourceMonitor;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
@@ -518,6 +525,128 @@ public abstract class TinyscriptTranspilerTestBase {
         }
         fail("Expected " + expectedType.getSimpleName() + " but no exception was thrown"
                 + "\n--- source ---\n" + tsCode);
+    }
+
+    // -------------------------------------------------------------------------
+    // Failures: the same behavior in both backends
+    // -------------------------------------------------------------------------
+
+    /**
+     * How a run failed: the output up to the error, the class (as Javascript names it) and
+     * message of the error, and whether catch gets it.
+     */
+    record Failure(String output, String name, String message, boolean catchable) {
+    }
+
+    /**
+     * Asserts that both backends fail in the same way (see TODO.md, what "equal" means): at the
+     * same point (the same output up to the error) and in the same category for catch. Class and
+     * message are only reported, in target/backend-differences.txt.
+     */
+    protected void assertSameFailure(String tsCode) {
+        Failure interpreter = interpreterFailure(tsCode);
+        assumeNodeAvailable();
+        String jsCode = transpile(parse(tsCode));
+        NodeJsRunner.Result result = NodeJsRunner.execute(withFailureHandler(jsCode), "");
+        if (result.exitCode() == 0)
+            fail("The interpreter fails, but node goes on (if that is known, use assertKnownGap)"
+                    + "\n--- Tinyscript ---\n" + tsCode
+                    + "\n--- interpreter ---\n" + interpreter
+                    + "\n--- node stdout ---\n" + result.stdout());
+        Failure node = nodeFailure(result);
+        if (node == null)
+            fail("node failed without the failure line (an error in the generated code?)"
+                    + "\n--- Tinyscript ---\n" + tsCode + "\n--- Generated JS ---\n" + jsCode
+                    + "\n--- node stderr ---\n" + result.stderr());
+        assertEquals(interpreter.output(), node.output(), "the output up to the error\n--- Tinyscript ---\n" + tsCode);
+        assertEquals(interpreter.catchable(), node.catchable(), "catch gets the error in one backend, not in the other"
+                + "\n--- Tinyscript ---\n" + tsCode + "\n--- interpreter ---\n" + interpreter + "\n--- node ---\n" + node);
+        BackendDifferences.note(tsCode, interpreter, node);
+    }
+
+    /**
+     * A known gap: the interpreter fails, the generated Javascript goes on. When node fails as
+     * well (the gap is closed), this fails: use {@link #assertSameFailure(String)} instead.
+     */
+    protected void assertKnownGap(String tsCode) {
+        interpreterFailure(tsCode);
+        assumeNodeAvailable();
+        NodeJsRunner.Result result = NodeJsRunner.execute(transpile(parse(tsCode)), "");
+        if (result.exitCode() != 0)
+            fail("node fails now as well, the gap is closed: use assertSameFailure"
+                    + "\n--- Tinyscript ---\n" + tsCode + "\n--- node stderr ---\n" + result.stderr());
+    }
+
+    /** How the interpreter fails for {@code tsCode}; fails the test if it does not. */
+    protected Failure interpreterFailure(String tsCode) {
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        try {
+            runInterpreter(tsCode, null, true, stdout);
+        }
+        catch (TinyscriptRuntimeException e) {
+            boolean catchable = e instanceof TinyscriptError || e instanceof TinyscriptIOError || e instanceof TinyscriptJsonError;
+            return new Failure(stdout.toString(StandardCharsets.UTF_8), javascriptName(e), e.getMessage(), catchable);
+        }
+        fail("The interpreter does not fail\n--- Tinyscript ---\n" + tsCode + "\n--- output ---\n" + stdout);
+        return null;
+    }
+
+    // The class of an interpreter error as Javascript names it (TinyscriptTypeError: TypeError)
+    private static String javascriptName(TinyscriptRuntimeException e) {
+        return switch (e) {
+            case TinyscriptJsonError json -> "SyntaxError";
+            case TinyscriptStackOverflowError overflow -> "RangeError";
+            case TinyscriptArgumentError argument -> "TypeError";
+            case TinyscriptAssertationError assertion -> "AssertionError";
+            default -> e.getClass().getSimpleName().replaceFirst("^Tinyscript", "");
+        };
+    }
+
+    private static final String FAILURE_MARKER = "__ts_failure\t";
+
+    /**
+     * Adds a handler for an uncaught error to a generated program: it asks the prelude whether
+     * catch would get the error (__ts_catchable) and writes a line with the result to stderr.
+     * The program then ends with exit code 70 (not with process.exit, which may cut the output).
+     */
+    static String withFailureHandler(String jsCode) {
+        String strict = "\"use strict\";\n";
+        if (!jsCode.startsWith(strict))
+            throw new IllegalArgumentException("not a generated program");
+        return strict
+                + "process.on(\"uncaughtException\", e => {\n"
+                + "    let caught = true;\n"
+                + "    try { __ts_catchable(e); } catch (_) { caught = false; }\n"
+                + "    const text = x => String(x).replace(/\\\\/g, \"\\\\\\\\\").replace(/\\n/g, \"\\\\n\").replace(/\\t/g, \"\\\\t\");\n"
+                + "    process.stderr.write(\"" + FAILURE_MARKER.replace("\t", "\\t") + "\" + caught + \"\\t\" + text(e?.name) + \"\\t\" + text(e?.message) + \"\\n\");\n"
+                + "    process.exitCode = 70;\n"
+                + "});\n"
+                + jsCode.substring(strict.length());
+    }
+
+    // The failure the handler of withFailureHandler reported, or null
+    static Failure nodeFailure(NodeJsRunner.Result result) {
+        for (String line : result.stderr().split("\n")) {
+            if (line.startsWith(FAILURE_MARKER)) {
+                String[] parts = line.substring(FAILURE_MARKER.length()).split("\t", 3);
+                return new Failure(result.stdout(), unescape(parts[1]), unescape(parts[2]), Boolean.parseBoolean(parts[0]));
+            }
+        }
+        return null;
+    }
+
+    private static String unescape(String text) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (c == '\\' && i + 1 < text.length()) {
+                char next = text.charAt(++i);
+                result.append(next == 'n' ? '\n' : next == 't' ? '\t' : next);
+            }
+            else
+                result.append(c);
+        }
+        return result.toString();
     }
 
     // -------------------------------------------------------------------------

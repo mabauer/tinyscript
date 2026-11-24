@@ -74,6 +74,23 @@ public class NodeJsRunner {
      * Like {@link #run(String, String...)}, with {@code input} as the standard input.
      */
     public static String runWithInput(String jsCode, String input, String... args) {
+        Result result = execute(jsCode, input, args);
+        if (result.exitCode() != 0) {
+            throw new AssertionError(
+                    "node exited with code " + result.exitCode() + "\n"
+                    + "--- node stderr ---\n" + result.stderr());
+        }
+        return result.stdout();
+    }
+
+    /** What a node run gave: its exit code and everything it wrote. */
+    public record Result(int exitCode, String stdout, String stderr) {
+    }
+
+    /**
+     * Runs {@code jsCode} with node and returns its exit code and output, also when it fails.
+     */
+    public static Result execute(String jsCode, String input, String... args) {
         File tmpFile = null;
         try {
             tmpFile = Files.createTempFile("tinyscript_test_", ".js").toFile();
@@ -104,13 +121,7 @@ public class NodeJsRunner {
                 exitCode = e.getExitValue();
             }
 
-            String stderrStr = stderr.toString(StandardCharsets.UTF_8);
-            if (exitCode != 0) {
-                throw new AssertionError(
-                        "node exited with code " + exitCode + "\n"
-                        + "--- node stderr ---\n" + stderrStr);
-            }
-            return stdout.toString(StandardCharsets.UTF_8);
+            return new Result(exitCode, stdout.toString(StandardCharsets.UTF_8), stderr.toString(StandardCharsets.UTF_8));
 
         } catch (IOException e) {
             throw new AssertionError("Failed to invoke node: " + e.getMessage(), e);
