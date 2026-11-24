@@ -108,11 +108,15 @@ Run, via the helper script (follows symlinks, checks for Java 25) or directly:
 de.mkbauer.tinyscript.repl/tinyscript                 # interactive session
 de.mkbauer.tinyscript.repl/tinyscript example.tys     # run a file
 de.mkbauer.tinyscript.repl/tinyscript --help
+de.mkbauer.tinyscript.repl/tinyscript --node example.tys     # run with node (experimental)
+de.mkbauer.tinyscript.repl/tinyscript --emit-js example.tys  # write the Javascript
 java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar example.tys
 ```
 
 Exit codes: 0 success, 1 syntax or runtime error, 2 wrong usage (unknown option,
-missing file, not a `.tys` file).
+missing file, not a `.tys` file, no node 20 or later for `--node`). With
+`--node`, the checks before the run (syntax, validator, imports) are the same as
+for the interpreter; a runtime error in node exits with 1 as well.
 
 ---
 

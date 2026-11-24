@@ -145,11 +145,7 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
    module is reported at the caller, as in the interpreter; with source maps
    enabled, errors that are thrown and caught often get slow (measure).
 
-7. **Running it:** `tinyscript --node file.tys` (generate, start node, pass
-   arguments, standard input and the exit code on) and `--emit-js`; a minimal
-   version of node, checked at the start; in CI the differential tests fail
-   without node instead of being skipped.
-8. **Warnings, later:** unused variables, parameters and imports; `let` never
+7. **Warnings, later:** unused variables, parameters and imports; `let` never
    assigned again; fits the language server.
 
 Stays with the interpreter by design: the sandbox (resource limits; generated

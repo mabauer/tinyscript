@@ -132,9 +132,12 @@ solved with _tinyscript_ (see [`examples`](examples)).
   `tinyscript.generator`). Today it keeps the interpreter honest: the tests run
   each language feature, every example of the web demo and the
   [Advent of Code solutions](examples/aoc2024) both in the interpreter and,
-  translated, in _node.js_, and compare their output. Originally, the generated
-  code ran in the _Nashorn_ engine of Java 8 and in a native iOS app (a
-  proof-of-concept in [`TinyscriptiOSDemo`](TinyscriptiOSDemo) and branch
+  translated, in _node.js_, and compare their output.
+  `tinyscript --node file.tys` runs a script with node (experimental: the
+  generated code does not yet find all errors the interpreter finds, e.g.
+  `"a" - 1` is `NaN` there), and `--emit-js` writes the Javascript. Originally,
+  the generated code ran in the _Nashorn_ engine of Java 8 and in a native iOS
+  app (a proof-of-concept in [`TinyscriptiOSDemo`](TinyscriptiOSDemo) and branch
   `iosdemo`).
 
 ## Design decisions
@@ -338,6 +341,10 @@ To run:
 
   Or directly:
   `java -jar de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar example.tys`
+
+  `tinyscript --node example.tys` runs the file with _node.js_ (20 or later)
+  instead of the interpreter, after the same checks; this is experimental.
+  `tinyscript --emit-js example.tys` writes the Javascript.
 
 - The web demo as a _Spring Boot_ application:
 

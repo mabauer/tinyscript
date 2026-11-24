@@ -597,6 +597,12 @@ Transpiles the Tinyscript AST to modern JavaScript source text for node (it uses
 **Used by:**
 
 - `/xcompile` REST endpoint (`TinyscriptCrossCompilingService`)
+- `tinyscript --node` / `--emit-js` (`TinyscriptReplMain`, `NodeRunner`): the
+  same checks before the run as the interpreter (parser, validator, imports),
+  then the program is written to a temporary `.cjs` file and run with the node
+  on the `PATH` (20 or later), with the arguments, the standard input and output
+  of the command; a failed node run exits with 1, as a runtime error of the
+  interpreter
 - the differential tests, which run the generated code with `node` and compare
   its output with the interpreter's
 
