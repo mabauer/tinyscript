@@ -453,7 +453,7 @@ public class TinyscriptReplMainTest {
     @Test
     public void testNodeRuntimeErrorExitsWithOneAfterTheOutputBefore() throws IOException {
         assumeNode();
-        Path file = script("error.tys", "print(\"before\");\nconst f = x => x;\nconst o = new f(1);\nprint(\"never\");");
+        Path file = script("error.tys", "print(\"before\");\nlet f = x => x;\nconst o = new f(1);\nprint(\"never\");");
         assertEquals(TinyscriptReplMain.EXIT_ERROR, run("--node", file.toString()));
         assertEquals("before\n", out.toString());
         assertTrue(err.toString().contains("TypeError"), err.toString());

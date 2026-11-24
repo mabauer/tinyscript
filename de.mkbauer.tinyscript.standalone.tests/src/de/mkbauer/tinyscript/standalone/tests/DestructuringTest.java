@@ -54,7 +54,7 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testAnArrayPatternNeedsAnArrayThatIsLongEnough() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("let [a, b, c] = [1, 2];"));
+        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("let xs = [1, 2];\nlet [a, b, c] = xs;"));
         assertEquals("[a, b, c] needs an array with at least 3 elements, not 2", e.getMessage());
         assertSameFailure(TinyscriptTypeError.class, "let [a, b] = \"ab\";");
         assertSameFailure(TinyscriptTypeError.class, "let [a] = null;");
@@ -66,7 +66,7 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testTheGeneratedCodeChecksTheArrayLengthAsWell() {
         assumeNodeAvailable();
-        String jsCode = transpile(parse("let [a, b, c] = [1, 2];"));
+        String jsCode = transpile(parse("let xs = [1, 2];\nlet [a, b, c] = xs;"));
         AssertionError e = assertThrows(AssertionError.class, () -> NodeJsRunner.run(jsCode));
         assertTrue(e.getMessage().contains("at least 3 elements"), e.getMessage());
     }

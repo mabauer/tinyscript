@@ -32,7 +32,7 @@ public class ThrowTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testOnlyErrorsCanBeThrown() {
         assertEquals("", thrown("throw new Error();").getMessage());
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("throw \"oops\";"));
+        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("const s = \"oops\";\nthrow s;"));
         assertEquals("throw needs an Error object, e.g. throw new Error(\"...\"), not string", e.getMessage());
     }
 

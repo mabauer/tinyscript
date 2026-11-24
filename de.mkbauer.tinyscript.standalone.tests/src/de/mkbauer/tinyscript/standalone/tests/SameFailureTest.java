@@ -18,7 +18,7 @@ public class SameFailureTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testTheSameFailure() {
-        assertSameFailure("print(1);\nconst f = x => x;\nconst o = new f();\nprint(2);");
+        assertSameFailure("print(1);\nlet f = x => x;\nconst o = new f();\nprint(2);");
         // Caught in both: throw, and not caught in both: a failed assert
         assertSameFailure("print(\"a\");\nthrow new Error(\"stop\");");
         assertSameFailure("assert 1 == 2;");
@@ -48,7 +48,7 @@ public class SameFailureTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testAClosedGap() {
         assumeNodeAvailable();
-        AssertionFailedError e = assertThrows(AssertionFailedError.class, () -> assertKnownGap("const f = x => x;\nconst o = new f(1);"));
+        AssertionFailedError e = assertThrows(AssertionFailedError.class, () -> assertKnownGap("let f = x => x;\nconst o = new f(1);"));
         assertEquals(true, e.getMessage().startsWith("node fails now as well"), e.getMessage());
     }
 

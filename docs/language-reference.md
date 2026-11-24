@@ -1740,6 +1740,17 @@ pipe) is the module `std:io`.
 
 ## 12. Differences from JavaScript
 
+Many mistakes that Javascript finds only when the code runs, or not at all, are
+errors before the run in tinyscript, where the syntax alone shows them: unknown
+names, members of builtins (`Math.sqr`) and the number of their arguments,
+operands and conditions that can never fit (`"a" - 1`, `if (1)`, `if (x = 2)`),
+a class called without `new`, `new` of an arrow function or of a builtin that is
+no constructor (`new Math.sqrt(4)`), `throw` of anything but an `Error` object
+(`throw "oops"`), and an array literal too short for its pattern
+(`const [a, b] = [1]`). Warnings point to code that runs but is almost always a
+mistake: duplicate keys in an object literal (`{ a: 1, a: 2 }`), code after
+`return`, `break`, `continue` or `throw`, `x == NaN`, and `typeof x == "numbr"`.
+
 Understanding where Tinyscript diverges from JavaScript is important both for
 writing code and for knowing its intentional limitations.
 

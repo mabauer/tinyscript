@@ -65,7 +65,7 @@ public class SpreadAndRestTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testRestElementsAreStrictLikeOtherPatterns() {
         // At least as many elements as there are names before the rest
-        assertSameFailure(TinyscriptTypeError.class, "const [a, b, ...rest] = [1];");
+        assertSameFailure(TinyscriptTypeError.class, "const one = [1];\nconst [a, b, ...rest] = one;");
         assertSameFailure(TinyscriptTypeError.class, "const [...rest] = \"abc\";");
     }
 

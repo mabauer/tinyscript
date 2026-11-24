@@ -39,6 +39,8 @@ import de.mkbauer.tinyscript.ts.StringLiteral;
 import de.mkbauer.tinyscript.ts.Tinyscript;
 import de.mkbauer.tinyscript.ts.TsPackage;
 import de.mkbauer.tinyscript.ts.Unary;
+import de.mkbauer.tinyscript.ts.ArrayPattern;
+import de.mkbauer.tinyscript.ts.ThrowStatement;
 import de.mkbauer.tinyscript.ts.ConditionalExpression;
 import de.mkbauer.tinyscript.ts.AssertStatement;
 import de.mkbauer.tinyscript.ts.IfStatement;
@@ -874,6 +876,114 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 			typeofSide = grouping.getExpr();
 		return typeofSide instanceof Unary unary && unary.getOp() == UnaryOperator.TYPEOF && other instanceof StringLiteral literal
 				? literal.getValue() : null;
+	}
+
+	/**
+	 * A class of the script called without new (P() instead of new P()), and new of what is no
+	 * constructor where it is known before the run: an arrow function in a const (new f()), a
+	 * builtin function that is no constructor (new Math.sqrt(4), new print(), new Number(5)).
+	 */
+	@Check
+	public void checkConstructorCalls(CallOrPropertyAccess call) {
+		boolean constructor = call.getExpr() instanceof NewExpression;
+		// new Math.sqrt(4) is new Math with the suffix .sqrt(4): a method of a builtin object
+		if (constructor && call.getSuffix() instanceof CallOrPropertyAccessSuffix methodCall && methodCall.getCall() != null
+				&& methodCall.getProperty() instanceof DotPropertyAccessSuffix method && method.getKey() != null && method.getKey().getName() != null
+				&& ((NewExpression) call.getExpr()).getExpr() instanceof Reference object && !object.isThis() && object.getId() != null
+				&& !object.getId().eIsProxy() && isBuiltin(object.getId())
+				&& signatures().global(object.getId().getName()) instanceof BuiltinSignatures.Members methods
+				&& methods.signature(method.getKey().getName()) instanceof BuiltinSignatures.Signature methodSignature
+				&& !methodSignature.constructor() && !isAddedInScript(call, object.getId().getName(), method.getKey().getName())) {
+			error("'new' needs a class or a constructor function, not the builtin function " + method.getKey().getName(), null);
+			return;
+		}
+		Expression callee;
+		if (call.getSuffix() instanceof CallSuffix)
+			callee = constructor ? ((NewExpression) call.getExpr()).getExpr() : call.getExpr();
+		else
+			return;
+		if (callee instanceof Reference reference && !reference.isThis() && reference.getId() != null && !reference.getId().eIsProxy()) {
+			Identifier id = reference.getId();
+			if (!constructor && id.eContainer() instanceof ClassDeclaration declaration && declaration.getId() == id)
+				error(id.getName() + " is a class: use new " + id.getName() + "(…)", null);
+			else if (constructor && knownFunction(id, false) instanceof ArrowFunction)
+				error("'new' needs a class or a constructor function, not an arrow function", null);
+			else if (constructor && isBuiltin(id) && signatures().function(id.getName()) instanceof BuiltinSignatures.Signature signature
+					&& !signature.constructor())
+				error("'new' needs a class or a constructor function, not the builtin function " + id.getName(), null);
+		}
+	}
+
+	/**
+	 * throw takes an Error object: a literal (throw "oops", throw 42, throw { message: … }) is a
+	 * TypeError whenever it runs.
+	 */
+	@Check
+	public void checkThrowTakesAnError(ThrowStatement statement) {
+		Expression thrown = statement.getExpr();
+		while (thrown instanceof GroupingExpression grouping)
+			thrown = grouping.getExpr();
+		String kind = Kinds.kind(thrown);
+		if (thrown instanceof ObjectInitializer || (kind != null && kind != Kinds.OBJECT))
+			error("throw needs an Error object, e.g. throw new Error(\"...\"), not " + (kind != null ? kind : Kinds.OBJECT),
+					TsPackage.Literals.THROW_STATEMENT__EXPR);
+	}
+
+	/**
+	 * const [a, b] = [1]; : an array pattern needs at least as many elements as it has names, so
+	 * an array literal that is too short fails whenever it runs.
+	 */
+	@Check
+	public void checkArrayPatternLength(BinaryExpression assignment) {
+		if (assignment.getOp() != BinaryOperator.ASSIGN || !(assignment.getLeft() instanceof ArrayPattern pattern))
+			return;
+		Expression value = assignment.getRight();
+		while (value instanceof GroupingExpression grouping)
+			value = grouping.getExpr();
+		if (!(value instanceof ArrayInitializer array) || array.getValues().stream().anyMatch(element -> element instanceof SpreadElement))
+			return;
+		int needed = pattern.getNames().size();
+		if (array.getValues().size() < needed)
+			error(TinyscriptModelUtil.sourceText(pattern) + " needs an array with at least " + needed + (needed == 1 ? " element" : " elements")
+					+ ", not " + array.getValues().size(), TsPackage.Literals.BINARY_EXPRESSION__RIGHT);
+	}
+
+	/**
+	 * { a: 1, a: 2 } is allowed (the last one wins), but almost always a mistake: a warning.
+	 */
+	@Check
+	public void checkDuplicateKeys(ObjectInitializer object) {
+		Set<String> keys = new HashSet<String>();
+		for (PropertyAssignment property : object.getPropertyassignments()) {
+			String key = property.getShorthand() != null && property.getShorthand().getId() != null
+					? property.getShorthand().getId().getName()
+					: property.getKey() != null ? TinyscriptModelUtil.propertyKey(property.getKey()) : null;
+			if (key != null && !keys.add(key))
+				warning("Duplicate key '" + key + "': only the last one counts", property, null);
+		}
+	}
+
+	/**
+	 * Statements after return, break, continue or throw in the same block never run (function
+	 * declarations, which are hoisted, excepted): a warning.
+	 */
+	@Check
+	public void checkUnreachableCode(Block block) {
+		List<Statement> statements = block.getStatements();
+		for (int i = 0; i < statements.size() - 1; i++) {
+			Statement statement = statements.get(i);
+			String jump = statement instanceof ReturnStatement ? "return" : statement instanceof BreakStatement ? "break"
+					: statement instanceof ContinueStatement ? "continue" : statement instanceof ThrowStatement ? "throw" : null;
+			if (jump == null)
+				continue;
+			for (int j = i + 1; j < statements.size(); j++) {
+				if (!(statements.get(j) instanceof FunctionDeclaration)) {
+					warning("This code never runs: it comes after " + jump, statements.get(j), null);
+					break;
+				}
+			}
+			return;
+		}
 	}
 
 	/**
