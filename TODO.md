@@ -64,12 +64,13 @@ overflow, keep their text: wrapping every access and call would cost the speed
 that is the reason for node), the line once there are source maps (item 6). Not
 equal by design: the sandbox, the depth of recursion, `Math.random`, time.
 
-1. **Same failures, tested:** `assertSameFailure(code)`: both backends fail,
-   with the same output up to the error and the same category for `catch`; class
-   and message are compared only as a goal (reported, not failed), the line once
-   there are source maps (item 6). Move the error tests
-   (`assertInterpreterThrows`, about 100 places that throw a `TypeError`) to it
-   step by step; the number of cases where node goes on measures the gap.
+1. **Same failures, tested:** the helpers are there (`assertSameFailure`,
+   `assertKnownGap`; class and message differences go to
+   `target/backend-differences.txt`), `StrictnessTest` uses them (2 cases fail
+   the same, 22 are gaps). Move the other error tests
+   (`assertInterpreterThrows`, about 170 places) to them; the number of
+   `assertKnownGap` measures the gap, grouped by cause it is the work list of
+   item 4.
 2. **Same values, tested:** the AoC programs cover only what works.
    - a matrix of every builtin with edge values (`NaN`, `-0`, `""`, negative,
      not an integer, too few arguments), generated from the builtin objects of

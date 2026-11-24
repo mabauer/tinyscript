@@ -791,8 +791,9 @@ class TinyscriptGenerator   {
 		'''
 	}
 
+	// assert(…) also for assert x == y; without parentheses
 	def dispatch generate(AssertStatement stmt) '''
-		assert «stmt.cond.generate»;
+		assert(«stmt.cond.generate»);
 	'''
 	
 	def dispatch generate(IfStatement stmt) '''

@@ -35,7 +35,7 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 		assertEquals('''
 			let hello;
 			hello = "Hello World!";
-			assert (__ts_eq(hello, "Hello World!"));
+			assert((__ts_eq(hello, "Hello World!")));
 		'''.toString, result)
 		
 	}
