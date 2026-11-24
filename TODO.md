@@ -94,16 +94,17 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      `continue` / `throw`, too short array literals in patterns.
 3. **Checked code in the generator** where types are not proven. The gap,
    measured with `assertKnownGap` (each closed gap turns into
-   `assertSameFailure`) and item 1: of 174 error tests, 126 fail the same in
-   node and 48 go on there (2026-11-24). Done: the builtins are replaced in the
+   `assertSameFailure`) and item 1: of 174 error tests, 157 fail the same in
+   node and 19 go on there (2026-11-24). Done: the builtins are replaced in the
    prelude and check their arguments as the interpreter does (types, integers,
-   the minimum number); in a microbenchmark of hot builtins 1.35 times slower,
-   on AoC days not measurable. Open: properties of primitives and arrays about
-   17 (`n.x`, `a.x = 5`, `a[-1] = 5`), operators about 16 (`1 - "a"`,
-   `x += true`, `s++`, `1 < "a"`), conditions about 13 (`if (1)`, `!0`,
-   callbacks of `filter` / `find` that return numbers), too many arguments of a
-   builtin 2 (`(1).toFixed(1, 2)`; a check at the call, not in the builtin,
-   since callbacks get more arguments: item 2).
+   the minimum number; in a microbenchmark of hot builtins 1.35 times slower, on
+   AoC days not measurable); operators and conditions are checked by helpers
+   where the operator does not already guarantee the kind (smart, see below;
+   `&&` / `||` give booleans now, as in the interpreter). Open: properties of
+   primitives, arrays, Maps and Sets 17 (`n.x`, `a.x = 5`, `a[-1] = 5`,
+   `m["a"] = 1`), too many arguments of a builtin 2 (`(1).toFixed(1, 2)`; a
+   check at the call, not in the builtin, since callbacks get more arguments:
+   item 2).
    - **Operators and conditions, measured 2026-11-24** with the checks generated
      by an experimental switch (34 of the 48 gaps closed, all tests and AoC
      programs unchanged), AoC days with full input, node's start (100 ms)
@@ -120,8 +121,10 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      checks, so they cost a small part of the factor: equal rank is possible.
      Writing the check inline
      (`typeof a === "number" && typeof b === "number" ? a - b : __ts_sub(a, b)`)
-     gains nothing measurable over the helpers (V8 inlines them). Next: smart,
-     with the helpers; item 4 removes more checks.
+     gains nothing measurable over the helpers (V8 inlines them). Built as smart
+     with the helpers: day09 101 → 183 ms, day20 219 → 311 ms, the others 0.94
+     to 1.33 times (`__ts_add` tests numbers first). Item 4 removes more checks
+     (comparisons of properties, callbacks that return a comparison).
    - Not possible at a reasonable price in node: no properties on arrays, an
      error for reading an unknown property (it would need a `Proxy` or a helper
      for every access). These stay with the static checks of item 4.

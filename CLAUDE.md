@@ -276,7 +276,8 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   (its declarations hide the prelude's `Map`, `String` …); names that only
   Javascript reserves (`default`, `enum`, `yield` …) get the prefix `__ts_`; its
   prelude replaces the builtins by ones that check their arguments as the
-  interpreter does
+  interpreter does, and operators and conditions are checked by `__ts_` helpers
+  where the operator does not already guarantee the kind
 
 ### TODO markers in the code
 

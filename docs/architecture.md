@@ -634,7 +634,20 @@ since callbacks get more arguments than they use): `Array.prototype` /
 `parseFloat`, `isNaN`, `Object.values` / `entries` / `assign` / `fromEntries`
 and `Error`. Each wrapper is written out by the template (not made in a loop),
 so that V8 sees one original per call site; `Array.prototype.at` accesses the
-element itself, since V8 does not inline a call of the original. Some examples:
+element itself, since V8 does not inline a call of the original.
+
+Operators and conditions are checked by helpers as in the interpreter:
+`__ts_sub`, `__ts_mul`, `__ts_div`, `__ts_rem` and `__ts_neg` need numbers,
+`__ts_lt`, `__ts_le`, `__ts_gt`, `__ts_ge` two numbers (not `NaN`) or two
+strings, `__ts_inc` / `__ts_dec` (for `i++;`) a number, and `__ts_cond` makes a
+condition of `if`, `while`, `?:`, `!`, `&&` / `||` (which give booleans),
+`assert` and the result of a callback of `filter`, `find`, `some` … (a boolean,
+`null` / `undefined` or an object; a number or string is a `TypeError`). The
+generator leaves a check out where the operator already guarantees the kind, by
+the syntax alone (`isBoolean`, `isNumber`): a comparison, `==`, `!`, `&&` / `||`
+is a boolean; `-`, `*`, `/`, `%`, unary `-` and number literals are numbers.
+Variables, properties and calls stay checked. Measured on AoC days with full
+input: 1.0 to 1.8 times the time of unchecked code. Some examples:
 
 ```javascript
 // Tinyscript assert → JS function; its error is not caught by catch (__ts_catchable)

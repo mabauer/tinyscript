@@ -75,8 +75,8 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testCallbacksMustReturnConditions() {
-        assertKnownGap(TinyscriptTypeError.class, "[1, 2].some(x => x);");
-        assertKnownGap(TinyscriptTypeError.class, "[1, 2].find(x => x - 1);");
+        assertSameFailure(TinyscriptTypeError.class, "[1, 2].some(x => x);");
+        assertSameFailure(TinyscriptTypeError.class, "[1, 2].find(x => x - 1);");
     }
 
     @Test

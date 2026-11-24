@@ -531,7 +531,7 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testComparingNumberWithStringIsATypeError() {
-        assertKnownGap(TinyscriptTypeError.class, "print(1 < \"a\");");
+        assertSameFailure(TinyscriptTypeError.class, "print(1 < \"a\");");
     }
 
     // =========================================================================

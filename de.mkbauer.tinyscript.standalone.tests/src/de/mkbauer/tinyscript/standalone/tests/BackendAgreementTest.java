@@ -112,4 +112,18 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
                 + "-Infinity 5 5 true 2.5 true\n", interpreterOutput(code));
         assertSameOutput(code);
     }
+
+    @Test
+    public void testOperatorsAndConditionsAsInTheInterpreter() {
+        // && and || give booleans; ++ / -- of properties; the checks skipped where the kind is certain
+        String code = "const o = {};\nconst u = null;\n"
+                + "print(o && true, o || false, u || false, u && true, !o, !u, [1, 2].find(x => x > 1) ?? 0);\n"
+                + "const p = { n: 1 };\np.n++;\nconst a = [5];\na[0]--;\nlet i = 0;\ni++;\nlet s = 10;\ns -= 3;\ns *= 2;\n"
+                + "print(p, a, i, s, (3 - 1) * 2, -(-2), 1 < 2 ? \"y\" : \"n\", \"a\" < \"b\", [3, 1, 2].filter(x => x != 1));";
+        assertEquals("true true false false false true 2\n"
+                + "{n: 2} [4] 1 14 4 2 y true [3, 2]\n", interpreterOutput(code));
+        assertSameOutput(code);
+        assertSameFailure("const n = 0 / 0;\nprint(n < 1);");
+        assertSameFailure("const p = { n: \"1\" };\np.n++;");
+    }
 }

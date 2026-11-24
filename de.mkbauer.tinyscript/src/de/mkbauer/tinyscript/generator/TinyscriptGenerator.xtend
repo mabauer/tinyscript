@@ -65,12 +65,65 @@ import java.util.HashMap
 import java.util.LinkedHashMap
 import org.eclipse.emf.common.util.URI
 import de.mkbauer.tinyscript.ts.Expression
+import de.mkbauer.tinyscript.ts.IncrementOperator
+import de.mkbauer.tinyscript.ts.PropertyAccessSuffix
 
 class TinyscriptGenerator   {
 	
 	@Inject
 	TinyscriptQualifiedNameProvider nameProvider;
 	
+	// Checks of operators and conditions in the generated code, as the interpreter makes them, but
+	// only where the operator does not already guarantee the kind (smart, no type inference): a
+	// comparison, ==, !, && / || are booleans; -, *, /, % and unary - (checked themselves) and
+	// number literals are numbers. Variables, properties and calls stay checked.
+	def static boolean isBoolean(Expression e) {
+		switch e {
+			BooleanLiteral: true
+			GroupingExpression: isBoolean(e.expr)
+			Unary: e.op == UnaryOperator.NOT
+			BinaryExpression: switch e.op {
+				case LESS, case LESS_OR_EQUAL, case GREATER, case GREATER_OR_EQUAL, case EQUALS, case NOT_EQUALS,
+					case INSTANCEOF, case AND, case OR: true
+				default: false
+			}
+			default: false
+		}
+	}
+
+	def static boolean isNumber(Expression e) {
+		switch e {
+			NumberLiteral: true
+			GroupingExpression: isNumber(e.expr)
+			Unary: e.op == UnaryOperator.NEGATE
+			BinaryExpression: switch e.op {
+				case SUBTRACT, case MULTIPLY, case DIVIDE, case REMAINDER: true
+				default: false
+			}
+			default: false
+		}
+	}
+
+	// A condition: checked by __ts_cond unless it is a boolean anyway
+	def CharSequence condition(Expression e) {
+		if (isBoolean(e)) e.generate else '''__ts_cond(«e.generate»)'''
+	}
+
+	// The helper that checks a binary operator, or null for the others
+	def static String checkingHelper(BinaryOperator op) {
+		switch op {
+			case SUBTRACT: "__ts_sub"
+			case MULTIPLY: "__ts_mul"
+			case DIVIDE: "__ts_div"
+			case REMAINDER: "__ts_rem"
+			case LESS: "__ts_lt"
+			case LESS_OR_EQUAL: "__ts_le"
+			case GREATER: "__ts_gt"
+			case GREATER_OR_EQUAL: "__ts_ge"
+			default: null
+		}
+	}
+
 	// Counter for unique names of temporary variables (loop bounds, iterables, indexes)
 	int tempCounter = 0;
 	
@@ -220,7 +273,12 @@ class TinyscriptGenerator   {
 			}.print;
 		}
 
+		// Numbers first, the most frequent case; the error in a function of its own, so that
+		// __ts_add stays small enough for V8 to inline it
 		function __ts_add(obj1, obj2) {
+			if (typeof obj1 === "number" && typeof obj2 === "number") {
+				return obj1 + obj2;
+			}
 			if (typeof obj1 === "string" || typeof obj2 === "string") {
 				return __ts_str(obj1) + __ts_str(obj2);
 			}
@@ -230,7 +288,71 @@ class TinyscriptGenerator   {
 				}
 				return obj1.concat(obj2);
 			}
-			return obj1 + obj2;
+			return __ts_cannotAdd(obj1, obj2);
+		}
+		function __ts_cannotAdd(obj1, obj2) {
+			throw new TypeError("'+' adds two numbers, two arrays, or a string and a value, not " + __ts_type(obj1) + " and " + __ts_type(obj2));
+		}
+
+		// Like the interpreter: - * / % and unary - need numbers; < <= > >= compare two numbers
+		// (not NaN) or two strings; a condition (if, while, ?:, !, && / ||, assert, the result of
+		// a callback of filter, find ...) is a boolean, null / undefined (false) or an object
+		// (true). The generator calls them only where the kind is not certain (see smart checks)
+		function __ts_numbers(op, a, b) {
+			throw new TypeError("'" + op + "' needs two numbers, not " + __ts_type(a) + " and " + __ts_type(b));
+		}
+		function __ts_sub(a, b) { if (typeof a !== "number" || typeof b !== "number") __ts_numbers("-", a, b); return a - b; }
+		function __ts_mul(a, b) { if (typeof a !== "number" || typeof b !== "number") __ts_numbers("*", a, b); return a * b; }
+		function __ts_div(a, b) { if (typeof a !== "number" || typeof b !== "number") __ts_numbers("/", a, b); return a / b; }
+		function __ts_rem(a, b) { if (typeof a !== "number" || typeof b !== "number") __ts_numbers("%", a, b); return a % b; }
+		function __ts_neg(a) {
+			if (typeof a !== "number") {
+				throw new TypeError("'-' needs a number, not " + __ts_type(a));
+			}
+			return -a;
+		}
+		function __ts_inc(a) {
+			if (typeof a !== "number") {
+				throw new TypeError("'++' needs a number, not " + __ts_type(a));
+			}
+			return a + 1;
+		}
+		function __ts_dec(a) {
+			if (typeof a !== "number") {
+				throw new TypeError("'--' needs a number, not " + __ts_type(a));
+			}
+			return a - 1;
+		}
+		function __ts_comparable(a, b) {
+			return (typeof a === "number" && typeof b === "number" && a === a && b === b) || (typeof a === "string" && typeof b === "string");
+		}
+		function __ts_compare(op, a, b) {
+			if (typeof a === "number" && typeof b === "number") {
+				throw new TypeError("'" + op + "' cannot compare NaN (e.g. from parseInt or Number of a text that is no number)");
+			}
+			if (!(__ts_isString(a) && __ts_isString(b))) {
+				throw new TypeError("'" + op + "' compares two numbers or two strings, not " + __ts_type(a) + " and " + __ts_type(b));
+			}
+		}
+		function __ts_lt(a, b) { if (!__ts_comparable(a, b)) __ts_compare("<", a, b); return a < b; }
+		function __ts_le(a, b) { if (!__ts_comparable(a, b)) __ts_compare("<=", a, b); return a <= b; }
+		function __ts_gt(a, b) { if (!__ts_comparable(a, b)) __ts_compare(">", a, b); return a > b; }
+		function __ts_ge(a, b) { if (!__ts_comparable(a, b)) __ts_compare(">=", a, b); return a >= b; }
+		function __ts_notACondition(x) {
+			throw new TypeError("A condition must be a boolean, not " + typeof x + ": compare it, e.g. "
+				+ (typeof x === "number" ? "x > 0" : "s != \"\""));
+		}
+		function __ts_cond(x) {
+			if (typeof x === "boolean") {
+				return x;
+			}
+			if (x === null || x === undefined) {
+				return false;
+			}
+			if (typeof x === "object" || typeof x === "function") {
+				return true;
+			}
+			return __ts_notACondition(x);
 		}
 		
 		// Like the interpreter: an interface is a value with the names of its methods; a class that
@@ -517,6 +639,18 @@ class TinyscriptGenerator   {
 					__ts_atLeast(arguments.length, 1, "«name»");
 					__ts_thisArray(this, "«name»");
 					return arguments.length === 1 ? «name».call(this, item) : «name».apply(this, arguments);
+				} }.«name»);
+			«ENDFOR»
+			// The result of the callback is a condition
+			«FOR name : #["filter", "find", "findIndex", "some", "every", "findLast", "findLastIndex"]»
+				const «name» = A.«name»;
+				__ts_replace(A, "«name»", { «name»(f) {
+					__ts_atLeast(arguments.length, 1, "«name»");
+					__ts_thisArray(this, "«name»");
+					if (typeof f !== "function") {
+						throw new TypeError("«name»() needs a function, not " + __ts_type(f));
+					}
+					return «name».call(this, (item, index, array) => __ts_cond(f(item, index, array)));
 				} }.«name»);
 			«ENDFOR»
 			__ts_replace(A, "join", { join(separator) {
@@ -1059,9 +1193,33 @@ class TinyscriptGenerator   {
 		«ENDFOR»
 	'''
 
-	def dispatch generate(ExpressionStatement stmt) '''
-		«stmt.expr.generate»«IF Operators.increment(stmt) !== null»«Operators.increment(stmt).literal»«ENDIF»;
-	'''
+	// i++; and i--; check that i is a number (__ts_inc / __ts_dec); a property is evaluated once
+	def dispatch generate(ExpressionStatement stmt) {
+		val increment = Operators.increment(stmt)
+		if (increment === null)
+			return '''
+				«stmt.expr.generate»;
+			'''
+		val helper = if (increment == IncrementOperator.INCREMENT) "__ts_inc" else "__ts_dec"
+		val target = stmt.expr
+		if (target instanceof CallOrPropertyAccess) {
+			return '''
+				((o, k) => o[k] = «helper»(o[k]))(«target.expr.generate», «propertyKey((target.suffix as CallOrPropertyAccessSuffix).property)»);
+			'''
+		}
+		'''
+			«target.generate» = «helper»(«target.generate»);
+		'''
+	}
+
+	// The key of o.key or o[key] as a Javascript expression
+	def String propertyKey(PropertyAccessSuffix property) {
+		switch property {
+			DotPropertyAccessSuffix case property.key.name !== null: '"' + property.key.name + '"'
+			DotPropertyAccessSuffix: property.key.expr.generate.toString
+			ComputedPropertyAccessSuffix: property.key.generate.toString
+		}
+	}
 	
 	// tinyscript's var and let are block-scoped: Javascript's let
 	def String declarationKeyword(String kind) {
@@ -1163,7 +1321,7 @@ class TinyscriptGenerator   {
 	'''
 	
 	def dispatch generate(WhileStatement stmt) '''
-		while («stmt.cond.generate») {
+		while («condition(stmt.cond)») {
 			«stmt.^do.generate»
 		}
 	'''
@@ -1195,11 +1353,11 @@ class TinyscriptGenerator   {
 
 	// assert(…) also for assert x == y; without parentheses
 	def dispatch generate(AssertStatement stmt) '''
-		assert(«stmt.cond.generate»);
+		assert(«condition(stmt.cond)»);
 	'''
 	
 	def dispatch generate(IfStatement stmt) '''
-		if («stmt.cond.generate») {
+		if («condition(stmt.cond)») {
 			«stmt.then.generate»
 		}
 		«IF stmt.^else?.elseIf !== null»
@@ -1236,7 +1394,23 @@ class TinyscriptGenerator   {
 		'''
 	}
 	
-	def dispatch generate(BinaryExpression expr) '''
+	// - * / % < <= > >= (and -= *= /= %=) call a checking helper, unless both operands are
+	// numbers anyway; && and || check their operands as conditions and give a boolean
+	def dispatch generate(BinaryExpression expr) {
+		if (!(expr.left instanceof Pattern)) {
+			val helper = checkingHelper(expr.op)
+			if (helper !== null && !(isNumber(expr.left) && isNumber(expr.right)))
+				return '''«helper»(«expr.left.generate», «expr.right.generate»)'''
+			val base = Operators.baseOf(expr.op)
+			if (base !== null && checkingHelper(base) !== null)
+				return expr.generateHelperAssignment(checkingHelper(base) + "(")
+			if (expr.op == BinaryOperator.AND || expr.op == BinaryOperator.OR)
+				return '''«condition(expr.left)» «expr.op.literal» «condition(expr.right)»'''
+		}
+		generateUnchecked(expr)
+	}
+
+	def generateUnchecked(BinaryExpression expr) '''
 		«IF (expr.left instanceof Pattern)»«expr.left.generate» = «(expr.left as Pattern).generatePatternValue(expr.right.generate)»«ELSEIF expr.op == BinaryOperator.ADD_ASSIGN»«expr.generateHelperAssignment("__ts_add(")»«ELSEIF expr.op.isBitwiseAssignment»«expr.generateHelperAssignment('__ts_bitwise("' + Operators.baseOf(expr.op).literal + '", ')»«ELSEIF Operators.isBitwise(expr.op)»__ts_bitwise("«expr.op.literal»", «expr.left.generate», «expr.right.generate»)«ELSEIF expr.op == BinaryOperator.ADD»__ts_add(«expr.left.generate», «expr.right.generate»)«ELSEIF expr.op == BinaryOperator.EQUALS»__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSEIF expr.op == BinaryOperator.NOT_EQUALS»!__ts_eq(«expr.left.generate», «expr.right.generate»)«ELSE»«expr.left.generate» «expr.op.literal» «expr.right.generate»«ENDIF»'''
 
 	// &=, |=, ^=, <<=, >>=: tinyscript's bitwise operators work on 53 bits, Javascript's on 32,
@@ -1294,10 +1468,19 @@ class TinyscriptGenerator   {
 	}
 
 	def dispatch generate(ConditionalExpression expr)
-		'''(«expr.cond.generate» ? «expr.then.generate» : «expr.^else.generate»)'''
+		'''(«condition(expr.cond)» ? «expr.then.generate» : «expr.^else.generate»)'''
 
 	// Nested unary operators get parentheses: "- -x" must not become the decrement "--x"
-	def dispatch generate(Unary expr)
+	// Unary - is checked unless its operand is a number anyway; ! checks its operand as a condition
+	def dispatch generate(Unary expr) {
+		if (expr.op == UnaryOperator.NEGATE && !isNumber(expr.expr))
+			return '''__ts_neg(«expr.expr.generate»)'''
+		if (expr.op == UnaryOperator.NOT)
+			return '''!«IF isBoolean(expr.expr)»«expr.expr.generate»«ELSE»__ts_cond(«expr.expr.generate»)«ENDIF»'''
+		generateUnchecked(expr)
+	}
+
+	def generateUnchecked(Unary expr)
 		'''«IF expr.op == UnaryOperator.DELETE»«expr.generateDelete»«ELSEIF expr.op == UnaryOperator.BIT_NOT»__ts_bitwise("~", «expr.expr.generate»)«ELSEIF expr.op == UnaryOperator.TYPEOF || expr.expr instanceof Unary»«expr.op.literal»(«expr.expr.generate»)«ELSE»«expr.op.literal»«expr.expr.generate»«ENDIF»'''
 		
 	def dispatch generate(NewExpression expr)
