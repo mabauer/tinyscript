@@ -96,18 +96,18 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testOnlyErrorObjectsCanBeThrown() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "throw \"oops\";");
-        assertInterpreterThrows(TinyscriptTypeError.class, "try { throw 42; } catch (e) { print(e); }");
-        assertInterpreterThrows(TinyscriptTypeError.class, "throw { message: \"x\" };");
-        assertInterpreterThrows(TinyscriptTypeError.class, "throw null;");
+        assertSameFailure(TinyscriptTypeError.class, "throw \"oops\";");
+        assertSameFailure(TinyscriptTypeError.class, "try { throw 42; } catch (e) { print(e); }");
+        assertSameFailure(TinyscriptTypeError.class, "throw { message: \"x\" };");
+        assertSameFailure(TinyscriptTypeError.class, "throw null;");
     }
 
     @Test
     public void testProgrammingErrorsAreNotCaught() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "const o = null;\ntry { print(o.x); } catch (e) { print(\"caught\"); }");
-        assertInterpreterThrows(TinyscriptTypeError.class, "try { [1].splice(\"a\"); } catch (e) { print(\"caught\"); }");
-        assertInterpreterThrows(TinyscriptTypeError.class, "try { print(1 + \"a\" < 2); } catch { print(\"caught\"); }");
-        assertInterpreterThrows(TinyscriptAssertationError.class, "try { assert 1 == 2; } catch (e) { print(\"caught\"); }");
+        assertSameFailure(TinyscriptTypeError.class, "const o = null;\ntry { print(o.x); } catch (e) { print(\"caught\"); }");
+        assertKnownGap(TinyscriptTypeError.class, "try { [1].splice(\"a\"); } catch (e) { print(\"caught\"); }");
+        assertKnownGap(TinyscriptTypeError.class, "try { print(1 + \"a\" < 2); } catch { print(\"caught\"); }");
+        assertSameFailure(TinyscriptAssertationError.class, "try { assert 1 == 2; } catch (e) { print(\"caught\"); }");
     }
 
     @Test
@@ -126,7 +126,7 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
     @Test
     @Timeout(value = 30, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void testStackOverflowIsNotCaught() {
-        assertInterpreterThrows(TinyscriptStackOverflowError.class,
+        assertSameFailure(TinyscriptStackOverflowError.class,
                 "function f(n) { return f(n + 1); }\ntry { f(0); } catch (e) { print(\"caught\"); }");
     }
 

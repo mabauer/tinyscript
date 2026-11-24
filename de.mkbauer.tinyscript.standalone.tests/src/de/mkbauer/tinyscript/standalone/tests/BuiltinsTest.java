@@ -71,19 +71,19 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testInvalidArrayLengthIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a.length = -1;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a.length = 1.5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a.length = \"2\";");
+        assertSameFailure(TinyscriptTypeError.class, "let a = []; a.length = -1;");
+        assertSameFailure(TinyscriptTypeError.class, "let a = []; a.length = 1.5;");
+        assertKnownGap(TinyscriptTypeError.class, "let a = []; a.length = \"2\";");
     }
 
     @Test
     public void testArraysHaveNoNamedProperties() {
         // Arrays are lists: writing anything but an integer index or length is a TypeError
-        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a.x = 5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; a[\"name\"] = 5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let a = [1]; a[-1] = 5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let a = [1]; a[1.5] = 5;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let a = []; Object.defineProperty(a, \"x\", { value: 1 });");
+        assertKnownGap(TinyscriptTypeError.class, "let a = []; a.x = 5;");
+        assertKnownGap(TinyscriptTypeError.class, "let a = []; a[\"name\"] = 5;");
+        assertKnownGap(TinyscriptTypeError.class, "let a = [1]; a[-1] = 5;");
+        assertKnownGap(TinyscriptTypeError.class, "let a = [1]; a[1.5] = 5;");
+        assertKnownGap(TinyscriptTypeError.class, "let a = []; Object.defineProperty(a, \"x\", { value: 1 });");
     }
 
     @Test
@@ -115,8 +115,8 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testIndexOfNeedsAnIntegerStartIndex() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].indexOf(1, 0.5);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "\"a\".indexOf(\"a\", \"1\");");
+        assertKnownGap(TinyscriptTypeError.class, "[1].indexOf(1, 0.5);");
+        assertKnownGap(TinyscriptTypeError.class, "\"a\".indexOf(\"a\", \"1\");");
     }
 
     @Test
@@ -128,22 +128,22 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testAtNeedsAnIntegerIndex() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].at(1.5);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].at(\"0\");");
-        assertInterpreterThrows(TinyscriptTypeError.class, "\"a\".at(0.5);");
-        assertInterpreterThrows(TinyscriptArgumentError.class, "[1].at();");
+        assertKnownGap(TinyscriptTypeError.class, "[1].at(1.5);");
+        assertKnownGap(TinyscriptTypeError.class, "[1].at(\"0\");");
+        assertKnownGap(TinyscriptTypeError.class, "\"a\".at(0.5);");
+        assertKnownGap(TinyscriptArgumentError.class, "[1].at();");
     }
 
     @Test
     public void testArrayMethodOnNonArrayIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class,
+        assertKnownGap(TinyscriptTypeError.class,
                 "let o = {};\no.push = [].push;\no.push(1);");
     }
 
     @Test
     public void testBuiltinCalledWithTooFewArgumentsIsAnArgumentError() {
-        assertInterpreterThrows(TinyscriptArgumentError.class, "[1].push();");
-        assertInterpreterThrows(TinyscriptArgumentError.class, "Math.sqrt();");
+        assertKnownGap(TinyscriptArgumentError.class, "[1].push();");
+        assertKnownGap(TinyscriptArgumentError.class, "Math.sqrt();");
     }
 
     // =========================================================================
@@ -213,7 +213,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testObjectCreateWithNonObjectIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "Object.create(5);");
+        assertSameFailure(TinyscriptTypeError.class, "Object.create(5);");
     }
 
     @Test
@@ -228,7 +228,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testObjectDefinePropertyOnNonObjectIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "Object.defineProperty(1, \"a\", {});");
+        assertSameFailure(TinyscriptTypeError.class, "Object.defineProperty(1, \"a\", {});");
     }
 
     @Test
@@ -259,7 +259,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testRedefiningANonConfigurablePropertyIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class,
+        assertSameFailure(TinyscriptTypeError.class,
                 "let o = {};\n"
                 + "Object.defineProperty(o, \"a\", { value: 1, configurable: false });\n"
                 + "Object.defineProperty(o, \"a\", { value: 2 });");
@@ -277,7 +277,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
                 + "print(o.a, Object.getOwnPropertyDescriptor(o, \"a\").writable);\n";
         assertEquals("1 false\n", interpreterOutput(code));
         // As in Javascript's strict mode, assigning to it is an error
-        assertInterpreterThrows(TinyscriptTypeError.class, code + "o.a = 2;");
+        assertSameFailure(TinyscriptTypeError.class, code + "o.a = 2;");
     }
 
     @Test

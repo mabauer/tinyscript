@@ -35,9 +35,9 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testMathChecksItsArguments() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "Math.pow(\"2\", 3);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "Math.hypot(3, \"4\");");
-        assertInterpreterThrows(TinyscriptRuntimeException.class, "Math.pow(2);");
+        assertKnownGap(TinyscriptTypeError.class, "Math.pow(\"2\", 3);");
+        assertKnownGap(TinyscriptTypeError.class, "Math.hypot(3, \"4\");");
+        assertKnownGap(TinyscriptRuntimeException.class, "Math.pow(2);");
     }
 
     @Test
@@ -62,8 +62,8 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "[2, 3] [] [] [1] []\n"
                 + "[] [1, 9, 2, 3, 0] [] [1, 9, 2, 3, 0]\n", interpreterOutput(code));
         assertSameOutput(code);
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].splice(0.5);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].splice(0, \"1\");");
+        assertKnownGap(TinyscriptTypeError.class, "[1].splice(0.5);");
+        assertKnownGap(TinyscriptTypeError.class, "[1].splice(0, \"1\");");
     }
 
     @Test
@@ -94,8 +94,8 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
         assertEquals("[1, 2, [3, [4]], 5] [1, 2, 3, [4], 5] [1, 2, 3, 4, 5] [1, [2, [3, [4]]], 5] []\n"
                 + "[\"a\", \"b\", \"c\"] [1, 10, 2, 20] [1, 2] [[1], 2]\n", interpreterOutput(code));
         assertSameOutput(code);
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].flat(-1);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].flat(1.5);");
+        assertKnownGap(TinyscriptTypeError.class, "[1].flat(-1);");
+        assertKnownGap(TinyscriptTypeError.class, "[1].flat(1.5);");
     }
 
     @Test
@@ -111,10 +111,10 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "{3: \"three\", a: 1, b: [2]} {m: 1} {}\n"
                 + "{a: 1, z: 9, b: 2, c: 3} true\n"
                 + "{aa: 1, bb: \"x\"}\n", interpreterOutput(code));
-        assertInterpreterThrows(TinyscriptTypeError.class, "Object.values(5);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "Object.fromEntries([[\"a\"]]);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "Object.fromEntries([[true, 1]]);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "Object.assign(null, {});");
+        assertKnownGap(TinyscriptTypeError.class, "Object.values(5);");
+        assertKnownGap(TinyscriptTypeError.class, "Object.fromEntries([[\"a\"]]);");
+        assertKnownGap(TinyscriptTypeError.class, "Object.fromEntries([[true, 1]]);");
+        assertSameFailure(TinyscriptTypeError.class, "Object.assign(null, {});");
     }
 
     @Test
@@ -136,7 +136,7 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "9007199254740991 -9007199254740991 9007199254740992\n"
                 + "1.7976931348623157e+308 5e-324 2.220446049250313e-16 Infinity true 0\n", interpreterOutput(code));
         assertSameOutput(code);
-        assertInterpreterThrows(TinyscriptTypeError.class, "parseFloat(3.5);");
+        assertKnownGap(TinyscriptTypeError.class, "parseFloat(3.5);");
     }
 
     @Test
@@ -163,12 +163,12 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testDeleteOnlyRemovesPropertiesOfObjects() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "const a = [1, 2]; delete a[0];");
-        assertInterpreterThrows(TinyscriptTypeError.class, "const m = new Map(); delete m.size;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "const s = \"abc\"; delete s.length;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "delete Math.PI;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "function f() { } delete f.prototype;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let u; delete u.x;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "const n = 5; delete n.x;");
+        assertSameFailure(TinyscriptTypeError.class, "const a = [1, 2]; delete a[0];");
+        assertSameFailure(TinyscriptTypeError.class, "const m = new Map(); delete m.size;");
+        assertSameFailure(TinyscriptTypeError.class, "const s = \"abc\"; delete s.length;");
+        assertSameFailure(TinyscriptTypeError.class, "delete Math.PI;");
+        assertSameFailure(TinyscriptTypeError.class, "function f() { } delete f.prototype;");
+        assertSameFailure(TinyscriptTypeError.class, "let u; delete u.x;");
+        assertKnownGap(TinyscriptTypeError.class, "const n = 5; delete n.x;");
     }
 }

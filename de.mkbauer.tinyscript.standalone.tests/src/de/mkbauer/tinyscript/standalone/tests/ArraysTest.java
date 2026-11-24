@@ -31,9 +31,9 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
         assertEquals("a,b,c\n0\n", interpreterOutput(code));
         assertSameOutput(code);
         // Javascript sorts numbers as strings ([1, 10, 9]), a trap
-        assertInterpreterThrows(TinyscriptTypeError.class, "[10, 9, 1].sort();");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[3, 1].sort((x, y) => x < y);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[3, 1].sort(1);");
+        assertKnownGap(TinyscriptTypeError.class, "[10, 9, 1].sort();");
+        assertKnownGap(TinyscriptTypeError.class, "[3, 1].sort((x, y) => x < y);");
+        assertSameFailure(TinyscriptTypeError.class, "[3, 1].sort(1);");
     }
 
     @Test
@@ -50,7 +50,7 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
                 + "print([\"a\", \"b\"].reduce((s, x, i) => s + x + i, \"\")); print([].reduce((s, x) => s + x, 42));";
         assertEquals("6\n6\na0b1\n42\n", interpreterOutput(code));
         assertSameOutput(code);
-        assertInterpreterThrows(TinyscriptTypeError.class, "[].reduce((s, x) => s + x);");
+        assertSameFailure(TinyscriptTypeError.class, "[].reduce((s, x) => s + x);");
     }
 
     @Test
@@ -75,16 +75,16 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testCallbacksMustReturnConditions() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1, 2].some(x => x);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1, 2].find(x => x - 1);");
+        assertKnownGap(TinyscriptTypeError.class, "[1, 2].some(x => x);");
+        assertKnownGap(TinyscriptTypeError.class, "[1, 2].find(x => x - 1);");
     }
 
     @Test
     public void testCallbacksMustBeFunctions() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].forEach(1);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].map(\"x\");");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].filter(null);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1].reduce({}, 0);");
+        assertSameFailure(TinyscriptTypeError.class, "[1].forEach(1);");
+        assertSameFailure(TinyscriptTypeError.class, "[1].map(\"x\");");
+        assertSameFailure(TinyscriptTypeError.class, "[1].filter(null);");
+        assertSameFailure(TinyscriptTypeError.class, "[1].reduce({}, 0);");
     }
 
     @Test
@@ -108,8 +108,8 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
                 + "print(new Array().length); print(new Array(1, 2).join(\",\")); print(new Array(\"a\").join(\",\"));";
         assertEquals("3\n0,0,0\n.../..#\n0\n1,2\na\n", interpreterOutput(code));
         assertSameOutput(code);
-        assertInterpreterThrows(TinyscriptTypeError.class, "new Array(-1);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "new Array(1.5);");
+        assertSameFailure(TinyscriptTypeError.class, "new Array(-1);");
+        assertSameFailure(TinyscriptTypeError.class, "new Array(1.5);");
     }
 
     @Test
@@ -125,6 +125,6 @@ public class ArraysTest extends TinyscriptTranspilerTestBase {
         String code = "print([1, 2, 3].join()); print([1, 2].join(\"\")); print([].join());";
         assertEquals("1,2,3\n12\n\n", interpreterOutput(code));
         assertSameOutput(code);
-        assertInterpreterThrows(TinyscriptTypeError.class, "[1, 2].join(1);");
+        assertKnownGap(TinyscriptTypeError.class, "[1, 2].join(1);");
     }
 }

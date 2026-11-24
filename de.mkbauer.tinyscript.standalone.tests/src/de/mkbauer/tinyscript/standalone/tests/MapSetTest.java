@@ -113,25 +113,25 @@ public class MapSetTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testForLoopNeedsSomethingIterable() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "for (let k : { a: 1 }) { }");
-        assertInterpreterThrows(TinyscriptTypeError.class, "for (let k : 42) { }");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let u; for (let k : u) { }");
+        assertSameFailure(TinyscriptTypeError.class, "for (let k : { a: 1 }) { }");
+        assertSameFailure(TinyscriptTypeError.class, "for (let k : 42) { }");
+        assertSameFailure(TinyscriptTypeError.class, "let u; for (let k : u) { }");
     }
 
     @Test
     public void testMapAndSetHaveNoOtherProperties() {
         // m[k] = v instead of m.set(k, v) is a common mistake
-        assertInterpreterThrows(TinyscriptTypeError.class, "let m = new Map(); m[\"a\"] = 1;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let m = new Map(); m.size = 3;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let s = new Set(); s.x = 1;");
+        assertKnownGap(TinyscriptTypeError.class, "let m = new Map(); m[\"a\"] = 1;");
+        assertSameFailure(TinyscriptTypeError.class, "let m = new Map(); m.size = 3;");
+        assertKnownGap(TinyscriptTypeError.class, "let s = new Set(); s.x = 1;");
     }
 
     @Test
     public void testMethodsOnlyWorkOnMapsAndSets() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "let get = new Map().get; get(1);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "new Map([1, 2]);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "new Set(42);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "new Map().forEach(1);");
+        assertSameFailure(TinyscriptTypeError.class, "let get = new Map().get; get(1);");
+        assertSameFailure(TinyscriptTypeError.class, "new Map([1, 2]);");
+        assertSameFailure(TinyscriptTypeError.class, "new Set(42);");
+        assertSameFailure(TinyscriptTypeError.class, "new Map().forEach(1);");
     }
 
     @Test

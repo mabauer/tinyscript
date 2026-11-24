@@ -105,10 +105,10 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
     public void testRangeIsStrict() {
         TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("range(1.5);"));
         assertEquals("range() needs integers, not 1.5", e.getMessage());
-        assertInterpreterThrows(TinyscriptTypeError.class, "range(\"3\");");
-        assertInterpreterThrows(TinyscriptTypeError.class, "range(0, 5, 0);");
+        assertSameFailure(TinyscriptTypeError.class, "range(\"3\");");
+        assertSameFailure(TinyscriptTypeError.class, "range(0, 5, 0);");
         assertThrows(TinyscriptRuntimeException.class, () -> interpreterOutput("range();"));
-        assertInterpreterThrows(TinyscriptTypeError.class, "range(1, 2, 3, 4);");
+        assertSameFailure(TinyscriptTypeError.class, "range(1, 2, 3, 4);");
     }
 
     @Test

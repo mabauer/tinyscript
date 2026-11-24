@@ -45,9 +45,9 @@ public class SpreadAndRestTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testSpreadOfAnythingElseIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "const o = { a: 1 }; print(...o);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "print([...5]);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let u; print(...u);");
+        assertSameFailure(TinyscriptTypeError.class, "const o = { a: 1 }; print(...o);");
+        assertSameFailure(TinyscriptTypeError.class, "print([...5]);");
+        assertSameFailure(TinyscriptTypeError.class, "let u; print(...u);");
     }
 
     @Test
@@ -65,8 +65,8 @@ public class SpreadAndRestTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testRestElementsAreStrictLikeOtherPatterns() {
         // At least as many elements as there are names before the rest
-        assertInterpreterThrows(TinyscriptTypeError.class, "const [a, b, ...rest] = [1];");
-        assertInterpreterThrows(TinyscriptTypeError.class, "const [...rest] = \"abc\";");
+        assertSameFailure(TinyscriptTypeError.class, "const [a, b, ...rest] = [1];");
+        assertSameFailure(TinyscriptTypeError.class, "const [...rest] = \"abc\";");
     }
 
     @Test

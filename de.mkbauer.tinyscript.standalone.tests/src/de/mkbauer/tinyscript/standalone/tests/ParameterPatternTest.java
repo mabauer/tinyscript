@@ -37,9 +37,9 @@ public class ParameterPatternTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testPatternParametersAreStrictLikeOtherPatterns() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "function f([a, b]) { return a; } f([1]);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "function f({ a }) { return a; } f(null);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "function f([a]) { return a; } f();");
+        assertSameFailure(TinyscriptTypeError.class, "function f([a, b]) { return a; } f([1]);");
+        assertSameFailure(TinyscriptTypeError.class, "function f({ a }) { return a; } f(null);");
+        assertSameFailure(TinyscriptTypeError.class, "function f([a]) { return a; } f();");
     }
 
     @Test

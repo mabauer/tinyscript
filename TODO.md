@@ -61,17 +61,10 @@ in node). Error class, message and line are goals for good messages, not part of
 equality: the same message only where tinyscript throws the error itself (V8's
 own, such as a property of `undefined`, a call of a non-function or a stack
 overflow, keep their text: wrapping every access and call would cost the speed
-that is the reason for node), the line once there are source maps (item 6). Not
+that is the reason for node), the line once there are source maps (item 5). Not
 equal by design: the sandbox, the depth of recursion, `Math.random`, time.
 
-1. **Same failures, tested:** the helpers are there (`assertSameFailure`,
-   `assertKnownGap`; class and message differences go to
-   `target/backend-differences.txt`), `StrictnessTest` uses them (2 cases fail
-   the same, 22 are gaps). Move the other error tests
-   (`assertInterpreterThrows`, about 170 places) to them; the number of
-   `assertKnownGap` measures the gap, grouped by cause it is the work list of
-   item 4.
-2. **Same values, tested:** the AoC programs cover only what works.
+1. **Same values, tested:** the AoC programs cover only what works.
    - a matrix of every builtin with edge values (`NaN`, `-0`, `""`, negative,
      not an integer, too few arguments), generated from the builtin objects of
      the runtime (`defineBuiltinMethod`): both backends give the same value or
@@ -86,7 +79,7 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      `trim` and `toUpperCase` / `toLowerCase` with Unicode; `includes` with
      `NaN` (fixed 2026-11-24); different: `new Number(5)` (a `TypeError` in the
      interpreter, a `Number` object in node).
-3. **Static checks, level 1 (sound, no type inference):**
+2. **Static checks, level 1 (sound, no type inference):**
    - builtins (`Math`, `JSON`, `Number`, `parseInt` …): unknown members with a
      suggestion (`Math.sqr`, `Math.PIE`, which gives `undefined` today), the
      number of arguments in both directions (too few is a
@@ -100,11 +93,19 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      function or a non-function, `throw` of anything but `new Error(…)`,
      duplicate keys in object literals, code after `return` / `break` /
      `continue` / `throw`, too short array literals in patterns.
-4. **Checked code in the generator** where types are not proven: `__ts_` helpers
-   for `-`, `*`, `<`, conditions, `&&` / `||` (as `__ts_add` and `__ts_eq`
-   already do); builtins replaced in the prelude to check as the interpreter
-   does (argument counts, integers for `substring` / `at` / `range`, `sort()`
-   without comparison only for strings). Measured against items 2 and 3.
+3. **Checked code in the generator** where types are not proven. The gap,
+   measured 2026-11-24 with `assertKnownGap`: of 174 error tests, 77 fail the
+   same in node and 97 go on there: arguments of builtins about 50 (types,
+   integers, counts: `"a".repeat(1.5)`, `Math.sqrt()`, `parseInt(42)`, `sort()`
+   of numbers), properties of primitives and arrays about 17 (`n.x`, `a.x = 5`,
+   `a[-1] = 5`), operators about 16 (`1 - "a"`, `x += true`, `s++`, `1 < "a"`)
+   and conditions about 13 (`if (1)`, `!0`, callbacks of `filter` / `find` that
+   return numbers). The parts: `__ts_` helpers for `-`, `*`, `<`, conditions,
+   `&&` / `||` (as `__ts_add` and `__ts_eq` already do); builtins replaced in
+   the prelude to check as the interpreter does (argument counts, integers for
+   `substring` / `at` / `range`, `sort()` without comparison only for strings).
+   Measured with the `assertKnownGap` cases (each closed gap turns into
+   `assertSameFailure`) and item 1.
    - **Measure the speed first:** two or three AoC days with the checks written
      by hand, before building them. A helper shared by all places sees all
      types; probably the check belongs inline, with the helper only for the
@@ -114,16 +115,16 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
      a fast mode with documented differences instead of one of equal rank.
    - Not possible at a reasonable price in node: no properties on arrays, an
      error for reading an unknown property (it would need a `Proxy` or a helper
-     for every access). These stay with the static checks of item 5.
-5. **Static checks, level 2 (kinds):** a light local inference from literals,
+     for every access). These stay with the static checks of item 4.
+4. **Static checks, level 2 (kinds):** a light local inference from literals,
    `new C(…)`, `range(…)`, the fixed result kinds of builtins (`split`, `map` →
    array, `length` → number) and `const` variables: `parts.lenght`,
    `range(n).filter`, `s.push` on a string, `new P().lenth()` on a known class
    (methods of a class only in its body, so this is sound; fields stay dynamic).
    The interpreter should then also reject reading an unknown property of an
    array, string, `Map`, `Set` or range (today `undefined`). The generator uses
-   the kinds to leave out the checks of item 4.
-6. **Error locations in node (source maps):** today an error in the generated
+   the kinds to leave out the checks of item 3.
+5. **Error locations in node (source maps):** today an error in the generated
    code points into the generated bundle, not to the `.tys` file. A source map
    (v3, inline as `//# sourceMappingURL=data:…`) maps the generated positions to
    the tinyscript file, line, column and name, and node uses it with
@@ -146,7 +147,7 @@ equal by design: the sandbox, the depth of recursion, `Math.random`, time.
    module is reported at the caller, as in the interpreter; with source maps
    enabled, errors that are thrown and caught often get slow (measure).
 
-7. **Warnings, later:** unused variables, parameters and imports; `let` never
+6. **Warnings, later:** unused variables, parameters and imports; `let` never
    assigned again; fits the language server.
 
 Stays with the interpreter by design: the sandbox (resource limits; generated
@@ -154,7 +155,7 @@ code never runs foreign scripts on a server), embedding in Java with objects of
 the host, the interactive REPL, and the exact error locations (source maps
 later, if needed). Limits: parameters, fields, return values of the script's own
 functions and `JSON.parse` data have no static type; there only the runtime
-checks of item 4 help. The price of a second backend: every language feature,
+checks of item 3 help. The price of a second backend: every language feature,
 builtin and native module is written and tested twice.
 
 ## Speed

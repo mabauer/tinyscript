@@ -55,7 +55,7 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testTypeOfPropertyOfUndefinedIsATypeError() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "let o = {}; print(typeof o.x.y);");
+        assertSameFailure(TinyscriptTypeError.class, "let o = {}; print(typeof o.x.y);");
     }
 
     @Test
@@ -71,8 +71,8 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNaNIsNoCondition() {
-        assertInterpreterThrows(TinyscriptTypeError.class, "let nan = 0 / 0; print(!nan);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan || false);");
+        assertKnownGap(TinyscriptTypeError.class, "let nan = 0 / 0; print(!nan);");
+        assertKnownGap(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan || false);");
     }
 
     @Test
@@ -118,12 +118,12 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testNumbersOnlyHaveMethodsAndBooleansNoProperties() {
         // Numbers have toFixed and toString (see NumberMethodsTest), nothing else
-        assertInterpreterThrows(TinyscriptTypeError.class, "print((5).hasOwnProperty(\"x\"));");
-        assertInterpreterThrows(TinyscriptTypeError.class, "print(true.toString());");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let n = 5; print(n.x);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let n = 5; n.x = 1;");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan.x);");
-        assertInterpreterThrows(TinyscriptTypeError.class, "let b = false; print(b.hasOwnProperty(\"value\"));");
+        assertKnownGap(TinyscriptTypeError.class, "print((5).hasOwnProperty(\"x\"));");
+        assertKnownGap(TinyscriptTypeError.class, "print(true.toString());");
+        assertKnownGap(TinyscriptTypeError.class, "let n = 5; print(n.x);");
+        assertSameFailure(TinyscriptTypeError.class, "let n = 5; n.x = 1;");
+        assertKnownGap(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan.x);");
+        assertKnownGap(TinyscriptTypeError.class, "let b = false; print(b.hasOwnProperty(\"value\"));");
     }
 
     @Test

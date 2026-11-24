@@ -88,12 +88,14 @@ Base class `TinyscriptTranspilerTestBase` provides:
 - `assertSameOutput(String tsCode)` — Level 1 differential assertion
 - `assertTranspilerCorrect(String)` / `assertTranspilerCorrectFromFile(String)`
   — Level 2 integration assertions
-- `assertInterpreterThrows(Class, String)` — expected-exception helper
-- `assertSameFailure(String)` — both backends fail at the same point (same
-  output up to the error) and in the same category for `catch`; class and
+- `assertInterpreterThrows(Class, String)` — expected-exception helper, only for
+  what node cannot do alike (the sandbox); errors otherwise use:
+- `assertSameFailure([Class,] String)` — both backends fail at the same point
+  (same output up to the error) and in the same category for `catch`; class and
   message differences are only written to `target/backend-differences.txt`
-- `assertKnownGap(String)` — the interpreter fails, node goes on (a known gap of
-  the generated code); fails once node fails too, so the list stays true
+- `assertKnownGap([Class,] String)` — the interpreter fails, node goes on (a
+  known gap of the generated code); fails once node fails too, so the list stays
+  true
 
 ```bash
 # Run standalone tests only (fast, use after interpreter or generator changes)
