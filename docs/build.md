@@ -11,15 +11,16 @@ pipeline.
 Tinyscript has two distinct kinds of Maven modules that cannot be mixed in a
 single reactor run:
 
-| Tier                       | Modules                                                                                                 | Build tool     | POM parent                                |
-| -------------------------- | ------------------------------------------------------------------------------------------------------- | -------------- | ----------------------------------------- |
-| **OSGi / Eclipse plugins** | `de.mkbauer.tinyscript`, `.ide`, `.ui`, `.tests`, `.sdk`, `.updatesite`, `.target`, `.standalone.tests` | Tycho 5        | Root `pom.xml`                            |
-| **Plain Maven JARs**       | `de.mkbauer.tinyscript.repl`, `de.mkbauer.tinyscript.webdemo`                                           | Standard Maven | `spring-boot-starter-parent` / own parent |
+| Tier               | Modules                                                                                                                            | Build tool     | POM parent                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------- |
+| **Tycho reactor**  | `de.mkbauer.tinyscript`, `.ide`, `.ui`, `.tests`, `.sdk`, `.updatesite`, `.target`; plain JARs in it: `.standalone.tests`, `.repl` | Tycho 5        | Root `pom.xml` (the plain JARs: none) |
+| **Separate build** | `de.mkbauer.tinyscript.webdemo`                                                                                                    | Standard Maven | `spring-boot-starter-parent`          |
 
-The root `pom.xml` is the **Tycho reactor**. It lists the OSGi modules
-(including `standalone.tests`) but intentionally **excludes** `repl` and
-`webdemo` — those are standalone Spring Boot / fat-JAR projects that inherit
-from different parents and must be built separately.
+The root `pom.xml` is the **Tycho reactor**. It lists the OSGi modules and two
+plain Maven JAR modules without a parent, `standalone.tests` and `repl` (since
+2026-11-24: a full build also builds and tests the REPL fat JAR with the core of
+the same build). It **excludes** `webdemo`, which inherits from
+`spring-boot-starter-parent` and builds its Vue frontend with npm.
 
 ---
 
@@ -52,9 +53,9 @@ tinyscript/                          ← Tycho reactor root
 ├── de.mkbauer.tinyscript.sdk        ← Eclipse feature for SDK distribution
 ├── de.mkbauer.tinyscript.updatesite ← Eclipse p2 update site
 ├── de.mkbauer.tinyscript.standalone.tests  ← Plain JUnit tests (no OSGi)
-│
 ├── de.mkbauer.tinyscript.repl       ← Standalone REPL fat JAR (plain Maven)
-└── de.mkbauer.tinyscript.webdemo    ← Spring Boot web demo fat JAR (plain Maven)
+│
+└── de.mkbauer.tinyscript.webdemo    ← Spring Boot web demo fat JAR (separate build)
 ```
 
 ---
@@ -65,7 +66,7 @@ tinyscript/                          ← Tycho reactor root
 ./mvnw clean install
 ```
 
-Runs the Tycho reactor over all 8 OSGi modules in dependency order:
+Runs the Tycho reactor over its 10 modules in dependency order:
 
 1. `target` — resolves the Eclipse target platform (downloads p2 artifacts on
    first run; cached in `~/.m2`)
@@ -77,10 +78,11 @@ Runs the Tycho reactor over all 8 OSGi modules in dependency order:
 5. `standalone.tests` — plain JUnit tests; no OSGi; fast (< 5 s); runs
    `InterpreterReferenceTest`, `TranspilerTest`, `TranspilerVerifyTest`
 6. `sdk`, `updatesite` — Eclipse feature + p2 site artifacts
+7. `repl` — the REPL fat JAR and its tests
 
-**Why `install` and not `package`?** The `repl` and `webdemo` modules depend on
+**Why `install` and not `package`?** The `webdemo` module depends on
 `de.mkbauer.tinyscript` as a plain Maven artifact. `install` puts it into the
-local `~/.m2` repository so the downstream builds can find it.
+local `~/.m2` repository so its separate build can find it.
 
 Skip tests:
 
@@ -92,12 +94,18 @@ Skip tests:
 
 ## 5. REPL Fat JAR
 
+Built by the full build. Only the REPL and what it needs (the core):
+
+```bash
+./mvnw clean package -pl de.mkbauer.tinyscript.repl -am
+```
+
+Or only the REPL itself, with the core already installed (`./mvnw install` from
+the root first):
+
 ```bash
 ./mvnw clean package -f de.mkbauer.tinyscript.repl/pom.xml
 ```
-
-Requires the core module to already be installed (i.e., `./mvnw install` from
-the root first).
 
 Output: `de.mkbauer.tinyscript.repl/target/tinyscript-repl.jar` (fixed name,
 version in the manifest)
