@@ -37,6 +37,62 @@ TypeScript (`examples/aoc20xx`).
 5. **Possibly later:** `finally`; error classes with `instanceof` (`TypeError`,
    `IOError`); patterns in `catch ({ message })`.
 
+## Checking scripts, and code generation as a second backend
+
+**Goal** (2026-11-24): keep the option open to run scripts by generating
+Javascript for node, as a second backend of equal rank next to the interpreter.
+Today the generator mainly keeps the interpreter honest (differential tests); as
+a backend it must keep tinyscript's semantics, errors included. A probe of 41
+typical mistakes: 1 was found before the run, 38 only by the interpreter or not
+at all; the generated code checks hardly any of them (`"a" - 1` is `NaN`,
+`if (1)` runs, `[10, 9, 1].sort()` sorts as text). Modules (not found, cyclic,
+missing exports, invalid imported files) are checked the same way in both.
+
+1. **Fixes first (small PR):** emit `"use strict"` (today `this` in a plain call
+   is `globalThis` in node but `undefined` in tinyscript, and `Math.PI = 3` is
+   ignored silently); members of builtin objects read-only in both
+   (`Math.PI = 3` works in the interpreter); `new` of an arrow function an error
+   in the interpreter too (node: `TypeError`).
+2. **Same errors, tested:** `assertSameError(code)`: both backends fail with the
+   same error class and message. Move the error tests
+   (`assertInterpreterThrows`, about 100 places that throw a `TypeError`) to it
+   step by step; the number of cases that still differ measures the gap.
+3. **Static checks, level 1 (sound, no type inference):**
+   - builtins (`Math`, `JSON`, `Number`, `parseInt` …): unknown members with a
+     suggestion (`Math.sqr`, `Math.PIE`, which gives `undefined` today), the
+     number of arguments in both directions (too few is a
+     `TinyscriptArgumentError` with a weak message today), literal arguments of
+     the wrong type; the signatures come from the builtin objects of the runtime
+     (`defineBuiltinMethod` knows minimum and maximum), not a second list;
+   - operators and conditions on literals or obvious types (`"a" - 1`,
+     `[1] + 1`, `1 < "2"`, `if (1)`, `if (x = 2)`, `x == NaN`,
+     `typeof x == "numbr"`), generalizing the check for `options || {}`;
+   - calls and structure: a known class without `new`, `new` of an arrow
+     function or a non-function, `throw` of anything but `new Error(…)`,
+     duplicate keys in object literals, code after `return` / `break` /
+     `continue` / `throw`, too short array literals in patterns.
+4. **Checked code in the generator** where types are not proven: `__ts_` helpers
+   for `-`, `*`, `<`, conditions, `&&` / `||` (as `__ts_add` and `__ts_eq`
+   already do); builtins replaced in the prelude to check as the interpreter
+   does (argument counts, integers for `substring` / `at` / `range`, `sort()`
+   without comparison only for strings, no properties on arrays). Costs speed in
+   node; measured against item 2.
+5. **Static checks, level 2 (kinds):** a light local inference from literals,
+   `new C(…)`, `range(…)`, the fixed result kinds of builtins (`split`, `map` →
+   array, `length` → number) and `const` variables: `parts.lenght`,
+   `range(n).filter`, `s.push` on a string, `new P().lenth()` on a known class
+   (methods of a class only in its body, so this is sound; fields stay dynamic).
+   The interpreter should then also reject reading an unknown property of an
+   array, string, `Map`, `Set` or range (today `undefined`). The generator uses
+   the kinds to leave out the checks of item 4.
+6. **Warnings, later:** unused variables, parameters and imports; `let` never
+   assigned again; fits the language server.
+
+Stays with the interpreter by design: the sandbox (resource limits) and the
+exact error locations (source maps later, if needed). Limits: parameters,
+fields, return values of the script's own functions and `JSON.parse` data have
+no static type; there only the runtime checks of item 4 help.
+
 ## Speed
 
 The tree-walking interpreter is fast enough for AoC: most days of 2023 and 2024
@@ -85,7 +141,8 @@ functions about 0.35 µs.
   decision, based on measurements.
 - **Running the generated Javascript in the JVM** (GraalJS / Nashorn, removed
   2026-11-22): node is the reference of the differential tests, and embedding
-  means `TinyscriptEngine` with its sandbox and error locations.
+  means `TinyscriptEngine` with its sandbox and error locations. Generating code
+  for node as a second backend is a different matter (see above).
 - **Inheritance between classes** (`extends`, `super`): code is shared by
   composition; objects with the same methods are used alike
   (`examples/oo/expressions.tys`).
