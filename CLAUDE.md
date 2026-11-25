@@ -281,9 +281,10 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   Javascript reserves (`default`, `enum`, `yield` …) get the prefix `__ts_`; its
   prelude replaces the builtins by ones that check their arguments as the
   interpreter does, and operators and conditions are checked by `__ts_` helpers
-  where the operator does not already guarantee the kind; with source maps
-  (`setSourceMaps`, `tinyscript --node`), node reports errors with the
-  tinyscript line
+  where the operator does not already guarantee the kind; for node
+  (`setForNode`, `tinyscript --node`), the program runs in a worker with a large
+  stack (deep recursion as in the interpreter) and reports errors with the
+  tinyscript line (source maps)
 
 ### TODO markers in the code
 
