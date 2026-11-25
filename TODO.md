@@ -20,6 +20,14 @@ TypeScript (`examples/aoc20xx`).
    Javascript-compatible. The lexer for `${…}` is real work in Xtext.
 2. **Smaller:** assignment with a pattern (`[a, b] = [b, a];`), renaming in
    imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`.
+   More of Javascript's builtins: node has methods and constants that tinyscript
+   does not (decided 2026-11-25: they stay in node, `BuiltinMembersTest` lists
+   them), such as `String#concat`, `match`, `substr`, `Array#concat`, `keys`,
+   `values`, `toSorted`, the `Set` operations (`union` …), `Number.isNaN`,
+   `Math.cosh`, `Math.LN2`, `Object.freeze`, `Object.is`, `valueOf`, `f.bind`,
+   `e.stack`; a program that uses them runs only in node. Decide which ones
+   tinyscript takes over; phase 3 finds the others before the run where the kind
+   is known.
 3. **Library:** a priority queue in a `std:` module (days 16 of 2024 and 17 of
    2023 have a binary heap of their own); `findAll` with the positions of the
    matches; a single-character field in `parse` (`a<2006`); possibly `readAll()`
@@ -48,26 +56,17 @@ the tinyscript line (source maps). 275 error tests require both backends to fail
 alike; 8 still go on in node (`assertKnownGap`): 4 properties (`a.x = 5` on an
 array and others, see phase 2.1), 4 builtins with too many arguments. Of the
 messages, 161 differ (157 only in the text, 4 `TypeError` against `RangeError`;
-`target/backend-differences.txt`). `BuiltinMatrixTest` calls every builtin with
-edge values in both backends (3105 cases); 2 known differences are left
-(`target/builtin-matrix.txt`). `BuiltinMembersTest` compares the members of the
-builtins and typical values in both directions.
+`target/backend-differences.txt`). Phase 1 is done (2026-11-25): every test runs
+in both backends (only the sandbox stays with the interpreter);
+`BuiltinMatrixTest` calls every builtin with edge values in both backends (3105
+cases, 2 known differences, `target/builtin-matrix.txt`); `BuiltinMembersTest`
+compares the members of the builtins and typical values in both directions.
 
-**Plan** (2026-11-24), in this order: phase 1, then 2, 3 and 5 (phase 2.1, the
-depth of recursion, is done: a worker with a large stack); phase 4 is put back
-for now. `--node` stops being experimental after phases 1 and 2 (no known gaps
-left, or only documented ones that phase 3 finds before the run); phase 3 then
-makes it stricter and faster.
+**Plan** (2026-11-24), in this order: phases 2, 3 and 5 (phase 1 is done); phase
+4 is put back for now. `--node` stops being experimental after phases 1 and 2
+(no known gaps left, or only documented ones that phase 3 finds before the run);
+phase 3 then makes it stricter and faster.
 
-1. **Phase 1: equality proven by tests.** Left: the members that only node has
-   (decided 2026-11-25: known, not deleted by the prelude; `BuiltinMembersTest`
-   lists them): Javascript's methods and constants that tinyscript does not
-   have, such as `String#concat`, `match`, `substr`, `Array#concat`, `keys`,
-   `values`, `toSorted`, `Array.from`, the `Set` operations (`union` …),
-   `Number.isNaN`, `toPrecision`, `Math.cosh`, `Math.LN2`, `Object.freeze`,
-   `Object.is`, `valueOf`, `f.bind`, and `e.stack`. A program that uses them
-   runs only in node. Decide which ones tinyscript takes over; phase 3 finds the
-   others before the run where the kind is known.
 2. **Phase 2: the gaps in behavior closed.**
    1. **Properties in node, the rest:** reading a property of a number or
       boolean, `o[key] = x` on an array and any new property of a `Map` or `Set`
@@ -97,7 +96,8 @@ makes it stricter and faster.
      errors before the run, for both backends.
    - The generator uses the kinds to leave out more checks (comparisons of
      properties, callbacks that return a comparison: day09 of 2024 takes 1.8
-     times the unchecked time today).
+     times the unchecked time today), and to check `o.name = x` only where `o`
+     may be an array (phase 2.1).
    - Literal arguments of the wrong type for builtins other than `Math`
      (`"a".repeat("2")`, `parseInt(42)`): the types are only in the
      implementations, so they need to be declared with `defineBuiltinMethod`.
@@ -110,7 +110,7 @@ makes it stricter and faster.
    (`not number and undefined`, `Cannot read properties of undefined`). Idea:
    each check site gets a number, and a table of the expressions' texts is read
    only when an error is reported, so it costs nothing on the normal path; align
-   the most frequent texts of the 84 differences. Not needed for "equal" (the
+   the most frequent texts of the 161 differences. Not needed for "equal" (the
    same behavior, not the same diagnostics).
 5. **Phase 5: official.** `--node` without the note "experimental"; README and
    language reference describe the second backend; CI runs the example programs
