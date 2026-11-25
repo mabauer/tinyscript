@@ -650,13 +650,13 @@ public abstract class TinyscriptTranspilerTestBase {
         return null;
     }
 
-    private static Failure failure(TinyscriptRuntimeException e, ByteArrayOutputStream stdout) {
+    static Failure failure(TinyscriptRuntimeException e, ByteArrayOutputStream stdout) {
         boolean catchable = e instanceof TinyscriptError || e instanceof TinyscriptIOError || e instanceof TinyscriptJsonError;
         return new Failure(stdout.toString(StandardCharsets.UTF_8), javascriptName(e), e.getMessage(), catchable);
     }
 
     // The class of an interpreter error as Javascript names it (TinyscriptTypeError: TypeError)
-    private static String javascriptName(TinyscriptRuntimeException e) {
+    static String javascriptName(TinyscriptRuntimeException e) {
         return switch (e) {
             case TinyscriptJsonError json -> "SyntaxError";
             case TinyscriptStackOverflowError overflow -> "RangeError";

@@ -1451,9 +1451,10 @@ for (const i : range(5).reverse()) { ... } // 4, 3, 2, 1, 0
 | `r.forEach(f)` | Calls `f(i)` for each integer                                                               |
 | `r.reverse()`  | The same integers backwards, again a lazy range: `range(5).reverse()` is `range(4, -1, -1)` |
 
-The arguments must be integers, the step must not be `0`; anything else is a
-`TypeError`. A range cannot be changed. The callbacks get `(i, index, range)`,
-like those of arrays. Javascript has no `range`: the transpiler adds one.
+The arguments must be integers (not `Infinity`: a range has an end), the step
+must not be `0`; anything else is a `TypeError`. A range cannot be changed. The
+callbacks get `(i, index, range)`, like those of arrays. Javascript has no
+`range`: the transpiler adds one.
 
 ### `Math`
 
@@ -1572,6 +1573,12 @@ array or object is noticed at once.
 | `Object.getOwnPropertyDescriptor(obj, key)`  | Returns a property descriptor                                                     |
 | `Object.getOwnPropertyNames(obj)`            | Array of all own property names                                                   |
 | `obj.hasOwnProperty(key)`                    | `true` if `key` is an own (non-inherited) property                                |
+| `Object()` / `new Object()`                  | A new empty object; `Object(obj)` is `obj`                                        |
+
+These functions take only objects (arrays and functions are objects): a number,
+string, boolean, `null` or `undefined` is a `TypeError` (Javascript lists the
+indexes of a string, gives `Number.prototype` for a number and wraps it in an
+object for `Object(5)`). Keys are strings or numbers, a descriptor is an object.
 
 ```
 const proto = { greet: function() { print("hi"); } };

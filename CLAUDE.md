@@ -81,6 +81,12 @@ node. The webdemo's `ExamplesTests` run every example as the demo does
 (sandboxed) and check that `Toolbar.vue` lists exactly the example files; a new
 example needs no new test.
 
+`BuiltinMatrixTest` calls every builtin (read from the builtin objects of the
+interpreter, so a new builtin needs no new test) with edge values in both
+backends: the same value or an error of the same category; the differences are
+in `target/builtin-matrix.txt`, known ones are listed in the test with their
+reason.
+
 Base class `TinyscriptTranspilerTestBase` provides:
 
 - `interpreterOutput(String tsCode)` — runs snippet through a fresh

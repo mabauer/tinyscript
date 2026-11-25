@@ -44,11 +44,13 @@ experimental) as a second backend of equal rank next to the interpreter; what
 "equal" means is in `docs/architecture.md` §15. State: the generated code runs
 in strict mode and checks builtins, operators and conditions as the interpreter
 does; many mistakes are errors before the run, for both backends; errors show
-the tinyscript line (source maps). 243 error tests require both backends to fail
-alike; 23 still go on in node (`assertKnownGap`): 19 properties of primitives,
+the tinyscript line (source maps). 275 error tests require both backends to fail
+alike; 22 still go on in node (`assertKnownGap`): 18 properties of primitives,
 arrays, Maps and Sets, 4 builtins with too many arguments. Of the messages, 161
 differ (157 only in the text, 4 `TypeError` against `RangeError`;
-`target/backend-differences.txt`).
+`target/backend-differences.txt`). `BuiltinMatrixTest` calls every builtin with
+edge values in both backends (3105 cases); 4 known differences are left
+(`target/builtin-matrix.txt`).
 
 **Plan** (2026-11-24), in this order: phase 1, then 2, 3 and 5 (phase 2.1, the
 depth of recursion, is done: a worker with a large stack); phase 4 is put back
@@ -57,16 +59,15 @@ left, or only documented ones that phase 3 finds before the run); phase 3 then
 makes it stricter and faster.
 
 1. **Phase 1: equality proven by tests.**
-   1. **Same values for every builtin:** a matrix of every builtin with edge
-      values (`NaN`, `-0`, `""`, negative, not an integer, too few arguments),
-      generated from the builtin objects of the runtime (`BuiltinSignatures`):
-      both backends give the same value or the same error.
-   2. **The members of the builtin objects and prototypes compared in both
+   1. **The members of the builtin objects and prototypes compared in both
       directions:** node knows more than tinyscript (`f.constructor`,
       `o.__proto__` of builtins …), and such a program runs only there; the
       prelude deletes what tinyscript does not have, or makes it an error. Found
-      when the interpreter-only tests went to both backends: the interpreter has
-      no `f.name` (always `undefined`), and print names fewer functions:
+      by the builtin matrix: functions have no own `name` and `length` in the
+      interpreter (`Object.getOwnPropertyNames(f)`), arrays an own `constructor`
+      (node: `length`), and `Array.prototype` is an array in node. Found when
+      the interpreter-only tests went to both backends: the interpreter has no
+      `f.name` (always `undefined`), and print names fewer functions:
       `const f = () => …`, `let g = function () { … }` and `later = () => 1`
       print as `[Function]` (node, by Javascript's name inference,
       `[Function: f]`), a method of a class as `[Function: P.area]` (node
@@ -76,7 +77,7 @@ makes it stricter and faster.
    1. **Properties in node:** reading a property of a number or boolean (`n.x`,
       `n.length`, `true.toString()`) and setting one on an array, `Map` or `Set`
       (`a.x = 5`, `a[-1] = 5`, `m["a"] = 1`) is a `TypeError` in the interpreter
-      and goes on in node (19 known gaps; setting one on a primitive already
+      and goes on in node (18 known gaps; setting one on a primitive already
       fails in strict mode). First measure a cheap check on the AoC days: for
       reads, a fast path for objects (`typeof o === "object"`); for writes, only
       on arrays, `Map`s and `Set`s. What costs at most about 10 % goes in; the
@@ -87,6 +88,11 @@ makes it stricter and faster.
       (4 known gaps). The checked builtins of the prelude do not check the
       maximum, since builtins as callbacks get more arguments (`.map(Number)`);
       a check at the call site of the generated code would tell the two apart.
+   3. **`Math.exp` and the other functions of `StrictMath` to the last bit:**
+      `Math.exp(1)` is `2.7182818284590455` in the interpreter, `Math.E` in node
+      (a known difference of the builtin matrix). Port `exp` (and where needed
+      `log`, `sin` …, `pow`) from FreeBSD's msun as `log2` and `cbrt`
+      (`FreeBsdMath`), checked against node on 20,000 inputs.
 3. **Phase 3: static checks, level 2 (kinds).**
    - A light local inference from literals, `new C(…)`, `range(…)`, the fixed
      result kinds of builtins (`split`, `map` → array, `length` → number) and

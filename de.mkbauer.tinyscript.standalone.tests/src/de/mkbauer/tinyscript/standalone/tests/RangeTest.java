@@ -100,6 +100,9 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
         assertEquals("range() needs integers, not 1.5", e.getMessage());
         assertSameFailure(TinyscriptTypeError.class, "range(\"3\");");
         assertSameFailure(TinyscriptTypeError.class, "range(0, 5, 0);");
+        // A range has an end
+        assertEquals("range() needs integers, not Infinity",
+                assertSameFailure(TinyscriptTypeError.class, "const n = Infinity;\nrange(n);").getMessage());
         assertEquals(java.util.List.of("1:1: range() needs at least 1 argument, not 0"), reportedErrors("range();"));
         assertEquals(java.util.List.of("1:1: range() takes at most 3 arguments, not 4"), reportedErrors("range(1, 2, 3, 4);"));
     }
