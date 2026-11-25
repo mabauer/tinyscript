@@ -740,7 +740,7 @@ call). node needs `--enable-source-maps`; it costs nothing measurable (AoC days,
 
 ## 13. Modules
 
-See `docs/language-reference.md` (section 13) for the language side.
+See `docs/language-reference.md` (section 14) for the language side.
 
 - **Grammar:** `Tinyscript: (imports += ImportStatement)* global=Global`;
   `ImportStatement` has either a `namespace` (`import * as m`) or `names`

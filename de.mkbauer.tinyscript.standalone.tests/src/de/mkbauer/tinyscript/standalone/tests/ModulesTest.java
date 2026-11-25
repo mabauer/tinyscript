@@ -25,7 +25,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TinyscriptUnsupportedOperationError;
 
 /**
- * Modules: import / export across files (language reference, section 13).
+ * Modules: import / export across files (language reference, section 14).
  */
 public class ModulesTest extends TinyscriptTranspilerTestBase {
 
