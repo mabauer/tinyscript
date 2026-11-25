@@ -666,7 +666,20 @@ generator leaves a check out where the operator already guarantees the kind, by
 the syntax alone (`isBoolean`, `isNumber`): a comparison, `==`, `!`, `&&` / `||`
 is a boolean; `-`, `*`, `/`, `%`, unary `-` and number literals are numbers.
 Variables, properties and calls stay checked. Measured on AoC days with full
-input: 1.0 to 1.8 times the time of unchecked code. Some examples:
+input: 1.0 to 1.8 times the time of unchecked code.
+
+Properties are checked as in the interpreter where it costs little: `o.name` and
+`o[key]` check `o` with `__ts_r` (a number has only `toFixed` and `toString`, a
+boolean no properties) and return it, so that the access stays at its place (V8
+keeps one inline cache per place; a helper that read the property itself would
+see every shape); `__ts_get` reads where the key cannot be evaluated twice
+(`o[f()]`). `o[key] = x` checks an array with `__ts_w` (only integer indexes and
+`length`), `__ts_set` where the key cannot be evaluated twice. `Map`s and `Set`s
+are not extensible, so `m["a"] = 1` fails in strict mode at no cost. Not
+checked: `o.name = x` (`a.x = 5` on an array). Measured (2026-11-25): reads and
+these writes 0–3 % on AoC days; a check of every `o.name = x` took up to 1.7
+times in a loop that updates fields (5.5 times with the store in the helper), so
+it waits for the kinds of the static checks. Some examples:
 
 ```javascript
 // Tinyscript assert → JS function; its error is not caught by catch (__ts_catchable)

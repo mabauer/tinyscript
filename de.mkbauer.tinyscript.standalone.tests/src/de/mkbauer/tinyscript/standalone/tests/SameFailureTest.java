@@ -40,9 +40,9 @@ public class SameFailureTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testNodeGoesOn() {
         assumeNodeAvailable();
-        AssertionFailedError e = assertThrows(AssertionFailedError.class, () -> assertSameFailure("const n = 5;\nprint(n.x);"));
+        AssertionFailedError e = assertThrows(AssertionFailedError.class, () -> assertSameFailure("let a = [];\na.x = 5;"));
         assertEquals(true, e.getMessage().startsWith("The interpreter fails, but node goes on"), e.getMessage());
-        assertKnownGap("const n = 5;\nprint(n.x);");
+        assertKnownGap("let a = [];\na.x = 5;");
     }
 
     @Test

@@ -78,11 +78,17 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArraysHaveNoNamedProperties() {
         // Arrays are lists: writing anything but an integer index or length is a TypeError
+        // (a.x = 5: node checks no o.name = x, it costs too much for every object, TODO.md)
         assertKnownGap(TinyscriptTypeError.class, "let a = []; a.x = 5;");
-        assertKnownGap(TinyscriptTypeError.class, "let a = []; a[\"name\"] = 5;");
-        assertKnownGap(TinyscriptTypeError.class, "let a = [1]; a[-1] = 5;");
-        assertKnownGap(TinyscriptTypeError.class, "let a = [1]; a[1.5] = 5;");
+        assertSameFailure(TinyscriptTypeError.class, "let a = []; a[\"name\"] = 5;");
+        assertSameFailure(TinyscriptTypeError.class, "let a = [1]; a[-1] = 5;");
+        assertSameFailure(TinyscriptTypeError.class, "let a = [1]; a[1.5] = 5;");
+        assertSameFailure(TinyscriptTypeError.class, "let a = [1]; const k = \"x\"; a[k] = 5;");
+        assertSameFailure(TinyscriptTypeError.class, "let a = [1]; function key() { return -1; }\na[key()] = 5;");
+        assertSameFailure(TinyscriptTypeError.class, "let a = [1]; a[\"x\"] += 1;");
         assertSameFailure(TinyscriptTypeError.class, "let a = []; Object.defineProperty(a, \"x\", { value: 1 });");
+        // Indexes as strings and length are fine
+        assertSameOutput("[1, 5, 7] [1]\n", "const a = [1];\na[\"1\"] = 5;\nconst k = 2;\na[k] = 7;\nconst b = [1, 2];\nb[\"length\"] = 1;\nprint(a, b);");
     }
 
     @Test
