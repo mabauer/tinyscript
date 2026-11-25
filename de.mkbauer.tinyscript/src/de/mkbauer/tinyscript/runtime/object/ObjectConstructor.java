@@ -8,7 +8,6 @@ import de.mkbauer.tinyscript.interpreter.BuiltinConstructor;
 import de.mkbauer.tinyscript.interpreter.BuiltinFunction;
 import de.mkbauer.tinyscript.interpreter.EmptyFunction;
 import de.mkbauer.tinyscript.interpreter.Function;
-import de.mkbauer.tinyscript.interpreter.InterpretedFunction;
 import de.mkbauer.tinyscript.interpreter.TinyscriptEngine;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 import de.mkbauer.tinyscript.interpreter.TSObject;
@@ -225,11 +224,9 @@ public class ObjectConstructor extends BuiltinConstructor {
 
 	// Function.prototype methods (the prototype of all functions)
 
+	// The same text as print and String(f): [Function: add], [class Point] (Javascript: the source)
 	private TSValue functionToString(TSObject self, TSValue[] args) {
-		if (self instanceof InterpretedFunction)
-			return TSValue.of(((InterpretedFunction) self).getCodeAsString());
-		String name = (self instanceof Function) ? ((Function) self).getName() : "";
-		return TSValue.of("function " + name + "() { // builtin }");
+		return TSValue.of(new Display(false).own(self));
 	}
 
 	private TSValue functionCall(TSObject self, TSValue[] args) {

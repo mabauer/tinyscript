@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EObject;
 
@@ -183,15 +182,6 @@ public class InterpretedFunction extends Function {
 		return null;
 	}
 
-	public String getCodeAsString() {
-		String result = "function " + getName() + "(";
-		if (ast != null) 
-			result = result + ast.getParams().stream()
-				.map(param -> param instanceof Identifier id ? id.getName() : "...")
-				.collect(Collectors.joining(", "));
-		result = result + ") {...}"; 
-		return result;
-	}
 	
 
 }

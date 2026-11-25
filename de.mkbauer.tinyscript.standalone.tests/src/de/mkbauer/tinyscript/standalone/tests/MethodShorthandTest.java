@@ -1,7 +1,5 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -23,8 +21,7 @@ public class MethodShorthandTest extends TinyscriptTranspilerTestBase {
                 + "};\n"
                 + "print(person.greet(\"Bob\"));\n"
                 + "print(person.rename(\"Carol\").greet(\"Dave\"), Object.keys(person).join());";
-        assertEquals("Hello Bob, I'm Alice\nHello Dave, I'm Carol name,greet,rename\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("Hello Bob, I'm Alice\nHello Dave, I'm Carol name,greet,rename\n", code);
     }
 
     @Test
@@ -41,8 +38,7 @@ public class MethodShorthandTest extends TinyscriptTranspilerTestBase {
                 + "  arrow: () => 3\n"
                 + "};\n"
                 + "print(o.sum(1, 2, 3), o.dist([1, 1], { x: 4, y: 5 }), o.delete(), o[\"two words\"](), o.none(), o.label, o.arrow());";
-        assertEquals("6 7 deleted 2 undefined x 3\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("6 7 deleted 2 undefined x 3\n", code);
     }
 
     @Test
@@ -58,8 +54,7 @@ public class MethodShorthandTest extends TinyscriptTranspilerTestBase {
                 + "const a = counter(0); const b = counter(10);\n"
                 + "a.inc().inc(); b.inc();\n"
                 + "print(a.get(), b.get(), a.n);";
-        assertEquals("2 11 undefined\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("2 11 undefined\n", code);
     }
 
     @Test
@@ -69,14 +64,13 @@ public class MethodShorthandTest extends TinyscriptTranspilerTestBase {
                 + "square.kind = \"square\"; square.side = 3;\n"
                 + "square.area = function() { return this.side * this.side; };\n"
                 + "print(square.describe());";
-        assertEquals("square with area 9\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("square with area 9\n", code);
     }
 
     @Test
     public void testTheStackTraceNamesTheMethod() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput(
-                "const o = {\n  load() {\n    const z = null;\n    return z.x;\n  },\n  \"run it\": function() { return this.load(); }\n};\no[\"run it\"]();"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, 
+                "const o = {\n  load() {\n    const z = null;\n    return z.x;\n  },\n  \"run it\": function() { return this.load(); }\n};\no[\"run it\"]();");
         String trace = e.getTinyscriptStacktraceAsString();
         assertTrue(trace.contains("at load(") && trace.contains("at run it("), trace);
     }

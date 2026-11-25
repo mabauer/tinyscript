@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -32,8 +31,7 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testArithmeticWithNaNStaysNaN() {
         String code = "let nan = 0 / 0; print(nan - 1); print(nan * 2); print(-nan); print(-(-3));";
-        assertEquals("NaN\nNaN\nNaN\n3\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("NaN\nNaN\nNaN\n3\n", code);
     }
 
     @Test
@@ -43,13 +41,12 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
         assertSameFailure("let u; print(u + 1);");
         assertSameFailure("const o = {}; print(o + 1);");
         String code = "let u; print(1 + 2); print(\"a\" + 1); print(1 + \"a\"); print(\"x\" + true); print(\"x\" + u); print(\"x\" + null);";
-        assertEquals("3\na1\n1a\nxtrue\nxundefined\nxnull\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("3\na1\n1a\nxtrue\nxundefined\nxnull\n", code);
     }
 
     @Test
     public void testUnaryMinusNeedsANumber() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("const s = \"a\";\nprint(-s);"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, "const s = \"a\";\nprint(-s);");
         assertTrue(e.getMessage().contains("'-' needs a number, but s is a string"), e.getMessage());
     }
 
@@ -60,15 +57,13 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testUndefinedAndNullAreSpelledLikeJavascript() {
         String code = "let u; print(u); print(null); print(String(u) + String(null));";
-        assertEquals("undefined\nnull\nundefinednull\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("undefined\nnull\nundefinednull\n", code);
     }
 
     @Test
     public void testStringConversionUsesAUserDefinedToString() {
         String code = "let o = { toString: function () { return \"O\"; } };\nprint(\"x\" + o); print(o + \"y\"); print(String(o));";
-        assertEquals("xO\nOy\nO\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("xO\nOy\nO\n", code);
     }
 
     // =========================================================================
@@ -78,8 +73,7 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testStringsCanBeIndexed() {
         String code = "let s = \"abc\"; print(s[1]); print(s[0] + s[2]); print(s[3] == null); print(s[-1] == null);";
-        assertEquals("b\nac\ntrue\ntrue\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("b\nac\ntrue\ntrue\n", code);
     }
 
     @Test
@@ -112,8 +106,7 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
                 + "print(t(true) + t(false) + t(null) + t(u) + t({}) + t([]) + t(t));\n"
                 + "let n = 0; while (node) { n = n + 1; node = node.next; } print(n);\n"
                 + "const o = {}; print(!null); print(!o); print(null || true); print(o && false);";
-        assertEquals("tfffttt\n1\ntrue\nfalse\ntrue\nfalse\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("tfffttt\n1\ntrue\nfalse\ntrue\nfalse\n", code);
     }
 
     @Test
@@ -127,7 +120,7 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
         assertSameFailure("const a = \"a\"; print(a || true);");
         assertSameFailure("const one = 1; assert(one);");
         assertSameFailure("print([1, 2].filter(x => x - 1).length);");
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("let count = 0;\nif (count) { print(1); }"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, "let count = 0;\nif (count) { print(1); }");
         assertTrue(e.getMessage().contains("The condition count is a number, not a boolean"), e.getMessage());
         assertEquals(2, e.getAffectedLine());
     }
@@ -136,6 +129,6 @@ public class StrictnessTest extends TinyscriptTranspilerTestBase {
     public void testLogicalOperatorsShortCircuit() {
         // The right operand is not evaluated, so it is not checked either (as a literal, 1 or "x"
         // would be a compile-time error, see ErrorMessagesTest)
-        assertEquals("false\ntrue\n", interpreterOutput("const one = 1; const x = \"x\"; print(false && one); print(true || x);"));
+        assertSameOutput("false\ntrue\n", "const one = 1; const x = \"x\"; print(false && one); print(true || x);");
     }
 }

@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -24,8 +23,8 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
     @Test
     @Timeout(value = 30, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void testEndlessRecursionIsAStackOverflowError() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptStackOverflowError.class,
-                () -> interpreterOutput("function f(n) { return f(n + 1); }\nf(0);"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptStackOverflowError.class,
+                "function f(n) { return f(n + 1); }\nf(0);");
         assertTrue(e.getMessage().startsWith("Stack overflow"), e.getMessage());
         // The stack trace is shortened, not thousands of lines
         long lines = e.getTinyscriptStacktraceAsString().lines().count();
@@ -43,7 +42,7 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testStackFramesAreNamedAfterTheFunctionsAlsoInBlocks() {
         // The calls are in blocks with variables of their own (which run in contexts of their own)
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput(
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, 
                 "function g(x) {\n"
                 + "    if (x > 0) {\n"
                 + "        const y = x * 2;\n"
@@ -58,21 +57,21 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
                 + "if (true) {\n"
                 + "    const z = 1;\n"
                 + "    g(z);\n"
-                + "}\n"));
+                + "}\n");
         assertEquals("at h(9) at g(4) at global(14)", frames(e));
     }
 
     @Test
     @Timeout(value = 30, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void testStackOverflowInABlockIsNamedAfterTheFunction() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptStackOverflowError.class, () -> interpreterOutput(
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptStackOverflowError.class, 
                 "function valueOf(n) {\n"
                 + "    if (n >= 0) {\n"
                 + "        const next = n + 1;\n"
                 + "        return valueOf(next);\n"
                 + "    }\n"
                 + "}\n"
-                + "valueOf(0);\n"));
+                + "valueOf(0);\n");
         assertTrue(frames(e).startsWith("at valueOf("), frames(e));
         assertTrue(frames(e).contains(" at valueOf(4) "), frames(e));
         assertTrue(frames(e).endsWith(" at global(7)"), frames(e));
@@ -81,8 +80,8 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
     @Test
     @Timeout(value = 30, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     public void testStackOverflowInACallback() {
-        assertThrows(TinyscriptStackOverflowError.class,
-                () -> interpreterOutput("function f(n) { return [n].map(x => f(x + 1)); }\nf(0);"));
+        assertSameFailure(TinyscriptStackOverflowError.class,
+                "function f(n) { return [n].map(x => f(x + 1)); }\nf(0);");
     }
 
     // =========================================================================
@@ -90,7 +89,7 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
     // =========================================================================
 
     private void assertTypeError(String expectedMessage, String code) {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput(code));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, code);
         assertEquals(expectedMessage, e.getMessage());
     }
 
@@ -117,8 +116,7 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
         String code = "function Car() { } let c = new Car();\n"
                 + "print(c.constructor == Car, Object.keys(Car.prototype).length, Car.prototype.constructor == Car, {}.constructor == Object);\n"
                 + "print(c.toString());";
-        assertEquals("true 0 true true\n{}\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true 0 true true\n{}\n", code);
     }
 
     @Test
@@ -141,7 +139,6 @@ public class RobustnessTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testSystemArgsIsEmptyByDefault() {
         String code = "print(System.args.length, Array.isArray(System.args));";
-        assertEquals("0 true\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("0 true\n", code);
     }
 }

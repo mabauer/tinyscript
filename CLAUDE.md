@@ -238,8 +238,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - `+` concatenates two arrays; with a string on either side it concatenates
   strings; an array plus anything else is a `TypeError`
 - One text form: `x.toString()`, `String(x)`, `"" + x` and `print` agree
-  (`{x: 1}`, `[1, 2]`, `Point {x: 1}`); the generator replaces
-  `Object.prototype.toString` / `Array.prototype.toString` so node does too
+  (`{x: 1}`, `[1, 2]`, `Point {x: 1}`, `[Function: f]`); the generator replaces
+  `Object.prototype.toString` / `Array.prototype.toString` /
+  `Function.prototype.toString` so node does too
 - A comma after the last element only in array and object literals (`[1, 2,]`),
   not in calls, parameter lists or patterns; arrays have no empty elements
   (`[1, , 2]` is a syntax error)

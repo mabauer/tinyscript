@@ -572,11 +572,16 @@ public abstract class TinyscriptTranspilerTestBase {
     }
 
     /**
-     * Like {@link #assertSameFailure(String)}; the interpreter must throw {@code expectedType}.
+     * Like {@link #assertSameFailure(String)}; the interpreter must throw {@code expectedType},
+     * which is returned (to check its message). Without node only the interpreter is checked,
+     * and the test goes on.
      */
-    protected void assertSameFailure(Class<? extends TinyscriptRuntimeException> expectedType, String tsCode) {
-        Failure interpreter = interpreterFailure(expectedType, tsCode);
-        assumeNodeAvailable();
+    protected <T extends TinyscriptRuntimeException> T assertSameFailure(Class<T> expectedType, String tsCode) {
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        T error = interpreterError(expectedType, tsCode, stdout);
+        Failure interpreter = failure(error, stdout);
+        if (!nodeAvailable())
+            return error;
         String jsCode = transpile(parse(tsCode));
         NodeJsRunner.Result result = NodeJsRunner.execute(withFailureHandler(jsCode), "");
         if (result.exitCode() == 0)
@@ -593,6 +598,7 @@ public abstract class TinyscriptTranspilerTestBase {
         assertEquals(interpreter.catchable(), node.catchable(), "catch gets the error in one backend, not in the other"
                 + "\n--- Tinyscript ---\n" + tsCode + "\n--- interpreter ---\n" + interpreter + "\n--- node ---\n" + node);
         BackendDifferences.note(tsCode, interpreter, node);
+        return error;
     }
 
     /**
@@ -604,15 +610,18 @@ public abstract class TinyscriptTranspilerTestBase {
     }
 
     /**
-     * Like {@link #assertKnownGap(String)}; the interpreter must throw {@code expectedType}.
+     * Like {@link #assertKnownGap(String)}; the interpreter must throw {@code expectedType},
+     * which is returned (to check its message). Without node only the interpreter is checked.
      */
-    protected void assertKnownGap(Class<? extends TinyscriptRuntimeException> expectedType, String tsCode) {
-        interpreterFailure(expectedType, tsCode);
-        assumeNodeAvailable();
+    protected <T extends TinyscriptRuntimeException> T assertKnownGap(Class<T> expectedType, String tsCode) {
+        T error = interpreterError(expectedType, tsCode, new ByteArrayOutputStream());
+        if (!nodeAvailable())
+            return error;
         NodeJsRunner.Result result = NodeJsRunner.execute(transpile(parse(tsCode)), "");
         if (result.exitCode() != 0)
             fail("node fails now as well, the gap is closed: use assertSameFailure"
                     + "\n--- Tinyscript ---\n" + tsCode + "\n--- node stderr ---\n" + result.stderr());
+        return error;
     }
 
     /** How the interpreter fails for {@code tsCode}; fails the test if it does not. */
@@ -622,6 +631,12 @@ public abstract class TinyscriptTranspilerTestBase {
 
     private Failure interpreterFailure(Class<? extends TinyscriptRuntimeException> expectedType, String tsCode) {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        return failure(interpreterError(expectedType, tsCode, stdout), stdout);
+    }
+
+    // The error of the interpreter for tsCode, its output up to there in stdout; fails the test
+    // if it does not fail
+    private <T extends TinyscriptRuntimeException> T interpreterError(Class<T> expectedType, String tsCode, ByteArrayOutputStream stdout) {
         try {
             runInterpreter(tsCode, null, true, stdout);
         }
@@ -629,11 +644,15 @@ public abstract class TinyscriptTranspilerTestBase {
             if (!expectedType.isInstance(e))
                 fail("Expected " + expectedType.getSimpleName() + " but got " + e.getClass().getSimpleName() + ": "
                         + e.getMessage() + "\n--- Tinyscript ---\n" + tsCode);
-            boolean catchable = e instanceof TinyscriptError || e instanceof TinyscriptIOError || e instanceof TinyscriptJsonError;
-            return new Failure(stdout.toString(StandardCharsets.UTF_8), javascriptName(e), e.getMessage(), catchable);
+            return expectedType.cast(e);
         }
         fail("The interpreter does not fail\n--- Tinyscript ---\n" + tsCode + "\n--- output ---\n" + stdout);
         return null;
+    }
+
+    private static Failure failure(TinyscriptRuntimeException e, ByteArrayOutputStream stdout) {
+        boolean catchable = e instanceof TinyscriptError || e instanceof TinyscriptIOError || e instanceof TinyscriptJsonError;
+        return new Failure(stdout.toString(StandardCharsets.UTF_8), javascriptName(e), e.getMessage(), catchable);
     }
 
     // The class of an interpreter error as Javascript names it (TinyscriptTypeError: TypeError)

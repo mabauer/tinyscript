@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.interpreter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.eclipse.xtext.testing.extensions.InjectionExtension;
 import org.junit.jupiter.api.Test;
@@ -55,9 +54,10 @@ public class ConversionsTest extends TinyscriptInterpreterTestHelper {
 	@Test
 	public void testFunctionToString() {
 		TSValue f = executeScriptFromString("function f(x) {return x; }; f;");
-		assertTrue(TSObject.toString(getExecutionVisitor(), f).startsWith("function f(x) {"));
+		// The same text as print
+		assertEquals("[Function: f]", TSObject.toString(getExecutionVisitor(), f));
 		f = executeScriptFromString("print;");
-		assertTrue(TSObject.toString(getExecutionVisitor(), f).startsWith("function print("));
+		assertEquals("[Function: print]", TSObject.toString(getExecutionVisitor(), f));
 	}
 	
 
