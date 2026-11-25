@@ -104,13 +104,15 @@ public class BuiltinMembersTest extends TinyscriptTranspilerTestBase {
             onlyNode.removeAll(inInterpreter);
             Set<String> unexpected = new TreeSet<>(onlyNode);
             unexpected.removeAll(known);
-            // Only its own known members: an inherited one may be in both ([1, 2].length)
-            Set<String> stale = names(JAVASCRIPT_ONLY.getOrDefault(value, ""));
-            stale.removeAll(onlyNode);
-            if (!onlyInterpreter.isEmpty() || !unexpected.isEmpty() || !stale.isEmpty())
+            // A known member that tinyscript has now is no longer known (its own: an inherited one
+            // may be in both, [1, 2].length). One that node does not have is fine: the members
+            // of Javascript depend on the version of node (getOrInsert came with node 26)
+            Set<String> adopted = names(JAVASCRIPT_ONLY.getOrDefault(value, ""));
+            adopted.retainAll(inInterpreter);
+            if (!onlyInterpreter.isEmpty() || !unexpected.isEmpty() || !adopted.isEmpty())
                 differences.add(value + ":" + (onlyInterpreter.isEmpty() ? "" : " only in the interpreter " + onlyInterpreter)
                         + (unexpected.isEmpty() ? "" : " only in node " + unexpected)
-                        + (stale.isEmpty() ? "" : " known, but no longer only in node " + stale));
+                        + (adopted.isEmpty() ? "" : " known as only in node, but the interpreter has it " + adopted));
         }
         if (!differences.isEmpty())
             fail("The members differ:\n" + String.join("\n", differences));
