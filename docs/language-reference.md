@@ -716,6 +716,17 @@ const oneArg = x => x + 1;
 const twoArgs = (x, y) => x + y;
 ```
 
+### Name and length
+
+As in Javascript, `f.name` is the name of a function, and a function without a
+name of its own takes the name it is written to: `const double = x => x * 2`,
+`f = function () { … }`, `{ area() { … } }`, `{ area: x => x }`, a default
+parameter `step = () => 1` and a method `area` of a class; otherwise it is `""`.
+`print` shows the same name (`[Function: double]`, `[Function]` without one).
+`f.length` is the number of parameters before the first one with a default. Both
+are read-only. Arrow functions and methods have no `prototype` (they cannot be
+called with `new`).
+
 ### Default parameters
 
 A parameter can have a default, used when the argument is missing or `undefined`

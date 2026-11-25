@@ -49,8 +49,9 @@ alike; 22 still go on in node (`assertKnownGap`): 18 properties of primitives,
 arrays, Maps and Sets, 4 builtins with too many arguments. Of the messages, 161
 differ (157 only in the text, 4 `TypeError` against `RangeError`;
 `target/backend-differences.txt`). `BuiltinMatrixTest` calls every builtin with
-edge values in both backends (3105 cases); 4 known differences are left
-(`target/builtin-matrix.txt`).
+edge values in both backends (3105 cases); 2 known differences are left
+(`target/builtin-matrix.txt`). `BuiltinMembersTest` compares the members of the
+builtins and typical values in both directions.
 
 **Plan** (2026-11-24), in this order: phase 1, then 2, 3 and 5 (phase 2.1, the
 depth of recursion, is done: a worker with a large stack); phase 4 is put back
@@ -58,21 +59,15 @@ for now. `--node` stops being experimental after phases 1 and 2 (no known gaps
 left, or only documented ones that phase 3 finds before the run); phase 3 then
 makes it stricter and faster.
 
-1. **Phase 1: equality proven by tests.**
-   1. **The members of the builtin objects and prototypes compared in both
-      directions:** node knows more than tinyscript (`f.constructor`,
-      `o.__proto__` of builtins …), and such a program runs only there; the
-      prelude deletes what tinyscript does not have, or makes it an error. Found
-      by the builtin matrix: functions have no own `name` and `length` in the
-      interpreter (`Object.getOwnPropertyNames(f)`), arrays an own `constructor`
-      (node: `length`), and `Array.prototype` is an array in node. Found when
-      the interpreter-only tests went to both backends: the interpreter has no
-      `f.name` (always `undefined`), and print names fewer functions:
-      `const f = () => …`, `let g = function () { … }` and `later = () => 1`
-      print as `[Function]` (node, by Javascript's name inference,
-      `[Function: f]`), a method of a class as `[Function: P.area]` (node
-      `[Function: area]`). Probably the interpreter should take over the names
-      of Javascript.
+1. **Phase 1: equality proven by tests.** Left: the members that only node has
+   (decided 2026-11-25: known, not deleted by the prelude; `BuiltinMembersTest`
+   lists them): Javascript's methods and constants that tinyscript does not
+   have, such as `String#concat`, `match`, `substr`, `Array#concat`, `keys`,
+   `values`, `toSorted`, `Array.from`, the `Set` operations (`union` …),
+   `Number.isNaN`, `toPrecision`, `Math.cosh`, `Math.LN2`, `Object.freeze`,
+   `Object.is`, `valueOf`, `f.bind`, and `e.stack`. A program that uses them
+   runs only in node. Decide which ones tinyscript takes over; phase 3 finds the
+   others before the run where the kind is known.
 2. **Phase 2: the gaps in behavior closed.**
    1. **Properties in node:** reading a property of a number or boolean (`n.x`,
       `n.length`, `true.toString()`) and setting one on an array, `Map` or `Set`

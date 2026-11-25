@@ -581,6 +581,8 @@ public class TinyscriptEngine {
     	function.setArrowFunction(isArrowFunction);
     	function.setOuterContext(currentContext);
     	function.setAst(definition);
+    	if (function.isConstructor())
+    		function.createPrototypeProperty();
     	return function;
     }
 

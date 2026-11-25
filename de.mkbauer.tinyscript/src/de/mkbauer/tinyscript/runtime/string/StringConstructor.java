@@ -76,7 +76,6 @@ public class StringConstructor extends BuiltinConstructor {
 	public StringObject createObject(TSValue value) {
 		StringObject newObject = new StringObject(engine, value);
 		newObject.setPrototype(getPrototypeProperty().asObject());
-		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 

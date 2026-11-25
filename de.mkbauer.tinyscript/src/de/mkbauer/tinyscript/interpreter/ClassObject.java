@@ -14,6 +14,7 @@ public class ClassObject extends InterpretedFunction {
 	public ClassObject(TinyscriptEngine engine, ClassDeclaration declaration) {
 		super(engine);
 		this.declaration = declaration;
+		createPrototypeProperty();
 	}
 
 	public ClassDeclaration getDeclaration() {
