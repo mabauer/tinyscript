@@ -49,15 +49,13 @@ public class InterfaceTest extends TinyscriptTranspilerTestBase {
         String code = SHAPES
                 + "for (const shape : [new Square(2), new Circle(1)]) { print(shape.scale(2).area()); }\n"
                 + "print(Shape, typeof Shape, \"\" + Named, [Shape]);";
-        assertEquals("16\n12\n[interface Shape] object [interface Named] [[interface Shape]]\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("16\n12\n[interface Shape] object [interface Named] [[interface Shape]]\n", code);
     }
 
     @Test
     public void testAnInterfaceWithoutMethodsAndAClassWithout() {
         String code = "interface Marker { }\nclass Thing implements Marker { }\nprint(new Thing());";
-        assertEquals("Thing {}\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("Thing {}\n", code);
     }
 
     private String onlyError(String code) {
@@ -102,8 +100,7 @@ public class InterfaceTest extends TinyscriptTranspilerTestBase {
         String code = "interface Visitor { visit(node, ...path); leave(); }\n"
                 + "class Printer implements Visitor { visit(node) { print(node); } leave() { } }\n"
                 + "new Printer().visit(1);";
-        assertEquals("1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1\n", code);
     }
 
     private Path write(String name, String code) throws IOException {

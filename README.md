@@ -24,11 +24,7 @@ _tinyscript_ code:
     print(fibonacci(50)); // 20365011074
 
 You can play with it online in your browser
-[here](https://tinyscript.mkbauer.de). The
-[language reference](docs/language-reference.md) describes the whole language,
-its built-in objects and its differences from Javascript. The
-[programming guide](docs/programming-guide.md) shows how to put it to use: which
-kind of object when, closures, your own kinds of errors.
+[here](https://tinyscript.mkbauer.de).
 
 _tinyscript_ offers quite a complete set of interesting language features:
 
@@ -58,6 +54,11 @@ _tinyscript_ offers quite a complete set of interesting language features:
   `import area, unit from "./geometry";`, and a small standard library
   (`import sum, reverse from "std:array";`); the web demo can import only the
   standard library
+
+The [language reference](docs/language-reference.md) describes the whole
+language, its built-in objects and its differences from Javascript. The
+[programming guide](docs/programming-guide.md) shows how to put it to use: which
+kind of object when, closures, your own kinds of errors.
 
 Larger examples: [Advent of Code 2024](examples/aoc2024), solutions of all 25
 days, [ten days of 2023](examples/aoc2023), written with classes, and

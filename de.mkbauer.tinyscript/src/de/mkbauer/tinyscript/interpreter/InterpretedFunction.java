@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.interpreter;
 
-import java.util.stream.Collectors;
 
 import org.eclipse.emf.ecore.EObject;
 
@@ -14,7 +13,6 @@ import de.mkbauer.tinyscript.ts.Identifier;
 import de.mkbauer.tinyscript.TinyscriptModelUtil;
 import de.mkbauer.tinyscript.ts.ClassDeclaration;
 import de.mkbauer.tinyscript.ts.ClassMethod;
-import de.mkbauer.tinyscript.ts.PropertyAssignment;
 
 public class InterpretedFunction extends Function {
 	
@@ -22,11 +20,20 @@ public class InterpretedFunction extends Function {
 	
 	private ExecutionContext outerContext;
 	
+	// The name, worked out once from the AST
+	private String name;
+
 	public InterpretedFunction(TinyscriptEngine engine) {
 		super(engine);
 		this.ast = null;
-		// Each user defined functions gets a new prototype property since it could be used as a constructor;
-		// like Javascript, its (non-enumerable) constructor property points back to the function
+	}
+
+	/**
+	 * Gives a function that can be a constructor (a class, a function written with function) its
+	 * prototype property; like Javascript, its (non-enumerable) constructor property points back
+	 * to the function. Arrow functions and methods have none.
+	 */
+	public void createPrototypeProperty() {
 		TSObject prototype = new TSObject(engine, engine.getDefaultPrototype());
 		prototype.defineDefaultProperty("constructor", this);
 		setPrototypeProperty(prototype);
@@ -60,7 +67,7 @@ public class InterpretedFunction extends Function {
 			return TSValue.UNDEFINED;
 			
 		// Create a new execution context
-		ExecutionContext currentContext = engine.enterNewExecutionContext(getName(), outerContext);
+		ExecutionContext currentContext = engine.enterNewExecutionContext(getStackName(), outerContext);
 		engine.callDepth++;
 
 		// Leave the context and restore the call depth however the call ends
@@ -127,22 +134,24 @@ public class InterpretedFunction extends Function {
 		}
 	}
 	
+	/**
+	 * The name, as Javascript gives it (f.name, print): the name of the function, or else where
+	 * it is written: const f = () => …, f = function () { … }, { greet() { … } },
+	 * { greet: x => x }, a default parameter step = () => 1 and the method area of a class.
+	 */
 	@Override
 	public String getName() {
-		if (ast != null) {
-			if (ast.getId() != null)
-				return ast.getId().getName();
-			// Like Javascript: { greet() { ... } } and { greet: function() { ... } } are named greet
-			if (ast.eContainer() instanceof PropertyAssignment property) {
-				String key = TinyscriptModelUtil.propertyKey(property.getKey());
-				if (key != null)
-					return key;
-			}
-			// A method of a class: Num.evaluate (the constructor is the class, see ClassObject)
-			if (ast.eContainer() instanceof ClassMethod method && method.eContainer() instanceof ClassDeclaration declaration)
-				return declaration.getId().getName() + "." + TinyscriptModelUtil.propertyKey(method.getName());
-		}
-		return "";
+		if (name == null)
+			name = ast != null ? TinyscriptModelUtil.functionName(ast) : "";
+		return name;
+	}
+
+	/** The name in a stack trace: a method of a class with the class, as node: Num.evaluate. */
+	public String getStackName() {
+		if (ast != null && ast.getId() == null && ast.eContainer() instanceof ClassMethod method
+				&& method.eContainer() instanceof ClassDeclaration declaration && !(this instanceof ClassObject))
+			return declaration.getId().getName() + "." + getName();
+		return getName();
 	}
 	
 	@Override
@@ -183,15 +192,6 @@ public class InterpretedFunction extends Function {
 		return null;
 	}
 
-	public String getCodeAsString() {
-		String result = "function " + getName() + "(";
-		if (ast != null) 
-			result = result + ast.getParams().stream()
-				.map(param -> param instanceof Identifier id ? id.getName() : "...")
-				.collect(Collectors.joining(", "));
-		result = result + ") {...}"; 
-		return result;
-	}
 	
 
 }

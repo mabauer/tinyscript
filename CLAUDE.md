@@ -59,9 +59,10 @@ module, no OSGi:
 
 Tests run in this order (alphabetical class order enforced by Surefire):
 
-1. `InterpreterReferenceTest` — 29
-   `assertEquals(expected, interpreterOutput(tsCode))` tests; one per language
-   feature; failure shows the exact wrong value produced by the interpreter.
+1. `InterpreterReferenceTest` — `assertSameOutput(expected, tsCode)` tests, one
+   per language feature: the interpreter must print `expected` (a failure shows
+   its exact wrong value), then node the same; only the sandbox (resource
+   limits) is checked in the interpreter alone.
 2. `TranspilerTest` — differential tests; `assertSameOutput(tsCode)` runs each
    snippet through both the interpreter and `node`, diffs stdout; generated JS
    is shown on failure so it can be pasted into `node` directly.
@@ -80,12 +81,22 @@ node. The webdemo's `ExamplesTests` run every example as the demo does
 (sandboxed) and check that `Toolbar.vue` lists exactly the example files; a new
 example needs no new test.
 
+`BuiltinMatrixTest` calls every builtin (read from the builtin objects of the
+interpreter, so a new builtin needs no new test) with edge values in both
+backends: the same value or an error of the same category; the differences are
+in `target/builtin-matrix.txt`, known ones are listed in the test with their
+reason. `BuiltinMembersTest` compares the members of the builtins and typical
+values (along the prototype chain) in both backends; Javascript's extras that
+tinyscript does not have are listed there as known.
+
 Base class `TinyscriptTranspilerTestBase` provides:
 
 - `interpreterOutput(String tsCode)` — runs snippet through a fresh
   `TinyscriptEngine`, returns captured stdout; use with JUnit's `assertEquals`
   for targeted interpreter tests
 - `assertSameOutput(String tsCode)` — Level 1 differential assertion
+- `assertSameOutput(String expected, String tsCode)` — both print `expected`;
+  without node only the interpreter is checked (the test is not skipped)
 - `assertTranspilerCorrect(String)` / `assertTranspilerCorrectFromFile(String)`
   — Level 2 integration assertions
 - `assertInterpreterThrows(Class, String)` — expected-exception helper, only for
@@ -235,8 +246,9 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - `+` concatenates two arrays; with a string on either side it concatenates
   strings; an array plus anything else is a `TypeError`
 - One text form: `x.toString()`, `String(x)`, `"" + x` and `print` agree
-  (`{x: 1}`, `[1, 2]`, `Point {x: 1}`); the generator replaces
-  `Object.prototype.toString` / `Array.prototype.toString` so node does too
+  (`{x: 1}`, `[1, 2]`, `Point {x: 1}`, `[Function: f]`); the generator replaces
+  `Object.prototype.toString` / `Array.prototype.toString` /
+  `Function.prototype.toString` so node does too
 - A comma after the last element only in array and object literals (`[1, 2,]`),
   not in calls, parameter lists or patterns; arrays have no empty elements
   (`[1, , 2]` is a syntax error)
@@ -281,9 +293,12 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   Javascript reserves (`default`, `enum`, `yield` …) get the prefix `__ts_`; its
   prelude replaces the builtins by ones that check their arguments as the
   interpreter does, and operators and conditions are checked by `__ts_` helpers
-  where the operator does not already guarantee the kind; with source maps
-  (`setSourceMaps`, `tinyscript --node`), node reports errors with the
-  tinyscript line
+  where the operator does not already guarantee the kind, property reads of
+  numbers and booleans by `__ts_r` / `__ts_get` and `o[key] = x` on arrays by
+  `__ts_w` / `__ts_set` (not `o.name = x`: too costly); `Map`s and `Set`s are
+  not extensible; for node (`setForNode`, `tinyscript --node`), the program runs
+  in a worker with a large stack (deep recursion as in the interpreter) and
+  reports errors with the tinyscript line (source maps)
 
 ### TODO markers in the code
 

@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -127,8 +126,7 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testIterableForWithoutVar() {
         String code = "let x; for (x : [1, 2]) { print(x); } print(x);";
-        assertEquals("1\n2\n2\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1\n2\n2\n", code);
     }
 
     @Test
@@ -137,30 +135,26 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
                 + "let o = new Foo;\n"
                 + "print(o.x); print(o instanceof Foo);\n"
                 + "let a = new Array; print(a.length);";
-        assertEquals("1\ntrue\n0\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1\ntrue\n0\n", code);
     }
 
     @Test
     public void testIterableIsEvaluatedOnce() {
         String code = "function f() { print(\"f\"); return [1, 2]; } for (let x : f()) { print(x); }";
-        assertEquals("f\n1\n2\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("f\n1\n2\n", code);
     }
 
     @Test
     public void testNestedIterableLoops() {
         String code = "for (let a : [1, 2]) { for (let b : [3, 4]) { print(a + \"-\" + b); } }";
-        assertEquals("1-3\n1-4\n2-3\n2-4\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1-3\n1-4\n2-3\n2-4\n", code);
     }
 
 
     @Test
     public void testStringKeysInObjectLiterals() {
         String code = "let o = { \"a b\": 1, c: 2 }; print(o[\"a b\"]); print(o.c);";
-        assertEquals("1\n2\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1\n2\n", code);
     }
 
     @Test
@@ -169,36 +163,31 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
                 + "Foo.prototype.get = function() { return this.x; };\n"
                 + "print(new Foo(2).x); print(new Foo(3).get());\n"
                 + "let ns = { Bar: function(y) { this.y = y; } }; print(new ns.Bar(4).y);";
-        assertEquals("2\n3\n4\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("2\n3\n4\n", code);
     }
 
     @Test
     public void testArrayGapsAreFilledWithUndefined() {
         String code = "let a = [1]; a[3] = 4; print(a.length); print(a[2] == null); print(a[3]);";
-        assertEquals("4\ntrue\n4\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("4\ntrue\n4\n", code);
     }
 
     @Test
     public void testSettingArrayLengthTruncates() {
         String code = "let a = [1, 2, 3]; a.length = 1; print(a.length); print(a[1] == null); print(a.join(\",\"));";
-        assertEquals("1\ntrue\n1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1\ntrue\n1\n", code);
     }
 
     @Test
     public void testSettingArrayLengthGrows() {
         String code = "let a = [1]; a.length = 3; print(a.length); print(a[2] == null); a.push(4); print(a[3]);";
-        assertEquals("3\ntrue\n4\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("3\ntrue\n4\n", code);
     }
 
     @Test
     public void testReadingNonIndexKeysOfArraysIsUndefined() {
         String code = "let a = [1]; print(a[-1] == null); print(a[1.5] == null); print(a.x == null); print(a.length);";
-        assertEquals("true\ntrue\ntrue\n1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true\ntrue\ntrue\n1\n", code);
     }
 
     @Test
@@ -206,8 +195,7 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
         String code = "let x = 1; let y = 2;\n"
                 + "let a = [x > y, !(x > y), x == 1, f => f * 2];\n"
                 + "print(a[0]); print(a[1]); print(a[2]); print(a[3](4));";
-        assertEquals("false\ntrue\ntrue\n8\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("false\ntrue\ntrue\n8\n", code);
     }
 
     @Test
@@ -215,30 +203,26 @@ public class TranspilerTest extends TinyscriptTranspilerTestBase {
         String code = "let o = {}; let a = [10, 20]; let i;\n"
                 + "o[1 < 2] = \"lt\"; print(o[\"true\"]);\n"
                 + "print(a[i = 1]); print(i);";
-        assertEquals("lt\n20\n1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("lt\n20\n1\n", code);
     }
 
     @Test
     public void testNestedUnaryOperators() {
         String code = "let x = 3; let b = true; let o = {};\n"
                 + "print(!!b); print(!!o); print(!!null); print(- -x); print(-(-x)); print(typeof -x); print(typeof !b);";
-        assertEquals("true\ntrue\nfalse\n3\n3\nnumber\nboolean\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true\ntrue\nfalse\n3\n3\nnumber\nboolean\n", code);
     }
 
     @Test
     public void testEscapesInStringLiterals() {
         String code = "let s = \"a\\nb\\t\\\"q\\\" \\\\ \\u00e4\";\nprint(s); print(s.length); print('it\\'s');";
-        assertEquals("a\nb\t\"q\" \\ ä\n11\nit's\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("a\nb\t\"q\" \\ ä\n11\nit's\n", code);
     }
 
     @Test
     public void testPrintWithSeveralArguments() {
         String code = "print(\"a\", 1, true); print(1, 2); print(\"x\" + 1, \"y\"); print(); print(2.5, -1);";
-        assertEquals("a 1 true\n1 2\nx1 y\n\n2.5 -1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("a 1 true\n1 2\nx1 y\n\n2.5 -1\n", code);
     }
 
     @Test

@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 
@@ -297,15 +296,13 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         // Like Javascript: only names of variables are reserved, not names of properties
         String code = "const range = { from: 1, to: 5, as: \"x\", import: true, if: 2 };\n"
                 + "print(range.from + range.to, range.as, range.import, range.if);";
-        assertEquals("6 x true 2\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("6 x true 2\n", code);
     }
 
     @Test
     public void testReservedWordsAreFineAsPropertyNames() {
         String code = "const o = { class: \"a\", case: 1 }; print(o.class + o.case);";
-        assertEquals("a1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("a1\n", code);
     }
 
     // =========================================================================
@@ -351,8 +348,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         String code = "const digits = [\n    \"abc\",\n    \"cf\",\n];\n"
                 + "const point = { x: 1, y: 2, };\n"
                 + "print(digits.length, digits, point, [], {});";
-        assertEquals("2 [\"abc\", \"cf\"] {x: 1, y: 2} [] {}\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("2 [\"abc\", \"cf\"] {x: 1, y: 2} [] {}\n", code);
     }
 
     @Test
@@ -386,7 +382,7 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
     // =========================================================================
 
     private void assertRuntimeError(String expectedMessage, String code) {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptRuntimeException.class, () -> interpreterOutput(code));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptRuntimeException.class, code);
         assertEquals(expectedMessage, e.getMessage());
     }
 

@@ -16,7 +16,9 @@ public class FunctionConstructor extends BuiltinConstructor {
 		
 		// Object is a function, so its prototype is the prototype of all functions
 		// which we will use to create new functions
-		setPrototypeProperty(engine.getGlobalContext().get("Object").asObject().getPrototype());
+		TSObject prototype = engine.getGlobalContext().get("Object").asObject().getPrototype();
+		setPrototypeProperty(prototype);
+		prototype.defineDefaultProperty("constructor", this);
 	}
 	
 	public String getName() {
@@ -30,8 +32,8 @@ public class FunctionConstructor extends BuiltinConstructor {
 
 	@Override
 	public TSObject createObject() {
-		TSObject newObject = new InterpretedFunction(engine);
-		newObject.defineDefaultProperty("constructor", this);
+		InterpretedFunction newObject = new InterpretedFunction(engine);
+		newObject.createPrototypeProperty();
 		return newObject;
 	}
 

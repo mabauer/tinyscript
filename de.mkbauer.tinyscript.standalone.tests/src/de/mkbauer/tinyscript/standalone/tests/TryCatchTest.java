@@ -27,8 +27,7 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
                 + "try {\n  print(parse(\"a\"));\n  print(parse(\"\"));\n  print(\"not reached\");\n}\n"
                 + "catch (e) {\n  print(\"caught\", e.message, e.name, e instanceof Error, e);\n}\n"
                 + "print(\"after\");";
-        assertEquals("a\ncaught empty Error true Error: empty\nafter\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("a\ncaught empty Error true Error: empty\nafter\n", code);
     }
 
     @Test
@@ -37,8 +36,7 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
                 + "catch (e2) { print(\"outer\", e2.message); }\n"
                 + "try { throw Error(\"ignored\"); } catch { print(\"no error variable\"); }\n"
                 + "try { print(\"no error\"); } catch (e) { print(\"not reached\"); }";
-        assertEquals("inner inner\nouter inner\nno error variable\nno error\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("inner inner\nouter inner\nno error variable\nno error\n", code);
     }
 
     @Test
@@ -51,8 +49,7 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
                 + "print(first([1, 2, 3, 4]), first([]));\n"
                 + "let count = 0;\nwhile (true) {\n  try { count++; if (count == 3) { break; } } catch (e) { print(\"not reached\"); }\n}\n"
                 + "print(count);";
-        assertEquals("x=2\n3 null\n3\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("x=2\n3 null\n3\n", code);
     }
 
     @Test
@@ -63,8 +60,7 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
                 + "function f() { try { throw new Error(\"x\"); } catch (err) { let y = 1; err = err.message + y; return err; } }\n"
                 + "print(f());";
         // Each catch gets a variable of its own; it can be assigned (as in Javascript)
-        assertEquals("outer [\"error 0\", \"error 1\"]\nx1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("outer [\"error 0\", \"error 1\"]\nx1\n", code);
     }
 
     @Test
@@ -75,21 +71,20 @@ public class TryCatchTest extends TinyscriptTranspilerTestBase {
                 + "print(errors, errors.map(e => e.message));\n"
                 + "try {\n  try { check(-1); } catch (e) { e.message = \"in input: \" + e.message; throw e; }\n}\n"
                 + "catch (e) { print(e.message); }";
-        assertEquals("[Error: negative: -2, Error: negative: -4] [\"negative: -2\", \"negative: -4\"]\n"
-                + "in input: negative: -1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[Error: negative: -2, Error: negative: -4] [\"negative: -2\", \"negative: -4\"]\n"
+                + "in input: negative: -1\n", code);
     }
 
     @Test
     public void testThrowingACaughtErrorAgainKeepsItsPlace() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptError.class, () -> interpreterOutput(
-                "function load() {\n  throw new Error(\"boom\");\n}\ntry {\n  load();\n}\ncatch (e) {\n  throw e;\n}"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptError.class, 
+                "function load() {\n  throw new Error(\"boom\");\n}\ntry {\n  load();\n}\ncatch (e) {\n  throw e;\n}");
         assertEquals("boom", e.getMessage());
         assertEquals(2, e.getAffectedLine());
         assertTrue(e.getTinyscriptStacktraceAsString().contains("load"), e.getTinyscriptStacktraceAsString());
         // A changed error is a new one, thrown where it is thrown again
-        e = assertThrows(TinyscriptError.class, () -> interpreterOutput(
-                "function load() {\n  throw new Error(\"boom\");\n}\ntry {\n  load();\n}\ncatch (e) {\n  e.message = \"more\";\n  throw e;\n}"));
+        e = assertSameFailure(TinyscriptError.class, 
+                "function load() {\n  throw new Error(\"boom\");\n}\ntry {\n  load();\n}\ncatch (e) {\n  e.message = \"more\";\n  throw e;\n}");
         assertEquals("more", e.getMessage());
         assertEquals(9, e.getAffectedLine());
     }

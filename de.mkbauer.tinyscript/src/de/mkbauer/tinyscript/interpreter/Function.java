@@ -42,12 +42,27 @@ public abstract class Function extends TSObject {
 	
 	public abstract int getLength();
 
-	// Like Javascript, f.length is the number of parameters (it came from Function.prototype)
+	// Like Javascript, f.length is the number of parameters (it came from Function.prototype) and
+	// f.name the name of the function ("" for an anonymous one)
 	@Override
 	public TSValue get(String key) {
 		if (key.equals("length") && !hasOwnProperty("length"))
 			return TSValue.of(getLength());
+		if (key.equals("name") && !hasOwnProperty("name"))
+			return TSValue.of(getName() != null ? getName() : "");
 		return super.get(key);
+	}
+
+	// Like Javascript, length and name are own properties of each function
+	@Override
+	public java.util.List<String> getOwnPropertyNames() {
+		java.util.List<String> result = new java.util.ArrayList<>();
+		for (String key : java.util.List.of("length", "name")) {
+			if (!hasOwnProperty(key))
+				result.add(key);
+		}
+		result.addAll(super.getOwnPropertyNames());
+		return result;
 	}
 
 	// Like Javascript's strict mode: f.length and f.name are read-only

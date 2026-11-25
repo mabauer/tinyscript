@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -21,12 +20,11 @@ public class JsonTest extends TinyscriptTranspilerTestBase {
                 + "print(JSON.parse(\"-1.5e3\"), JSON.parse(\"0\"), JSON.parse(\"-0\") == 0, JSON.parse(\"12345678901234567890\"), JSON.parse(\"1E-2\"));\n"
                 + "print(JSON.parse(\"\\\"a\\\\\\\"b\\\\\\\\c\\\\/d\\\\u00e9\\\\n\\\"\").length, JSON.parse(\"true\"), JSON.parse(\"null\"));\n"
                 + "const o = JSON.parse(\"{\\\"b\\\": 1, \\\"1\\\": 2, \\\"b\\\": 3}\"); print(o, Object.keys(o));";
-        assertEquals("[1, [2, [3, []]], 4] [] {}\n"
+        assertSameOutput("[1, [2, [3, []]], 4] [] {}\n"
                 + "{a: 1, b: [true, false, null], c: {d: \"e\"}}\n"
                 + "-1500 0 true 12345678901234567000 0.01\n"
                 + "9 true null\n"
-                + "{1: 2, b: 3} [\"1\", \"b\"]\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "{1: 2, b: 3} [\"1\", \"b\"]\n", code);
     }
 
     @Test
@@ -34,8 +32,7 @@ public class JsonTest extends TinyscriptTranspilerTestBase {
         // AoC 2022, day 13: nested lists, one per line
         String code = "const lines = [\"[1,[2,[3,[4,[5,6,7]]]],8,9]\", \"[[[]]]\", \"[[1],4]\"];\n"
                 + "for (const packet : lines.map(JSON.parse)) { print(packet, Array.isArray(packet), packet.length); }";
-        assertEquals("[1, [2, [3, [4, [5, 6, 7]]]], 8, 9] true 4\n[[[]]] true 1\n[[1], 4] true 2\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[1, [2, [3, [4, [5, 6, 7]]]], 8, 9] true 4\n[[[]]] true 1\n[[1], 4] true 2\n", code);
     }
 
     @Test
@@ -44,12 +41,11 @@ public class JsonTest extends TinyscriptTranspilerTestBase {
         String code = "for (const text : [\"{a: 1}\", \"[1, 2,]\", \"'x'\", \"\", \"[1] 2\", \"01\", \"{\\\"a\\\" 1}\", \"\\\"\\n\\\"\"]) {\n"
                 + "    try { JSON.parse(text); print(\"parsed\", text); } catch (e) { print(e.name, e instanceof Error); }\n"
                 + "}";
-        assertEquals("SyntaxError true\n".repeat(8), interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("SyntaxError true\n".repeat(8), code);
     }
 
     private void assertMessage(String expected, String text) {
-        TinyscriptJsonError e = assertThrows(TinyscriptJsonError.class, () -> interpreterOutput("JSON.parse(" + text + ");"));
+        TinyscriptJsonError e = assertSameFailure(TinyscriptJsonError.class, "JSON.parse(" + text + ");");
         assertEquals(expected, e.getMessage());
     }
 

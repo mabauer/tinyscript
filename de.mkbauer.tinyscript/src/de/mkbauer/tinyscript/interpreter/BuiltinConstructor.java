@@ -5,8 +5,10 @@ public abstract class BuiltinConstructor extends BuiltinFunction {
 	public BuiltinConstructor(TinyscriptEngine engine) {
 		super(engine);
 		
-		setPrototypeProperty(new TSObject(engine, engine.getDefaultPrototype()));
-
+		// Like Javascript, the instances get constructor from the prototype ([].constructor is Array)
+		TSObject prototype = new TSObject(engine, engine.getDefaultPrototype());
+		prototype.defineDefaultProperty("constructor", this);
+		setPrototypeProperty(prototype);
 	}
 	
 	@Override

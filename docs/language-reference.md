@@ -752,6 +752,17 @@ const oneArg = x => x + 1;
 const twoArgs = (x, y) => x + y;
 ```
 
+### Name and length
+
+As in Javascript, `f.name` is the name of a function, and a function without a
+name of its own takes the name it is written to: `const double = x => x * 2`,
+`f = function () { … }`, `{ area() { … } }`, `{ area: x => x }`, a default
+parameter `step = () => 1` and a method `area` of a class; otherwise it is `""`.
+`print` shows the same name (`[Function: double]`, `[Function]` without one).
+`f.length` is the number of parameters before the first one with a default. Both
+are read-only. Arrow functions and methods have no `prototype` (they cannot be
+called with `new`).
+
 ### Default parameters
 
 A parameter can have a default, used when the argument is missing or `undefined`
@@ -1310,8 +1321,9 @@ print(o);                   // {name: "o", self: [Circular]}
 ```
 
 `x.toString()` gives the same text as `print`, `String(x)` and `"" + x`, also
-for objects and arrays without a `toString` of their own (`{x: 1}`, `[1, "a"]`;
-Javascript gives `"[object Object]"` and `"1,a"`).
+for objects, arrays and functions without a `toString` of their own (`{x: 1}`,
+`[1, "a"]`, `[Function: add]`, `[class Point]`; Javascript gives
+`"[object Object]"`, `"1,a"` and the source of the function).
 `Object.prototype.toString.call(x)` shows `x` without its own `toString`.
 
 A reference back to an object that is still being printed shows as `[Circular]`;
@@ -1340,9 +1352,10 @@ for (const i : range(5).reverse()) { ... } // 4, 3, 2, 1, 0
 | `r.forEach(f)` | Calls `f(i)` for each integer                                                               |
 | `r.reverse()`  | The same integers backwards, again a lazy range: `range(5).reverse()` is `range(4, -1, -1)` |
 
-The arguments must be integers, the step must not be `0`; anything else is a
-`TypeError`. A range cannot be changed. The callbacks get `(i, index, range)`,
-like those of arrays. Javascript has no `range`: the transpiler adds one.
+The arguments must be integers (not `Infinity`: a range has an end), the step
+must not be `0`; anything else is a `TypeError`. A range cannot be changed. The
+callbacks get `(i, index, range)`, like those of arrays. Javascript has no
+`range`: the transpiler adds one.
 
 ### `Math`
 
@@ -1461,6 +1474,12 @@ array or object is noticed at once.
 | `Object.getOwnPropertyDescriptor(obj, key)`  | Returns a property descriptor                                                     |
 | `Object.getOwnPropertyNames(obj)`            | Array of all own property names                                                   |
 | `obj.hasOwnProperty(key)`                    | `true` if `key` is an own (non-inherited) property                                |
+| `Object()` / `new Object()`                  | A new empty object; `Object(obj)` is `obj`                                        |
+
+These functions take only objects (arrays and functions are objects): a number,
+string, boolean, `null` or `undefined` is a `TypeError` (Javascript lists the
+indexes of a string, gives `Number.prototype` for a number and wraps it in an
+object for `Object(5)`). Keys are strings or numbers, a descriptor is an object.
 
 ```
 const proto = { greet: function() { print("hi"); } };
@@ -1754,7 +1773,7 @@ in tinyscript (see [Errors](#12-errors)).
 | **`==` vs `===`**            | Different (type coercion vs. strict)                     | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`)     |
 | **Relational operators**     | Coerce operands (`1 < "2"`)                              | Only number with number or string with string; otherwise a `TypeError`     |
 | **`++` / `--`**              | Expressions, prefix and postfix                          | Only the statements `i++;` / `i--;`                                        |
-| **`toString()`**             | `"[object Object]"` for objects, `"1,2"` for arrays      | The same text as `print`: `{x: 1}`, `[1, 2]`                               |
+| **`toString()`**             | `"[object Object]"` for objects, `"1,2"` for arrays      | The same text as `print`: `{x: 1}`, `[1, 2]`, `[Function: f]`              |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
 

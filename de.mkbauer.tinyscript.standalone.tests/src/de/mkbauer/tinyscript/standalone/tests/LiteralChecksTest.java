@@ -87,7 +87,6 @@ public class LiteralChecksTest extends TinyscriptTranspilerTestBase {
                 + "while (n) { }\nif (a) { print(\"array\"); }\nprint(x > 0 && s != \"\", !n, n ?? 1);";
         assertEquals(List.of(), reportedErrors(code));
         assertEquals(List.of(), reportedWarnings(code));
-        assertEquals("2 a1 1a [1, 2] [1] true true -3 2 true\n6\narray\ntrue true 1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("2 a1 1a [1, 2] [1] true true -3 2 true\n6\narray\ntrue true 1\n", code);
     }
 }

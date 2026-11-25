@@ -130,6 +130,30 @@ class TinyscriptGenerator   {
 	// Counter for unique names of temporary variables (loop bounds, iterables, indexes)
 	int tempCounter = 0;
 	
+	// For node: the interpreter runs recursions of about 450,000 calls, node's main thread only a
+	// few thousand (the checked operators take frames of their own). So the program starts itself
+	// again in a worker with a stack of 256 MB (more than a million calls; the main thread only
+	// waits for it, and its exit code becomes the program's). The worker gets the same arguments
+	// and node options (--enable-source-maps) and reads the same standard input (std:io reads fd 0)
+	def largeStackWorker() '''
+		{
+			const threads = require("worker_threads");
+			if (threads.isMainThread) {
+				const worker = new threads.Worker(__filename, { argv: process.argv.slice(2), resourceLimits: { stackSizeMb: 256 } });
+				worker.on("error", error => {
+					process.stderr.write(String(error && error.stack || error) + "\n");
+					process.exitCode = 1;
+				});
+				worker.on("exit", code => {
+					if (code !== 0) {
+						process.exitCode = code;
+					}
+				});
+				return;
+			}
+		}
+	'''
+
 	// With source maps: an error that ends the program is printed as by the interpreter, with the
 	// tinyscript line (from the source map) and a stack of the tinyscript functions; the frames
 	// of the prelude (__ts_ helpers) and of the standard library are left out
@@ -216,9 +240,11 @@ class TinyscriptGenerator   {
 		// a cycle is [Circular], nesting deeper than 50 levels [Object] / [Array], and an object with
 		// a toString of its own shows what it returns.
 		const __ts_JsString = globalThis.String;
-		// Like the interpreter: o.toString() and a.toString() give the same text as print
-		// (Javascript: "[object Object]", "1,2"); also join uses it for the elements
-		for (const prototype of [Object.prototype, Array.prototype]) {
+		// The source of a function (for __ts_isClass), before toString is replaced
+		const __ts_functionSource = Function.prototype.toString;
+		// Like the interpreter: o.toString(), a.toString() and f.toString() give the same text as
+		// print (Javascript: "[object Object]", "1,2", the source); also join uses it for the elements
+		for (const prototype of [Object.prototype, Array.prototype, Function.prototype]) {
 			Object.defineProperty(prototype, "toString", {
 				value: function toString() { return __ts_display(this, [], true); },
 				writable: true, configurable: true, enumerable: false
@@ -241,7 +267,7 @@ class TinyscriptGenerator   {
 
 		// A class of the script (written with class, not a constructor function)
 		function __ts_isClass(f) {
-			return typeof f === "function" && /^class[\s{]/.test(Function.prototype.toString.call(f));
+			return typeof f === "function" && /^class[\s{]/.test(__ts_functionSource.call(f));
 		}
 
 		// own: the value itself, without its toString (for Object.prototype.toString)
@@ -444,33 +470,55 @@ class TinyscriptGenerator   {
 			}
 		};
 
-		// Like the interpreter: keys(), values() and entries() of Maps and Sets return arrays
-		var Map = (function (JsMap) {
+		// Like the interpreter: keys(), values() and entries() of Maps and Sets return arrays, the
+		// methods need their arguments (m.get() is an error, not undefined), and Maps and Sets have
+		// no other properties (m["a"] = 1 is an error in strict mode: they are not extensible)
+		var Map = (function (JsMap, preventExtensions) {
 			return class Map extends JsMap {
+				constructor(entries) { super(entries); preventExtensions(this); }
+				get(key) { if (arguments.length < 1) { __ts_atLeast(0, 1, "get"); } return super.get(key); }
+				set(key, value) { if (arguments.length < 2) { __ts_atLeast(arguments.length, 2, "set"); } return super.set(key, value); }
+				has(key) { if (arguments.length < 1) { __ts_atLeast(0, 1, "has"); } return super.has(key); }
+				delete(key) { if (arguments.length < 1) { __ts_atLeast(0, 1, "delete"); } return super.delete(key); }
 				keys() { return Array.from(super.keys()); }
 				values() { return Array.from(super.values()); }
 				entries() { return Array.from(super.entries()); }
 			};
-		})(globalThis.Map);
-		var Set = (function (JsSet) {
+		})(globalThis.Map, Object.preventExtensions);
+		var Set = (function (JsSet, preventExtensions) {
 			return class Set extends JsSet {
+				constructor(values) { super(values); preventExtensions(this); }
+				add(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "add"); } return super.add(value); }
+				has(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "has"); } return super.has(value); }
+				delete(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "delete"); } return super.delete(value); }
 				values() { return Array.from(super.values()); }
 			};
-		})(globalThis.Set);
+		})(globalThis.Set, Object.preventExtensions);
+		(function () {
+			const hasOwnProperty = Object.prototype.hasOwnProperty;
+			Object.defineProperty(Object.prototype, "hasOwnProperty", { value: { hasOwnProperty(key) {
+				__ts_atLeast(arguments.length, 1, "hasOwnProperty");
+				return hasOwnProperty.call(this, key);
+			} }.hasOwnProperty, writable: true, configurable: true, enumerable: false });
+		})();
 
 		// Like the interpreter: range(end), range(start, end[, step]) is a lazy range of integers
 		// with an exclusive end
 		class __ts_Range {
+			// Private: as in the interpreter, r.start is undefined
+			#start;
+			#end;
+			#step;
 			constructor(start, end, step) {
-				this.start = start;
-				this.end = end;
-				this.step = step;
+				this.#start = start;
+				this.#end = end;
+				this.#step = step;
 			}
 			get length() {
-				return Math.max(0, Math.ceil((this.end - this.start) / this.step));
+				return Math.max(0, Math.ceil((this.#end - this.#start) / this.#step));
 			}
 			*[Symbol.iterator]() {
-				for (let i = this.start; this.step > 0 ? i < this.end : i > this.end; i += this.step) {
+				for (let i = this.#start; this.#step > 0 ? i < this.#end : i > this.#end; i += this.#step) {
 					yield i;
 				}
 			}
@@ -488,11 +536,11 @@ class TinyscriptGenerator   {
 			}
 			// Like the interpreter: the same integers backwards, again a lazy range
 			reverse() {
-				const last = this.start + (this.length - 1) * this.step;
-				return new __ts_Range(last, this.start - this.step, -this.step);
+				const last = this.#start + (this.length - 1) * this.#step;
+				return new __ts_Range(last, this.#start - this.#step, -this.#step);
 			}
 			toString() {
-				return "range(" + this.start + ", " + this.end + (this.step !== 1 ? ", " + this.step : "") + ")";
+				return "range(" + this.#start + ", " + this.#end + (this.#step !== 1 ? ", " + this.#step : "") + ")";
 			}
 		}
 
@@ -622,6 +670,47 @@ class TinyscriptGenerator   {
 		function __ts_isString(value) {
 			return typeof value === "string" || value instanceof __ts_JsString;
 		}
+		// Like the interpreter: a number has only its methods toFixed and toString, a boolean no
+		// properties (Javascript: undefined, or the methods of Number.prototype / Boolean.prototype).
+		// __ts_r checks the receiver of o.name and o.name(…) and returns it, so that the access stays
+		// at its place in the code (one property access per place is faster for V8); __ts_get reads
+		// o[key] where the key cannot be evaluated twice
+		function __ts_r(o, key) {
+			if (typeof o === "number" || typeof o === "boolean") {
+				__ts_primitiveProperty(o, key);
+			}
+			return o;
+		}
+		function __ts_get(o, key) {
+			if (typeof o === "number" || typeof o === "boolean") {
+				__ts_primitiveProperty(o, key);
+			}
+			return o[key];
+		}
+		function __ts_primitiveProperty(o, key) {
+			if (typeof o === "number" && (key === "toFixed" || key === "toString")) {
+				return;
+			}
+			throw new TypeError("Cannot read '" + key + "' of " + __ts_str(o) + ": "
+				+ (typeof o === "number" ? "numbers only have the methods toFixed and toString" : "booleans have no properties"));
+		}
+		// Like the interpreter: an array has only its indexes (integers from 0) and length, so
+		// a[-1] = x, a[1.5] = x and a["name"] = x are errors (Javascript: properties). __ts_w checks
+		// the target of o[key] = x and returns it; __ts_set writes where the key cannot be evaluated
+		// twice. (o.name = x is not checked: it costs too much for every object, see TODO.md)
+		function __ts_w(o, key) {
+			if (Array.isArray(o) && !__ts_isArrayKey(key) && o !== Array.prototype) {
+				throw new TypeError("Arrays only have integer indexes, cannot set '" + key + "'");
+			}
+			return o;
+		}
+		function __ts_set(o, key, value) {
+			return __ts_w(o, key)[key] = value;
+		}
+		function __ts_isArrayKey(key) {
+			return typeof key === "number" ? key >= 0 && Math.trunc(key) === key && key <= 2147483647
+				: key === "length" || (typeof key === "string" && /^(0|[1-9][0-9]*)$/.exec(key) !== null && +key <= 2147483647);
+		}
 		function __ts_atLeast(count, min, name) {
 			if (count < min) {
 				throw new TypeError("Builtin function " + name + " requires at least " + min + " arguments.");
@@ -671,6 +760,25 @@ class TinyscriptGenerator   {
 				const i = index < 0 ? this.length + index : index;
 				return i >= 0 && i < this.length ? this[i] : undefined;
 			} }.at);
+			// The index of an item == null or undefined (tinyscript's ==: null == undefined), from
+			// start on, or before it from the end (last)
+			function nullishIndex(array, start, last) {
+				const n = array.length;
+				if (last) {
+					for (let i = start === undefined ? n - 1 : start < 0 ? n + start : Math.min(start, n - 1); i >= 0; i--) {
+						if (array[i] == null) {
+							return i;
+						}
+					}
+					return -1;
+				}
+				for (let i = start === undefined ? 0 : start < 0 ? Math.max(0, n + start) : start; i < n; i++) {
+					if (array[i] == null) {
+						return i;
+					}
+				}
+				return -1;
+			}
 			// indexOf(x[, start]), includes, lastIndexOf: the index must be an integer. Each wrapper
 			// is a function of its own (not made in a loop), so that V8 sees one original per call
 			«FOR name : #["indexOf", "includes", "lastIndexOf"]»
@@ -679,6 +787,9 @@ class TinyscriptGenerator   {
 					__ts_thisArray(this, "«name»");
 					if (arguments.length > 1 && !__ts_isInteger(start)) {
 						throw new TypeError(«IF name == "lastIndexOf"»"lastIndexOf() needs an integer index, not " + __ts_describe(start)«ELSE»"indexOf() needs an integer start index, not " + __ts_str(start)«ENDIF»);
+					}
+					if (value == null) {
+						return nullishIndex(this, arguments.length > 1 ? start : undefined, «name == "lastIndexOf"»)«IF name == "includes"» >= 0«ENDIF»;
 					}
 					return arguments.length > 1 ? «name».call(this, value, start) : «name».call(this, value);
 				} }.«name»);
@@ -893,7 +1004,8 @@ class TinyscriptGenerator   {
 				if (typeof value !== "number" && typeof value !== "string" && typeof value !== "boolean") {
 					throw new TypeError("Number() needs a string, a number or a boolean, not " + __ts_type(value));
 				}
-				return JsNumber(value);
+				// Unlike Javascript, a blank string is NaN (not 0)
+				return typeof value === "string" && value.trim() === "" ? NaN : JsNumber(value);
 			} }.Number;
 			for (const key of Object.getOwnPropertyNames(JsNumber)) {
 				if (!(key in N) || key === "prototype") {
@@ -961,8 +1073,9 @@ class TinyscriptGenerator   {
 			«ENDFOR»
 		})();
 
-		// Object.values / entries / assign need objects, fromEntries [key, value] pairs or a Map
-		«FOR name : #["values", "entries"]»
+		// Object.values / entries / assign / keys … need objects, fromEntries [key, value] pairs or
+		// a Map (Javascript: the indexes of a string, Number.prototype for a number)
+		«FOR name : #["values", "entries", "keys", "getOwnPropertyNames", "getPrototypeOf"]»
 			Object.«name» = (function («name») {
 				return { «name»(object) {
 					__ts_atLeast(arguments.length, 1, "«name»");
@@ -971,6 +1084,52 @@ class TinyscriptGenerator   {
 				} }.«name»;
 			})(Object.«name»);
 		«ENDFOR»
+		function __ts_propertyKey(key) {
+			if (typeof key !== "string" && typeof key !== "number") {
+				throw new TypeError("A property key must be a string or a number, not " + __ts_type(key));
+			}
+		}
+		Object.getOwnPropertyDescriptor = (function (getOwnPropertyDescriptor) {
+			return { getOwnPropertyDescriptor(object, key) {
+				__ts_atLeast(arguments.length, 2, "getOwnPropertyDescriptor");
+				__ts_object(object, "getOwnPropertyDescriptor");
+				__ts_propertyKey(key);
+				return getOwnPropertyDescriptor(object, key);
+			} }.getOwnPropertyDescriptor;
+		})(Object.getOwnPropertyDescriptor);
+		Object.defineProperty = (function (defineProperty) {
+			return { defineProperty(object, key, descriptor) {
+				__ts_atLeast(arguments.length, 3, "defineProperty");
+				__ts_object(object, "defineProperty");
+				if (Array.isArray(object)) {
+					throw new TypeError("Object.defineProperty is not supported for arrays");
+				}
+				__ts_propertyKey(key);
+				if (descriptor === null || (typeof descriptor !== "object" && typeof descriptor !== "function")) {
+					throw new TypeError("defineProperty() needs a descriptor object, not " + __ts_type(descriptor));
+				}
+				return defineProperty(object, key, descriptor);
+			} }.defineProperty;
+		})(Object.defineProperty);
+		// Object() and new Object() make an empty object, Object(o) is o; tinyscript has no objects
+		// for numbers, strings or booleans (Javascript wraps them). The same statics and prototype,
+		// and ({}).constructor is the new Object
+		globalThis.Object = (function (JsObject) {
+			const O = function Object(value) {
+				if (arguments.length === 0) {
+					return {};
+				}
+				__ts_object(value, "Object");
+				return value;
+			};
+			for (const key of JsObject.getOwnPropertyNames(JsObject)) {
+				if (key !== "length" && key !== "name") {
+					Reflect.defineProperty(O, key, Reflect.getOwnPropertyDescriptor(JsObject, key));
+				}
+			}
+			Reflect.defineProperty(JsObject.prototype, "constructor", { value: O, writable: true, configurable: true, enumerable: false });
+			return O;
+		})(Object);
 		Object.assign = (function (assign) {
 			return { assign(target) {
 				__ts_atLeast(arguments.length, 1, "assign");
@@ -1039,31 +1198,34 @@ class TinyscriptGenerator   {
 		loading.push(script.eResource.URI)
 		collectModules(script, loader, loading)
 		val code = generateScript(script, includeBuiltins).toString
-		if (!sourceMaps)
+		if (!forNode)
 			return code
 		if (!includeBuiltins)
 			return SourceMaps.strip(code)
 		SourceMaps.attach(code, sources.keySet.map[sourceName].toList, sources.keySet.map[sourceText].toList)
 	}
 
-	// Source maps (TinyscriptGenerator.setSourceMaps): a marker with the tinyscript position before
-	// each statement, call or property access and checked operator, see SourceMaps
-	boolean sourceMaps = false
+	// A program for node (TinyscriptGenerator.setForNode): with source maps (a marker with the
+	// tinyscript position before each statement, call or property access and checked operator, see
+	// SourceMaps), the error handler and the worker with a large stack
+	boolean forNode = false
 
 	/**
-	 * With source maps, a program (with the builtins) gets an inline source map, and errors that
-	 * end it are printed with the tinyscript line, as by the interpreter; node needs
-	 * --enable-source-maps for it.
+	 * A program (with the builtins) for node, as tinyscript --node runs it: it runs in a worker with
+	 * a large stack (deep recursion as in the interpreter), gets an inline source map, and errors
+	 * that end it are printed with the tinyscript line, as by the interpreter (node needs
+	 * --enable-source-maps for that). The code then uses require and a return at the top level of
+	 * node's module; without it (/xcompile), it is plain Javascript.
 	 */
-	def void setSourceMaps(boolean sourceMaps) {
-		this.sourceMaps = sourceMaps
+	def void setForNode(boolean forNode) {
+		this.forNode = forNode
 	}
 
 	// The resources of the markers, numbered in the order of their first marker
 	LinkedHashMap<Resource, Integer> sources = new LinkedHashMap
 
 	def String mark(EObject element) {
-		if (!sourceMaps || element === null)
+		if (!forNode || element === null)
 			return ""
 		val node = NodeModelUtils.findActualNodeFor(element)
 		val resource = element.eResource
@@ -1139,7 +1301,8 @@ class TinyscriptGenerator   {
 	def private generateScript(Tinyscript script, boolean includeBuiltins) '''
 		«IF includeBuiltins»
 			"use strict";
-			«IF sourceMaps»
+			«IF forNode»
+				«largeStackWorker»
 				«uncaughtErrorHandler»
 			«ENDIF»
 			«generateBuiltins»
@@ -1311,12 +1474,65 @@ class TinyscriptGenerator   {
 		val target = stmt.expr
 		if (target instanceof CallOrPropertyAccess) {
 			return '''
-				((o, k) => o[k] = «helper»(o[k]))(«target.expr.generate», «propertyKey((target.suffix as CallOrPropertyAccessSuffix).property)»);
+				((o, k) => «writeTarget((target.suffix as CallOrPropertyAccessSuffix).property)»[k] = «helper»(o[k]))(«target.expr.generate», «propertyKey((target.suffix as CallOrPropertyAccessSuffix).property)»);
 			'''
 		}
 		'''
 			«target.generate» = «helper»(«target.generate»);
 		'''
+	}
+
+	// The object o of o[k] = … in a helper: o[key] is checked (an array has only indexes and
+	// length), o.name is not (it costs too much for every object, see TODO.md)
+	def String writeTarget(PropertyAccessSuffix property) {
+		if (property instanceof ComputedPropertyAccessSuffix) "__ts_w(o, k)" else "o"
+	}
+
+	// A key that can be evaluated twice: a literal or a variable (o[i], o["a"], not o[f()])
+	def boolean isSimpleKey(PropertyAccessSuffix property) {
+		switch property {
+			DotPropertyAccessSuffix case property.key.name !== null: true
+			DotPropertyAccessSuffix: property.key.expr instanceof StringLiteral || property.key.expr instanceof NumberLiteral
+			ComputedPropertyAccessSuffix: property.key instanceof StringLiteral || property.key instanceof NumberLiteral
+				|| (property.key instanceof Reference && !(property.key as Reference).^this)
+			default: false
+		}
+	}
+
+	// Whether o.key / o[key] is read with a check of o (a number or boolean has no properties):
+	// not where it is written to or deleted, not in an optional chain (?. ends it early), not in
+	// the callee of new (new a.b(…): Javascript reads a.b itself), and not where o is an object
+	// by its syntax (this, a literal)
+	def boolean isCheckedRead(CallOrPropertyAccess expr) {
+		if (!(expr.suffix instanceof CallOrPropertyAccessSuffix))
+			return false
+		val container = expr.eContainer
+		if (container instanceof BinaryExpression && (container as BinaryExpression).left === expr
+				&& Operators.isAssignment((container as BinaryExpression).op))
+			return false
+		if (container instanceof Unary && (container as Unary).op == UnaryOperator.DELETE)
+			return false
+		val receiver = expr.expr
+		if (receiver instanceof Reference && (receiver as Reference).^this || receiver instanceof ObjectInitializer
+				|| receiver instanceof ArrayInitializer || receiver instanceof StringLiteral)
+			return false
+		var hasCall = false
+		var Expression e = expr
+		while (e instanceof CallOrPropertyAccess) {
+			val suffix = e.suffix
+			if (suffix instanceof CallOrPropertyAccessSuffix) {
+				val property = suffix.property
+				if (property instanceof DotPropertyAccessSuffix && (property as DotPropertyAccessSuffix).optional
+						|| property instanceof ComputedPropertyAccessSuffix && (property as ComputedPropertyAccessSuffix).optional)
+					return false
+				if (e !== expr && suffix.call !== null)
+					hasCall = true
+			}
+			else if (e !== expr)
+				hasCall = true
+			e = e.expr
+		}
+		!(e instanceof NewExpression && !hasCall)
 	}
 
 	// The key of o.key or o[key] as a Javascript expression
@@ -1504,6 +1720,18 @@ class TinyscriptGenerator   {
 	// - * / % < <= > >= (and -= *= /= %=) call a checking helper, unless both operands are
 	// numbers anyway; && and || check their operands as conditions and give a boolean
 	def dispatch generate(BinaryExpression expr) {
+		// o[key] = x checks o (an array has only indexes and length), o.name = x does not (TODO.md)
+		val left = expr.left
+		if (expr.op == BinaryOperator.ASSIGN && left instanceof CallOrPropertyAccess
+				&& (left as CallOrPropertyAccess).suffix instanceof CallOrPropertyAccessSuffix) {
+			val access = left as CallOrPropertyAccess
+			val property = (access.suffix as CallOrPropertyAccessSuffix).property
+			if (property instanceof ComputedPropertyAccessSuffix && !property.optional) {
+				if (isSimpleKey(property))
+					return '''«mark(expr)»__ts_w(«access.expr.generate», «propertyKey(property)»)[«propertyKey(property)»] = «expr.right.generate»'''
+				return '''«mark(expr)»__ts_set(«access.expr.generate», «propertyKey(property)», «expr.right.generate»)'''
+			}
+		}
 		if (!(expr.left instanceof Pattern)) {
 			val helper = checkingHelper(expr.op)
 			if (helper !== null && !(isNumber(expr.left) && isNumber(expr.right)))
@@ -1551,7 +1779,7 @@ class TinyscriptGenerator   {
 				DotPropertyAccessSuffix: property.key.expr.generate.toString
 				ComputedPropertyAccessSuffix: property.key.generate.toString
 			}
-			return '''((o, k) => o[k] = «helper»o[k], «expr.right.generate»))(«left.expr.generate», «key»)'''
+			return '''((o, k) => «writeTarget(property)»[k] = «helper»o[k], «expr.right.generate»))(«left.expr.generate», «key»)'''
 		}
 		'''«left.generate» = «helper»«left.generate», «expr.right.generate»)'''
 	}
@@ -1596,8 +1824,17 @@ class TinyscriptGenerator   {
 	def dispatch generate(GroupingExpression expr)
 		'''(«expr.expr.generate»)'''
 
-	def dispatch generate(CallOrPropertyAccess expr) 
+	// o.key and o[key] check o where it may be a number or boolean (see isCheckedRead)
+	def dispatch generate(CallOrPropertyAccess expr) {
+		if (isCheckedRead(expr)) {
+			val suffix = expr.suffix as CallOrPropertyAccessSuffix
+			if (isSimpleKey(suffix.property))
+				return '''«mark(expr)»__ts_r(«expr.expr.generate», «propertyKey(suffix.property)»)«suffix.generate»'''
+			if (suffix.call === null)
+				return '''«mark(expr)»__ts_get(«expr.expr.generate», «propertyKey(suffix.property)»)'''
+		}
 		'''«mark(expr)»«expr.expr.generate»«IF (expr.suffix !== null)»«expr.suffix.generate»«ENDIF»'''
+	}
 	
 	def dispatch generate(CallOrPropertyAccessSuffix suffix) 
 		'''«suffix.property.generate»«IF (suffix.call !== null)»«suffix.call.generate»«ENDIF»'''

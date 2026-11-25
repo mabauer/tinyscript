@@ -20,6 +20,14 @@ TypeScript (`examples/aoc20xx`).
    Javascript-compatible. The lexer for `${…}` is real work in Xtext.
 2. **Smaller:** assignment with a pattern (`[a, b] = [b, a];`), renaming in
    imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`.
+   More of Javascript's builtins: node has methods and constants that tinyscript
+   does not (decided 2026-11-25: they stay in node, `BuiltinMembersTest` lists
+   them), such as `String#concat`, `match`, `substr`, `Array#concat`, `keys`,
+   `values`, `toSorted`, the `Set` operations (`union` …), `Number.isNaN`,
+   `Math.cosh`, `Math.LN2`, `Object.freeze`, `Object.is`, `valueOf`, `f.bind`,
+   `e.stack`; a program that uses them runs only in node. Decide which ones
+   tinyscript takes over; phase 3 finds the others before the run where the kind
+   is known.
 3. **Library:** a priority queue in a `std:` module (days 16 of 2024 and 17 of
    2023 have a binary heap of their own); `findAll` with the positions of the
    matches; a single-character field in `parse` (`a<2006`); possibly `readAll()`
@@ -44,48 +52,41 @@ experimental) as a second backend of equal rank next to the interpreter; what
 "equal" means is in `docs/architecture.md` §15. State: the generated code runs
 in strict mode and checks builtins, operators and conditions as the interpreter
 does; many mistakes are errors before the run, for both backends; errors show
-the tinyscript line (source maps). 165 error tests require both backends to fail
-alike; 16 still go on in node (`assertKnownGap`), all of them properties of
-primitives, arrays, Maps and Sets. Of the messages, 84 differ (80 only in the
-text, 4 `TypeError` against `RangeError`; `target/backend-differences.txt`).
+the tinyscript line (source maps). 275 error tests require both backends to fail
+alike; 8 still go on in node (`assertKnownGap`): 4 properties (`a.x = 5` on an
+array and others, see phase 2.1), 4 builtins with too many arguments. Of the
+messages, 161 differ (157 only in the text, 4 `TypeError` against `RangeError`;
+`target/backend-differences.txt`). Phase 1 is done (2026-11-25): every test runs
+in both backends (only the sandbox stays with the interpreter);
+`BuiltinMatrixTest` calls every builtin with edge values in both backends (3105
+cases, 2 known differences, `target/builtin-matrix.txt`); `BuiltinMembersTest`
+compares the members of the builtins and typical values in both directions.
 
-**Plan** (2026-11-24), in this order: phase 2.1, then 1, the rest of 2, 3 and 5;
-phase 4 is put back for now. `--node` stops being experimental after phases 1
-and 2 (no known gaps left, or only documented ones that phase 3 finds before the
-run); phase 3 then makes it stricter and faster.
+**Plan** (2026-11-24), in this order: phases 2, 3 and 5 (phase 1 is done); phase
+4 is put back for now. `--node` stops being experimental after phases 1 and 2
+(no known gaps left, or only documented ones that phase 3 finds before the run);
+phase 3 then makes it stricter and faster.
 
-1. **Phase 1: equality proven by tests.**
-   1. **Interpreter-only tests in both backends:** `InterpreterReferenceTest`
-      (82 cases) and the `assertEquals(…, interpreterOutput(…))` of the other
-      classes become `assertSameOutput` with the expected value; only what node
-      cannot do (the sandbox) stays interpreter-only, with the reason. New
-      differences are fixed or marked with `assertKnownGap`.
-   2. **Same values for every builtin:** a matrix of every builtin with edge
-      values (`NaN`, `-0`, `""`, negative, not an integer, too few arguments),
-      generated from the builtin objects of the runtime (`BuiltinSignatures`):
-      both backends give the same value or the same error.
-   3. **The members of the builtin objects and prototypes compared in both
-      directions:** node knows more than tinyscript (`f.constructor`,
-      `o.__proto__` of builtins …), and such a program runs only there; the
-      prelude deletes what tinyscript does not have, or makes it an error.
 2. **Phase 2: the gaps in behavior closed.**
-   1. **Depth of recursion (first):** node stops at fewer than 30,000 nested
-      calls (`RangeError`), the interpreter at about 450,000; a recursive
-      depth-first search (a flood fill in AoC) then runs only in the
-      interpreter. `--node` runs the program in a `Worker` with
-      `resourceLimits: { stackSizeMb: 256 }` (tried: 200,000 calls in 0.13 s;
-      `node --stack-size` on the main thread crashes silently instead). Check in
-      the worker: the standard input (`fs.readSync(0)` of `std:io`), the exit
-      code, the prelude's handler of uncaught errors, the source maps. A test
-      with 100,000 nested calls in both backends.
-   2. **Properties in node:** reading a property of a number or boolean (`n.x`,
-      `n.length`, `true.toString()`) and setting one on an array, `Map` or `Set`
-      (`a.x = 5`, `a[-1] = 5`, `m["a"] = 1`) is a `TypeError` in the interpreter
-      and goes on in node (the 16 known gaps; setting one on a primitive already
-      fails in strict mode). First measure a cheap check on the AoC days: for
-      reads, a fast path for objects (`typeof o === "object"`); for writes, only
-      on arrays, `Map`s and `Set`s. What costs at most about 10 % goes in; the
-      rest waits for the kinds of phase 3.
+   1. **Properties in node, the rest:** reading a property of a number or
+      boolean, `o[key] = x` on an array and any new property of a `Map` or `Set`
+      fail in node as in the interpreter (2026-11-25, 0–3 % on the AoC days).
+      Left (4 known gaps): `o.name = x` on an array (`a.x = 5`,
+      `a.length = "2"`), since a check of every `o.name = x` costs up to 1.7
+      times in loops that update fields (measured 2026-11-25); `delete n.x` of a
+      number; `let { a } = 42`. With the kinds of phase 3, the check is needed
+      only where `o` may be an array.
+   2. **Too many arguments for a builtin** where the receiver is only known at
+      run time (`s.startsWith("a", 0, 1)`, `a.map(f, {})`,
+      `new Map().get(1, 2)`): a `TypeError` in the interpreter, ignored in node
+      (4 known gaps). The checked builtins of the prelude do not check the
+      maximum, since builtins as callbacks get more arguments (`.map(Number)`);
+      a check at the call site of the generated code would tell the two apart.
+   3. **`Math.exp` and the other functions of `StrictMath` to the last bit:**
+      `Math.exp(1)` is `2.7182818284590455` in the interpreter, `Math.E` in node
+      (a known difference of the builtin matrix). Port `exp` (and where needed
+      `log`, `sin` …, `pow`) from FreeBSD's msun as `log2` and `cbrt`
+      (`FreeBsdMath`), checked against node on 20,000 inputs.
 3. **Phase 3: static checks, level 2 (kinds).**
    - A light local inference from literals, `new C(…)`, `range(…)`, the fixed
      result kinds of builtins (`split`, `map` → array, `length` → number) and
@@ -95,7 +96,8 @@ run); phase 3 then makes it stricter and faster.
      errors before the run, for both backends.
    - The generator uses the kinds to leave out more checks (comparisons of
      properties, callbacks that return a comparison: day09 of 2024 takes 1.8
-     times the unchecked time today).
+     times the unchecked time today), and to check `o.name = x` only where `o`
+     may be an array (phase 2.1).
    - Literal arguments of the wrong type for builtins other than `Math`
      (`"a".repeat("2")`, `parseInt(42)`): the types are only in the
      implementations, so they need to be declared with `defineBuiltinMethod`.
@@ -108,7 +110,7 @@ run); phase 3 then makes it stricter and faster.
    (`not number and undefined`, `Cannot read properties of undefined`). Idea:
    each check site gets a number, and a table of the expressions' texts is read
    only when an error is reported, so it costs nothing on the normal path; align
-   the most frequent texts of the 84 differences. Not needed for "equal" (the
+   the most frequent texts of the 161 differences. Not needed for "equal" (the
    same behavior, not the same diagnostics).
 5. **Phase 5: official.** `--node` without the note "experimental"; README and
    language reference describe the second backend; CI runs the example programs

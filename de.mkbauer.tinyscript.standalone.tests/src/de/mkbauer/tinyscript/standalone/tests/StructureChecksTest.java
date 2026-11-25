@@ -67,7 +67,6 @@ public class StructureChecksTest extends TinyscriptTranspilerTestBase {
                 + "try { throw new Error(\"x\"); } catch (e) { print(e.message); }";
         assertEquals(List.of(), reportedErrors(code));
         assertEquals(List.of(), reportedWarnings(code));
-        assertEquals("Point {x: 1} {y: 2} Map {} e\n1 2 4 []\n5\nx\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("Point {x: 1} {y: 2} Map {} e\n1 2 4 []\n5\nx\n", code);
     }
 }

@@ -18,7 +18,7 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 public class ThrowTest extends TinyscriptTranspilerTestBase {
 
     private TinyscriptRuntimeException thrown(String code) {
-        return assertThrows(TinyscriptError.class, () -> interpreterOutput(code));
+        return assertSameFailure(TinyscriptError.class, code);
     }
 
     @Test
@@ -32,7 +32,7 @@ public class ThrowTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testOnlyErrorsCanBeThrown() {
         assertEquals("", thrown("throw new Error();").getMessage());
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("const s = \"oops\";\nthrow s;"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, "const s = \"oops\";\nthrow s;");
         assertEquals("throw needs an Error object, e.g. throw new Error(\"...\"), not string", e.getMessage());
     }
 
@@ -47,8 +47,7 @@ public class ThrowTest extends TinyscriptTranspilerTestBase {
     public void testErrorObjects() {
         String code = "let e = new Error(\"bad\"); print(e.message, e.name, e.toString(), e instanceof Error);\n"
                 + "print(new Error().message == \"\", Error(\"x\").message, \"\" + new Error(\"y\"));";
-        assertEquals("bad Error Error: bad true\ntrue x Error: y\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("bad Error Error: bad true\ntrue x Error: y\n", code);
     }
 
     @Test

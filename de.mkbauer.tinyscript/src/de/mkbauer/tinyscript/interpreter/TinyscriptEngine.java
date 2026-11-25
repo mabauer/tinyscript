@@ -581,6 +581,8 @@ public class TinyscriptEngine {
     	function.setArrowFunction(isArrowFunction);
     	function.setOuterContext(currentContext);
     	function.setAst(definition);
+    	if (function.isConstructor())
+    		function.createPrototypeProperty();
     	return function;
     }
 
@@ -1514,8 +1516,9 @@ public class TinyscriptEngine {
 		}
 		if (constructor instanceof ClassObject cls)
 			cls.initialize(self, args);
-		else
-			constructor.apply(self, args);
+		else if (constructor.apply(self, args) instanceof TSObject result && constructor instanceof BuiltinConstructor)
+			// Like Javascript: a builtin constructor may give another object (new Object(o) is o)
+			return result;
 		return self;
 	}
 	

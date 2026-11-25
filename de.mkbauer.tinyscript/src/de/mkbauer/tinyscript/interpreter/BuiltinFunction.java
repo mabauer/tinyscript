@@ -19,8 +19,8 @@ public class BuiltinFunction extends Function {
 	}
 	
 	public void checkArgs(TSValue[] args) {
-		if (args.length < getLength()) {
-			throw new TinyscriptArgumentError("Builtin function " + getName() + " requires at least " + getLength() + " arguments.", 
+		if (args.length < getMinArgs()) {
+			throw new TinyscriptArgumentError("Builtin function " + getName() + " requires at least " + getMinArgs() + " arguments.",
 					engine.getCurrentContext().currentExpression);
 		}
 	}
@@ -53,6 +53,11 @@ public class BuiltinFunction extends Function {
 
 	protected void setMaxArgs(int maxArgs) {
 		this.maxArgs = maxArgs;
+	}
+
+	/** The minimum number of arguments: its length, unless a builtin says otherwise (Object). */
+	public int getMinArgs() {
+		return getLength();
 	}
 
 	/** The maximum number of arguments ({@link #VARIADIC}: any number). */

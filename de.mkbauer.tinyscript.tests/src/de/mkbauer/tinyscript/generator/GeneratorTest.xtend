@@ -99,13 +99,14 @@ class GeneratorTest extends TinyscriptInterpreterTestHelper {
 			obj();
 			obj.method();
 		''')
+		// __ts_r checks the receiver (a number or boolean has no properties) and returns it
 		assertEquals('''
 			let obj;
-			obj.key1;
-			obj.key1.key2;
-			obj["key"];
+			__ts_r(obj, "key1").key1;
+			__ts_r(__ts_r(obj, "key1").key1, "key2").key2;
+			__ts_r(obj, "key")["key"];
 			obj();
-			obj.method();
+			__ts_r(obj, "method").method();
 		'''.toString, result)
 	}
 	

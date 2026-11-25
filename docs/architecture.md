@@ -666,7 +666,20 @@ generator leaves a check out where the operator already guarantees the kind, by
 the syntax alone (`isBoolean`, `isNumber`): a comparison, `==`, `!`, `&&` / `||`
 is a boolean; `-`, `*`, `/`, `%`, unary `-` and number literals are numbers.
 Variables, properties and calls stay checked. Measured on AoC days with full
-input: 1.0 to 1.8 times the time of unchecked code. Some examples:
+input: 1.0 to 1.8 times the time of unchecked code.
+
+Properties are checked as in the interpreter where it costs little: `o.name` and
+`o[key]` check `o` with `__ts_r` (a number has only `toFixed` and `toString`, a
+boolean no properties) and return it, so that the access stays at its place (V8
+keeps one inline cache per place; a helper that read the property itself would
+see every shape); `__ts_get` reads where the key cannot be evaluated twice
+(`o[f()]`). `o[key] = x` checks an array with `__ts_w` (only integer indexes and
+`length`), `__ts_set` where the key cannot be evaluated twice. `Map`s and `Set`s
+are not extensible, so `m["a"] = 1` fails in strict mode at no cost. Not
+checked: `o.name = x` (`a.x = 5` on an array). Measured (2026-11-25): reads and
+these writes 0–3 % on AoC days; a check of every `o.name = x` took up to 1.7
+times in a loop that updates fields (5.5 times with the store in the helper), so
+it waits for the kinds of the static checks. Some examples:
 
 ```javascript
 // Tinyscript assert → JS function; its error is not caught by catch (__ts_catchable)
@@ -722,9 +735,9 @@ that `new` of it fails in both backends.
 
 ### Source maps
 
-With `setSourceMaps(true)` (off by default, so `/xcompile` is unchanged), a
-program gets an inline source map, so that node shows errors with the tinyscript
-lines. The generator writes a marker with the tinyscript position
+With `setForNode(true)` (off by default, so `/xcompile` stays plain Javascript),
+a program gets an inline source map, so that node shows errors with the
+tinyscript lines. The generator writes a marker with the tinyscript position
 (`SourceMaps.marker`: a control character never written otherwise, source, line,
 column) before each statement, call or property access, checked operator and
 condition; `SourceMaps.attach` removes the markers and appends the map (version
@@ -735,6 +748,21 @@ tinyscript line with `^`, and the stack of the tinyscript functions without the
 `__ts_` helpers and the standard library (an error inside `std:` is shown at the
 call). node needs `--enable-source-maps`; it costs nothing measurable (AoC days,
 `throw` / `catch` in a loop: node maps a stack only when it is read).
+
+### A worker with a large stack
+
+The interpreter runs recursions of about 450,000 calls (the REPL's thread has a
+stack of 256 MB); node's main thread stops at a few thousand, since the checked
+operators take frames of their own, so a recursive flood fill (AoC) ran only in
+the interpreter. With `setForNode(true)`, the program starts itself again in a
+`Worker` with `resourceLimits: { stackSizeMb: 256 }` (more than a million calls;
+`node --stack-size` on the main thread crashes silently instead) and the main
+thread only waits for it: its exit code becomes the program's. The worker gets
+the same arguments and node options (`--enable-source-maps`) and reads the same
+standard input (`std:io` reads fd 0); the error handler and the source maps work
+there. So the output of `--emit-js` runs deep recursions with a plain `node`
+too. Measured (2026-11-25): 6 to 10 ms more to start, the same time on AoC days,
+41 → 49 MB of memory.
 
 ---
 
@@ -1003,17 +1031,19 @@ transpiler.
 
 This module is the right place for:
 
-- Interpreter correctness tests (one `assertEquals` per language feature)
+- Correctness tests with the expected output (one per language feature), in both
+  backends; only the sandbox (resource limits) is tested in the interpreter
+  alone
 - Transpiler differential tests (interpreter output vs node output)
 - Integration tests for complete programs
 
 ### Two-level test design in `standalone.tests`
 
-| Level             | Class                      | Assertion                                           | On failure                                                                    |
-| ----------------- | -------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1a — interpreter  | `InterpreterReferenceTest` | `assertEquals(expected, interpreterOutput(tsCode))` | Exact wrong value; points to buggy `TinyscriptEngine` visitor                 |
-| 1b — differential | `TranspilerTest`           | `assertSameOutput(tsCode)`                          | Source + generated JS + both stdouts shown; paste JS into `node` to reproduce |
-| 2 — integration   | `TranspilerVerifyTest`     | `assertTranspilerCorrectFromFile(filename)`         | Generated JS + node stderr shown                                              |
+| Level             | Class                      | Assertion                                   | On failure                                                                             |
+| ----------------- | -------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1a — both, fixed  | `InterpreterReferenceTest` | `assertSameOutput(expected, tsCode)`        | Exact wrong value of the interpreter first (points to `TinyscriptEngine`), then node's |
+| 1b — differential | `TranspilerTest`           | `assertSameOutput(tsCode)`                  | Source + generated JS + both stdouts shown; paste JS into `node` to reproduce          |
+| 2 — integration   | `TranspilerVerifyTest`     | `assertTranspilerCorrectFromFile(filename)` | Generated JS + node stderr shown                                                       |
 
 Tests run alphabetically: `InterpreterReferenceTest` → `TranspilerTest` →
 `TranspilerVerifyTest`. Whole programs (Advent of Code 2021, 2023 and 2024, the

@@ -80,9 +80,9 @@ public abstract class TinyscriptTranspilerTestBase {
     public void setUpInjector() {
         injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         generator = injector.getInstance(TinyscriptGenerator.class);
-        // With source maps, as tinyscript --node runs: every differential test checks that the
-        // markers come out of the code again
-        generator.setSourceMaps(true);
+        // For node, as tinyscript --node runs it (in a worker, with source maps): every differential
+        // test checks that the markers come out of the code again
+        generator.setForNode(true);
         resourceSet = injector.getInstance(XtextResourceSet.class);
     }
 
@@ -99,10 +99,17 @@ public abstract class TinyscriptTranspilerTestBase {
      * {@code @BeforeEach} method.
      */
     protected void assumeNodeAvailable() {
-        // In CI (GitHub sets CI=true), node must be there: the differential tests fail instead
+        Assumptions.assumeTrue(nodeAvailable(), "Skipping: node.js not found on PATH");
+    }
+
+    /**
+     * Whether node is on the PATH; in CI (GitHub sets CI=true), node must be there: the
+     * differential tests fail instead.
+     */
+    protected static boolean nodeAvailable() {
         if (System.getenv("CI") != null && !NodeJsRunner.isAvailable())
             throw new AssertionError("node.js is needed in CI, but not found on PATH");
-        Assumptions.assumeTrue(NodeJsRunner.isAvailable(), "Skipping: node.js not found on PATH");
+        return NodeJsRunner.isAvailable();
     }
 
     // -------------------------------------------------------------------------
@@ -419,9 +426,23 @@ public abstract class TinyscriptTranspilerTestBase {
      */
     protected void assertSameOutput(String tsCode) {
         assumeNodeAvailable();
+        assertNodeOutput(interpreterOutput(tsCode), tsCode);
+    }
 
-        String jsCode = transpile(parse(tsCode));
+    /**
+     * Both backends print {@code expected}: the interpreter always, node where it is on the
+     * PATH (without node, only the interpreter is checked, and the test goes on).
+     */
+    protected void assertSameOutput(String expected, String tsCode) {
         String interpreterOut = interpreterOutput(tsCode);
+        assertEquals(expected, interpreterOut, "interpreter output of:\n" + tsCode);
+        if (nodeAvailable())
+            assertNodeOutput(interpreterOut, tsCode);
+    }
+
+    // node prints what the interpreter printed
+    private void assertNodeOutput(String interpreterOut, String tsCode) {
+        String jsCode = transpile(parse(tsCode));
         String nodeOut;
         try {
             nodeOut = NodeJsRunner.run(jsCode);
@@ -551,11 +572,16 @@ public abstract class TinyscriptTranspilerTestBase {
     }
 
     /**
-     * Like {@link #assertSameFailure(String)}; the interpreter must throw {@code expectedType}.
+     * Like {@link #assertSameFailure(String)}; the interpreter must throw {@code expectedType},
+     * which is returned (to check its message). Without node only the interpreter is checked,
+     * and the test goes on.
      */
-    protected void assertSameFailure(Class<? extends TinyscriptRuntimeException> expectedType, String tsCode) {
-        Failure interpreter = interpreterFailure(expectedType, tsCode);
-        assumeNodeAvailable();
+    protected <T extends TinyscriptRuntimeException> T assertSameFailure(Class<T> expectedType, String tsCode) {
+        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        T error = interpreterError(expectedType, tsCode, stdout);
+        Failure interpreter = failure(error, stdout);
+        if (!nodeAvailable())
+            return error;
         String jsCode = transpile(parse(tsCode));
         NodeJsRunner.Result result = NodeJsRunner.execute(withFailureHandler(jsCode), "");
         if (result.exitCode() == 0)
@@ -572,6 +598,7 @@ public abstract class TinyscriptTranspilerTestBase {
         assertEquals(interpreter.catchable(), node.catchable(), "catch gets the error in one backend, not in the other"
                 + "\n--- Tinyscript ---\n" + tsCode + "\n--- interpreter ---\n" + interpreter + "\n--- node ---\n" + node);
         BackendDifferences.note(tsCode, interpreter, node);
+        return error;
     }
 
     /**
@@ -583,15 +610,18 @@ public abstract class TinyscriptTranspilerTestBase {
     }
 
     /**
-     * Like {@link #assertKnownGap(String)}; the interpreter must throw {@code expectedType}.
+     * Like {@link #assertKnownGap(String)}; the interpreter must throw {@code expectedType},
+     * which is returned (to check its message). Without node only the interpreter is checked.
      */
-    protected void assertKnownGap(Class<? extends TinyscriptRuntimeException> expectedType, String tsCode) {
-        interpreterFailure(expectedType, tsCode);
-        assumeNodeAvailable();
+    protected <T extends TinyscriptRuntimeException> T assertKnownGap(Class<T> expectedType, String tsCode) {
+        T error = interpreterError(expectedType, tsCode, new ByteArrayOutputStream());
+        if (!nodeAvailable())
+            return error;
         NodeJsRunner.Result result = NodeJsRunner.execute(transpile(parse(tsCode)), "");
         if (result.exitCode() != 0)
             fail("node fails now as well, the gap is closed: use assertSameFailure"
                     + "\n--- Tinyscript ---\n" + tsCode + "\n--- node stderr ---\n" + result.stderr());
+        return error;
     }
 
     /** How the interpreter fails for {@code tsCode}; fails the test if it does not. */
@@ -601,6 +631,12 @@ public abstract class TinyscriptTranspilerTestBase {
 
     private Failure interpreterFailure(Class<? extends TinyscriptRuntimeException> expectedType, String tsCode) {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+        return failure(interpreterError(expectedType, tsCode, stdout), stdout);
+    }
+
+    // The error of the interpreter for tsCode, its output up to there in stdout; fails the test
+    // if it does not fail
+    private <T extends TinyscriptRuntimeException> T interpreterError(Class<T> expectedType, String tsCode, ByteArrayOutputStream stdout) {
         try {
             runInterpreter(tsCode, null, true, stdout);
         }
@@ -608,15 +644,19 @@ public abstract class TinyscriptTranspilerTestBase {
             if (!expectedType.isInstance(e))
                 fail("Expected " + expectedType.getSimpleName() + " but got " + e.getClass().getSimpleName() + ": "
                         + e.getMessage() + "\n--- Tinyscript ---\n" + tsCode);
-            boolean catchable = e instanceof TinyscriptError || e instanceof TinyscriptIOError || e instanceof TinyscriptJsonError;
-            return new Failure(stdout.toString(StandardCharsets.UTF_8), javascriptName(e), e.getMessage(), catchable);
+            return expectedType.cast(e);
         }
         fail("The interpreter does not fail\n--- Tinyscript ---\n" + tsCode + "\n--- output ---\n" + stdout);
         return null;
     }
 
+    static Failure failure(TinyscriptRuntimeException e, ByteArrayOutputStream stdout) {
+        boolean catchable = e instanceof TinyscriptError || e instanceof TinyscriptIOError || e instanceof TinyscriptJsonError;
+        return new Failure(stdout.toString(StandardCharsets.UTF_8), javascriptName(e), e.getMessage(), catchable);
+    }
+
     // The class of an interpreter error as Javascript names it (TinyscriptTypeError: TypeError)
-    private static String javascriptName(TinyscriptRuntimeException e) {
+    static String javascriptName(TinyscriptRuntimeException e) {
         return switch (e) {
             case TinyscriptJsonError json -> "SyntaxError";
             case TinyscriptStackOverflowError overflow -> "RangeError";
