@@ -722,9 +722,9 @@ that `new` of it fails in both backends.
 
 ### Source maps
 
-With `setSourceMaps(true)` (off by default, so `/xcompile` is unchanged), a
-program gets an inline source map, so that node shows errors with the tinyscript
-lines. The generator writes a marker with the tinyscript position
+With `setForNode(true)` (off by default, so `/xcompile` stays plain Javascript),
+a program gets an inline source map, so that node shows errors with the
+tinyscript lines. The generator writes a marker with the tinyscript position
 (`SourceMaps.marker`: a control character never written otherwise, source, line,
 column) before each statement, call or property access, checked operator and
 condition; `SourceMaps.attach` removes the markers and appends the map (version
@@ -735,6 +735,21 @@ tinyscript line with `^`, and the stack of the tinyscript functions without the
 `__ts_` helpers and the standard library (an error inside `std:` is shown at the
 call). node needs `--enable-source-maps`; it costs nothing measurable (AoC days,
 `throw` / `catch` in a loop: node maps a stack only when it is read).
+
+### A worker with a large stack
+
+The interpreter runs recursions of about 450,000 calls (the REPL's thread has a
+stack of 256 MB); node's main thread stops at a few thousand, since the checked
+operators take frames of their own, so a recursive flood fill (AoC) ran only in
+the interpreter. With `setForNode(true)`, the program starts itself again in a
+`Worker` with `resourceLimits: { stackSizeMb: 256 }` (more than a million calls;
+`node --stack-size` on the main thread crashes silently instead) and the main
+thread only waits for it: its exit code becomes the program's. The worker gets
+the same arguments and node options (`--enable-source-maps`) and reads the same
+standard input (`std:io` reads fd 0); the error handler and the source maps work
+there. So the output of `--emit-js` runs deep recursions with a plain `node`
+too. Measured (2026-11-25): 6 to 10 ms more to start, the same time on AoC days,
+41 → 49 MB of memory.
 
 ---
 

@@ -480,6 +480,33 @@ public class TinyscriptReplMainTest {
     }
 
     @Test
+    public void testDeepRecursionInBothBackends() throws IOException {
+        // A recursive flood fill of an open grid nests 100,000 calls: the interpreter runs it
+        // with its large stack, node in a worker with a large stack (its main thread stops at a
+        // few thousand calls)
+        Path file = script("flood.tys", "const n = 100000;\nconst seen = new Set();\n"
+                + "function fill(i) {\n    if (i < 0 || i >= n || seen.has(i)) {\n        return;\n    }\n"
+                + "    seen.add(i);\n    fill(i + 1);\n    fill(i - 1);\n}\nfill(0);\nprint(seen.size);");
+        assertEquals(TinyscriptReplMain.EXIT_OK, run(file.toString()));
+        assertEquals("100000\n", out.toString());
+        assumeNode();
+        out.reset();
+        err.reset();
+        assertEquals(TinyscriptReplMain.EXIT_OK, run("--node", file.toString()), err.toString());
+        assertEquals("100000\n", out.toString());
+    }
+
+    @Test
+    public void testNodeEndlessRecursionIsAnError() throws IOException {
+        assumeNode();
+        Path file = script("endless.tys", "function f(n) {\n    return f(n + 1) + 1;\n}\nprint(\"start\");\nprint(f(0));");
+        assertEquals(TinyscriptReplMain.EXIT_ERROR, run("--node", file.toString()));
+        assertEquals("start\n", out.toString());
+        assertTrue(err.toString().contains("RangeError: Maximum call stack size exceeded\n"
+                + "        return f(n + 1) + 1;\n"), err.toString());
+    }
+
+    @Test
     public void testEmitJs() throws IOException {
         Path file = script("hello.tys", "print(\"Hello\");");
         assertEquals(TinyscriptReplMain.EXIT_OK, run("--emit-js", file.toString()));

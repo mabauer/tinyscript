@@ -80,9 +80,9 @@ public abstract class TinyscriptTranspilerTestBase {
     public void setUpInjector() {
         injector = new TinyscriptStandaloneSetup().createInjectorAndDoEMFRegistration();
         generator = injector.getInstance(TinyscriptGenerator.class);
-        // With source maps, as tinyscript --node runs: every differential test checks that the
-        // markers come out of the code again
-        generator.setSourceMaps(true);
+        // For node, as tinyscript --node runs it (in a worker, with source maps): every differential
+        // test checks that the markers come out of the code again
+        generator.setForNode(true);
         resourceSet = injector.getInstance(XtextResourceSet.class);
     }
 

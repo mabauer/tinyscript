@@ -130,6 +130,30 @@ class TinyscriptGenerator   {
 	// Counter for unique names of temporary variables (loop bounds, iterables, indexes)
 	int tempCounter = 0;
 	
+	// For node: the interpreter runs recursions of about 450,000 calls, node's main thread only a
+	// few thousand (the checked operators take frames of their own). So the program starts itself
+	// again in a worker with a stack of 256 MB (more than a million calls; the main thread only
+	// waits for it, and its exit code becomes the program's). The worker gets the same arguments
+	// and node options (--enable-source-maps) and reads the same standard input (std:io reads fd 0)
+	def largeStackWorker() '''
+		{
+			const threads = require("worker_threads");
+			if (threads.isMainThread) {
+				const worker = new threads.Worker(__filename, { argv: process.argv.slice(2), resourceLimits: { stackSizeMb: 256 } });
+				worker.on("error", error => {
+					process.stderr.write(String(error && error.stack || error) + "\n");
+					process.exitCode = 1;
+				});
+				worker.on("exit", code => {
+					if (code !== 0) {
+						process.exitCode = code;
+					}
+				});
+				return;
+			}
+		}
+	'''
+
 	// With source maps: an error that ends the program is printed as by the interpreter, with the
 	// tinyscript line (from the source map) and a stack of the tinyscript functions; the frames
 	// of the prelude (__ts_ helpers) and of the standard library are left out
@@ -1039,31 +1063,34 @@ class TinyscriptGenerator   {
 		loading.push(script.eResource.URI)
 		collectModules(script, loader, loading)
 		val code = generateScript(script, includeBuiltins).toString
-		if (!sourceMaps)
+		if (!forNode)
 			return code
 		if (!includeBuiltins)
 			return SourceMaps.strip(code)
 		SourceMaps.attach(code, sources.keySet.map[sourceName].toList, sources.keySet.map[sourceText].toList)
 	}
 
-	// Source maps (TinyscriptGenerator.setSourceMaps): a marker with the tinyscript position before
-	// each statement, call or property access and checked operator, see SourceMaps
-	boolean sourceMaps = false
+	// A program for node (TinyscriptGenerator.setForNode): with source maps (a marker with the
+	// tinyscript position before each statement, call or property access and checked operator, see
+	// SourceMaps), the error handler and the worker with a large stack
+	boolean forNode = false
 
 	/**
-	 * With source maps, a program (with the builtins) gets an inline source map, and errors that
-	 * end it are printed with the tinyscript line, as by the interpreter; node needs
-	 * --enable-source-maps for it.
+	 * A program (with the builtins) for node, as tinyscript --node runs it: it runs in a worker with
+	 * a large stack (deep recursion as in the interpreter), gets an inline source map, and errors
+	 * that end it are printed with the tinyscript line, as by the interpreter (node needs
+	 * --enable-source-maps for that). The code then uses require and a return at the top level of
+	 * node's module; without it (/xcompile), it is plain Javascript.
 	 */
-	def void setSourceMaps(boolean sourceMaps) {
-		this.sourceMaps = sourceMaps
+	def void setForNode(boolean forNode) {
+		this.forNode = forNode
 	}
 
 	// The resources of the markers, numbered in the order of their first marker
 	LinkedHashMap<Resource, Integer> sources = new LinkedHashMap
 
 	def String mark(EObject element) {
-		if (!sourceMaps || element === null)
+		if (!forNode || element === null)
 			return ""
 		val node = NodeModelUtils.findActualNodeFor(element)
 		val resource = element.eResource
@@ -1139,7 +1166,8 @@ class TinyscriptGenerator   {
 	def private generateScript(Tinyscript script, boolean includeBuiltins) '''
 		«IF includeBuiltins»
 			"use strict";
-			«IF sourceMaps»
+			«IF forNode»
+				«largeStackWorker»
 				«uncaughtErrorHandler»
 			«ENDIF»
 			«generateBuiltins»

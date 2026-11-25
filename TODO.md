@@ -49,10 +49,11 @@ alike; 16 still go on in node (`assertKnownGap`), all of them properties of
 primitives, arrays, Maps and Sets. Of the messages, 84 differ (80 only in the
 text, 4 `TypeError` against `RangeError`; `target/backend-differences.txt`).
 
-**Plan** (2026-11-24), in this order: phase 2.1, then 1, the rest of 2, 3 and 5;
-phase 4 is put back for now. `--node` stops being experimental after phases 1
-and 2 (no known gaps left, or only documented ones that phase 3 finds before the
-run); phase 3 then makes it stricter and faster.
+**Plan** (2026-11-24), in this order: phase 1, then 2, 3 and 5 (phase 2.1, the
+depth of recursion, is done: a worker with a large stack); phase 4 is put back
+for now. `--node` stops being experimental after phases 1 and 2 (no known gaps
+left, or only documented ones that phase 3 finds before the run); phase 3 then
+makes it stricter and faster.
 
 1. **Phase 1: equality proven by tests.**
    1. **Interpreter-only tests in both backends:** `InterpreterReferenceTest`
@@ -69,16 +70,7 @@ run); phase 3 then makes it stricter and faster.
       `o.__proto__` of builtins …), and such a program runs only there; the
       prelude deletes what tinyscript does not have, or makes it an error.
 2. **Phase 2: the gaps in behavior closed.**
-   1. **Depth of recursion (first):** node stops at fewer than 30,000 nested
-      calls (`RangeError`), the interpreter at about 450,000; a recursive
-      depth-first search (a flood fill in AoC) then runs only in the
-      interpreter. `--node` runs the program in a `Worker` with
-      `resourceLimits: { stackSizeMb: 256 }` (tried: 200,000 calls in 0.13 s;
-      `node --stack-size` on the main thread crashes silently instead). Check in
-      the worker: the standard input (`fs.readSync(0)` of `std:io`), the exit
-      code, the prelude's handler of uncaught errors, the source maps. A test
-      with 100,000 nested calls in both backends.
-   2. **Properties in node:** reading a property of a number or boolean (`n.x`,
+   1. **Properties in node:** reading a property of a number or boolean (`n.x`,
       `n.length`, `true.toString()`) and setting one on an array, `Map` or `Set`
       (`a.x = 5`, `a[-1] = 5`, `m["a"] = 1`) is a `TypeError` in the interpreter
       and goes on in node (the 16 known gaps; setting one on a primitive already
