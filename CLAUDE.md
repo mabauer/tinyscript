@@ -59,9 +59,10 @@ module, no OSGi:
 
 Tests run in this order (alphabetical class order enforced by Surefire):
 
-1. `InterpreterReferenceTest` — 29
-   `assertEquals(expected, interpreterOutput(tsCode))` tests; one per language
-   feature; failure shows the exact wrong value produced by the interpreter.
+1. `InterpreterReferenceTest` — `assertSameOutput(expected, tsCode)` tests, one
+   per language feature: the interpreter must print `expected` (a failure shows
+   its exact wrong value), then node the same; only the sandbox (resource
+   limits) is checked in the interpreter alone.
 2. `TranspilerTest` — differential tests; `assertSameOutput(tsCode)` runs each
    snippet through both the interpreter and `node`, diffs stdout; generated JS
    is shown on failure so it can be pasted into `node` directly.
@@ -86,6 +87,8 @@ Base class `TinyscriptTranspilerTestBase` provides:
   `TinyscriptEngine`, returns captured stdout; use with JUnit's `assertEquals`
   for targeted interpreter tests
 - `assertSameOutput(String tsCode)` — Level 1 differential assertion
+- `assertSameOutput(String expected, String tsCode)` — both print `expected`;
+  without node only the interpreter is checked (the test is not skipped)
 - `assertTranspilerCorrect(String)` / `assertTranspilerCorrectFromFile(String)`
   — Level 2 integration assertions
 - `assertInterpreterThrows(Class, String)` — expected-exception helper, only for
