@@ -1018,17 +1018,19 @@ transpiler.
 
 This module is the right place for:
 
-- Interpreter correctness tests (one `assertEquals` per language feature)
+- Correctness tests with the expected output (one per language feature), in both
+  backends; only the sandbox (resource limits) is tested in the interpreter
+  alone
 - Transpiler differential tests (interpreter output vs node output)
 - Integration tests for complete programs
 
 ### Two-level test design in `standalone.tests`
 
-| Level             | Class                      | Assertion                                           | On failure                                                                    |
-| ----------------- | -------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1a — interpreter  | `InterpreterReferenceTest` | `assertEquals(expected, interpreterOutput(tsCode))` | Exact wrong value; points to buggy `TinyscriptEngine` visitor                 |
-| 1b — differential | `TranspilerTest`           | `assertSameOutput(tsCode)`                          | Source + generated JS + both stdouts shown; paste JS into `node` to reproduce |
-| 2 — integration   | `TranspilerVerifyTest`     | `assertTranspilerCorrectFromFile(filename)`         | Generated JS + node stderr shown                                              |
+| Level             | Class                      | Assertion                                   | On failure                                                                             |
+| ----------------- | -------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------- |
+| 1a — both, fixed  | `InterpreterReferenceTest` | `assertSameOutput(expected, tsCode)`        | Exact wrong value of the interpreter first (points to `TinyscriptEngine`), then node's |
+| 1b — differential | `TranspilerTest`           | `assertSameOutput(tsCode)`                  | Source + generated JS + both stdouts shown; paste JS into `node` to reproduce          |
+| 2 — integration   | `TranspilerVerifyTest`     | `assertTranspilerCorrectFromFile(filename)` | Generated JS + node stderr shown                                                       |
 
 Tests run alphabetically: `InterpreterReferenceTest` → `TranspilerTest` →
 `TranspilerVerifyTest`. Whole programs (Advent of Code 2021, 2023 and 2024, the

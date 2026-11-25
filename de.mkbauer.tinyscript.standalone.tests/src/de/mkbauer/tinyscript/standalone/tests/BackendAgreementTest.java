@@ -1,12 +1,9 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
@@ -16,27 +13,21 @@ import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
  */
 public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
 
-    // Both fail with a TypeError: the interpreter with message, node with its own
+    // Both fail alike: the interpreter with message, node with its own
     private void assertBothFail(String message, String code) {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput(code));
-        assertEquals(message, e.getMessage());
-        assumeNodeAvailable();
-        AssertionError nodeError = assertThrows(AssertionError.class, () -> NodeJsRunner.run(transpile(parse(code))));
-        assertTrue(nodeError.getMessage().contains("TypeError"), nodeError.getMessage());
+        assertEquals(message, assertSameFailure(TinyscriptTypeError.class, code).getMessage());
     }
 
     @Test
     public void testIncludesFindsNaN() {
         String code = "print([1, NaN].includes(NaN), [NaN].indexOf(NaN), [NaN, 1].includes(NaN, 1), [0].includes(-0), [1].includes(NaN));";
-        assertEquals("true -1 false true false\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true -1 false true false\n", code);
     }
 
     @Test
     public void testThisInAPlainCallIsUndefined() {
         String code = "function f() { return this; }\nconst o = { f };\nprint(f(), o.f() == o);";
-        assertEquals("undefined true\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("undefined true\n", code);
     }
 
     @Test
@@ -47,8 +38,7 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
         assertBothFail("Cannot assign to the read-only property 'name' of a function", "const f = x => x;\nf.name = \"g\";");
         // Methods can be replaced, in both
         String code = "Math.sqrt = x => x;\nprint(Math.sqrt(4));";
-        assertEquals("4\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("4\n", code);
     }
 
     @Test
@@ -73,15 +63,13 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
         // Classes, functions written with function and builtin constructors
         String code = "function P(x) { this.x = x; }\nconst o = { Q: function (y) { this.y = y; } };\nclass R { }\n"
                 + "print(new P(1), new o.Q(2), new R(), new Map(), new Error(\"e\").message);";
-        assertEquals("{x: 1} {y: 2} R {} Map {} e\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("{x: 1} {y: 2} R {} Map {} e\n", code);
     }
 
     @Test
     public void testDeclarationsHideThePrelude() {
         String code = "const Map = 1;\nlet String = \"s\";\nconst JSON = [2];\nconst System = 3;\nprint(Map, String, JSON, System);";
-        assertEquals("1 s [2] 3\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1 s [2] 3\n", code);
     }
 
     @Test
@@ -93,9 +81,8 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
                 + "const o = { default, with: 5 };\n"
                 + "const f = function await() { };\n"
                 + "print(default, yield, enum(4), new static(6), do, eval, o, enum, static, f);";
-        assertEquals("1 2 [4] static {do: 6} 3 4 {default: 1, with: 5} [Function: enum] [class static] [Function: await]\n",
-                interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1 2 [4] static {do: 6} 3 4 {default: 1, with: 5} [Function: enum] [class static] [Function: await]\n",
+                code);
     }
 
     @Test
@@ -106,12 +93,11 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
                 + "print((255).toString(16), (1.5).toFixed(), \"x\".padStart(3), \"abc\".slice(-2), [1, 2, 3].splice(1), Number.isInteger(5));\n"
                 + "print(String.fromCharCode(72, 105), Object.fromEntries([[\"a\", 1], [2, 3]]), Object.assign({}, null, { b: 2 }), new Error(\"e\").message);\n"
                 + "print(Math.max(), Math.max(1, 5, 3), Math.hypot(3, 4), isNaN(0 / 0), parseFloat(\"2.5kg\"), new Error() instanceof Error);";
-        assertEquals("[3, 1] [2, 3] [\"a\", \"b\"] [1, 3]\n"
+        assertSameOutput("[3, 1] [2, 3] [\"a\", \"b\"] [1, 3]\n"
                 + "31 255 a+b [1, 2, 3] 1,2\n"
                 + "ff 2 \"  x\" bc [2, 3] true\n".replace("\"  x\"", "  x")
                 + "Hi {2: 3, a: 1} {b: 2} e\n"
-                + "-Infinity 5 5 true 2.5 true\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "-Infinity 5 5 true 2.5 true\n", code);
     }
 
     @Test
@@ -121,9 +107,8 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
                 + "print(o && true, o || false, u || false, u && true, !o, !u, [1, 2].find(x => x > 1) ?? 0);\n"
                 + "const p = { n: 1 };\np.n++;\nconst a = [5];\na[0]--;\nlet i = 0;\ni++;\nlet s = 10;\ns -= 3;\ns *= 2;\n"
                 + "print(p, a, i, s, (3 - 1) * 2, -(-2), 1 < 2 ? \"y\" : \"n\", \"a\" < \"b\", [3, 1, 2].filter(x => x != 1));";
-        assertEquals("true true false false false true 2\n"
-                + "{n: 2} [4] 1 14 4 2 y true [3, 2]\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true true false false false true 2\n"
+                + "{n: 2} [4] 1 14 4 2 y true [3, 2]\n", code);
         assertSameFailure("const n = 0 / 0;\nprint(n < 1);");
         assertSameFailure("const p = { n: \"1\" };\np.n++;");
     }

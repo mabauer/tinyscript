@@ -630,9 +630,8 @@ public class InterpreterReferenceTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testErrorInBuiltinReportsTheLineOfTheCall() {
-        assertSameFailure("let a = [1];\n\na.push();");
-        TinyscriptRuntimeException e = assertThrows(TinyscriptRuntimeException.class,
-                () -> interpreterOutput("let a = [1];\n\na.push();"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptRuntimeException.class,
+                "let a = [1];\n\na.push();");
         assertEquals(3, e.getAffectedLine());
     }
 }

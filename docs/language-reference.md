@@ -1420,8 +1420,9 @@ print(o);                   // {name: "o", self: [Circular]}
 ```
 
 `x.toString()` gives the same text as `print`, `String(x)` and `"" + x`, also
-for objects and arrays without a `toString` of their own (`{x: 1}`, `[1, "a"]`;
-Javascript gives `"[object Object]"` and `"1,a"`).
+for objects, arrays and functions without a `toString` of their own (`{x: 1}`,
+`[1, "a"]`, `[Function: add]`, `[class Point]`; Javascript gives
+`"[object Object]"`, `"1,a"` and the source of the function).
 `Object.prototype.toString.call(x)` shows `x` without its own `toString`.
 
 A reference back to an object that is still being printed shows as `[Circular]`;
@@ -1769,7 +1770,7 @@ writing code and for knowing its intentional limitations.
 | **Relational operators**     | Coerce operands (`1 < "2"`)                              | Only number with number or string with string; otherwise a `TypeError`     |
 | **`var` keyword**            | Function-scoped variable, hoisted                        | Reserved word; use `let`                                                   |
 | **`++` / `--`**              | Expressions, prefix and postfix                          | Only the statements `i++;` / `i--;`                                        |
-| **`toString()`**             | `"[object Object]"` for objects, `"1,2"` for arrays      | The same text as `print`: `{x: 1}`, `[1, 2]`                               |
+| **`toString()`**             | `"[object Object]"` for objects, `"1,2"` for arrays      | The same text as `print`: `{x: 1}`, `[1, 2]`, `[Function: f]`              |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
 

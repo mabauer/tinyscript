@@ -56,7 +56,6 @@ public class BuiltinChecksTest extends TinyscriptTranspilerTestBase {
                 + "const JSON = { stringify(x) { return \"s\"; } };\nprint(JSON.stringify(1));\n"
                 + "print(typeof Math.XYZ, Math.__proto__ == Object.prototype);";
         assertEquals(List.of(), reportedErrors(code));
-        assertEquals("-Infinity 3 true 3 2 true\n3 true\ntrue\n3\ns\nundefined true\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("-Infinity 3 true 3 2 true\n3 true\ntrue\n3\ns\nundefined true\n", code);
     }
 }

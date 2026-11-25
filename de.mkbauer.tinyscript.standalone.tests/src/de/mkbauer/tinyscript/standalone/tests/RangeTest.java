@@ -32,8 +32,7 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
                 + "for (const i : range(0, 10, 4)) { s += i + \",\"; } s += \" \";\n"
                 + "for (const i : range(3, 3)) { s += \"never\"; } for (const i : range(5, 2)) { s += \"never\"; }\n"
                 + "print(s);";
-        assertEquals("01234 2345 10,7,4,1, 0,4,8, \n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("01234 2345 10,7,4,1, 0,4,8, \n", code);
     }
 
     @Test
@@ -41,8 +40,7 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
         String code = "const a = [\"x\", \"y\", \"z\"]; let s = \"\";\n"
                 + "for (const i : range(a.length)) { s += i + a[i]; } print(s);\n"
                 + "for (const i : range(a.length - 1, -1, -1)) { if (i == 1) { continue; } if (i == 0) { break; } print(a[i]); }";
-        assertEquals("0x1y2z\nz\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("0x1y2z\nz\n", code);
     }
 
     @Test
@@ -58,11 +56,10 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
                 + "print(range(5).reverse(), range(1, 10, 3).reverse(), range(5).reverse().length, range(0).reverse().length);\n"
                 + "print(range(4).reverse().toArray(), range(3).reverse().reverse(), range(4).reverse().map(i => i * i));\n"
                 + "const a = [\"x\", \"y\", \"z\"]; const back = []; for (const i : range(a.length).reverse()) { back.push(a[i]); } print(back);";
-        assertEquals("43210 5432 7,4,1, 1,4,7,10, \n"
+        assertSameOutput("43210 5432 7,4,1, 1,4,7,10, \n"
                 + "range(4, -1, -1) range(7, -2, -3) 5 0\n"
                 + "[3, 2, 1, 0] range(0, 3) [9, 4, 1, 0]\n"
-                + "[\"z\", \"y\", \"x\"]\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "[\"z\", \"y\", \"x\"]\n", code);
     }
 
     @Test
@@ -70,8 +67,7 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
     public void testReverseIsLazy() {
         // A trillion integers: only lazy is this fast
         String code = "for (const i : range(1000000000000).reverse()) { print(i); break; } print(range(1000000000000).reverse().length);";
-        assertEquals("999999999999\n1000000000000\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("999999999999\n1000000000000\n", code);
     }
 
     @Test
@@ -79,8 +75,7 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
         // A range does not create its numbers: a huge one costs nothing until it is used
         String code = "const huge = range(1000000000000); print(huge.length);\n"
                 + "let first = -1; for (const i : huge) { first = i; break; } print(first);";
-        assertEquals("1000000000000\n0\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1000000000000\n0\n", code);
     }
 
     @Test
@@ -90,20 +85,18 @@ public class RangeTest extends TinyscriptTranspilerTestBase {
                 + "const grid = range(2).map(() => range(3).map(() => \".\")); print(grid.map(row => row.join(\"\")).join(\"/\"));\n"
                 + "print(range(3), range(1, 9, 2));\n"
                 + "print(new Set(range(3)).size, typeof range(1));";
-        assertEquals("0,1,2,3 0,1,4,9 3 0\n10\n.../...\nrange(0, 3) range(1, 9, 2)\n3 object\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("0,1,2,3 0,1,4,9 3 0\n10\n.../...\nrange(0, 3) range(1, 9, 2)\n3 object\n", code);
     }
 
     @Test
     public void testClosuresSeeTheirOwnValue() {
         String code = "const fs = []; for (const i : range(3)) { fs.push(() => i); } print(fs.map(f => f()).join());";
-        assertEquals("0,1,2\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("0,1,2\n", code);
     }
 
     @Test
     public void testRangeIsStrict() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("range(1.5);"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, "range(1.5);");
         assertEquals("range() needs integers, not 1.5", e.getMessage());
         assertSameFailure(TinyscriptTypeError.class, "range(\"3\");");
         assertSameFailure(TinyscriptTypeError.class, "range(0, 5, 0);");

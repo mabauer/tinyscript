@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
@@ -21,8 +20,7 @@ public class SpreadAndRestTest extends TinyscriptTranspilerTestBase {
                 + "function f(a, b, ...rest) { return a + b + rest.length; } print(f(...[1, 2, 3, 4]));\n"
                 + "class P { constructor(x, y) { this.x = x; this.y = y; } } print(new P(...[1, 2]));\n"
                 + "print(...[]);";
-        assertEquals("4 0\n[1, 3, 1, 4, 5]\n5\nP {x: 1, y: 2}\n\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("4 0\n[1, 3, 1, 4, 5]\n5\nP {x: 1, y: 2}\n\n", code);
     }
 
     @Test
@@ -30,8 +28,7 @@ public class SpreadAndRestTest extends TinyscriptTranspilerTestBase {
         String code = "const a = [1, 2]; const b = [3];\n"
                 + "print([...a, ...b], [0, ...a, 9], [...a,], [...[]]);\n"
                 + "const copy = [...a]; copy.push(3); print(a, copy);";
-        assertEquals("[1, 2, 3] [0, 1, 2, 9] [1, 2] []\n[1, 2] [1, 2, 3]\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[1, 2, 3] [0, 1, 2, 9] [1, 2] []\n[1, 2] [1, 2, 3]\n", code);
     }
 
     @Test
@@ -39,8 +36,7 @@ public class SpreadAndRestTest extends TinyscriptTranspilerTestBase {
         String code = "print([...\"abc\"], [...range(3)], [...range(3).reverse()]);\n"
                 + "print([...new Set([1, 1, 2])], [...new Map([[\"a\", 1]])]);\n"
                 + "print(String.fromCharCode(...[104, 105]));";
-        assertEquals("[\"a\", \"b\", \"c\"] [0, 1, 2] [2, 1, 0]\n[1, 2] [[\"a\", 1]]\nhi\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[\"a\", \"b\", \"c\"] [0, 1, 2] [2, 1, 0]\n[1, 2] [[\"a\", 1]]\nhi\n", code);
     }
 
     @Test
@@ -58,8 +54,7 @@ public class SpreadAndRestTest extends TinyscriptTranspilerTestBase {
                 + "for (const [key, ...values] : [[\"k\", 1, 2], [\"l\"]]) { print(key, values); }\n"
                 + "function head([h, ...t]) { return h + \"/\" + t.length; } print(head([7, 8, 9]));\n"
                 + "print([[1, 2, 3]].map(([x, ...more]) => more));";
-        assertEquals("1 [2, 3]\n1 2 []\n[\"x\"]\nk [1, 2]\nl []\n7/2\n[[2, 3]]\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1 [2, 3]\n1 2 []\n[\"x\"]\nk [1, 2]\nl []\n7/2\n[[2, 3]]\n", code);
     }
 
     @Test
@@ -72,7 +67,6 @@ public class SpreadAndRestTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testRestNamesAreDeclarations() {
         String code = "const [x, ...xs] = [1, 2]; let [y, ...ys] = [3]; ys = ys + [4]; print(xs, ys);";
-        assertEquals("[2] [4]\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[2] [4]\n", code);
     }
 }

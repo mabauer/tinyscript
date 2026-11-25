@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
@@ -20,15 +19,14 @@ public class ToStringTest extends TinyscriptTranspilerTestBase {
                 + "}\n"
                 + "print(v2());\n"
                 + "function v2() { return [[1, 2], { x: 1 }].join(\" | \"); }";
-        assertEquals("true true Point {x: 3, y: 4}\n"
+        assertSameOutput("true true Point {x: 3, y: 4}\n"
                 + "true true {a: [1, \"b\"]}\n"
                 + "true true [1, [2, 3], \"c\"]\n"
                 + "true true Map {\"k\" => 1}\n"
                 + "true true Set {1}\n"
                 + "true true []\n"
                 + "true true {}\n"
-                + "[1, 2] | {x: 1}\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "[1, 2] | {x: 1}\n", code);
     }
 
     @Test
@@ -39,7 +37,6 @@ public class ToStringTest extends TinyscriptTranspilerTestBase {
                 + "  debug() { return Object.prototype.toString.call(this); }\n}\n"
                 + "const m = new Money(1250);\n"
                 + "print(m, [m], m.toString(), \"\" + m, m.debug(), [m].toString());";
-        assertEquals("12.50 [12.50] 12.50 12.50 Money {cents: 1250} [12.50]\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("12.50 [12.50] 12.50 12.50 Money {cents: 1250} [12.50]\n", code);
     }
 }

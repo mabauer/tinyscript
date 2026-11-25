@@ -14,23 +14,20 @@ public class NumberLiteralsTest extends TinyscriptTranspilerTestBase {
     public void testHexadecimalBinaryAndOctal() {
         String code = "print(0xff, 0XFF, 0x0, 0b1010, 0B11, 0o17, 0O777, 0b0011110 | 0b1000000);\n"
                 + "print(0xFFFFFFFFFFFFFFFF, 0x1fffffffffffff, 0b1 + 0o1 + 0x1, -0x10);";
-        assertEquals("255 255 0 10 3 15 511 94\n"
-                + "18446744073709552000 9007199254740991 3 -16\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("255 255 0 10 3 15 511 94\n"
+                + "18446744073709552000 9007199254740991 3 -16\n", code);
     }
 
     @Test
     public void testSeparators() {
         String code = "print(1_000_000, 1_000_000_000_000, 3.141_592, 1e1_0, 0xff_ff, 0b1111_0000, 0o7_7, .0_5);";
-        assertEquals("1000000 1000000000000 3.141592 10000000000 65535 240 63 0.05\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1000000 1000000000000 3.141592 10000000000 65535 240 63 0.05\n", code);
     }
 
     @Test
     public void testDecimalNumbersAsBefore() {
         String code = "print(42, 3.14, .5, 5., 1e3, 1E-3, 2.5e+2, 0, 0.0, 10, 0e1, 0.5e1, 0x1e+5);";
-        assertEquals("42 3.14 0.5 5 1000 0.001 250 0 0 10 0 5 35\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("42 3.14 0.5 5 1000 0.001 250 0 0 10 0 5 35\n", code);
     }
 
     private String firstError(String code) {

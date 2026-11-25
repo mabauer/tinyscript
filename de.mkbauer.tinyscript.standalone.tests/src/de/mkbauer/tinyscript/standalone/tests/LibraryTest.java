@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import de.mkbauer.tinyscript.TinyscriptRuntimeException;
 import de.mkbauer.tinyscript.interpreter.TinyscriptTypeError;
 
 /**
@@ -23,14 +22,13 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "print(Math.sin(0), Math.cos(0), Math.sin(Math.PI / 2), Math.tan(Math.PI / 4), Math.atan2(1, 1) * 4 == Math.PI);\n"
                 + "print(Math.asin(1), Math.acos(1), Math.atan(1), Math.sin(1), Math.cos(1), Math.exp(2), Math.log(10));\n"
                 + "print(Math.round(2.5), Math.round(-2.5), Math.round(2.4), Math.round(-0.4), Math.round(1e20), Math.round(0 / 0), Math.round(0.49999999999999994));";
-        assertEquals("1024 1.4142135623730951 0.5 NaN NaN 1\n"
+        assertSameOutput("1024 1.4142135623730951 0.5 NaN NaN 1\n"
                 + "2 -2 0 -1 0 1 NaN\n"
                 + "2.718281828459045 1 3 10 3.321928094887362 3 0.3010299956639812\n"
                 + "3 -2 5 0 1.414213562373095e+200 Infinity\n"
                 + "0 1 1 0.9999999999999999 true\n"
                 + "1.5707963267948966 0 0.7853981633974483 0.8414709848078965 0.5403023058681398 7.38905609893065 2.302585092994046\n"
-                + "3 -2 2 0 100000000000000000000 NaN 0\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "3 -2 2 0 100000000000000000000 NaN 0\n", code);
     }
 
     @Test
@@ -44,8 +42,7 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
     public void testReverseAndToReversed() {
         String code = "const a = [1, 2, 3]; const r = a.reverse(); print(a, r == a);\n"
                 + "const b = [\"x\", \"y\"]; const c = b.toReversed(); print(b, c, c == b, [].toReversed(), [].reverse());";
-        assertEquals("[3, 2, 1] true\n[\"x\", \"y\"] [\"y\", \"x\"] false [] []\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[3, 2, 1] true\n[\"x\", \"y\"] [\"y\", \"x\"] false [] []\n", code);
     }
 
     @Test
@@ -56,12 +53,11 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "a = [1, 2, 3]; print(a.splice(1), a, a.splice(), a.splice(0, 99), a);\n"
                 + "a = [1, 2, 3]; print(a.splice(1, -1, 9), a, a.splice(10, 1, 0), a);";
         // print evaluates all its arguments first, so a shows its state after the last splice
-        assertEquals("[2, 3] [1, 4, 5]\n"
+        assertSameOutput("[2, 3] [1, 4, 5]\n"
                 + "[] [1, \"x\", \"y\", 2, 3]\n"
                 + "[3, 4] [1, 2]\n"
                 + "[2, 3] [] [] [1] []\n"
-                + "[] [1, 9, 2, 3, 0] [] [1, 9, 2, 3, 0]\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "[] [1, 9, 2, 3, 0] [] [1, 9, 2, 3, 0]\n", code);
         assertSameFailure(TinyscriptTypeError.class, "[1].splice(0.5);");
         assertSameFailure(TinyscriptTypeError.class, "[1].splice(0, \"1\");");
     }
@@ -71,8 +67,7 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
         String code = "const a = [1, 2, 3, 2, 1];\n"
                 + "print(a.lastIndexOf(2), a.lastIndexOf(2, 2), a.lastIndexOf(2, -3), a.lastIndexOf(9), a.lastIndexOf(1, -9), [].lastIndexOf(1));\n"
                 + "print(a.findLast(x => x > 1), a.findLastIndex(x => x > 1), a.findLast(x => x > 5), a.findLastIndex(x => x > 5));";
-        assertEquals("3 1 1 -1 -1 -1\n2 3 undefined -1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("3 1 1 -1 -1 -1\n2 3 undefined -1\n", code);
     }
 
     @Test
@@ -82,8 +77,7 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "for (const [i, x] : a.entries()) { print(i, x); }\n"
                 + "print(a.entries(), [].entries(), a.entries().length, [...a.entries()][1], a.entries().map(([i, x]) => x + i));\n"
                 + "const e = a.entries(); a.push(\"z\"); print(e.length);";
-        assertEquals("0 x\n1 y\n[[0, \"x\"], [1, \"y\"]] [] 2 [1, \"y\"] [\"x0\", \"y1\"]\n2\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("0 x\n1 y\n[[0, \"x\"], [1, \"y\"]] [] 2 [1, \"y\"] [\"x0\", \"y1\"]\n2\n", code);
     }
 
     @Test
@@ -91,9 +85,8 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
         String code = "const a = [1, [2, [3, [4]]], 5];\n"
                 + "print(a.flat(), a.flat(2), a.flat(1 / 0), a.flat(0), [].flat());\n"
                 + "print([\"a b\", \"c\"].flatMap(s => s.split(\" \")), [1, 2].flatMap(x => [x, x * 10]), [1, 2].flatMap(x => x), [[1], 2].flatMap(x => [x]));";
-        assertEquals("[1, 2, [3, [4]], 5] [1, 2, 3, [4], 5] [1, 2, 3, 4, 5] [1, [2, [3, [4]]], 5] []\n"
-                + "[\"a\", \"b\", \"c\"] [1, 10, 2, 20] [1, 2] [[1], 2]\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[1, 2, [3, [4]], 5] [1, 2, 3, [4], 5] [1, 2, 3, 4, 5] [1, [2, [3, [4]]], 5] []\n"
+                + "[\"a\", \"b\", \"c\"] [1, 10, 2, 20] [1, 2] [[1], 2]\n", code);
         assertSameFailure(TinyscriptTypeError.class, "[1].flat(-1);");
         assertSameFailure(TinyscriptTypeError.class, "[1].flat(1.5);");
     }
@@ -106,11 +99,11 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "print(Object.fromEntries([[\"a\", 1], [\"b\", [2]], [3, \"three\"]]), Object.fromEntries(new Map([[\"m\", 1]])), Object.fromEntries([]));\n"
                 + "const target = { a: 0, z: 9 }; const r = Object.assign(target, { a: 1, b: 2 }, null, { c: 3 }); print(target, r == target);\n"
                 + "print(Object.fromEntries(Object.entries(o).map(([k, v]) => [k + k, v])));";
-        assertEquals("[1, \"x\"] [[\"a\", 1], [\"b\", \"x\"]] [7, 8] []\n"
+        assertSameOutput("[1, \"x\"] [[\"a\", 1], [\"b\", \"x\"]] [7, 8] []\n"
                 + "a=1\nb=x\n"
                 + "{3: \"three\", a: 1, b: [2]} {m: 1} {}\n"
                 + "{a: 1, z: 9, b: 2, c: 3} true\n"
-                + "{aa: 1, bb: \"x\"}\n", interpreterOutput(code));
+                + "{aa: 1, bb: \"x\"}\n", code);
         assertSameFailure(TinyscriptTypeError.class, "Object.values(5);");
         assertSameFailure(TinyscriptTypeError.class, "Object.fromEntries([[\"a\"]]);");
         assertSameFailure(TinyscriptTypeError.class, "Object.fromEntries([[true, 1]]);");
@@ -131,11 +124,10 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "print(Number.isFinite(1), Number.isFinite(1 / 0), Number.isFinite(0 / 0), Number.isFinite(\"1\"));\n"
                 + "print(Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER + 2);\n"
                 + "print(Number.MAX_VALUE, Number.MIN_VALUE, Number.EPSILON, Number.MAX_VALUE * 2, 1 + Number.EPSILON > 1, Number.MIN_VALUE / 2);";
-        assertEquals("3.5 -1000 0.5 1 Infinity NaN NaN\n"
+        assertSameOutput("3.5 -1000 0.5 1 Infinity NaN NaN\n"
                 + "true false false false\n"
                 + "9007199254740991 -9007199254740991 9007199254740992\n"
-                + "1.7976931348623157e+308 5e-324 2.220446049250313e-16 Infinity true 0\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "1.7976931348623157e+308 5e-324 2.220446049250313e-16 Infinity true 0\n", code);
         assertSameFailure(TinyscriptTypeError.class, "parseFloat(3.5);");
     }
 
@@ -143,8 +135,7 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
     public void testStrings() {
         String code = "const s = \"  a b  \"; print(\"[\" + s.trimStart() + \"]\", \"[\" + s.trimEnd() + \"]\", \"[\" + s.trim() + \"]\");\n"
                 + "print(\"A\".codePointAt(0), \"😀\".codePointAt(0), \"😀\".length, \"ab\".codePointAt(5), \"äb\".codePointAt(1));";
-        assertEquals("[a b  ] [  a b] [a b]\n65 128512 2 undefined 98\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[a b  ] [  a b] [a b]\n65 128512 2 undefined 98\n", code);
     }
 
     @Test
@@ -154,11 +145,10 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
                 + "delete o[key]; delete o.missing; print(o);\n"
                 + "const m = new Map([[\"k\", 1]]); print(m.delete(\"k\"), m.size);\n"
                 + "function Car() { this.wheels = 4; } const car = new Car(); delete car.wheels; print(car.wheels, typeof Car.prototype);";
-        assertEquals("true {b: 2, c: 3} [\"b\", \"c\"] undefined\n"
+        assertSameOutput("true {b: 2, c: 3} [\"b\", \"c\"] undefined\n"
                 + "{b: 2}\n"
                 + "true 0\n"
-                + "undefined object\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "undefined object\n", code);
     }
 
     @Test

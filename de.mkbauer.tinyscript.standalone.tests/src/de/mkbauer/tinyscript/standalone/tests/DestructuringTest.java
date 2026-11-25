@@ -21,8 +21,7 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
                 + "let [first, second] = \"x,y,z\".split(\",\"); print(first + second);\n"
                 + "let [x, y] = [3, 4], z = 5; print(x * y * z);\n"
                 + "function divide(n, d) { return [Math.floor(n / d), n % d]; } let [q, r] = divide(17, 5); print(q, r);";
-        assertEquals("3\nxy\n60\n3 2\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("3\nxy\n60\n3 2\n", code);
     }
 
     @Test
@@ -30,8 +29,7 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
         String code = "let guard = { row: 6, col: 4, dir: \"up\" }; let { row, col } = guard; print(row * 10 + col);\n"
                 + "let { missing } = guard; print(missing);\n"
                 + "let { length } = \"abc\"; print(length);";
-        assertEquals("64\nundefined\n3\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("64\nundefined\n3\n", code);
     }
 
     @Test
@@ -40,27 +38,25 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
                 + "for (let [key, value] : m) { print(key + value); }\n"
                 + "for (let [n, square] : [[2, 4], [3, 9]]) { print(n + \"^2=\" + square); }\n"
                 + "for (let { name, age } : [{ name: \"Ann\", age: 30 }]) { print(name + \" \" + age); }";
-        assertEquals("a1\nb2\n2^2=4\n3^2=9\nAnn 30\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("a1\nb2\n2^2=4\n3^2=9\nAnn 30\n", code);
     }
 
     @Test
     public void testPatternVariablesAreBlockScoped() {
         String code = "let a = \"outer\"; { let [a, b] = [1, 2]; print(a); } print(a);\n"
                 + "let fs = []; for (let [k, v] : [[1, 2], [3, 4]]) { fs.push(() => k + v); } print(fs[0]() + fs[1]());";
-        assertEquals("1\nouter\n10\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("1\nouter\n10\n", code);
     }
 
     @Test
     public void testAnArrayPatternNeedsAnArrayThatIsLongEnough() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput("let xs = [1, 2];\nlet [a, b, c] = xs;"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, "let xs = [1, 2];\nlet [a, b, c] = xs;");
         assertEquals("[a, b, c] needs an array with at least 3 elements, not 2", e.getMessage());
         assertSameFailure(TinyscriptTypeError.class, "let [a, b] = \"ab\";");
         assertSameFailure(TinyscriptTypeError.class, "let [a] = null;");
         assertSameFailure(TinyscriptTypeError.class, "for (let [a, b] : [[1, 2], [3]]) { }");
         // More elements are fine
-        assertEquals("1\n", interpreterOutput("let [a] = [1, 2, 3]; print(a);"));
+        assertSameOutput("1\n", "let [a] = [1, 2, 3]; print(a);");
     }
 
     @Test
@@ -91,6 +87,6 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testPatternVariablesCanBeExported() {
         String code = "export let [a, b] = [1, 2]; print(a + b);";
-        assertEquals("3\n", interpreterOutput(code));
+        assertSameOutput("3\n", code);
     }
 }

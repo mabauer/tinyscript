@@ -1,7 +1,6 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -38,8 +37,7 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
                 + "const p = new Point(3, 4);\n"
                 + "print(p, p.length(), p.plus(new Point(1, 1)), [p, p]);\n"
                 + "print(p instanceof Point, typeof Point, typeof p.plus, Object.keys(p).join());";
-        assertEquals("(3, 4) 5 (4, 5) [(3, 4), (3, 4)]\ntrue function function x,y\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("(3, 4) 5 (4, 5) [(3, 4), (3, 4)]\ntrue function function x,y\n", code);
     }
 
     @Test
@@ -52,10 +50,9 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
                 + "print(\"\" + n, Object.keys(Num.prototype).length, n.twice());\n"
                 + "function Old(value) { this.value = value; }\n"
                 + "print(new Old(1));";
-        assertEquals("Num {value: 3} [Num {value: 3}] {n: Num {value: 3}} Empty {} [class Num] [[class Empty]]\n"
+        assertSameOutput("Num {value: 3} [Num {value: 3}] {n: Num {value: 3}} Empty {} [class Num] [[class Empty]]\n"
                 + "Num {value: 3} 0 6\n"
-                + "{value: 1}\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "{value: 1}\n", code);
     }
 
     @Test
@@ -70,8 +67,7 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
                 + "const bag = new Bag(\"b\", 1, 2).add([3, 4]);\n"
                 + "print(bag.name, bag.items, bag.sum(), bag[\"size of\"]());\n"
                 + "bag.delete(); print(bag.items);";
-        assertEquals("b [1, 2, 7] 10 3\n[]\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("b [1, 2, 7] 10 3\n[]\n", code);
     }
 
     @Test
@@ -81,8 +77,7 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
                 + "class Node {\n  constructor(child) { this.child = child; }\n  depth() { return 1 + this.child.depth(); }\n}\n"
                 + "class Leaf {\n  depth() { return 0; }\n  wrap() { return new Node(this); }\n}\n"
                 + "print(make(3).depth(), new Leaf().wrap().depth());";
-        assertEquals("3 1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("3 1\n", code);
     }
 
     @Test
@@ -90,8 +85,7 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
         String code = "class Counter {\n  inc() { this.n = (this.n ?? 0) + 1; return this; }\n}\n"
                 + "const c = new Counter(); c.inc().inc();\n"
                 + "print(c.n, new Counter().n, Counter.length);";
-        assertEquals("2 undefined 0\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("2 undefined 0\n", code);
     }
 
     @Test
@@ -109,8 +103,8 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testAClassNeedsNew() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class,
-                () -> interpreterOutput(POINT + "const P = Point;\nconst p = P(1, 2);"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class,
+                POINT + "const P = Point;\nconst p = P(1, 2);");
         assertEquals("Point is a class: use new Point(…)", e.getMessage());
         assertSameFailure(TinyscriptTypeError.class, POINT + "print([1, 2].map(Point));");
     }
@@ -122,16 +116,16 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testAFunctionCalledBeforeTheClassStatement() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class,
-                () -> interpreterOutput("function make() { return new Late(); }\nprint(make());\nclass Late { }"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptReferenceError.class,
+                "function make() { return new Late(); }\nprint(make());\nclass Late { }");
         assertEquals("Late is used before its declaration (line 3)", e.getMessage());
         assertEquals(1, e.getAffectedLine());
     }
 
     @Test
     public void testTheStackTraceNamesClassAndMethod() {
-        TinyscriptRuntimeException e = assertThrows(TinyscriptTypeError.class, () -> interpreterOutput(
-                "class Box {\n  constructor(v) { this.v = v; this.check(); }\n  check() {\n    const z = null;\n    return z.x;\n  }\n}\nnew Box(1);"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptTypeError.class, 
+                "class Box {\n  constructor(v) { this.v = v; this.check(); }\n  check() {\n    const z = null;\n    return z.x;\n  }\n}\nnew Box(1);");
         String trace = e.getTinyscriptStacktraceAsString();
         assertTrue(trace.contains("at Box.check(") && trace.contains("at Box("), trace);
     }
@@ -156,15 +150,14 @@ public class ClassTest extends TinyscriptTranspilerTestBase {
     public void testUsedBeforeItsDeclarationAlsoForVariables() {
         assertEquals(List.of("1:7: limit is used before its declaration (line 2)"), reportedErrors("print(limit);\nconst limit = 3;"));
         // At runtime, as in Javascript: a function that runs before the statement
-        TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class,
-                () -> interpreterOutput("function f() { return limit; }\nprint(f());\nconst limit = 3;"));
+        TinyscriptRuntimeException e = assertSameFailure(TinyscriptReferenceError.class,
+                "function f() { return limit; }\nprint(f());\nconst limit = 3;");
         assertEquals("limit is used before its declaration (line 3)", e.getMessage());
         assertSameFailure(TinyscriptReferenceError.class,
                 "function g() {\n  const read = () => [a, b];\n  const r = read();\n  let [a, b] = [1, 2];\n  return r;\n}\ng();");
         // Declared, but without a value, is fine; and so is a function that runs after the statement
         String code = "function h() { let x; return x; }\nfunction later() { return limit * 2; }\nconst limit = 3;\nprint(h(), later());";
-        assertEquals("undefined 6\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("undefined 6\n", code);
     }
 
     @Test

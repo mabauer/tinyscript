@@ -240,9 +240,11 @@ class TinyscriptGenerator   {
 		// a cycle is [Circular], nesting deeper than 50 levels [Object] / [Array], and an object with
 		// a toString of its own shows what it returns.
 		const __ts_JsString = globalThis.String;
-		// Like the interpreter: o.toString() and a.toString() give the same text as print
-		// (Javascript: "[object Object]", "1,2"); also join uses it for the elements
-		for (const prototype of [Object.prototype, Array.prototype]) {
+		// The source of a function (for __ts_isClass), before toString is replaced
+		const __ts_functionSource = Function.prototype.toString;
+		// Like the interpreter: o.toString(), a.toString() and f.toString() give the same text as
+		// print (Javascript: "[object Object]", "1,2", the source); also join uses it for the elements
+		for (const prototype of [Object.prototype, Array.prototype, Function.prototype]) {
 			Object.defineProperty(prototype, "toString", {
 				value: function toString() { return __ts_display(this, [], true); },
 				writable: true, configurable: true, enumerable: false
@@ -265,7 +267,7 @@ class TinyscriptGenerator   {
 
 		// A class of the script (written with class, not a constructor function)
 		function __ts_isClass(f) {
-			return typeof f === "function" && /^class[\s{]/.test(Function.prototype.toString.call(f));
+			return typeof f === "function" && /^class[\s{]/.test(__ts_functionSource.call(f));
 		}
 
 		// own: the value itself, without its toString (for Object.prototype.toString)
@@ -695,6 +697,25 @@ class TinyscriptGenerator   {
 				const i = index < 0 ? this.length + index : index;
 				return i >= 0 && i < this.length ? this[i] : undefined;
 			} }.at);
+			// The index of an item == null or undefined (tinyscript's ==: null == undefined), from
+			// start on, or before it from the end (last)
+			function nullishIndex(array, start, last) {
+				const n = array.length;
+				if (last) {
+					for (let i = start === undefined ? n - 1 : start < 0 ? n + start : Math.min(start, n - 1); i >= 0; i--) {
+						if (array[i] == null) {
+							return i;
+						}
+					}
+					return -1;
+				}
+				for (let i = start === undefined ? 0 : start < 0 ? Math.max(0, n + start) : start; i < n; i++) {
+					if (array[i] == null) {
+						return i;
+					}
+				}
+				return -1;
+			}
 			// indexOf(x[, start]), includes, lastIndexOf: the index must be an integer. Each wrapper
 			// is a function of its own (not made in a loop), so that V8 sees one original per call
 			«FOR name : #["indexOf", "includes", "lastIndexOf"]»
@@ -703,6 +724,9 @@ class TinyscriptGenerator   {
 					__ts_thisArray(this, "«name»");
 					if (arguments.length > 1 && !__ts_isInteger(start)) {
 						throw new TypeError(«IF name == "lastIndexOf"»"lastIndexOf() needs an integer index, not " + __ts_describe(start)«ELSE»"indexOf() needs an integer start index, not " + __ts_str(start)«ENDIF»);
+					}
+					if (value == null) {
+						return nullishIndex(this, arguments.length > 1 ? start : undefined, «name == "lastIndexOf"»)«IF name == "includes"» >= 0«ENDIF»;
 					}
 					return arguments.length > 1 ? «name».call(this, value, start) : «name».call(this, value);
 				} }.«name»);
@@ -917,7 +941,8 @@ class TinyscriptGenerator   {
 				if (typeof value !== "number" && typeof value !== "string" && typeof value !== "boolean") {
 					throw new TypeError("Number() needs a string, a number or a boolean, not " + __ts_type(value));
 				}
-				return JsNumber(value);
+				// Unlike Javascript, a blank string is NaN (not 0)
+				return typeof value === "string" && value.trim() === "" ? NaN : JsNumber(value);
 			} }.Number;
 			for (const key of Object.getOwnPropertyNames(JsNumber)) {
 				if (!(key in N) || key === "prototype") {

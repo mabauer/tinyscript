@@ -26,9 +26,8 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
         String code = VALUES
                 + "print(typeof u); print(typeof n); print(typeof b); print(typeof i); print(typeof nan);\n"
                 + "print(typeof s); print(typeof f); print(typeof o); print(typeof a);";
-        assertEquals("undefined\nobject\nboolean\nnumber\nnumber\nstring\nfunction\nobject\nobject\n",
-                interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("undefined\nobject\nboolean\nnumber\nnumber\nstring\nfunction\nobject\nobject\n",
+                code);
     }
 
     @Test
@@ -36,16 +35,14 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
         String code = "function f() { return 1; } let a = [\"s\"]; let o = { x: true, g: f };\n"
                 + "print(typeof f()); print(typeof a[0]); print(typeof (1 + 2)); print(typeof o.x);\n"
                 + "print(typeof o.g); print(typeof o.missing); print(typeof [1]); print(typeof {});";
-        assertEquals("number\nstring\nnumber\nboolean\nfunction\nundefined\nobject\nobject\n",
-                interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("number\nstring\nnumber\nboolean\nfunction\nundefined\nobject\nobject\n",
+                code);
     }
 
     @Test
     public void testTypeOfBindsTighterThanBinaryOperators() {
         String code = "print(typeof 1 + \"x\"); print(typeof 1 == \"number\");";
-        assertEquals("numberx\ntrue\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("numberx\ntrue\n", code);
     }
 
     @Test
@@ -65,8 +62,7 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
         String code = "function t(x) { if (x) { return \"t\"; } else { return \"f\"; } }\n"
                 + VALUES
                 + "print(t(u) + t(n) + t(b) + t(false) + t(f) + t(o) + t(a));";
-        assertEquals("fftfttt\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("fftfttt\n", code);
     }
 
     @Test
@@ -80,15 +76,13 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
         String code = VALUES
                 + "print(i == 1); print(s == \"s\"); print(n == null); print(u == u); print(o == o); print(f == f);\n"
                 + "print(nan == nan); print(nan != nan); print({} == {}); print([] == []);";
-        assertEquals("true\ntrue\ntrue\ntrue\ntrue\ntrue\nfalse\ntrue\nfalse\nfalse\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true\ntrue\ntrue\ntrue\ntrue\ntrue\nfalse\ntrue\nfalse\nfalse\n", code);
     }
 
     @Test
     public void testNullEqualsUndefined() {
         String code = "let u; let o = {};\nprint(u == null); print(null == u); print(o.x == null); print(o.x != null);";
-        assertEquals("true\ntrue\ntrue\nfalse\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true\ntrue\ntrue\nfalse\n", code);
     }
 
     @Test
@@ -96,23 +90,20 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
         // Unlike Javascript's ==; the generator emits __ts_eq to match
         String code = "print(1 == \"1\"); print(true == 1); print(0 == false); print(\"\" == false);\n"
                 + "print(1 != \"1\"); print(null == 0); print(null != false);";
-        assertEquals("false\nfalse\nfalse\nfalse\ntrue\nfalse\ntrue\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("false\nfalse\nfalse\nfalse\ntrue\nfalse\ntrue\n", code);
     }
 
     @Test
     public void testStringObjectsEqualTheirStrings() {
         String code = "let s = new String(\"a\");\n"
                 + "print(s == \"a\"); print(\"a\" == s); print(s == new String(\"a\")); print(s != \"b\");";
-        assertEquals("true\ntrue\ntrue\ntrue\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true\ntrue\ntrue\ntrue\n", code);
     }
 
     @Test
     public void testNumberFormatting() {
         String code = "print(3); print(2.5); print(-4); print(1 / 0); print(0 / 0); print(0.1 + 0.2);";
-        assertEquals("3\n2.5\n-4\nInfinity\nNaN\n0.30000000000000004\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("3\n2.5\n-4\nInfinity\nNaN\n0.30000000000000004\n", code);
     }
 
     @Test
@@ -129,8 +120,7 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testStringsKeepTheirMethods() {
         String code = "let n = 5; print(String(n) + String(true)); print(\"abc\".length); print(\"abc\".charAt(1));";
-        assertEquals("5true\n3\nb\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("5true\n3\nb\n", code);
     }
 
     // =========================================================================
@@ -160,9 +150,8 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
                 + "function f(a) { if (a == undefined) { return undefined; } return a; }\n"
                 + "print(f(), f(undefined), f(2), [undefined, null], undefined ?? \"default\", (2.5).toFixed(undefined), o.undefined);\n"
                 + "print(\"x\" + undefined, String(undefined));";
-        assertEquals("true true true undefined true\n"
+        assertSameOutput("true true true undefined true\n"
                 + "undefined undefined 2 [undefined, null] default 3 1\n"
-                + "xundefined undefined\n", interpreterOutput(code));
-        assertSameOutput(code);
+                + "xundefined undefined\n", code);
     }
 }

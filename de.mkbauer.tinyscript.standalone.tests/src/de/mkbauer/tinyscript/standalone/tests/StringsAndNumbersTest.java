@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -24,40 +23,35 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
         String code = "let s = \"  a,b,,c \\n\";\n"
                 + "print(\"[\" + s.trim() + \"]\"); print(s.trim().split(\",\").length); print(s.trim().split(\",\").join(\"|\"));\n"
                 + "print(\"abc\".split(\"\").join(\"-\")); print(\"a b  c\".split(\" \").length); print(\"\".split(\",\").length);";
-        assertEquals("[a,b,,c]\n4\na|b||c\na-b-c\n4\n1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("[a,b,,c]\n4\na|b||c\na-b-c\n4\n1\n", code);
     }
 
     @Test
     public void testSearching() {
         String code = "print(\"abc\".startsWith(\"ab\"), \"abc\".endsWith(\"bc\"), \"abc\".includes(\"x\"), \"abc\".includes(\"\"));\n"
                 + "print(\"abcabc\".lastIndexOf(\"b\")); print(\"abc\".lastIndexOf(\"x\"));";
-        assertEquals("true true false true\n4\n-1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true true false true\n4\n-1\n", code);
     }
 
     @Test
     public void testReplace() {
         String code = "print(\"a-b-c\".replace(\"-\", \"+\")); print(\"a-b-c\".replaceAll(\"-\", \"+\")); print(\"aaa\".replaceAll(\"a\", \"aa\"));\n"
                 + "print(\"a.b\".replace(\".\", \"$\")); print(\"abc\".replace(\"x\", \"y\"));";
-        assertEquals("a+b-c\na+b+c\naaaaaa\na$b\nabc\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("a+b-c\na+b+c\naaaaaa\na$b\nabc\n", code);
     }
 
     @Test
     public void testReplacementPatternsAndEmptySearch() {
         String code = "print(\"a-b\".replace(\"-\", \"[$&]\")); print(\"a-b\".replace(\"-\", \"$$\")); print(\"a-b\".replace(\"-\", \"<$`|$'>\"));\n"
                 + "print(\"ab\".replaceAll(\"\", \"-\")); print(\"ab\".replace(\"\", \"-\")); print(\"abcb\".lastIndexOf(\"b\", 2));";
-        assertEquals("a[-]b\na$b\na<a|b>b\n-a-b-\n-ab\n1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("a[-]b\na$b\na<a|b>b\n-a-b-\n-ab\n1\n", code);
     }
 
     @Test
     public void testSlice() {
         String code = "print(\"hello\".slice(1, 3)); print(\"hello\".slice(-3)); print(\"hello\".slice(2)); print(\"[\" + \"hello\".slice(3, 1) + \"]\");\n"
                 + "print(\"hello\".slice(-10, 2)); print(\"hello\".slice(1, -1));";
-        assertEquals("el\nllo\nllo\n[]\nhe\nell\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("el\nllo\nllo\n[]\nhe\nell\n", code);
     }
 
     @Test
@@ -65,16 +59,14 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
         String code = "print(\"ab\".repeat(3)); print(\"[\" + \"ab\".repeat(0) + \"]\"); print(\"7\".padStart(3, \"0\")); print(\"[\" + \"x\".padStart(3) + \"]\");\n"
                 + "print(\"abc\".padStart(2, \"0\")); print(\"5\".padStart(4, \"ab\")); print(\"Ab\".toUpperCase() + \"Ab\".toLowerCase());\n"
                 + "print(\"[\" + \"x\".padEnd(3) + \"]\"); print(\"ab\".padEnd(5, \"xy\"));";
-        assertEquals("ababab\n[]\n007\n[  x]\nabc\naba5\nABab\n[x  ]\nabxyx\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("ababab\n[]\n007\n[  x]\nabc\naba5\nABab\n[x  ]\nabxyx\n", code);
     }
 
     @Test
     public void testCharCodes() {
         String code = "print(\"a\".charCodeAt(0)); print(\"abc\".charCodeAt(2)); print(isNaN(\"a\".charCodeAt(5)));\n"
                 + "print(String.fromCharCode(72, 105)); print(String.fromCharCode(\"a\".charCodeAt(0) + 1));";
-        assertEquals("97\n99\ntrue\nHi\nb\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("97\n99\ntrue\nHi\nb\n", code);
     }
 
     @Test
@@ -107,14 +99,13 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
     public void testNumber() {
         String code = "print(Number(\"42\") + 1); print(Number(\" 3.5 \")); print(Number(\"-1e3\")); print(Number(\"0x1f\"));\n"
                 + "print(isNaN(Number(\"abc\"))); print(isNaN(Number(\"12px\"))); print(Number(7)); print(Number(true) + Number(false));";
-        assertEquals("43\n3.5\n-1000\n31\ntrue\ntrue\n7\n1\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("43\n3.5\n-1000\n31\ntrue\ntrue\n7\n1\n", code);
     }
 
     @Test
     public void testNumberOfAnEmptyStringIsNaN() {
         // Javascript gives 0, a trap
-        assertEquals("true\ntrue\n", interpreterOutput("print(isNaN(Number(\"\"))); print(isNaN(Number(\"   \")));"));
+        assertSameOutput("true\ntrue\n", "print(isNaN(Number(\"\"))); print(isNaN(Number(\"   \")));");
     }
 
     @Test
@@ -122,15 +113,13 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
         String code = "print(parseInt(\"42abc\")); print(parseInt(\"  -17\")); print(parseInt(\"+5\")); print(parseInt(\"3.9\"));\n"
                 + "print(parseInt(\"ff\", 16)); print(parseInt(\"0x1f\")); print(parseInt(\"101\", 2)); print(parseInt(\"z\", 36));\n"
                 + "print(isNaN(parseInt(\"x\"))); print(isNaN(parseInt(\"\"))); print(parseInt(\"12345678901234\"));";
-        assertEquals("42\n-17\n5\n3\n255\n31\n5\n35\ntrue\ntrue\n12345678901234\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("42\n-17\n5\n3\n255\n31\n5\n35\ntrue\ntrue\n12345678901234\n", code);
     }
 
     @Test
     public void testIsNaNAndIsInteger() {
         String code = "print(isNaN(0 / 0), isNaN(1)); print(Number.isInteger(5), Number.isInteger(5.5), Number.isInteger(\"5\"), Number.isInteger(1 / 0));";
-        assertEquals("true false\ntrue false false false\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("true false\ntrue false false false\n", code);
     }
 
     @Test
@@ -151,12 +140,11 @@ public class StringsAndNumbersTest extends TinyscriptTranspilerTestBase {
                 + "print(0.0001, 0.000001, 0.0000001, 1.5e-7, 1.5e-10, 5e-324, 1.5e300, 1.7976931348623157e308);\n"
                 + "print(-0, 0 * -1, -1e-7, -1e21, 1 / 0, -1 / 0, 0 / 0);\n"
                 + "print(\"\" + 12345678.5, String(1e-7), [1, 2.5].join());";
-        assertEquals("3 -3 0.1 0.5 -2.25 0.30000000000000004 0.3333333333333333 0.6666666666666666\n"
+        assertSameOutput("3 -3 0.1 0.5 -2.25 0.30000000000000004 0.3333333333333333 0.6666666666666666\n"
                 + "12345678.5 123456789012.25 9007199254740992 100000000000000000000 1e+21 1.5e+21 1.23e+22\n"
                 + "0.0001 0.000001 1e-7 1.5e-7 1.5e-10 5e-324 1.5e+300 1.7976931348623157e+308\n"
                 + "0 0 -1e-7 -1e+21 Infinity -Infinity NaN\n"
-                + "12345678.5 1e-7 1,2.5\n", interpreterOutput(code));
-        assertSameOutput(code);
-        assertEquals("[0.0001, 1e+21]\n", interpreterOutput("print([0.0001, 1e21]);"));
+                + "12345678.5 1e-7 1,2.5\n", code);
+        assertSameOutput("[0.0001, 1e+21]\n", "print([0.0001, 1e21]);");
     }
 }

@@ -1,6 +1,5 @@
 package de.mkbauer.tinyscript.standalone.tests;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -23,16 +22,14 @@ public class ParameterPatternTest extends TinyscriptTranspilerTestBase {
                 + "print(robots.map(({ name }, i) => name + i).join());\n"
                 + "const m = new Map([[\"k\", 1], [\"l\", 2]]); print(m.entries().map(([key, value]) => key + value).join());\n"
                 + "const f = function({ a }, b, ...rest) { return a + b + rest.length; }; print(f({ a: 1 }, 2, 3, 4));";
-        assertEquals("7\n2,12\na0,b1\nk1,l2\n5\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("7\n2,12\na0,b1\nk1,l2\n5\n", code);
     }
 
     @Test
     public void testPatternParametersWithABlockBody() {
         String code = "const sum = ([a, b]) => { const s = a + b; return s; }; print(sum([3, 4]));\n"
                 + "print([[1, 2], [3, 4]].map(([a, b]) => { return a * b; }).join());";
-        assertEquals("7\n2,12\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("7\n2,12\n", code);
     }
 
     @Test
@@ -53,8 +50,7 @@ public class ParameterPatternTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testFunctionLengthCountsPatterns() {
         String code = "function f([a, b], { c }, d) { } print(f.length);";
-        assertEquals("3\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("3\n", code);
     }
 
     @Test
@@ -71,7 +67,6 @@ public class ParameterPatternTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testInfinity() {
         String code = "print(Infinity, -Infinity, Infinity > 1e300, 1 / 0 == Infinity, Math.min(Infinity, 3));";
-        assertEquals("Infinity -Infinity true true 3\n", interpreterOutput(code));
-        assertSameOutput(code);
+        assertSameOutput("Infinity -Infinity true true 3\n", code);
     }
 }
