@@ -27,7 +27,9 @@ How classes were written before `class`, each next to the same with `class`:
 | [prototypes_as_classes.tys](prototypes_as_classes.tys) | inheritance with `super`, built from prototypes only (what `class` leaves out on purpose); with `class`, composition instead of inheritance |
 
 See also the language reference,
-[Classes and objects](../../docs/language-reference.md#9-classes-and-objects).
+[Classes and objects](../../docs/language-reference.md#9-classes-and-objects),
+and the programming guide,
+[Objects with behavior](../../docs/programming-guide.md#1-objects-with-behavior).
 
 `OoExamplesTest` runs every example in the interpreter and in node and checks
 that each pair prints the same.

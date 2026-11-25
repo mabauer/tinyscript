@@ -768,7 +768,7 @@ too. Measured (2026-11-25): 6 to 10 ms more to start, the same time on AoC days,
 
 ## 13. Modules
 
-See `docs/language-reference.md` (section 13) for the language side.
+See `docs/language-reference.md` (section 14) for the language side.
 
 - **Grammar:** `Tinyscript: (imports += ImportStatement)* global=Global`;
   `ImportStatement` has either a `namespace` (`import * as m`) or `names`

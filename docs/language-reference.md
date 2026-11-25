@@ -21,8 +21,9 @@ and all the details you need to write correct programs.
 9. [Classes and objects](#9-classes-and-objects)
 10. [Closures](#10-closures)
 11. [Built-in objects and functions](#11-built-in-objects-and-functions)
-12. [Differences from JavaScript](#12-differences-from-javascript)
-13. [Modules](#13-modules)
+12. [Errors](#12-errors)
+13. [Differences from JavaScript](#13-differences-from-javascript)
+14. [Modules](#14-modules)
 
 ---
 
@@ -73,16 +74,82 @@ Tinyscript has six types:
 | `undefined` | `undefined`                     | Value of uninitialized variables and missing properties; a literal like `null` |
 | `object`    | `{ }`, `[ ]`, functions         | All objects and arrays; functions are objects                                  |
 
+Unlike Javascript, where `undefined` is a global variable (which a function can
+even redeclare), `undefined` is a literal like `null`: it cannot be declared,
+assigned or shadowed (`let undefined = 1;` is an error). To check for "no
+value", `x == null` is the usual test: it is also `true` for `undefined`.
+
+### Numbers
+
+There is one kind of number, as in Javascript: 64-bit floating point. Integers
+are numbers without a fraction, not a type of their own.
+
 Number literals are written as in Javascript: decimal (`42`, `3.14`, `.5`,
 `1e-9`), hexadecimal (`0xff`), binary (`0b1010`) and octal (`0o17`), with `_`
 between digits as a separator (`1_000_000`, `0b1111_0000`). Unlike Javascript
 outside of strict mode, a decimal number cannot start with `0` (`017`, which
 Javascript reads as the octal number 15, is an error: write `17` or `0o17`).
 
-Unlike Javascript, where `undefined` is a global variable (which a function can
-even redeclare), `undefined` is a literal like `null`: it cannot be declared,
-assigned or shadowed (`let undefined = 1;` is an error). To check for "no
-value", `x == null` is the usual test: it is also `true` for `undefined`.
+- **Integers are exact up to 2^53** (`Number.MAX_SAFE_INTEGER` is 2^53 - 1).
+  Beyond that, neighbours fall together: `9007199254740992 + 1` is
+  `9007199254740992`.
+- **Fractions are binary**, so decimal ones are rounded: `0.1 + 0.2` is
+  `0.30000000000000004`, and `0.1 + 0.2 == 0.3` is `false`.
+- **Division never fails and never rounds:** `7 / 2` is `3.5`, `1 / 0` is
+  `Infinity`, `-1 / 0` is `-Infinity`, `0 / 0` is `NaN`. For an integer
+  quotient, round: `Math.floor(7 / 2)` is `3`. With a negative number,
+  `Math.floor` rounds down and `Math.trunc` towards zero (`Math.floor(-7 / 2)`
+  is `-4`, `Math.trunc(-7 / 2)` is `-3`).
+- **`%` is the remainder with the sign of the left operand:** `-7 % 3` is `-1`,
+  `7 % -3` is `1`, `5.5 % 2` is `1.5`, `5 % 0` is `NaN`. For a result from `0`
+  to `n - 1` also for a negative `a`, write `((a % n) + n) % n`.
+- **`NaN`** ("not a number") is the result of a calculation that has none. It is
+  a number (`typeof NaN` is `"number"`), goes on through arithmetic (`NaN - 1`
+  is `NaN`), and is not equal to anything, not even to itself: test with
+  `isNaN(x)`.
+- There is no power operator `**`: use `Math.pow(x, y)`.
+
+How numbers print and how to convert from and to strings: see
+[`Number`, `parseInt`, `isNaN`](#number-parseint-isnan).
+
+### Strings
+
+A string is a sequence of characters that cannot be changed: every operation
+gives a new string. Literals are written in double or single quotes, which makes
+no difference, with these escape sequences:
+
+| Escape           | Character                                             |
+| ---------------- | ----------------------------------------------------- |
+| `\n`, `\r`, `\t` | Line break, carriage return, tab                      |
+| `\b`, `\f`       | Backspace, form feed                                  |
+| `\"`, `\'`, `\\` | The quote or backslash itself                         |
+| `\u00e4`         | The character with this UTF-16 code (four hex digits) |
+
+Any other escape is a syntax error, also those that Javascript knows (`\x41`,
+`\0`, `\/`, `\u{1F600}`). There are no template literals (`` `…` ``): build
+strings with `+`.
+
+```
+const s = "hello";
+s.length        // 5
+s[0]            // "h" (a string of length 1: there is no character type)
+s[10]           // undefined
+s.at(-1)        // "o", the last character
+s[0] = "H";     // TypeError: Strings cannot be changed
+```
+
+- **Length and indexes count UTF-16 units**, as in Javascript. Characters beyond
+  the first 65,536 of Unicode, such as emoji, take two of them (`"😀".length` is
+  `2`), and the `for` loop and `split("")` go through the units as well.
+  `codePointAt` reads both halves.
+- **`==` compares the contents.** `<`, `<=`, `>`, `>=` compare character by
+  character by their codes: upper case comes before lower case (`"B" < "a"`), a
+  prefix before the longer string (`"a" < "ab"`), and digits are characters
+  (`"10" < "9"`; convert with `Number` to compare numbers).
+- **`+` concatenates** a string and any value (see [Arithmetic](#arithmetic));
+  nothing else converts between strings and numbers silently.
+
+The methods of strings: see [`String`](#string).
 
 ### Conditions
 
@@ -222,15 +289,9 @@ of `Math` (`Math.PI`, `Math.E`) are read-only, its methods are not.
 
 ## 4. Operators
 
-Where the syntax alone shows that operands can never fit, the mistake is an
-error before the run: a literal or the result of an operator of the wrong kind,
-as in `"a" - 1`, `[1] + 1`, `1 < "2"`, `-"a"`, `x -= "a"`, `Math.sqrt("4")`, and
-conditions that are a number or a string (`if (1)`, `while (n - 1)`, `!0`, see
-[Conditions](#conditions)) or an assignment (`if (x = 2)`; to assign there, put
-it in parentheses: `if ((x = next()) != null)`). With variables, properties and
-calls, the same mistakes are a `TypeError` when they run. `x == NaN` (always
-`false`, use `isNaN(x)`) and `typeof x == "numbr"` (`typeof` never gives that)
-are warnings.
+Operators do not convert their operands. An operand of the wrong kind is a
+compile-time error where the source text alone shows it (`"a" - 1`), otherwise a
+`TypeError` when the operator runs (see [Errors](#12-errors)).
 
 ### Arithmetic
 
@@ -243,10 +304,11 @@ are warnings.
 | `%`      | Remainder                                                                               |
 | `-x`     | Unary negation                                                                          |
 
-Operators do not convert their operands: `-`, `*`, `/`, `%` and unary `-` need
-numbers, and `+` adds two numbers, two arrays, or a string and a value; anything
-else (`1 + true`, `1 - "a"`, `undefined + 1`) is a `TypeError` instead of a
-silent `NaN`. `NaN` is a number, so `NaN - 1` is `NaN`.
+`-`, `*`, `/`, `%` and unary `-` need numbers, and `+` adds two numbers, two
+arrays (see [Array concatenation with `+`](#array-concatenation-with-)), or a
+string and a value; anything else (`1 + true`, `1 - "a"`, `undefined + 1`) is a
+`TypeError` instead of a silent `NaN`. Division by zero, the sign of `%` and
+`NaN`: see [Numbers](#numbers).
 
 With a string, `+` converts the other value to a string: `undefined` and `null`
 as `"undefined"` / `"null"`, an object with a `toString` method written in
@@ -254,9 +316,8 @@ tinyscript by calling it, other values in their usual form. tinyscript does not
 support `valueOf` (it would convert objects implicitly in operators).
 
 ```
-let arr = ["a", "b"];
-arr = arr + ["c", "d"];      // ["a", "b", "c", "d"]
 print("n = " + 42);          // n = 42
+print("items: " + [1, 2]);   // items: [1, 2]
 ```
 
 ### Bitwise
@@ -293,8 +354,31 @@ print(-8 >> 1);               // -4
 | `>=`         | Greater than or equal                              |
 | `instanceof` | Prototype chain check                              |
 
-`<`, `<=`, `>`, `>=` compare two numbers or two strings (lexicographically).
-Comparing values of different or other types is a `TypeError`.
+`<`, `<=`, `>`, `>=` compare two numbers or two strings (character by character,
+see [Strings](#strings)). Comparing values of different or other types is a
+`TypeError`.
+
+`==` and `!=` accept any two values and never convert them:
+
+- Values of different types are different (`1 == "1"`, `0 == false` and
+  `null == 0` are `false`), with one exception: `null == undefined` is `true`.
+- Numbers, strings and booleans are equal if they have the same value.
+- Objects, arrays and functions are equal only if they are the same object, not
+  if they have the same contents.
+- `NaN` is not equal to anything, not even to itself: use `isNaN(x)` (`x == NaN`
+  is a warning).
+
+```
+const a = [1, 2];
+const b = a;
+print(a == b);         // true: the same array
+print(a == [1, 2]);    // false: another array with the same elements
+print(a.length == 2 && a.every((x, i) => x == b[i]));   // compares the elements
+```
+
+`indexOf` and `std:array`'s `contains` compare with `==`; `includes` and the
+keys of `Map` and `Set` do too, except that they find `NaN`. There is no `===` /
+`!==`: `==` already is the strict comparison.
 
 ### Logical
 
@@ -394,12 +478,7 @@ assert fibonacci(7) == 21;
 
 ### Variable declaration
 
-```
-let name;
-let name = expression;
-let a = 1, b = 2, c = 3;
-const name = expression;
-```
+`let` and `const`: see [Variables and Scope](#3-variables-and-scope).
 
 ### Expression statement
 
@@ -542,10 +621,11 @@ for (const i : range(1, 11)) {
 
 ### `throw`
 
-Throws an error: an `Error` object (see [Errors](#errors)). Unlike Javascript,
-only `Error` objects can be thrown; `throw "text";` is a `TypeError`. Unless a
-`try` / `catch` catches it, the error ends the script; the REPL prints it with
-the stack trace as `TinyscriptError: message`.
+Throws an error: an `Error` object (see
+[Errors that `catch` gets](#errors-that-catch-gets)). Unlike Javascript, only
+`Error` objects can be thrown; `throw "text";` is a `TypeError`. Unless a `try`
+/ `catch` catches it, the error ends the script; the REPL prints it with the
+stack trace as `TinyscriptError: message`.
 
 ```
 function parse(line) {
@@ -574,58 +654,14 @@ object with `e.name` and `e.message`. `e` is a variable of the `catch` block (it
 can be assigned, as in Javascript). Without the variable, `catch { … }` ignores
 the error. There is no `finally`.
 
-Only the errors a script can expect are caught:
-
-- errors thrown with `throw`;
-- failed input / output of `std:fs` (a missing file, a directory that cannot be
-  listed, …) and `std:io`: an `Error` named `IOError`, e.g. `e.message` is
-  `Cannot read file "data.txt": not found`.
-- `JSON.parse` of a text that is no JSON: an `Error` named `SyntaxError`.
-
-Everything else is a programming error and ends the script, also inside `try`: a
-`TypeError` (wrong types, wrong arguments of a builtin, accessing a property of
-`null`), a failed `assert`, a stack overflow, and a violated resource limit in
-sandboxed mode. This is stricter than Javascript, where `catch` gets every
-error; a broad `catch (e) { return null; }` cannot hide a typo.
+Only the errors a script can expect are caught: those thrown with `throw`,
+failed input / output and `JSON.parse` of invalid JSON. Programming errors such
+as a `TypeError` or a failed `assert` end the script, also inside `try` (see
+[Errors](#12-errors) for the full list).
 
 `throw e;` in a `catch` block throws the caught error again, with its original
 place and stack trace (unless its message was changed). `return`, `break` and
 `continue` leave a `try` or `catch` block as any other block.
-
-### Kinds of errors
-
-To tell your own errors apart, give them a name. `throw` takes only `Error`
-objects, and a class cannot extend `Error`, so the name is a property: a small
-function makes such errors, and a `catch` that handles only them throws the
-others on.
-
-```
-function parseError(message) {
-    const e = new Error(message);
-    e.name = "ParseError";
-    return e;
-}
-
-function parsePoint(text) {
-    const parts = text.split(",");
-    if (parts.length != 2) {
-        throw parseError("expected x,y but got \"" + text + "\"");
-    }
-    return { x: Number(parts[0]), y: Number(parts[1]) };
-}
-
-for (const line : ["1,2", "oops"]) {
-    try {
-        print(parsePoint(line));
-    }
-    catch (e) {
-        if (e.name != "ParseError") {
-            throw e;            // not ours: pass it on
-        }
-        print(e);               // ParseError: expected x,y but got "oops"
-    }
-}
-```
 
 ### `return`
 
@@ -872,7 +908,8 @@ except that integer keys come first in ascending order, as in Javascript:
 `{ b: 1, "7": 2, "10": 3 }` lists `7`, `10`, `b`.
 
 How to choose between object literals, factory functions and classes for objects
-with behavior: see [Classes and objects](#9-classes-and-objects).
+with behavior: see the
+[programming guide](programming-guide.md#1-objects-with-behavior).
 
 ### Property access
 
@@ -975,29 +1012,29 @@ Javascript, writing any other key is a `TypeError`, including `nums.x = 1`,
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `arr.at(i)`                                  | Element at index `i`; a negative `i` counts from the end (`arr.at(-1)` is the last element); `undefined` if out of range                                           |
 | `arr.indexOf(x[, start])`                    | Index of the first element `== x` (tinyscript's `==`), or `-1`; searching from `start` (negative: counts from the end)                                             |
+| `arr.lastIndexOf(x[, from])`                 | Index of the last element `== x` at or before `from` (negative: counts from the end), or `-1`                                                                      |
 | `arr.includes(x[, start])`                   | `true` if an element `== x`, searching from `start` (negative: counts from the end); unlike `indexOf` and as in Javascript, it finds `NaN`                         |
+| `arr.find(fn)` / `arr.findIndex(fn)`         | The first element / its index for which `fn` is true, or `undefined` / `-1`                                                                                        |
+| `arr.findLast(fn)` / `arr.findLastIndex(fn)` | Like `find` / `findIndex`, searching from the end                                                                                                                  |
+| `arr.some(fn)` / `arr.every(fn)`             | Whether `fn` is true for some / every element                                                                                                                      |
 | `arr.push(x)`                                | Appends `x` to the end; returns new element count                                                                                                                  |
 | `arr.pop()`                                  | Removes and returns the last element                                                                                                                               |
-| `arr.shift()`                                | Removes and returns the first element                                                                                                                              |
 | `arr.unshift(x)`                             | Prepends `x`; returns new element count                                                                                                                            |
-| `arr.slice([start[, end]])`                  | A new array with the elements from `start` (inclusive) to `end` (exclusive); negative indices count from the end; `arr.slice()` copies the array                   |
+| `arr.shift()`                                | Removes and returns the first element                                                                                                                              |
+| `arr.splice(start[, count[, x, ...]])`       | Removes `count` elements from `start` (by default all to the end) and inserts `x, ...` there; returns the removed elements; a negative `start` counts from the end |
 | `arr.fill(x[, start[, end]])`                | Sets the elements from `start` to `end` to `x`; returns the array                                                                                                  |
-| `arr.join([sep])`                            | Returns a string with elements joined by `sep` (default `","`)                                                                                                     |
+| `arr.slice([start[, end]])`                  | A new array with the elements from `start` (inclusive) to `end` (exclusive); negative indices count from the end; `arr.slice()` copies the array                   |
 | `arr.forEach(fn)`                            | Calls `fn(element, index, array)` for each element                                                                                                                 |
 | `arr.map(fn)`                                | Returns a new array of the results of `fn(element, index, array)`                                                                                                  |
+| `arr.flatMap(fn)`                            | Like `map`, but an array that `fn` returns adds its elements: `["a b", "c"].flatMap(s => s.split(" "))` is `["a", "b", "c"]`                                       |
 | `arr.filter(fn)`                             | Returns a new array of the elements for which `fn(element, index, array)` is true                                                                                  |
-| `arr.some(fn)` / `arr.every(fn)`             | Whether `fn` is true for some / every element                                                                                                                      |
-| `arr.find(fn)` / `arr.findIndex(fn)`         | The first element / its index for which `fn` is true, or `undefined` / `-1`                                                                                        |
 | `arr.reduce(fn[, initial])`                  | Combines the elements with `fn(accumulator, element, index, array)`, starting with `initial` (or the first element; then an empty array is a `TypeError`)          |
+| `arr.flat([depth])`                          | A new array with the elements of nested arrays, `depth` levels deep (default `1`, `Infinity` for all)                                                              |
 | `arr.sort([compare])`                        | Sorts the array in place (stable) and returns it; `compare(a, b)` returns a negative number if `a` comes first, a positive one if `b` does, `0` otherwise          |
 | `arr.reverse()`                              | Reverses the array in place and returns it                                                                                                                         |
 | `arr.toReversed()`                           | A reversed copy; the array stays as it is                                                                                                                          |
-| `arr.splice(start[, count[, x, ...]])`       | Removes `count` elements from `start` (by default all to the end) and inserts `x, ...` there; returns the removed elements; a negative `start` counts from the end |
-| `arr.lastIndexOf(x[, from])`                 | Index of the last element `== x` at or before `from` (negative: counts from the end), or `-1`                                                                      |
-| `arr.findLast(fn)` / `arr.findLastIndex(fn)` | Like `find` / `findIndex`, searching from the end                                                                                                                  |
-| `arr.flat([depth])`                          | A new array with the elements of nested arrays, `depth` levels deep (default `1`, `Infinity` for all)                                                              |
-| `arr.flatMap(fn)`                            | Like `map`, but an array that `fn` returns adds its elements: `["a b", "c"].flatMap(s => s.split(" "))` is `["a", "b", "c"]`                                       |
 | `arr.entries()`                              | An array of `[index, element]` pairs, as for a `Map`: `for (const [i, x] : arr.entries())` (Javascript: an iterator)                                               |
+| `arr.join([sep])`                            | Returns a string with elements joined by `sep` (default `","`)                                                                                                     |
 | `arr.toString()`                             | The same text as `print` and `String(arr)`: `[1, "a"]` (Javascript: `1,a`)                                                                                         |
 
 The callbacks must be functions; the results of the callbacks of `filter`,
@@ -1049,69 +1086,19 @@ Array.isArray([1, 2, 3])   // true
 Array.isArray("hello")     // false
 ```
 
-### Iterating
-
-```
-for (const x : array) { ... }                 // iterates values
-for (const i : range(array.length)) { ... }   // iterates indexes
-```
-
 ---
 
 ## 9. Classes and Objects
 
-There are three ways to make objects with behavior. Choose by what you need:
+A class describes objects of the same kind, and an interface names methods that
+a class must have. Both are built on Javascript's prototypes (see
+[Under the hood: prototypes](#under-the-hood-prototypes)). Object literals are
+described in [Objects](#7-objects).
 
-| Form                                                 | Use it for                                          | Example                                              |
-| ---------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------- |
-| [Object literal](#object-literals)                   | a single object: settings, a record, a small helper | `{ x, y, length() { … } }`                           |
-| [Factory function](#factory-functions-with-closures) | objects with private state, without `this`          | `counter()` returning `{ inc() { … }, get() { … } }` |
-| [`class`](#classes)                                  | many objects of the same kind with shared methods   | `class Point { … }`                                  |
-
-There is no inheritance between classes: code that several kinds of objects
-share goes into a function, or one object uses another one (see
-[Reuse without inheritance](#reuse-without-inheritance)). Objects of different
-kinds can still be used alike, if they have the same methods (see
-[Objects of different kinds used alike](#objects-of-different-kinds-used-alike)).
-Under the hood, all of this is Javascript's prototypes (see
-[Under the hood: prototypes](#under-the-hood-prototypes)).
-
-### Object literals
-
-A literal (see [Objects](#7-objects)) with methods is the simplest object with
-behavior; `this` in a method is the object the method is called on:
-
-```
-const origin = {
-    x: 0,
-    y: 0,
-    distanceTo(other) { return Math.hypot(other.x - this.x, other.y - this.y); }
-};
-print(origin.distanceTo({ x: 3, y: 4 }));   // 5
-```
-
-### Factory functions with closures
-
-A function that returns an object literal makes objects whose state only their
-methods can reach (see [Closures](#10-closures)). The methods use the variables
-of the function, not `this`:
-
-```
-function counter(start) {
-    let n = start;              // private: only inc and get see it
-    return {
-        inc() { n++; },
-        get() { return n; }
-    };
-}
-
-const c = counter(10);
-c.inc();
-print(c.get(), c.n);   // 11 undefined
-```
-
-Each call makes new state. Since the methods do not use `this`, they also work
-when taken off the object (`const inc = c.inc; inc();`).
+There is no inheritance between classes. When to use an object literal, a
+function that returns objects or a class, and how to share code without
+inheritance: see the
+[programming guide](programming-guide.md#1-objects-with-behavior).
 
 ### Classes
 
@@ -1145,7 +1132,7 @@ print(p instanceof Point, Object.keys(p));   // true ["x", "y"]
 - A class can only be created with `new`: `Point(1, 2)` is a `TypeError`.
 - Classes are declared at the top level of a file only, not in blocks or
   functions, and can be exported (`export class Point { … }`, see
-  [Modules](#13-modules)). The name is a constant.
+  [Modules](#14-modules)). The name is a constant.
 - Like `let` and `const`, a class can be used from its declaration on: functions
   and methods may mention a class declared further down, since they run later,
   but `new Point(1, 2)` at the top level before `class Point` is an error.
@@ -1216,76 +1203,6 @@ wrap the call in an arrow function: `points.map(point => point.length())`. A
 `function () { … }` written inside a method has its own `this` as well; use an
 arrow function there.
 
-### Objects of different kinds used alike
-
-Objects that have the same methods can be used alike, whatever made them:
-objects of different classes, and object literals too.
-
-```
-class Circle {
-    constructor(radius) { this.radius = radius; }
-    area() { return Math.PI * this.radius * this.radius; }
-    toString() { return "circle " + this.radius; }
-}
-
-class Square {
-    constructor(side) { this.side = side; }
-    area() { return this.side * this.side; }
-    toString() { return "square " + this.side; }
-}
-
-const shapes = [new Circle(1), new Square(2), { area() { return 1.5; }, toString() { return "patch"; } }];
-for (const shape : shapes) {
-    print(shape + ": " + shape.area().toFixed(2));
-}
-```
-
-Describe the methods such objects need in a comment. Where a missing method
-would only show up much later, a function can check for it right away:
-
-```
-function addListener(listeners, listener) {
-    if (listener == null || typeof listener.onEvent != "function") {
-        throw new Error("a listener needs a method onEvent(event)");
-    }
-    listeners.push(listener);
-}
-```
-
-Otherwise, calling a method that is not there is a clear error anyway:
-`Square has no method 'perimeter'`. The examples
-[`expressions.tys`](../examples/oo/expressions.tys) (kinds of expressions that
-can all evaluate, derive and simplify themselves) and
-[`orders.tys`](../examples/oo/orders.tys) (listeners on an event bus) are built
-this way.
-
-### Reuse without inheritance
-
-Instead of a class that extends another one, an object can have another one and
-pass work on to it (composition):
-
-```
-class Person {
-    constructor(name) { this.name = name; }
-    describe() { return "Person called " + this.name; }
-}
-
-class Employee {
-    constructor(name, title) {
-        this.person = new Person(name);
-        this.title = title;
-    }
-    describe() { return this.person.describe() + " (" + this.title + ")"; }
-}
-
-print(new Employee("Jane", "CTO").describe());   // Person called Jane (CTO)
-```
-
-Code that several classes share, but that does not belong to any of them, goes
-into a function next to them, e.g. `binary(left, op, right, precedence)` in
-[`expressions.tys`](../examples/oo/expressions.tys), which the classes `Add`,
-`Sub` and `Mul` use for `toString`.
-
 ### Under the hood: prototypes
 
 Every object has a prototype: a property that the object does not have is looked
@@ -1329,7 +1246,8 @@ Unlike a class, such a function can be called without `new` by mistake (then
 `this` is `undefined` and the first assignment fails), and its objects print
 without a name. Inheritance can be built from these parts
 (`Object.create(Parent.prototype)` and `Parent.call(this, …)`, or plain objects
-as classes), but it is not the way tinyscript recommends: use composition.
+as classes), but it is not the way tinyscript recommends: use composition (see
+[Reuse without inheritance](programming-guide.md#reuse-without-inheritance)).
 [`examples/oo/car.tys`](../examples/oo/car.tys) shows a constructor function
 next to the same class, and
 [`examples/oo/prototypes_as_classes.tys`](../examples/oo/prototypes_as_classes.tys)
@@ -1360,52 +1278,24 @@ print(counter());   // 3
 Each call to `makeCounter()` creates a fresh `count` variable, so closures from
 different calls do not share state. A function that returns an object with
 several such methods makes objects with private state (see
-[Factory functions with closures](#factory-functions-with-closures)).
+[Factory functions with closures](programming-guide.md#factory-functions-with-closures)).
 
-Two common uses: a function that remembers results (here in a `Map`, which only
-the returned function can reach) and a function made from a parameter, e.g. a
-comparison for `sort`:
-
-```
-function memoize(f) {
-    const cache = new Map();
-    return function(n) {
-        if (!cache.has(n)) {
-            cache.set(n, f(n));
-        }
-        return cache.get(n);
-    };
-}
-
-// Without the cache, fib(70) would take years
-const fib = memoize(n => n < 2 ? n : fib(n - 1) + fib(n - 2));
-print(fib(70));   // 190392490709135
-
-function by(key) {
-    return (a, b) => a[key] - b[key];
-}
-
-const people = [{ name: "Ann", age: 41 }, { name: "Bob", age: 23 }, { name: "Cy", age: 35 }];
-people.sort(by("age"));
-print(people.map(p => p.name).join(", "));   // Bob, Cy, Ann
-```
+More uses, such as a function that remembers its results: see
+[Closures in practice](programming-guide.md#2-closures-in-practice).
 
 To share functions and values between files, use modules (see
-[Modules](#13-modules)).
+[Modules](#14-modules)).
 
 ---
 
 ## 11. Built-in Objects and Functions
 
-The builtins are checked before the run where it is clear which one is meant: a
-member of `Math`, `JSON`, `Number` … that does not exist (`Math.sqr(2)`,
-`Math.PIE`, with a suggestion: `did you mean 'sqrt'?`), a method of a string,
-number or array literal that does not exist (`"a,b".splitt(",")`), a call of
-something that is no function (`Math.PI()`) and the wrong number of arguments
-(`Math.sqrt()`, `parseInt("1", 10, 2)`, `"a".repeat()`). Adding a member
-(`Math.TAU = 2 * Math.PI;`) or replacing one is allowed, and `typeof Math.TAU`
-asks whether it is there. Where the object is known only at run time
-(`s.splitt(",")` with a variable `s`), the same mistakes are a `TypeError` then.
+Builtins check the types and the number of their arguments; a member that does
+not exist (`Math.sqr`) or a wrong argument is a compile-time error where it is
+clear which builtin is meant, otherwise a `TypeError` (see
+[Errors](#12-errors)). Adding a member to a builtin object
+(`Math.TAU = 2 * Math.PI;`) is allowed, and `typeof Math.TAU` asks whether it is
+there.
 
 ### `print(value, ...)`
 
@@ -1472,18 +1362,18 @@ callbacks get `(i, index, range)`, like those of arrays. Javascript has no
 | Member                                                                  | Description                                         |
 | ----------------------------------------------------------------------- | --------------------------------------------------- |
 | `Math.PI`                                                               | 3.141592653589793                                   |
-| `Math.sqrt(x)`                                                          | Square root of `x`                                  |
-| `Math.round(x)`                                                         | Round to nearest integer                            |
-| `Math.random()`                                                         | Random number in [0, 1)                             |
-| `Math.min(a, b, ...)` / `Math.max(a, b, ...)`                           | Smallest / largest of the arguments                 |
+| `Math.E`                                                                | 2.718281828459045                                   |
 | `Math.abs(x)`                                                           | Absolute value                                      |
 | `Math.floor(x)` / `Math.ceil(x)`                                        | Round down / up                                     |
+| `Math.round(x)`                                                         | Round to nearest integer                            |
 | `Math.trunc(x)` / `Math.sign(x)`                                        | Integer part (towards zero) / sign (`-1`, `0`, `1`) |
+| `Math.min(a, b, ...)` / `Math.max(a, b, ...)`                           | Smallest / largest of the arguments                 |
+| `Math.sqrt(x)`                                                          | Square root of `x`                                  |
+| `Math.cbrt(x)`, `Math.hypot(a, b, ...)`                                 | Cube root; square root of the sum of squares        |
 | `Math.pow(x, y)`                                                        | `x` to the power of `y`                             |
 | `Math.exp(x)`, `Math.log(x)`, `Math.log2(x)`, `Math.log10(x)`           | e to the power of `x`; logarithms                   |
-| `Math.cbrt(x)`, `Math.hypot(a, b, ...)`                                 | Cube root; square root of the sum of squares        |
 | `Math.sin(x)`, `cos`, `tan`, `asin`, `acos`, `atan`, `Math.atan2(y, x)` | Trigonometry (radians)                              |
-| `Math.E`                                                                | 2.718281828459045                                   |
+| `Math.random()`                                                         | Random number in [0, 1)                             |
 
 ```
 print(Math.sqrt(2));    // 1.4142135623730951
@@ -1615,6 +1505,7 @@ String methods:
 | `str.at(i)`                                                  | Character at index `i`; a negative `i` counts from the end; `undefined` if out of range                                                                              |
 | `str.charAt(i)`                                              | Character at index `i`                                                                                                                                               |
 | `str.charCodeAt(i)`                                          | UTF-16 code of the character at index `i`, or `NaN`                                                                                                                  |
+| `str.codePointAt(i)`                                         | Unicode code point at index `i` (both halves of an emoji), or `undefined`                                                                                            |
 | `str.indexOf(sub[, pos])`                                    | First index of `sub` at or after `pos` (negative: 0), or `-1`                                                                                                        |
 | `str.lastIndexOf(sub[, pos])`                                | Last index of `sub` at or before `pos`, or `-1`                                                                                                                      |
 | `str.includes(sub[, pos])` / `str.startsWith(sub[, pos])`    | Whether `str` contains `sub` at or after `pos` / starts with `sub` at `pos`                                                                                          |
@@ -1622,9 +1513,8 @@ String methods:
 | `str.substring(start, end)`                                  | Substring from `start` (inclusive) to `end` (exclusive)                                                                                                              |
 | `str.slice(start[, end])`                                    | Like `substring`, but negative indices count from the end, and `start > end` gives `""`                                                                              |
 | `str.split(sep[, limit])`                                    | Array of the parts between occurrences of `sep` (at most `limit` of them); `""` splits into characters. To split at any whitespace, use `words(str)` of `std:string` |
-| `str.trimStart()` / `str.trimEnd()`                          | Without leading / trailing whitespace                                                                                                                                |
-| `str.codePointAt(i)`                                         | Unicode code point at index `i` (both halves of an emoji), or `undefined`                                                                                            |
 | `str.trim()`                                                 | Without leading and trailing whitespace                                                                                                                              |
+| `str.trimStart()` / `str.trimEnd()`                          | Without leading / trailing whitespace                                                                                                                                |
 | `str.replace(search, repl)` / `str.replaceAll(search, repl)` | Replaces the first / every occurrence of `search`; `repl` may contain `$&` (the match), `` $` `` / `$'` (the text before / after it) and `$$`                        |
 | `str.repeat(n)`                                              | `str` repeated `n` times                                                                                                                                             |
 | `str.padStart(len[, pad])` / `str.padEnd(len[, pad])`        | Padded at the start / end with spaces or `pad` up to length `len`                                                                                                    |
@@ -1656,11 +1546,8 @@ print("7".padStart(3, "0")); // "007"
 
 ### `Array`
 
-See [Arrays](#8-arrays) for method details. Additional static:
-
-| Method                 | Description                           |
-| ---------------------- | ------------------------------------- |
-| `Array.isArray(value)` | Returns `true` if `value` is an array |
+The methods of arrays, `new Array(n)` and `Array.isArray(value)`: see
+[Arrays](#8-arrays).
 
 ### `Map` and `Set`
 
@@ -1710,10 +1597,8 @@ print(visited.has("1,2"));   // true
 
 ### `Function.prototype`
 
-| Method                         | Description                                      |
-| ------------------------------ | ------------------------------------------------ |
-| `fn.call(thisArg, arg1, ...)`  | Call `fn` with explicit `this`                   |
-| `fn.apply(thisArg, argsArray)` | Call `fn` with explicit `this` and array of args |
+`fn.call(thisArg, arg1, ...)` and `fn.apply(thisArg, argsArray)`: see
+[`Function.prototype.call` and `.apply`](#functionprototypecall-and-apply).
 
 ### `System`
 
@@ -1730,48 +1615,149 @@ print(System.currentTimeMillis() - start);   // elapsed ms
 const file = System.args.length > 0 ? System.args[0] : "input.txt";
 ```
 
-### Errors
+### `Error`
 
-Calling something that is not a function is a `TypeError` that names it:
-`String has no method 'splitt'`, `'x' of Object is a number, not a function`,
-`'f' is undefined, not a function`.
-
-`new Error(message)` (or `Error(message)`) creates an error object for `throw`:
-`e.message`, `e.name` (`"Error"`) and `e.toString()` (`"Error: message"`) as in
-Javascript; the message must be a string. There are no subclasses like
-`TypeError` and no stack property. `catch` gets thrown errors and failed input /
-output (`e.name` is `"IOError"`) and `JSON.parse` of a text that is no JSON
-(`"SyntaxError"`), not programming errors (see [`try` / `catch`](#try--catch)).
-
-A too deep (or endless) recursion is a `TinyscriptStackOverflowError` ("Stack
-overflow: too many nested calls"); its stack trace shows only the innermost and
-outermost calls. The REPL allows a recursion depth of about 500,000 calls; in
-the web demo the limit is lower.
+`new Error(message)` creates an error object for `throw`: see
+[Errors that `catch` gets](#errors-that-catch-gets).
 
 ### File access
 
 There is no global `fs` (since 0.18): file access is the module `std:fs` (see
-[Modules](#13-modules)), `import * as fs from "std:fs";`. It is not available in
+[Modules](#14-modules)), `import * as fs from "std:fs";`. It is not available in
 the web demo or any sandboxed execution context. The standard input (keyboard or
 pipe) is the module `std:io`.
 
 ---
 
-## 12. Differences from JavaScript
+## 12. Errors
 
-Many mistakes that Javascript finds only when the code runs, or not at all, are
-errors before the run in tinyscript, where the syntax alone shows them: unknown
-names, members of builtins (`Math.sqr`) and the number of their arguments,
-operands and conditions that can never fit (`"a" - 1`, `if (1)`, `if (x = 2)`),
-a class called without `new`, `new` of an arrow function or of a builtin that is
-no constructor (`new Math.sqrt(4)`), `throw` of anything but an `Error` object
-(`throw "oops"`), and an array literal too short for its pattern
-(`const [a, b] = [1]`). Warnings point to code that runs but is almost always a
-mistake: duplicate keys in an object literal (`{ a: 1, a: 2 }`), code after
-`return`, `break`, `continue` or `throw`, `x == NaN`, and `typeof x == "numbr"`.
+A mistake shows at one of three times. The earlier, the better: tinyscript
+reports before the run whatever the source text alone shows, where Javascript
+would fail only when the code runs, or not at all.
+
+| Kind               | When                                       | Effect                         | `catch` gets it |
+| ------------------ | ------------------------------------------ | ------------------------------ | --------------- |
+| Compile-time error | Before the run                             | Nothing runs                   | –               |
+| Warning            | Before the run                             | The script runs                | –               |
+| Programming error  | At run time, when the statement is reached | Ends the script                | No              |
+| Expected error     | At run time, when the statement is reached | Ends the script, unless caught | Yes             |
+
+The REPL reports an error with its place in the source and, at run time, the
+calls that led there, and exits with code 1:
+
+```
+TinyscriptTypeError: Cannot read 'width' of shape: it is null
+        return shape.width * shape.height;
+               ^
+    at area(area.tys:2)
+    at global(area.tys:6)
+```
+
+### Compile-time errors
+
+A file is checked as a whole before its first statement runs. All of these are
+reported as a `TinyscriptSyntaxError`:
+
+- **Syntax:** a missing `;` or brace, and what tinyscript leaves out of
+  Javascript, with a hint what to write instead (`var`, `switch`, `finally`,
+  template literals, the counting `for` loop, `extends`).
+- **Names:** an unknown name, a variable used above its declaration in the same
+  block, a name declared twice in a scope ("Duplicate identifier"), assigning to
+  a constant, a function declaration, a class, a builtin (`Math = …`) or an
+  imported name, `this` or `return` outside of a function, `break` or `continue`
+  outside of a loop.
+- **Operands and conditions that can never fit**, where a literal or the result
+  of an operator shows the kind: `"a" - 1`, `[1] + 1`, `1 < "2"`, `-"a"`,
+  `x -= "a"`, `Math.sqrt("4")`; a condition that is a number or a string
+  (`if (1)`, `while (n - 1)`, `!0`, see [Conditions](#conditions)) or an
+  assignment (`if (x = 2)`; to assign there, put it in parentheses:
+  `if ((x = next()) != null)`); a literal operand of `&&` / `||` that can never
+  be a condition (`options || {}`).
+- **Builtins**, where it is clear which one is meant: a member of `Math`,
+  `JSON`, `Number` … that does not exist (`Math.sqr(2)`, `Math.PIE`, with a
+  suggestion: `did you mean 'sqrt'?`), a method of a string, number or array
+  literal that does not exist (`"a,b".splitt(",")`), a call of something that is
+  no function (`Math.PI()`) and the wrong number of arguments (`Math.sqrt()`,
+  `parseInt("1", 10, 2)`, `"a".repeat()`).
+- **Calls and `new`:** too many arguments for a function that is known (see
+  [Calling functions](#calling-functions)), a class called without `new`, `new`
+  of an arrow function or of a builtin that is no constructor
+  (`new Math.sqrt(4)`).
+- **Other:** `throw` of anything but an `Error` object (`throw "oops"`), an
+  array literal too short for its pattern (`const [a, b] = [1]`), a class
+  without a method of an interface of the same file, `this.x = …` in a class
+  with a method `x`, `delete` of anything but a property.
+
+The compiler only sees literals and operators. The same mistakes with variables,
+properties and results of calls (`s.splitt(",")` with a variable `s`, `a - b`
+with a string in `b`) are programming errors when they run.
+
+### Warnings
+
+A warning points to code that runs but is almost always a mistake:
+
+- a declaration that hides a builtin (`for (const range : spans)`),
+- duplicate keys in an object literal (`{ a: 1, a: 2 }`),
+- code after `return`, `break`, `continue` or `throw`,
+- `x == NaN` (always `false`: use `isNaN(x)`),
+- `typeof x == "numbr"` (`typeof` never gives that).
+
+### Programming errors
+
+A programming error ends the script, also inside `try`: the code is wrong, and
+going on would only hide it. This is stricter than Javascript, where `catch`
+gets every error; a broad `catch (e) { return null; }` cannot hide a typo.
+
+- **`TypeError`:** a value of the wrong kind. Operands and conditions
+  (`1 + true`, `if (count)`), arguments of a builtin of the wrong type or too
+  many of them, a property of `null` or `undefined`
+  (`Cannot read 'x' of o: it is null`; use `?.` where that is expected), a call
+  of something that is no function (`String has no method 'splitt'`,
+  `'x' of Object is a number, not a function`,
+  `'f' is undefined, not a function`), an assignment to a read-only property
+  (`Math.PI`), to a character of a string or to a key of an array other than its
+  indexes and `length`, `new` of something that is no constructor, a value that
+  does not fit a pattern or cannot be iterated.
+- **`ReferenceError`:** a function uses a variable whose declaration has not run
+  yet ("x is used before its declaration").
+- **A failed `assert`.**
+- **Stack overflow:** a too deep (or endless) recursion ("Stack overflow: too
+  many nested calls"); its stack trace shows only the innermost and outermost
+  calls. The REPL allows a recursion depth of about 500,000 calls; in the web
+  demo the limit is lower.
+- **A resource limit** in sandboxed mode, e.g. in the web demo: the number of
+  statements, CPU time, memory, call depth, the length of a string or the size
+  of the output ("Statement limit reached").
+
+### Errors that `catch` gets
+
+Errors a correct script must expect can be caught with
+[`try` / `catch`](#try--catch); uncaught, they end the script like the others.
+In the `catch` block, the error is always an `Error` object with a `name` and a
+`message`:
+
+| Error                                      | `e.name`        | Example of `e.message`                           |
+| ------------------------------------------ | --------------- | ------------------------------------------------ |
+| Thrown with `throw`                        | `"Error"`       | The message given to `new Error(…)`              |
+| Failed input / output (`std:fs`, `std:io`) | `"IOError"`     | `Cannot read file "data.txt": not found`         |
+| `JSON.parse` of a text that is no JSON     | `"SyntaxError"` | `JSON.parse: expected a key in double quotes, …` |
+
+`new Error(message)` (or `Error(message)`) creates an error object for `throw`:
+`e.message`, `e.name` (`"Error"`) and `e.toString()` (`"Error: message"`) as in
+Javascript; the message must be a string. There are no subclasses like
+`TypeError` and no stack property.
+
+To tell your own errors apart, give them a name (`e.name = "ParseError";`): see
+[Your own kinds of errors](programming-guide.md#3-your-own-kinds-of-errors).
+
+---
+
+## 13. Differences from JavaScript
 
 Understanding where Tinyscript diverges from JavaScript is important both for
-writing code and for knowing its intentional limitations.
+writing code and for knowing its intentional limitations. Many mistakes that
+Javascript finds only when the code runs, or not at all, are compile-time errors
+in tinyscript (see [Errors](#12-errors)).
 
 ### Things Tinyscript does differently
 
@@ -1786,7 +1772,6 @@ writing code and for knowing its intentional limitations.
 | **Array `+`**                | String concatenation                                     | Concatenation of two arrays; an array plus a number etc. is a `TypeError`  |
 | **`==` vs `===`**            | Different (type coercion vs. strict)                     | Only `==` / `!=`, which never coerce types (there is no `===` / `!==`)     |
 | **Relational operators**     | Coerce operands (`1 < "2"`)                              | Only number with number or string with string; otherwise a `TypeError`     |
-| **`var` keyword**            | Function-scoped variable, hoisted                        | Reserved word; use `let`                                                   |
 | **`++` / `--`**              | Expressions, prefix and postfix                          | Only the statements `i++;` / `i--;`                                        |
 | **`toString()`**             | `"[object Object]"` for objects, `"1,2"` for arrays      | The same text as `print`: `{x: 1}`, `[1, 2]`, `[Function: f]`              |
 
@@ -1798,7 +1783,6 @@ writing code and for knowing its intentional limitations.
 - `this` binding in constructors and methods
 - Assigning to a read-only property (`Math.PI`, `f.length`, `f.name`, one
   defined with `writable: false`) is a `TypeError`, not silently ignored
-- `class` with a `constructor` and methods (without inheritance)
 - `new`, `instanceof`, `typeof`
 - Arrow functions with lexical `this`
 - Rest parameters (`...args`), default parameters (`step = 1`), spread in calls
@@ -1808,28 +1792,59 @@ writing code and for knowing its intentional limitations.
 
 ### Things not supported
 
+Most of these are an error before the run, many with a hint what to write
+instead.
+
+Syntax:
+
+- **Template literals** — no backtick strings; build strings with `+`
 - **Regular expressions** — no regex literals or `RegExp`; to read structured
   text, use `parse` / `findAll` of `std:string`
+- **`switch`** — use `if` / `else if`
+- **`do … while`**, the counting `for (…; …; …)`, `for … in` / `for … of` (see
+  the table above) and labels (`outer: while …`, `break outer;`)
 - **`finally`** — only `try` / `catch`; `catch` does not catch programming
   errors such as a `TypeError`
-- **Template literals** — no backtick strings
+- The operators `**` (use `Math.pow(x, y)`), `>>>`, `===` / `!==` (`==` / `!=`
+  never convert) and the assignments `??=`, `||=`, `&&=`
+- **`in`** — use `o.hasOwnProperty(key)`, or `m.has(key)` with a `Map`
+- **The comma operator** (`a = 1, b = 2;`) and **`void`**
+- **`async` / `await`, generators** (`function*`, `yield`) and timers
+  (`setTimeout`): a script runs from its first statement to its last
+- **`arguments`** — use a rest parameter (`...args`)
 - **Destructuring** beyond flat patterns in declarations, `for` and parameters —
   no nesting, defaults, renaming, rest elements in object patterns, or patterns
   in assignments
 - **Spread in object literals** (`{ ...o }`) — use `Object.assign({}, o)`
 - **Empty array elements** (`[1, , 2]`) and a comma after the last argument or
   parameter (`f(a, b,)`); in array and object literals it is allowed
-- **`switch` statement**
-- **Getter / setter properties** (`get`/`set` in object literals and classes)
+
+Classes and objects:
+
 - **Inheritance between classes** (`extends`, `super`), **`static`** members and
   field declarations in a class body
-- **`Symbol`, `WeakMap`, `Promise`**, and other ES6+ built-ins
+- **Getter / setter properties** (`get`/`set` in object literals and classes)
+- **`valueOf`** — operators never convert objects
+- **`bind`** — wrap the call in an arrow function (`x => o.method(x)`)
+- **`Object.freeze`** — only the exports of a module are read-only
+
+Builtins:
+
+- **`Symbol`, `WeakMap`, `Promise`**, and other ES6+ built-ins; there is no
+  `globalThis`
 - **`Date`** object (use `System.currentTimeMillis()` instead)
 - **`console`** (use `print()` instead)
+- **`Boolean(x)`** — conditions do not convert; compare instead (`x != 0`,
+  `x != null`)
+- **`JSON.stringify`** — `print` and `String(x)` quote strings inside arrays and
+  objects as it does
+- **`concat`** and **`Array.from`** — use `a + b` and `[...items]`
+- Only the methods listed in [section 11](#11-built-in-objects-and-functions)
+  exist
 
 ---
 
-## 13. Modules
+## 14. Modules
 
 A file is a module. Top-level functions and variables marked with `export` can
 be imported by other files:

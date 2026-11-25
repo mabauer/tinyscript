@@ -275,7 +275,7 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
 - Modules: `export` top-level functions / variables / classes;
   `import a, b from "./m";` or `import * as m from "./m";`. Each module runs
   once; imported names are read-only; files share names only via imports (see
-  `docs/language-reference.md`, section 13)
+  `docs/language-reference.md`, section 14)
 - `try { … } catch (e) { … }` (no `finally`) catches only errors thrown with
   `throw` (which takes only `Error` objects) and failed `std:fs` / `std:io`
   input / output (`e.name == "IOError"`) and `JSON.parse` of invalid JSON

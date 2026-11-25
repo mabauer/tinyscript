@@ -56,7 +56,9 @@ _tinyscript_ offers quite a complete set of interesting language features:
   standard library
 
 The [language reference](docs/language-reference.md) describes the whole
-language, its built-in objects and its differences from Javascript.
+language, its built-in objects and its differences from Javascript. The
+[programming guide](docs/programming-guide.md) shows how to put it to use: which
+kind of object when, closures, your own kinds of errors.
 
 Larger examples: [Advent of Code 2024](examples/aoc2024), solutions of all 25
 days, [ten days of 2023](examples/aoc2023), written with classes, and
@@ -243,7 +245,8 @@ of primitive datatypes in Javascript is a mine-field on its own.
   interface is in the same file), not each object, as Python's abstract classes
   do at each instantiation. Object literals have the method shorthand
   `{ area() { … } }`. See
-  [Classes and objects](docs/language-reference.md#9-classes-and-objects).
+  [Classes and objects](docs/language-reference.md#9-classes-and-objects) and
+  the [programming guide](docs/programming-guide.md#1-objects-with-behavior).
 - **Sandboxing:** in sandboxed mode every loop iteration counts against the
   statement limit, so even endless loops cannot exceed the resource limits (see
   [Sandboxing](#sandboxing)).
