@@ -99,10 +99,17 @@ public abstract class TinyscriptTranspilerTestBase {
      * {@code @BeforeEach} method.
      */
     protected void assumeNodeAvailable() {
-        // In CI (GitHub sets CI=true), node must be there: the differential tests fail instead
+        Assumptions.assumeTrue(nodeAvailable(), "Skipping: node.js not found on PATH");
+    }
+
+    /**
+     * Whether node is on the PATH; in CI (GitHub sets CI=true), node must be there: the
+     * differential tests fail instead.
+     */
+    protected static boolean nodeAvailable() {
         if (System.getenv("CI") != null && !NodeJsRunner.isAvailable())
             throw new AssertionError("node.js is needed in CI, but not found on PATH");
-        Assumptions.assumeTrue(NodeJsRunner.isAvailable(), "Skipping: node.js not found on PATH");
+        return NodeJsRunner.isAvailable();
     }
 
     // -------------------------------------------------------------------------
@@ -419,9 +426,23 @@ public abstract class TinyscriptTranspilerTestBase {
      */
     protected void assertSameOutput(String tsCode) {
         assumeNodeAvailable();
+        assertNodeOutput(interpreterOutput(tsCode), tsCode);
+    }
 
-        String jsCode = transpile(parse(tsCode));
+    /**
+     * Both backends print {@code expected}: the interpreter always, node where it is on the
+     * PATH (without node, only the interpreter is checked, and the test goes on).
+     */
+    protected void assertSameOutput(String expected, String tsCode) {
         String interpreterOut = interpreterOutput(tsCode);
+        assertEquals(expected, interpreterOut, "interpreter output of:\n" + tsCode);
+        if (nodeAvailable())
+            assertNodeOutput(interpreterOut, tsCode);
+    }
+
+    // node prints what the interpreter printed
+    private void assertNodeOutput(String interpreterOut, String tsCode) {
+        String jsCode = transpile(parse(tsCode));
         String nodeOut;
         try {
             nodeOut = NodeJsRunner.run(jsCode);
