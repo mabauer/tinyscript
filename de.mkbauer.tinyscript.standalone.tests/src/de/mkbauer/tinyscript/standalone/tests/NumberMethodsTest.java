@@ -57,9 +57,9 @@ public class NumberMethodsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testNumbersOnlyHaveTheirMethods() {
-        assertKnownGap(TinyscriptTypeError.class, "const n = 5; print(n.length);");
+        assertSameFailure(TinyscriptTypeError.class, "const n = 5; print(n.length);");
         assertSameFailure(TinyscriptTypeError.class, "const n = 5; n.x = 1;");
         assertSameFailure(TinyscriptTypeError.class, "const n = 5; n.toFixed = 1;");
-        assertKnownGap(TinyscriptTypeError.class, "const n = 5; print(n.constructor);");
+        assertSameFailure(TinyscriptTypeError.class, "const n = 5; print(n.constructor);");
     }
 }

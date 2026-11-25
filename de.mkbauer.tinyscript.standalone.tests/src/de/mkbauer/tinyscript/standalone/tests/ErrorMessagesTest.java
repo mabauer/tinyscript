@@ -386,11 +386,6 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
         assertEquals(expectedMessage, e.getMessage());
     }
 
-    // The interpreter fails with the message, the generated code goes on (TODO.md, phase 2)
-    private void assertKnownGapWithMessage(String expectedMessage, String code) {
-        assertEquals(expectedMessage, assertKnownGap(TinyscriptRuntimeException.class, code).getMessage());
-    }
-
     @Test
     public void testPropertyOfUndefinedOrNull() {
         assertRuntimeError("Cannot read 'length' of o.lst: it is undefined", "const o = { list: [1, 2] };\nconst total = o.lst.length;");
@@ -403,9 +398,9 @@ public class ErrorMessagesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testPropertyOfANumberOrBoolean() {
-        assertKnownGapWithMessage("Cannot read 'length' of n: numbers only have the methods toFixed and toString", "const n = 5;\nprint(n.length);");
+        assertRuntimeError("Cannot read 'length' of n: numbers only have the methods toFixed and toString", "const n = 5;\nprint(n.length);");
         assertRuntimeError("Cannot set 'x' of n: numbers cannot be changed", "const n = 5;\nn.x = 1;");
-        assertKnownGapWithMessage("Cannot read 'x' of flag: booleans have no properties", "const flag = true;\nprint(flag.x);");
+        assertRuntimeError("Cannot read 'x' of flag: booleans have no properties", "const flag = true;\nprint(flag.x);");
     }
 
     @Test

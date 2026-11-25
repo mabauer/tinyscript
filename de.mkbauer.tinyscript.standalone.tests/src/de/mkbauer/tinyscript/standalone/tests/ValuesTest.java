@@ -110,11 +110,19 @@ public class ValuesTest extends TinyscriptTranspilerTestBase {
     public void testNumbersOnlyHaveMethodsAndBooleansNoProperties() {
         // Numbers have toFixed and toString (see NumberMethodsTest), nothing else
         assertEquals(java.util.List.of("1:7: a number has no method 'hasOwnProperty'"), reportedErrors("print((5).hasOwnProperty(\"x\"));"));
-        assertKnownGap(TinyscriptTypeError.class, "print(true.toString());");
-        assertKnownGap(TinyscriptTypeError.class, "let n = 5; print(n.x);");
+        assertSameFailure(TinyscriptTypeError.class, "print(true.toString());");
+        assertSameFailure(TinyscriptTypeError.class, "let n = 5; print(n.x);");
         assertSameFailure(TinyscriptTypeError.class, "let n = 5; n.x = 1;");
-        assertKnownGap(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan.x);");
-        assertKnownGap(TinyscriptTypeError.class, "let b = false; print(b.hasOwnProperty(\"value\"));");
+        assertSameFailure(TinyscriptTypeError.class, "let nan = 0 / 0; print(nan.x);");
+        assertSameFailure(TinyscriptTypeError.class, "let b = false; print(b.hasOwnProperty(\"value\"));");
+        assertSameFailure(TinyscriptTypeError.class, "let n = 5; const k = \"length\"; print(n[k]);");
+        assertSameFailure(TinyscriptTypeError.class, "let n = 5; function k() { return \"x\"; }\nprint(n[k()]);");
+        assertSameFailure(TinyscriptTypeError.class, "let n = 5; print(typeof n.x);");
+        assertSameFailure(TinyscriptTypeError.class, "const o = { n: 5 }; print(o.n.x);");
+        // Their methods, strings, objects, optional chains and new work as before
+        assertSameOutput("5.0 101 3 undefined undefined 1 2\n",
+                "const n = 5; const s = \"abc\"; const o = { a: { b: null }, P: function (x) { this.x = x; } };\n"
+                + "print(n.toFixed(1), (5).toString(2), s.length, s.x, o.a.b?.c, new o.P(1).x, o[\"a\"] == o.a ? 2 : 0);");
     }
 
     @Test

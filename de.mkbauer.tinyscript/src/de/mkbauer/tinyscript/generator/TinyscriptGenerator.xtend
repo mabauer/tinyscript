@@ -470,10 +470,12 @@ class TinyscriptGenerator   {
 			}
 		};
 
-		// Like the interpreter: keys(), values() and entries() of Maps and Sets return arrays, and
-		// the methods need their arguments (m.get() is an error, not undefined)
-		var Map = (function (JsMap) {
+		// Like the interpreter: keys(), values() and entries() of Maps and Sets return arrays, the
+		// methods need their arguments (m.get() is an error, not undefined), and Maps and Sets have
+		// no other properties (m["a"] = 1 is an error in strict mode: they are not extensible)
+		var Map = (function (JsMap, preventExtensions) {
 			return class Map extends JsMap {
+				constructor(entries) { super(entries); preventExtensions(this); }
 				get(key) { if (arguments.length < 1) { __ts_atLeast(0, 1, "get"); } return super.get(key); }
 				set(key, value) { if (arguments.length < 2) { __ts_atLeast(arguments.length, 2, "set"); } return super.set(key, value); }
 				has(key) { if (arguments.length < 1) { __ts_atLeast(0, 1, "has"); } return super.has(key); }
@@ -482,15 +484,16 @@ class TinyscriptGenerator   {
 				values() { return Array.from(super.values()); }
 				entries() { return Array.from(super.entries()); }
 			};
-		})(globalThis.Map);
-		var Set = (function (JsSet) {
+		})(globalThis.Map, Object.preventExtensions);
+		var Set = (function (JsSet, preventExtensions) {
 			return class Set extends JsSet {
+				constructor(values) { super(values); preventExtensions(this); }
 				add(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "add"); } return super.add(value); }
 				has(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "has"); } return super.has(value); }
 				delete(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "delete"); } return super.delete(value); }
 				values() { return Array.from(super.values()); }
 			};
-		})(globalThis.Set);
+		})(globalThis.Set, Object.preventExtensions);
 		(function () {
 			const hasOwnProperty = Object.prototype.hasOwnProperty;
 			Object.defineProperty(Object.prototype, "hasOwnProperty", { value: { hasOwnProperty(key) {
@@ -666,6 +669,47 @@ class TinyscriptGenerator   {
 		}
 		function __ts_isString(value) {
 			return typeof value === "string" || value instanceof __ts_JsString;
+		}
+		// Like the interpreter: a number has only its methods toFixed and toString, a boolean no
+		// properties (Javascript: undefined, or the methods of Number.prototype / Boolean.prototype).
+		// __ts_r checks the receiver of o.name and o.name(…) and returns it, so that the access stays
+		// at its place in the code (one property access per place is faster for V8); __ts_get reads
+		// o[key] where the key cannot be evaluated twice
+		function __ts_r(o, key) {
+			if (typeof o === "number" || typeof o === "boolean") {
+				__ts_primitiveProperty(o, key);
+			}
+			return o;
+		}
+		function __ts_get(o, key) {
+			if (typeof o === "number" || typeof o === "boolean") {
+				__ts_primitiveProperty(o, key);
+			}
+			return o[key];
+		}
+		function __ts_primitiveProperty(o, key) {
+			if (typeof o === "number" && (key === "toFixed" || key === "toString")) {
+				return;
+			}
+			throw new TypeError("Cannot read '" + key + "' of " + __ts_str(o) + ": "
+				+ (typeof o === "number" ? "numbers only have the methods toFixed and toString" : "booleans have no properties"));
+		}
+		// Like the interpreter: an array has only its indexes (integers from 0) and length, so
+		// a[-1] = x, a[1.5] = x and a["name"] = x are errors (Javascript: properties). __ts_w checks
+		// the target of o[key] = x and returns it; __ts_set writes where the key cannot be evaluated
+		// twice. (o.name = x is not checked: it costs too much for every object, see TODO.md)
+		function __ts_w(o, key) {
+			if (Array.isArray(o) && !__ts_isArrayKey(key) && o !== Array.prototype) {
+				throw new TypeError("Arrays only have integer indexes, cannot set '" + key + "'");
+			}
+			return o;
+		}
+		function __ts_set(o, key, value) {
+			return __ts_w(o, key)[key] = value;
+		}
+		function __ts_isArrayKey(key) {
+			return typeof key === "number" ? key >= 0 && Math.trunc(key) === key && key <= 2147483647
+				: key === "length" || (typeof key === "string" && /^(0|[1-9][0-9]*)$/.exec(key) !== null && +key <= 2147483647);
 		}
 		function __ts_atLeast(count, min, name) {
 			if (count < min) {
@@ -1430,12 +1474,65 @@ class TinyscriptGenerator   {
 		val target = stmt.expr
 		if (target instanceof CallOrPropertyAccess) {
 			return '''
-				((o, k) => o[k] = «helper»(o[k]))(«target.expr.generate», «propertyKey((target.suffix as CallOrPropertyAccessSuffix).property)»);
+				((o, k) => «writeTarget((target.suffix as CallOrPropertyAccessSuffix).property)»[k] = «helper»(o[k]))(«target.expr.generate», «propertyKey((target.suffix as CallOrPropertyAccessSuffix).property)»);
 			'''
 		}
 		'''
 			«target.generate» = «helper»(«target.generate»);
 		'''
+	}
+
+	// The object o of o[k] = … in a helper: o[key] is checked (an array has only indexes and
+	// length), o.name is not (it costs too much for every object, see TODO.md)
+	def String writeTarget(PropertyAccessSuffix property) {
+		if (property instanceof ComputedPropertyAccessSuffix) "__ts_w(o, k)" else "o"
+	}
+
+	// A key that can be evaluated twice: a literal or a variable (o[i], o["a"], not o[f()])
+	def boolean isSimpleKey(PropertyAccessSuffix property) {
+		switch property {
+			DotPropertyAccessSuffix case property.key.name !== null: true
+			DotPropertyAccessSuffix: property.key.expr instanceof StringLiteral || property.key.expr instanceof NumberLiteral
+			ComputedPropertyAccessSuffix: property.key instanceof StringLiteral || property.key instanceof NumberLiteral
+				|| (property.key instanceof Reference && !(property.key as Reference).^this)
+			default: false
+		}
+	}
+
+	// Whether o.key / o[key] is read with a check of o (a number or boolean has no properties):
+	// not where it is written to or deleted, not in an optional chain (?. ends it early), not in
+	// the callee of new (new a.b(…): Javascript reads a.b itself), and not where o is an object
+	// by its syntax (this, a literal)
+	def boolean isCheckedRead(CallOrPropertyAccess expr) {
+		if (!(expr.suffix instanceof CallOrPropertyAccessSuffix))
+			return false
+		val container = expr.eContainer
+		if (container instanceof BinaryExpression && (container as BinaryExpression).left === expr
+				&& Operators.isAssignment((container as BinaryExpression).op))
+			return false
+		if (container instanceof Unary && (container as Unary).op == UnaryOperator.DELETE)
+			return false
+		val receiver = expr.expr
+		if (receiver instanceof Reference && (receiver as Reference).^this || receiver instanceof ObjectInitializer
+				|| receiver instanceof ArrayInitializer || receiver instanceof StringLiteral)
+			return false
+		var hasCall = false
+		var Expression e = expr
+		while (e instanceof CallOrPropertyAccess) {
+			val suffix = e.suffix
+			if (suffix instanceof CallOrPropertyAccessSuffix) {
+				val property = suffix.property
+				if (property instanceof DotPropertyAccessSuffix && (property as DotPropertyAccessSuffix).optional
+						|| property instanceof ComputedPropertyAccessSuffix && (property as ComputedPropertyAccessSuffix).optional)
+					return false
+				if (e !== expr && suffix.call !== null)
+					hasCall = true
+			}
+			else if (e !== expr)
+				hasCall = true
+			e = e.expr
+		}
+		!(e instanceof NewExpression && !hasCall)
 	}
 
 	// The key of o.key or o[key] as a Javascript expression
@@ -1623,6 +1720,18 @@ class TinyscriptGenerator   {
 	// - * / % < <= > >= (and -= *= /= %=) call a checking helper, unless both operands are
 	// numbers anyway; && and || check their operands as conditions and give a boolean
 	def dispatch generate(BinaryExpression expr) {
+		// o[key] = x checks o (an array has only indexes and length), o.name = x does not (TODO.md)
+		val left = expr.left
+		if (expr.op == BinaryOperator.ASSIGN && left instanceof CallOrPropertyAccess
+				&& (left as CallOrPropertyAccess).suffix instanceof CallOrPropertyAccessSuffix) {
+			val access = left as CallOrPropertyAccess
+			val property = (access.suffix as CallOrPropertyAccessSuffix).property
+			if (property instanceof ComputedPropertyAccessSuffix && !property.optional) {
+				if (isSimpleKey(property))
+					return '''«mark(expr)»__ts_w(«access.expr.generate», «propertyKey(property)»)[«propertyKey(property)»] = «expr.right.generate»'''
+				return '''«mark(expr)»__ts_set(«access.expr.generate», «propertyKey(property)», «expr.right.generate»)'''
+			}
+		}
 		if (!(expr.left instanceof Pattern)) {
 			val helper = checkingHelper(expr.op)
 			if (helper !== null && !(isNumber(expr.left) && isNumber(expr.right)))
@@ -1670,7 +1779,7 @@ class TinyscriptGenerator   {
 				DotPropertyAccessSuffix: property.key.expr.generate.toString
 				ComputedPropertyAccessSuffix: property.key.generate.toString
 			}
-			return '''((o, k) => o[k] = «helper»o[k], «expr.right.generate»))(«left.expr.generate», «key»)'''
+			return '''((o, k) => «writeTarget(property)»[k] = «helper»o[k], «expr.right.generate»))(«left.expr.generate», «key»)'''
 		}
 		'''«left.generate» = «helper»«left.generate», «expr.right.generate»)'''
 	}
@@ -1715,8 +1824,17 @@ class TinyscriptGenerator   {
 	def dispatch generate(GroupingExpression expr)
 		'''(«expr.expr.generate»)'''
 
-	def dispatch generate(CallOrPropertyAccess expr) 
+	// o.key and o[key] check o where it may be a number or boolean (see isCheckedRead)
+	def dispatch generate(CallOrPropertyAccess expr) {
+		if (isCheckedRead(expr)) {
+			val suffix = expr.suffix as CallOrPropertyAccessSuffix
+			if (isSimpleKey(suffix.property))
+				return '''«mark(expr)»__ts_r(«expr.expr.generate», «propertyKey(suffix.property)»)«suffix.generate»'''
+			if (suffix.call === null)
+				return '''«mark(expr)»__ts_get(«expr.expr.generate», «propertyKey(suffix.property)»)'''
+		}
 		'''«mark(expr)»«expr.expr.generate»«IF (expr.suffix !== null)»«expr.suffix.generate»«ENDIF»'''
+	}
 	
 	def dispatch generate(CallOrPropertyAccessSuffix suffix) 
 		'''«suffix.property.generate»«IF (suffix.call !== null)»«suffix.call.generate»«ENDIF»'''

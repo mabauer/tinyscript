@@ -45,9 +45,9 @@ experimental) as a second backend of equal rank next to the interpreter; what
 in strict mode and checks builtins, operators and conditions as the interpreter
 does; many mistakes are errors before the run, for both backends; errors show
 the tinyscript line (source maps). 275 error tests require both backends to fail
-alike; 22 still go on in node (`assertKnownGap`): 18 properties of primitives,
-arrays, Maps and Sets, 4 builtins with too many arguments. Of the messages, 161
-differ (157 only in the text, 4 `TypeError` against `RangeError`;
+alike; 8 still go on in node (`assertKnownGap`): 4 properties (`a.x = 5` on an
+array and others, see phase 2.1), 4 builtins with too many arguments. Of the
+messages, 161 differ (157 only in the text, 4 `TypeError` against `RangeError`;
 `target/backend-differences.txt`). `BuiltinMatrixTest` calls every builtin with
 edge values in both backends (3105 cases); 2 known differences are left
 (`target/builtin-matrix.txt`). `BuiltinMembersTest` compares the members of the
@@ -69,14 +69,14 @@ makes it stricter and faster.
    runs only in node. Decide which ones tinyscript takes over; phase 3 finds the
    others before the run where the kind is known.
 2. **Phase 2: the gaps in behavior closed.**
-   1. **Properties in node:** reading a property of a number or boolean (`n.x`,
-      `n.length`, `true.toString()`) and setting one on an array, `Map` or `Set`
-      (`a.x = 5`, `a[-1] = 5`, `m["a"] = 1`) is a `TypeError` in the interpreter
-      and goes on in node (18 known gaps; setting one on a primitive already
-      fails in strict mode). First measure a cheap check on the AoC days: for
-      reads, a fast path for objects (`typeof o === "object"`); for writes, only
-      on arrays, `Map`s and `Set`s. What costs at most about 10 % goes in; the
-      rest waits for the kinds of phase 3.
+   1. **Properties in node, the rest:** reading a property of a number or
+      boolean, `o[key] = x` on an array and any new property of a `Map` or `Set`
+      fail in node as in the interpreter (2026-11-25, 0–3 % on the AoC days).
+      Left (4 known gaps): `o.name = x` on an array (`a.x = 5`,
+      `a.length = "2"`), since a check of every `o.name = x` costs up to 1.7
+      times in loops that update fields (measured 2026-11-25); `delete n.x` of a
+      number; `let { a } = 42`. With the kinds of phase 3, the check is needed
+      only where `o` may be an array.
    2. **Too many arguments for a builtin** where the receiver is only known at
       run time (`s.startsWith("a", 0, 1)`, `a.map(f, {})`,
       `new Map().get(1, 2)`): a `TypeError` in the interpreter, ignored in node

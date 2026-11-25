@@ -111,9 +111,9 @@ public class MapSetTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testMapAndSetHaveNoOtherProperties() {
         // m[k] = v instead of m.set(k, v) is a common mistake
-        assertKnownGap(TinyscriptTypeError.class, "let m = new Map(); m[\"a\"] = 1;");
+        assertSameFailure(TinyscriptTypeError.class, "let m = new Map(); m[\"a\"] = 1;");
         assertSameFailure(TinyscriptTypeError.class, "let m = new Map(); m.size = 3;");
-        assertKnownGap(TinyscriptTypeError.class, "let s = new Set(); s.x = 1;");
+        assertSameFailure(TinyscriptTypeError.class, "let s = new Set(); s.x = 1;");
     }
 
     @Test
