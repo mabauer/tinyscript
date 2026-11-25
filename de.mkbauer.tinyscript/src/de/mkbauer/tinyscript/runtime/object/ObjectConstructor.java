@@ -42,7 +42,6 @@ public class ObjectConstructor extends BuiltinConstructor {
 		this.setPrototype(proto);
 
 		proto.setPrototype(engine.getDefaultPrototype());
-		proto.setPrototypeProperty(proto);
 
 		// Add all the basic stuff to our prototype, the prototype of all functions
 		proto.defineBuiltinMethod("toString", this::functionToString, 0);
@@ -100,7 +99,6 @@ public class ObjectConstructor extends BuiltinConstructor {
 	@Override
 	public TSObject createObject() {
 		TSObject newObject = new TSObject(engine, engine.getDefaultPrototype());
-		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 

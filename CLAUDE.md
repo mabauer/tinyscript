@@ -85,7 +85,9 @@ example needs no new test.
 interpreter, so a new builtin needs no new test) with edge values in both
 backends: the same value or an error of the same category; the differences are
 in `target/builtin-matrix.txt`, known ones are listed in the test with their
-reason.
+reason. `BuiltinMembersTest` compares the members of the builtins and typical
+values (along the prototype chain) in both backends; Javascript's extras that
+tinyscript does not have are listed there as known.
 
 Base class `TinyscriptTranspilerTestBase` provides:
 

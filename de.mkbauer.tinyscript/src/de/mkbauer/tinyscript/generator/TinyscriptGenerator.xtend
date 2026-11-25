@@ -502,16 +502,20 @@ class TinyscriptGenerator   {
 		// Like the interpreter: range(end), range(start, end[, step]) is a lazy range of integers
 		// with an exclusive end
 		class __ts_Range {
+			// Private: as in the interpreter, r.start is undefined
+			#start;
+			#end;
+			#step;
 			constructor(start, end, step) {
-				this.start = start;
-				this.end = end;
-				this.step = step;
+				this.#start = start;
+				this.#end = end;
+				this.#step = step;
 			}
 			get length() {
-				return Math.max(0, Math.ceil((this.end - this.start) / this.step));
+				return Math.max(0, Math.ceil((this.#end - this.#start) / this.#step));
 			}
 			*[Symbol.iterator]() {
-				for (let i = this.start; this.step > 0 ? i < this.end : i > this.end; i += this.step) {
+				for (let i = this.#start; this.#step > 0 ? i < this.#end : i > this.#end; i += this.#step) {
 					yield i;
 				}
 			}
@@ -529,11 +533,11 @@ class TinyscriptGenerator   {
 			}
 			// Like the interpreter: the same integers backwards, again a lazy range
 			reverse() {
-				const last = this.start + (this.length - 1) * this.step;
-				return new __ts_Range(last, this.start - this.step, -this.step);
+				const last = this.#start + (this.length - 1) * this.#step;
+				return new __ts_Range(last, this.#start - this.#step, -this.#step);
 			}
 			toString() {
-				return "range(" + this.start + ", " + this.end + (this.step !== 1 ? ", " + this.step : "") + ")";
+				return "range(" + this.#start + ", " + this.#end + (this.#step !== 1 ? ", " + this.#step : "") + ")";
 			}
 		}
 

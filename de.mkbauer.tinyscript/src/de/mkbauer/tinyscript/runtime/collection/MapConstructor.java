@@ -50,7 +50,6 @@ public class MapConstructor extends BuiltinConstructor {
 	public TSObject createObject() {
 		MapObject newObject = new MapObject(engine);
 		newObject.setPrototype(getPrototypeProperty().asObject());
-		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 

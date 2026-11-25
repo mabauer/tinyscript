@@ -139,6 +139,33 @@ public class TinyscriptModelUtil {
 	}
 
 	/**
+	 * The name of a function as Javascript gives it (f.name): its own name, or else the name it
+	 * is written to: const f = () => …, f = function () { … } (only with =), the key of an object
+	 * literal ({ greet() { … } }, { greet: x => x }), a default parameter (step = () => 1) or the
+	 * name of a method of a class; "" otherwise.
+	 */
+	public static String functionName(FunctionDefinition function) {
+		if (function.getId() != null)
+			return function.getId().getName();
+		EObject container = function.eContainer();
+		String name = null;
+		if (container instanceof PropertyAssignment property)
+			name = propertyKey(property.getKey());
+		else if (container instanceof de.mkbauer.tinyscript.ts.ClassMethod method)
+			name = propertyKey(method.getName());
+		else if (container instanceof Identifier parameter && parameter.getDefaultValue() == function)
+			name = parameter.getName();
+		else if (container instanceof BinaryExpression assignment && assignment.getRight() == function
+				&& assignment.getOp() == de.mkbauer.tinyscript.ts.BinaryOperator.ASSIGN) {
+			if (assignment.getLeft() instanceof Identifier variable)
+				name = variable.getName();
+			else if (assignment.getLeft() instanceof de.mkbauer.tinyscript.ts.Reference reference && reference.getId() != null)
+				name = reference.getId().getName();
+		}
+		return name != null ? name : "";
+	}
+
+	/**
 	 * The method shorthand of an object literal ({ area() { … } }, not { area: function() { … } }):
 	 * as in Javascript, it is no constructor.
 	 */

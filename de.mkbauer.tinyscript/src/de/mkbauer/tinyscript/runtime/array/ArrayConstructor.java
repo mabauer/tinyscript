@@ -81,7 +81,6 @@ public class ArrayConstructor extends BuiltinConstructor {
 	public TSObject createObject() {
 		TSObject newObject = new ArrayObject(engine);
 		newObject.setPrototype(getPrototypeProperty().asObject());
-		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 

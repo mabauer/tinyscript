@@ -184,7 +184,18 @@ public class ArrayObject extends BuiltinType {
 			result.add(String.valueOf(i));
 		}
 		result.addAll(super.getKeys());
-		return result; 
+		return result;
+	}
+
+	// Like Javascript: the indexes and length
+	@Override
+	public List<String> getOwnPropertyNames() {
+		List<String> result = new ArrayList<String>();
+		for (int i = 0; i < items.size(); i++)
+			result.add(String.valueOf(i));
+		result.add("length");
+		result.addAll(super.getOwnPropertyNames());
+		return result;
 	}
 	
 	protected void update() {

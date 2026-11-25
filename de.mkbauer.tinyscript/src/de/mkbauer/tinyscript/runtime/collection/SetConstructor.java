@@ -44,7 +44,6 @@ public class SetConstructor extends BuiltinConstructor {
 	public TSObject createObject() {
 		SetObject newObject = new SetObject(engine);
 		newObject.setPrototype(getPrototypeProperty().asObject());
-		newObject.defineDefaultProperty("constructor", this);
 		return newObject;
 	}
 

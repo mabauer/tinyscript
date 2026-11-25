@@ -84,9 +84,7 @@ public class BuiltinMatrixTest extends TinyscriptTranspilerTestBase {
     // a case listed here that no longer differs fails, so that the list stays true
     private static final Map<String, String> KNOWN = Map.of(
             "const a0 = 1;\nMath.exp(a0)", "exp of StrictMath differs from V8 in the last digit for some inputs",
-            "const a0 = [];\nObject.getPrototypeOf(a0)", "Array.prototype is an array in node (phase 1, members)",
-            "const a0 = [];\nObject.getOwnPropertyNames(a0)", "own members of arrays (phase 1, members)",
-            "const a0 = id;\nObject.getOwnPropertyNames(a0)", "functions have no name and length of their own in the interpreter (phase 1, members)");
+            "const a0 = [];\nObject.getPrototypeOf(a0)", "Array.prototype is an array in Javascript (see BuiltinMembersTest)");
 
     /** A call of a builtin: the declarations of the receiver and arguments, and the call. */
     record Case(String builtin, String declarations, String call) {
