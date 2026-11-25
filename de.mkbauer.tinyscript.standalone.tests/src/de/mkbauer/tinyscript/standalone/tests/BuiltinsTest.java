@@ -82,7 +82,7 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
         assertKnownGap(TinyscriptTypeError.class, "let a = []; a[\"name\"] = 5;");
         assertKnownGap(TinyscriptTypeError.class, "let a = [1]; a[-1] = 5;");
         assertKnownGap(TinyscriptTypeError.class, "let a = [1]; a[1.5] = 5;");
-        assertKnownGap(TinyscriptTypeError.class, "let a = []; Object.defineProperty(a, \"x\", { value: 1 });");
+        assertSameFailure(TinyscriptTypeError.class, "let a = []; Object.defineProperty(a, \"x\", { value: 1 });");
     }
 
     @Test
@@ -242,9 +242,22 @@ public class BuiltinsTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testObjectGetOwnPropertyDescriptorOfMissingPropertyIsUndefined() {
-        assertSameOutput("true\ntrue\n", 
-                "print(Object.getOwnPropertyDescriptor({ a: 1 }, \"x\") == null);\n"
-                + "print(Object.getOwnPropertyDescriptor(5, \"a\") == null);");
+        assertSameOutput("true\n", "print(Object.getOwnPropertyDescriptor({ a: 1 }, \"x\") == null);");
+    }
+
+    @Test
+    public void testTheFunctionsOfObjectNeedObjects() {
+        // Unlike Javascript (the indexes of a string, Number.prototype, a wrapper for a number)
+        for (String call : java.util.List.of("Object.keys(v)", "Object.getOwnPropertyNames(v)", "Object.getPrototypeOf(v)",
+                "Object.getOwnPropertyDescriptor(v, \"a\")", "Object.values(v)", "Object(v)", "new Object(v)"))
+            for (String value : java.util.List.of("5", "\"ab\"", "true", "null"))
+                assertSameFailure(TinyscriptTypeError.class, "const v = " + value + ";\nprint(" + call + ");");
+        assertSameFailure(TinyscriptTypeError.class, "const o = {};\nconst d = 1;\nObject.defineProperty(o, \"x\", d);");
+        assertSameFailure(TinyscriptTypeError.class, "const o = {};\nconst k = [];\nObject.defineProperty(o, k, { value: 1 });");
+        // Object() and new Object() make an empty object, Object(o) is o
+        assertSameOutput("{} {} true true {a: 1}\n",
+                "const o = { a: 1 };\nprint(Object(), new Object(), Object(o) == o, new Object(o) == o, Object.getOwnPropertyDescriptor(o, \"a\").value == 1 ? o : null);");
+        assertSameOutput("true true\n", "const o = {};\nprint(o.constructor == Object, o instanceof Object);");
     }
 
     @Test

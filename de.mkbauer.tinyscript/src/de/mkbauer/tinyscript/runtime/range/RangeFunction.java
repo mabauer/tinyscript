@@ -34,7 +34,8 @@ public final class RangeFunction {
 
 	private static TSValue range(TinyscriptEngine engine, TSObject prototype, TSValue[] args) {
 		for (TSValue arg : args) {
-			if (!arg.isMathematicalInteger())
+			// Not Infinity either: a range has an end
+			if (!arg.isMathematicalInteger() || !Double.isFinite(arg.asDouble()))
 				throw new TinyscriptTypeError("range() needs integers, not " + (arg.isNumber() ? arg.asString() : arg.typeOf()));
 		}
 		double start = args.length > 1 ? args[0].asDouble() : 0;

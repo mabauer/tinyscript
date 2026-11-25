@@ -470,9 +470,14 @@ class TinyscriptGenerator   {
 			}
 		};
 
-		// Like the interpreter: keys(), values() and entries() of Maps and Sets return arrays
+		// Like the interpreter: keys(), values() and entries() of Maps and Sets return arrays, and
+		// the methods need their arguments (m.get() is an error, not undefined)
 		var Map = (function (JsMap) {
 			return class Map extends JsMap {
+				get(key) { if (arguments.length < 1) { __ts_atLeast(0, 1, "get"); } return super.get(key); }
+				set(key, value) { if (arguments.length < 2) { __ts_atLeast(arguments.length, 2, "set"); } return super.set(key, value); }
+				has(key) { if (arguments.length < 1) { __ts_atLeast(0, 1, "has"); } return super.has(key); }
+				delete(key) { if (arguments.length < 1) { __ts_atLeast(0, 1, "delete"); } return super.delete(key); }
 				keys() { return Array.from(super.keys()); }
 				values() { return Array.from(super.values()); }
 				entries() { return Array.from(super.entries()); }
@@ -480,9 +485,19 @@ class TinyscriptGenerator   {
 		})(globalThis.Map);
 		var Set = (function (JsSet) {
 			return class Set extends JsSet {
+				add(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "add"); } return super.add(value); }
+				has(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "has"); } return super.has(value); }
+				delete(value) { if (arguments.length < 1) { __ts_atLeast(0, 1, "delete"); } return super.delete(value); }
 				values() { return Array.from(super.values()); }
 			};
 		})(globalThis.Set);
+		(function () {
+			const hasOwnProperty = Object.prototype.hasOwnProperty;
+			Object.defineProperty(Object.prototype, "hasOwnProperty", { value: { hasOwnProperty(key) {
+				__ts_atLeast(arguments.length, 1, "hasOwnProperty");
+				return hasOwnProperty.call(this, key);
+			} }.hasOwnProperty, writable: true, configurable: true, enumerable: false });
+		})();
 
 		// Like the interpreter: range(end), range(start, end[, step]) is a lazy range of integers
 		// with an exclusive end
@@ -1010,8 +1025,9 @@ class TinyscriptGenerator   {
 			«ENDFOR»
 		})();
 
-		// Object.values / entries / assign need objects, fromEntries [key, value] pairs or a Map
-		«FOR name : #["values", "entries"]»
+		// Object.values / entries / assign / keys … need objects, fromEntries [key, value] pairs or
+		// a Map (Javascript: the indexes of a string, Number.prototype for a number)
+		«FOR name : #["values", "entries", "keys", "getOwnPropertyNames", "getPrototypeOf"]»
 			Object.«name» = (function («name») {
 				return { «name»(object) {
 					__ts_atLeast(arguments.length, 1, "«name»");
@@ -1020,6 +1036,52 @@ class TinyscriptGenerator   {
 				} }.«name»;
 			})(Object.«name»);
 		«ENDFOR»
+		function __ts_propertyKey(key) {
+			if (typeof key !== "string" && typeof key !== "number") {
+				throw new TypeError("A property key must be a string or a number, not " + __ts_type(key));
+			}
+		}
+		Object.getOwnPropertyDescriptor = (function (getOwnPropertyDescriptor) {
+			return { getOwnPropertyDescriptor(object, key) {
+				__ts_atLeast(arguments.length, 2, "getOwnPropertyDescriptor");
+				__ts_object(object, "getOwnPropertyDescriptor");
+				__ts_propertyKey(key);
+				return getOwnPropertyDescriptor(object, key);
+			} }.getOwnPropertyDescriptor;
+		})(Object.getOwnPropertyDescriptor);
+		Object.defineProperty = (function (defineProperty) {
+			return { defineProperty(object, key, descriptor) {
+				__ts_atLeast(arguments.length, 3, "defineProperty");
+				__ts_object(object, "defineProperty");
+				if (Array.isArray(object)) {
+					throw new TypeError("Object.defineProperty is not supported for arrays");
+				}
+				__ts_propertyKey(key);
+				if (descriptor === null || (typeof descriptor !== "object" && typeof descriptor !== "function")) {
+					throw new TypeError("defineProperty() needs a descriptor object, not " + __ts_type(descriptor));
+				}
+				return defineProperty(object, key, descriptor);
+			} }.defineProperty;
+		})(Object.defineProperty);
+		// Object() and new Object() make an empty object, Object(o) is o; tinyscript has no objects
+		// for numbers, strings or booleans (Javascript wraps them). The same statics and prototype,
+		// and ({}).constructor is the new Object
+		globalThis.Object = (function (JsObject) {
+			const O = function Object(value) {
+				if (arguments.length === 0) {
+					return {};
+				}
+				__ts_object(value, "Object");
+				return value;
+			};
+			for (const key of JsObject.getOwnPropertyNames(JsObject)) {
+				if (key !== "length" && key !== "name") {
+					Reflect.defineProperty(O, key, Reflect.getOwnPropertyDescriptor(JsObject, key));
+				}
+			}
+			Reflect.defineProperty(JsObject.prototype, "constructor", { value: O, writable: true, configurable: true, enumerable: false });
+			return O;
+		})(Object);
 		Object.assign = (function (assign) {
 			return { assign(target) {
 				__ts_atLeast(arguments.length, 1, "assign");

@@ -82,6 +82,21 @@ public class ObjectConstructor extends BuiltinConstructor {
 		return 1;
 	}
 
+	// But Object() takes no argument as well
+	@Override
+	public int getMinArgs() {
+		return 0;
+	}
+
+	// Object() and new Object() make an empty object, Object(o) is o; tinyscript has no objects
+	// for numbers, strings or booleans, so anything else is an error (Javascript wraps it)
+	@Override
+	public TSValue apply(TSObject self, TSValue[] args) {
+		if (args.length == 0)
+			return self != null ? self : createObject();
+		return object(args[0], "Object");
+	}
+
 	@Override
 	public TSObject createObject() {
 		TSObject newObject = new TSObject(engine, engine.getDefaultPrototype());
@@ -99,34 +114,36 @@ public class ObjectConstructor extends BuiltinConstructor {
 		throw new TinyscriptTypeError("Object.create(proto): proto must be an object!");
 	}
 
+	// These need objects (Javascript: the indexes of a string, Number.prototype for a number)
 	private TSValue getPrototypeOf(TSObject self, TSValue[] args) {
-		if (args[0] instanceof TSObject object && object.getPrototype() != null)
-			return object.getPrototype();
-		return TSValue.NULL;
+		TSObject prototype = object(args[0], "getPrototypeOf").getPrototype();
+		return prototype != null ? prototype : TSValue.NULL;
 	}
 
 	private TSValue defineProperty(TSObject self, TSValue[] args) {
-		if (!(args[0] instanceof TSObject object))
-			throw new TinyscriptTypeError("Object.defineProperty called on non-object");
+		TSObject object = object(args[0], "defineProperty");
 		if (object instanceof ArrayObject)
 			throw new TinyscriptTypeError("Object.defineProperty is not supported for arrays");
-		if (args[2] instanceof TSObject descriptor)
-			object.setOwnPropertyDescriptor(args[1].asString(), TSPropertyDescriptor.fromObject(descriptor));
+		String key = propertyKey(args[1]);
+		if (!(args[2] instanceof TSObject descriptor))
+			throw new TinyscriptTypeError("defineProperty() needs a descriptor object, not " + args[2].typeOf());
+		object.setOwnPropertyDescriptor(key, TSPropertyDescriptor.fromObject(descriptor));
 		return object;
 	}
 
 	private TSValue getOwnPropertyNames(TSObject self, TSValue[] args) {
-		return stringArray(args[0] instanceof TSObject object ? object.getOwnPropertyNames() : List.of());
+		return stringArray(object(args[0], "getOwnPropertyNames").getOwnPropertyNames());
 	}
 
 	private TSValue getOwnPropertyDescriptor(TSObject self, TSValue[] args) {
-		if (args[0] instanceof TSObject object && object.getOwnPropertyDescriptor(args[1].asString()) instanceof TSPropertyDescriptor desc)
+		TSObject object = object(args[0], "getOwnPropertyDescriptor");
+		if (object.getOwnPropertyDescriptor(propertyKey(args[1])) instanceof TSPropertyDescriptor desc)
 			return desc.toObject(engine);
 		return TSValue.UNDEFINED;
 	}
 
 	private TSValue keys(TSObject self, TSValue[] args) {
-		return stringArray(args[0] instanceof TSObject object ? object.getKeys() : List.of());
+		return stringArray(object(args[0], "keys").getKeys());
 	}
 
 	// Object.values(obj), Object.entries(obj): the values / the [key, value] pairs of the own

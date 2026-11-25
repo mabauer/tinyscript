@@ -113,7 +113,7 @@ public final class BuiltinSignatures {
 	}
 
 	private static Signature signature(BuiltinFunction function) {
-		return new Signature(function.getLength(), function.getMaxArgs(), function.isConstructor());
+		return new Signature(function.getMinArgs(), function.getMaxArgs(), function.isConstructor());
 	}
 
 	// The members of an object and its prototypes
