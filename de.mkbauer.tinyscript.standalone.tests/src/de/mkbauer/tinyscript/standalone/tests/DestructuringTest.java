@@ -86,7 +86,7 @@ public class DestructuringTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testPatternVariablesCanBeExported() {
-        String code = "export let [a, b] = [1, 2]; print(a + b);";
+        String code = "export const [a, b] = [1, 2]; print(a + b);";
         assertSameOutput("3\n", code);
     }
 }

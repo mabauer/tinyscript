@@ -588,8 +588,8 @@ Violations become error markers (red squiggles). The checks cover:
 - classes (only at top level, each method only once, a field must not hide a
   method), interfaces (a class has the methods of an interface of the same file
   it implements; for an imported one the interpreter checks when the class is
-  declared) and modules (`export` only at top level, imported names unique and
-  read-only).
+  declared) and modules (`export` only at top level and not for `let`, imported
+  names unique and read-only).
 
 These checks are compile-time only — the interpreter does not re-run them at
 runtime.
@@ -778,8 +778,10 @@ See `docs/language-reference.md` (section 14) for the language side.
 - **Scoping:** the names of the imports are part of the top-level scope
   (`TinyscriptScopeProvider`); the global scope only contains shared resources
   (builtins, REPL session lines), so files never see each other's names.
-- **Validation:** `export` only at top level; imported names unique and not
-  redeclared; no assignment to imported names.
+- **Validation:** `export` only at top level and only for functions, classes and
+  `const` (the exports are copied once the module has run, so an exported `let`
+  would be a stale snapshot); imported names unique and not redeclared; no
+  assignment to imported names.
 - **Interpreter:** `TinyscriptEngine.setModuleLoader(ModuleLoader)` enables
   imports (without a loader, e.g. in the webdemo, `import` is an error). Before
   running a script, `bindImports` resolves each import, loads the module (cached

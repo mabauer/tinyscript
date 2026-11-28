@@ -272,9 +272,10 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   `interface Shape { area(); }` names methods; `class Square implements Shape`
   is checked once when the class is declared (by the validator if the interface
   is in the same file), only method names count
-- Modules: `export` top-level functions / variables / classes;
-  `import a, b from "./m";` or `import * as m from "./m";`. Each module runs
-  once; imported names are read-only; files share names only via imports (see
+- Modules: `export` top-level functions / constants / classes (not `let`: an
+  importer would not see later assignments); `import a, b from "./m";` or
+  `import * as m from "./m";`. Each module runs once; imported names are
+  read-only; files share names only via imports (see
   `docs/language-reference.md`, section 14)
 - `try { … } catch (e) { … }` (no `finally`) catches only errors thrown with
   `throw` (which takes only `Error` objects) and failed `std:fs` / `std:io`

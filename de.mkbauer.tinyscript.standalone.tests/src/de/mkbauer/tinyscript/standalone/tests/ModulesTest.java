@@ -41,7 +41,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @BeforeEach
     public void writeGeometry() throws IOException {
         write("geometry.tys", "export function area(r) { return 3 * r * r; }\n"
-                + "export let unit = \"cm\";\n"
+                + "export const unit = \"cm\";\n"
                 + "let helper = 2;\n");
     }
 
@@ -98,7 +98,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     @Test
     public void testRelativeImportsOfNonFilesResolveAgainstTheWorkingDirectory() throws IOException {
         // e.g. a line typed in the interactive REPL, whose resource is not a file
-        Path module = write("m.tys", "export let x = 1;");
+        Path module = write("m.tys", "export const x = 1;");
         Path relative = Path.of("").toAbsolutePath().relativize(module);
         URI resolved = new FileSystemModuleLoader(List.of()).resolve("./" + relative, URI.createURI("__repl0.tys"));
         assertEquals(module.toRealPath().toString(), resolved.toFileString());
@@ -106,7 +106,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testOnlyTysFilesAreModules() throws IOException {
-        write("m.js", "export let x = 1;");
+        write("m.js", "export const x = 1;");
         Path main = write("main.tys", "import x from \"./m.js\";\nprint(x);");
         TinyscriptRuntimeException e = assertThrows(TinyscriptReferenceError.class, () -> runModule(main));
         assertTrue(e.getMessage().contains("not a tinyscript module"), e.getMessage());
@@ -118,7 +118,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testModuleRunsOnceInADiamond() throws IOException {
-        write("m1.tys", "print(\"m1 runs\");\nexport let id1 = {};");
+        write("m1.tys", "print(\"m1 runs\");\nexport const id1 = {};");
         write("m2.tys", "import id1 from \"./m1\";\nexport function same(x) { return x == id1; }");
         Path main = write("main.tys", "import id1 from \"./m1\";\nimport same from \"./m2\";\nprint(same(id1));");
         assertEquals("m1 runs\ntrue\n", runModule(main));
@@ -126,7 +126,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testASymlinkIsTheSameModule() throws IOException {
-        write("m1.tys", "print(\"m1 runs\");\nexport let id1 = {};");
+        write("m1.tys", "print(\"m1 runs\");\nexport const id1 = {};");
         Files.createSymbolicLink(dir.resolve("alias.tys"), dir.resolve("m1.tys"));
         Path main = write("main.tys", "import * as a from \"./m1\";\nimport * as b from \"./alias\";\nprint(a == b);");
         assertEquals("m1 runs\ntrue\n", runModule(main));
@@ -292,7 +292,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testTranspiledModuleRunsOnceInADiamond() throws IOException {
-        write("m1.tys", "print(\"m1 runs\");\nexport let id1 = {};");
+        write("m1.tys", "print(\"m1 runs\");\nexport const id1 = {};");
         write("m2.tys", "import id1 from \"./m1\";\nexport function same(x) { return x == id1; }");
         Path main = write("main.tys", "import id1 from \"./m1\";\nimport same from \"./m2\";\nprint(same(id1));");
         assertSameOutputModule(main);
@@ -346,7 +346,7 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     public void testValidImportsAndExportsAreAccepted() {
         // Guards the rejections below: they must come from the rules, not from a syntax error
         parse("import a, b from \"./m\";\nimport * as m from \"./m2\";\nprint(a, b, m.x);\nlet c = a; c = 2;");
-        parse("export let x = 1, y;\nexport function f() { return x; }\nlet privat = 2;");
+        parse("export const x = 1, y = 2;\nexport function f() { return x; }\nlet privat = 2;");
     }
 
     @Test
@@ -367,8 +367,27 @@ public class ModulesTest extends TinyscriptTranspilerTestBase {
     }
 
     @Test
+    public void testOnlyConstantsAreExported() {
+        // An importer gets the value when the module has run: a let assigned later would be a
+        // snapshot there (Javascript: a live binding), so only const, functions and classes
+        String hint = "Only constants can be exported (export const …): an importer would not see later assignments;"
+                + " to share a value that changes, export a function that returns it";
+        assertEquals(List.of("1:8: " + hint), reportedErrors("export let n = 0;"));
+        assertEquals(List.of("1:8: " + hint), reportedErrors("export let [a, b] = [1, 2];"));
+        assertEquals(List.of(), reportedErrors("export const n = 0;\nexport function f() { }\nexport class C { }\nlet m = 1;\nm = 2;"));
+    }
+
+    @Test
+    public void testStateOfAModuleIsSharedThroughFunctions() throws IOException {
+        write("counter.tys", "let n = 0;\nexport function inc() { n++; }\nexport function count() { return n; }");
+        Path main = write("main.tys", "import inc, count from \"./counter\";\ninc();\ninc();\nprint(count());");
+        assertEquals("2\n", runModule(main));
+        assertSameOutputModule(main);
+    }
+
+    @Test
     public void testExportOnlyAtTopLevel() {
-        assertRejected("function f() { export let x = 1; }");
+        assertRejected("function f() { export const x = 1; }");
         assertRejected("if (true) { export function g() { } }");
     }
 }

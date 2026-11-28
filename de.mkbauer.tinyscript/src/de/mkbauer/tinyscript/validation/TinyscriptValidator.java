@@ -1077,6 +1077,18 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 			error("Only top-level functions, variables and classes can be exported", null);
 	}
 
+	/**
+	 * Only constants are exported: an importer gets the value once the module has run, so a let
+	 * assigned later would be a stale snapshot there (Javascript: a live binding). State that
+	 * changes is shared through exported functions.
+	 */
+	@Check
+	public void checkOnlyConstantsAreExported(VariableStatement variables) {
+		if (variables.isExported() && !isConstantDeclaration(variables.getKind()))
+			error("Only constants can be exported (export const …): an importer would not see later assignments;"
+					+ " to share a value that changes, export a function that returns it", TsPackage.Literals.VARIABLE_STATEMENT__KIND);
+	}
+
 	private static boolean isTopLevel(EObject declaration) {
 		Block block = TinyscriptModelUtil.containingBlock(declaration);
 		return block != null && block.eContainer() instanceof Tinyscript;
