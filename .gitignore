@@ -27,6 +27,8 @@ DerivedData/
 *.perspectivev3
 !default.perspectivev3
 xcuserdata/
+# Written by Xcode when it opens the project (e.g. IDEDidComputeMac32BitWarning)
+IDEWorkspaceChecks.plist
 
 ## Other
 *.moved-aside
