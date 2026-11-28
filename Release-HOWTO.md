@@ -7,33 +7,27 @@ required.
 
 ## 1. Update version numbers
 
-**OSGi modules** — updates the root `pom.xml`, all child `pom.xml` files, every
-`META-INF/MANIFEST.MF` (`Bundle-Version`), and `feature.xml` in one shot:
+    ./set-version.sh X.Y.Z
 
-    ./mvnw org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
+The script does what used to be several manual steps, and checks the result:
 
-**Plain Maven modules** — `repl` and `standalone.tests` are in the Tycho reactor
-but have no parent, `webdemo` is outside of it; their own version is updated
-separately:
+- `tycho-versions-plugin:set-version` for the OSGi modules: the root `pom.xml`,
+  all child `pom.xml` files, every `META-INF/MANIFEST.MF` (`Bundle-Version`),
+  `feature.xml` and `category.xml`, and the `de.mkbauer.tinyscript` dependency
+  of `repl` and `standalone.tests`;
+- `versions:set` for the plain Maven modules `repl`, `standalone.tests` (in the
+  Tycho reactor, but without a parent) and `webdemo` (outside of it);
+- the `de.mkbauer.tinyscript` dependency in
+  `de.mkbauer.tinyscript.webdemo/pom.xml`, which `versions:set` does not update.
 
-    ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
-        -f de.mkbauer.tinyscript.repl/pom.xml
-    ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
-        -f de.mkbauer.tinyscript.webdemo/pom.xml
-    ./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false \
-        -f de.mkbauer.tinyscript.standalone.tests/pom.xml
+## 2. Check the result
 
-**Core dependency references** — `versions:set` only updates the project's own
-`<version>`, not dependency versions. `tycho-versions-plugin` updates the
-`de.mkbauer.tinyscript` dependency in the reactor modules (`repl`,
-`standalone.tests`); manually set it to `X.Y.Z` in:
-
-- `de.mkbauer.tinyscript.webdemo/pom.xml`
-
-## 2. Verify no old version remains
-
-    grep -r "OLD_VERSION" --include="*.xml" --include="MANIFEST.MF" . \
-        | grep -v "target/" | grep -v ".git/" | grep -v "bin/"
+The script fails if the old version is left anywhere, or if the new version is
+in fewer or more places than the old one was (21 places in 17 files as of 0.31).
+It refuses to start if a `pom.xml`, `MANIFEST.MF`, `feature.xml` or
+`category.xml` has uncommitted changes, so `git diff` shows exactly its changes.
+It does not commit. It uses JDK 25 via `/usr/libexec/java_home` where that
+exists (macOS); elsewhere `JAVA_HOME` must point to a JDK 25.
 
 ## 3. Write release notes
 
@@ -71,17 +65,7 @@ Monitor progress at: https://github.com/mabauer/tinyscript/actions
 
 ## 5. Bump to next SNAPSHOT
 
-    ./mvnw org.eclipse.tycho:tycho-versions-plugin:set-version \
-        -DnewVersion=X.Y.(Z+1)-SNAPSHOT
-    ./mvnw versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
-        -f de.mkbauer.tinyscript.repl/pom.xml
-    ./mvnw versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
-        -f de.mkbauer.tinyscript.webdemo/pom.xml
-    ./mvnw versions:set -DnewVersion=X.Y.(Z+1)-SNAPSHOT -DgenerateBackupPoms=false \
-        -f de.mkbauer.tinyscript.standalone.tests/pom.xml
-
-Then manually update the `de.mkbauer.tinyscript` dependency version in
-`webdemo/pom.xml` to `X.Y.(Z+1)-SNAPSHOT`.
+    ./set-version.sh X.Y.(Z+1)-SNAPSHOT
 
     git add -A
     git commit -m "Bump to X.Y.(Z+1)-SNAPSHOT"
@@ -96,7 +80,8 @@ Then manually update the `de.mkbauer.tinyscript` dependency version in
   `tycho-versions-plugin` needs at least Java 21). If your shell's default
   `java` is not 25, prefix every `./mvnw` command with
   `export JAVA_HOME=$(/usr/libexec/java_home -v 25)` (macOS) or set `JAVA_HOME`
-  appropriately before running any Maven command in this procedure.
+  appropriately before running any Maven command in this procedure
+  (`set-version.sh` does this itself on macOS).
 - **GitHub secrets required:** the Docker workflow reads `DOCKERHUB_USERNAME`
   and `DOCKERHUB_TOKEN` from repository secrets (Settings → Secrets and
   variables → Actions → Repository secrets).

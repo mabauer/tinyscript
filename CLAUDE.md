@@ -357,21 +357,16 @@ release notes (incompatible changes first, then new features and fixes),
 published as a GitHub release for the tag. Key commands:
 
 ```bash
-# 1. Bump version in OSGi modules (pom.xml + MANIFEST.MF + feature.xml)
-./mvnw org.eclipse.tycho:tycho-versions-plugin:set-version -DnewVersion=X.Y.Z
+# 1. Set the version everywhere (OSGi modules, plain Maven modules, the
+#    core dependency of the webdemo) and check that no old version is left
+./set-version.sh X.Y.Z
 
-# 2. Bump plain Maven modules
-./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.repl/pom.xml
-./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.webdemo/pom.xml
-./mvnw versions:set -DnewVersion=X.Y.Z -DgenerateBackupPoms=false -f de.mkbauer.tinyscript.standalone.tests/pom.xml
-# Also manually update the de.mkbauer.tinyscript dependency version in webdemo pom.xml
-# (step 1 updates it in repl and standalone.tests, which are in the reactor)
-
-# 3. Commit, tag, push — Docker workflow triggers automatically
+# 2. Commit, tag, push — Docker workflow triggers automatically
 git add -A && git commit -m "Release version X.Y.Z"
 git tag vX.Y.Z && git push && git push --tags
 
-# 4. Bump to next SNAPSHOT (repeat steps 1-2 with X.Y.(Z+1)-SNAPSHOT)
+# 3. Bump to next SNAPSHOT
+./set-version.sh X.Y.(Z+1)-SNAPSHOT
 ```
 
 ## CI/CD
