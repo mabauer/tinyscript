@@ -1,31 +1,32 @@
-// Helper function to check if arrays are element-wise equal
-Array.prototype.equals = function(array) {
-	// if the other array is a falsy value, return
-	if (!array || !Array.isArray(array)) {
+// Helper function to check if arrays are element-wise equal (a function: builtins such as
+// Array.prototype cannot be extended)
+function equals(array, other) {
+	// if the other array is no array, return
+	if (!Array.isArray(other)) {
 		return false;
 	}
 
 	// compare lengths - can save a lot of time
-	if (this.length != array.length) {
+	if (array.length != other.length) {
 		return false;
 	}
 
-	for (const i : range(this.length)) {
-		if (this[i] != array[i]) {
+	for (const i : range(array.length)) {
+		if (array[i] != other[i]) {
 			// Warning - two different object instances will never be equal:
 			// {x:20} != {x:20}
 			return false;
 		}
 	}
 	return true;
-};
+}
 
 // Test cases
 let str = "test";
 let arr1 = [ "a", "b", "c" ];
 let arr2 = [ 1, 2, 3 ];
 
-assert ([ "a", "b", "c", 1, 2, 3 ].equals(arr1 + arr2)) ;
+assert (equals([ "a", "b", "c", 1, 2, 3 ], arr1 + arr2)) ;
 // Adding a string and an array concatenates strings
 let s1 = str + arr1, s2 = arr1 + str;
 assert (typeof s1 == "string");

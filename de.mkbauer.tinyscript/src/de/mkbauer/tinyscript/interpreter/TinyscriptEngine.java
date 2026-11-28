@@ -4,12 +4,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.emf.common.util.URI;
@@ -201,9 +204,38 @@ public class TinyscriptEngine {
 		addValueToGlobalObject("NaN", Double.NaN);
 		addToGlobalObject("System", new SystemObject(this));
 		addToGlobalObject("print", Print.create(this));
-		
+		freezeBuiltins();
+
 		if (resourceMonitor != null)
 			resourceMonitor.stop();
+	}
+
+	/**
+	 * Builtins cannot be replaced or extended: freezes everything the globals reach through their
+	 * properties and prototypes (Math and Math.sqrt, Array and Array.prototype, Object.prototype
+	 * …), but not the global object itself (it holds the script's top-level names in the REPL)
+	 * and no arrays (System.args is a value for the script).
+	 */
+	private void freezeBuiltins() {
+		Set<TSObject> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+		ArrayDeque<TSObject> pending = new ArrayDeque<>();
+		TSObject globalObject = globalContext.getGlobalObject();
+		for (TSPropertyDescriptor property : globalObject.properties.values()) {
+			if (property.getValue() instanceof TSObject builtin && builtin != globalObject)
+				pending.push(builtin);
+		}
+		while (!pending.isEmpty()) {
+			TSObject object = pending.pop();
+			if (!seen.add(object) || object instanceof ArrayObject)
+				continue;
+			object.freeze();
+			for (TSPropertyDescriptor property : object.properties.values()) {
+				if (property.getValue() instanceof TSObject value && value != globalObject)
+					pending.push(value);
+			}
+			if (object.getPrototype() != null)
+				pending.push(object.getPrototype());
+		}
 	}
 	
 	/**

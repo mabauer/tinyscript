@@ -29,6 +29,9 @@ public final class RangeFunction {
 		BuiltinFunction range = engine.defineBuiltinFunction("range", (self, args) -> range(engine, prototype, args), 1, 3);
 		// range(3).constructor is range (messages name the type as "range", see TinyscriptEngine.typeName)
 		prototype.defineDefaultProperty("constructor", range);
+		// The other builtins are frozen through the globals (TinyscriptEngine.freezeBuiltins);
+		// this prototype is not reachable from them
+		prototype.freeze();
 		return range;
 	}
 

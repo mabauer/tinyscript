@@ -279,11 +279,19 @@ const counter = { n: 0, get: () => this.n }; // error: use get: function() { …
 ```
 
 Unlike in a Javascript script, there is no way to reach the global object (with
-`Math`, `print`, …): builtins cannot be replaced, neither by a script nor by a
-module it imports. Assigning to a builtin (`Math = …`, `print = …`,
-`Infinity = 1`) is a compile-time error; a declaration may hide one (see
-[Variables and Scope](#3-variables-and-scope)). As in Javascript, the constants
-of `Math` (`Math.PI`, `Math.E`) are read-only, its methods are not.
+`Math`, `print`, …), and the builtins are read-only: a script or a module it
+imports can neither replace nor extend them, so every module sees the same
+builtins. Assigning to a builtin (`Math = …`, `print = …`, `Infinity = 1`) or
+changing one (`Math.sqrt = …`, `Math.TAU = …`, `Array.prototype.first = …`,
+`delete Math.PI`) is a compile-time error; where only the run shows the builtin
+(`const m = Math; m.TAU = …`), it is a `TypeError`. Write a function or a
+constant of your own instead (`const TAU = 2 * Math.PI;`). A declaration may
+hide a builtin (see [Variables and Scope](#3-variables-and-scope)).
+
+Objects of the script still get properties of their own with the names of the
+builtins' methods: `o.toString = …` on an object, `e.name = "ParseError"` on an
+error, `Car.prototype.toString = …` on a constructor function (in Javascript,
+`Object.freeze` of the builtins would forbid these too).
 
 ---
 
@@ -1293,9 +1301,8 @@ To share functions and values between files, use modules (see
 Builtins check the types and the number of their arguments; a member that does
 not exist (`Math.sqr`) or a wrong argument is a compile-time error where it is
 clear which builtin is meant, otherwise a `TypeError` (see
-[Errors](#12-errors)). Adding a member to a builtin object
-(`Math.TAU = 2 * Math.PI;`) is allowed, and `typeof Math.TAU` asks whether it is
-there.
+[Errors](#12-errors)). Builtins cannot be changed or extended (see
+[`this`](#this)); `typeof Math.TAU` asks whether a member is there.
 
 ### `print(value, ...)`
 
@@ -1664,8 +1671,9 @@ reported as a `TinyscriptSyntaxError`:
 - **Names:** an unknown name, a variable used above its declaration in the same
   block, a name declared twice in a scope ("Duplicate identifier"), assigning to
   a constant, a function declaration, a class, a builtin (`Math = …`) or an
-  imported name, `this` or `return` outside of a function, `break` or `continue`
-  outside of a loop.
+  imported name, changing a builtin (`Math.TAU = …`, `Array.prototype.x = …`,
+  `delete Math.PI`), `this` or `return` outside of a function, `break` or
+  `continue` outside of a loop.
 - **Operands and conditions that can never fit**, where a literal or the result
   of an operator shows the kind: `"a" - 1`, `[1] + 1`, `1 < "2"`, `-"a"`,
   `x -= "a"`, `Math.sqrt("4")`; a condition that is a number or a string
@@ -1715,9 +1723,10 @@ gets every error; a broad `catch (e) { return null; }` cannot hide a typo.
   of something that is no function (`String has no method 'splitt'`,
   `'x' of Object is a number, not a function`,
   `'f' is undefined, not a function`), an assignment to a read-only property
-  (`Math.PI`), to a character of a string or to a key of an array other than its
-  indexes and `length`, `new` of something that is no constructor, a value that
-  does not fit a pattern or cannot be iterated.
+  (`f.length`) or a builtin (`const m = Math; m.PI = 3`), to a character of a
+  string or to a key of an array other than its indexes and `length`, `new` of
+  something that is no constructor, a value that does not fit a pattern or
+  cannot be iterated.
 - **`ReferenceError`:** a function uses a variable whose declaration has not run
   yet ("x is used before its declaration").
 - **A failed `assert`.**
@@ -1774,6 +1783,7 @@ in tinyscript (see [Errors](#12-errors)).
 | **Relational operators**     | Coerce operands (`1 < "2"`)                              | Only number with number or string with string; otherwise a `TypeError`     |
 | **`++` / `--`**              | Expressions, prefix and postfix                          | Only the statements `i++;` / `i--;`                                        |
 | **`toString()`**             | `"[object Object]"` for objects, `"1,2"` for arrays      | The same text as `print`: `{x: 1}`, `[1, 2]`, `[Function: f]`              |
+| **Builtins**                 | Can be replaced and extended (`Array.prototype.x = …`)   | Read-only: a compile-time error, or a `TypeError` at run time              |
 
 ### Things Tinyscript shares with JavaScript (strict mode)
 
@@ -1781,8 +1791,8 @@ in tinyscript (see [Errors](#12-errors)).
 - Classes (without inheritance) and prototypes (`Object.create`, `__proto__`)
 - First-class functions, closures, and lexical scoping
 - `this` binding in constructors and methods
-- Assigning to a read-only property (`Math.PI`, `f.length`, `f.name`, one
-  defined with `writable: false`) is a `TypeError`, not silently ignored
+- Assigning to a read-only property (`f.length`, `f.name`, one defined with
+  `writable: false`) is a `TypeError`, not silently ignored
 - `new`, `instanceof`, `typeof`
 - Arrow functions with lexical `this`
 - Rest parameters (`...args`), default parameters (`step = 1`), spread in calls
@@ -1826,7 +1836,8 @@ Classes and objects:
 - **Getter / setter properties** (`get`/`set` in object literals and classes)
 - **`valueOf`** — operators never convert objects
 - **`bind`** — wrap the call in an arrow function (`x => o.method(x)`)
-- **`Object.freeze`** — only the exports of a module are read-only
+- **`Object.freeze`** — only the builtins and the exports of a module are
+  read-only
 
 Builtins:
 

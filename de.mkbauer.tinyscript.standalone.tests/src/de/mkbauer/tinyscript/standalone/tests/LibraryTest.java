@@ -156,7 +156,7 @@ public class LibraryTest extends TinyscriptTranspilerTestBase {
         assertSameFailure(TinyscriptTypeError.class, "const a = [1, 2]; delete a[0];");
         assertSameFailure(TinyscriptTypeError.class, "const m = new Map(); delete m.size;");
         assertSameFailure(TinyscriptTypeError.class, "const s = \"abc\"; delete s.length;");
-        assertSameFailure(TinyscriptTypeError.class, "delete Math.PI;");
+        assertSameFailure(TinyscriptTypeError.class, "const m = Math; delete m.PI;");
         assertSameFailure(TinyscriptTypeError.class, "function f() { } delete f.prototype;");
         assertSameFailure(TinyscriptTypeError.class, "let u; delete u.x;");
         assertKnownGap(TinyscriptTypeError.class, "const n = 5; delete n.x;");

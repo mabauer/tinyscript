@@ -569,7 +569,8 @@ Violations become error markers (red squiggles). The checks cover:
 - builtins (where the receiver is a builtin or a literal): unknown members
   (`Math.sqr`, `Math.PIE`, `"a".splitt()`, with a suggestion), calls of members
   that are no functions, and the number of arguments in both directions (also
-  `parseInt()`, `range(1, 2, 3, 4)`); assigning to a builtin. The members and
+  `parseInt()`, `range(1, 2, 3, 4)`); assigning to a builtin, or changing one
+  (`Math.TAU = …`, `Array.prototype.x = …`, `delete Math.PI`). The members and
   the minimum and maximum of arguments come from the builtin objects of the
   runtime: `runtime/BuiltinSignatures` makes a `TinyscriptEngine` once and reads
   them, so there is no second list;
@@ -726,7 +727,7 @@ renamed function or class keeps its `name` for `print`.
 
 A program (`generate` with the builtins) starts with `"use strict"`, so node
 behaves as the interpreter: `this` in a plain call is `undefined`, assigning to
-a read-only property (`Math.PI`) is a `TypeError`. The prelude is strict itself
+a read-only property (`f.length`) is a `TypeError`. The prelude is strict itself
 (it assigns `print` and `range` to `globalThis`). The script (its imports and
 statements) is a block of its own: its declarations hide the prelude's `var`s
 (`const Map = …`, `String`, `JSON`, `System`) instead of being a `SyntaxError`.
@@ -953,6 +954,21 @@ over a value is checked for exhaustiveness by the compiler, and the common
 builtins are properties of one global object, as in ECMAScript, and the
 top-level variables of a script or REPL session live next to them. Scripts
 cannot reach the object itself (`this` is `undefined` outside functions).
+
+**Why are the builtins frozen, and how?** So that no script or module changes
+what every other module sees, and a typo such as `Math.sqrt = …` instead of
+`Math.sqrt(…)` is found. `TinyscriptEngine.freezeBuiltins` marks everything the
+globals reach (properties and prototypes, not the global object, not the array
+`System.args`) at the end of `initialize`; `TSObject.put`, `delete` and
+`Object.defineProperty` then throw a `TypeError`, while Java code can still
+define properties (`System.args` of the host). Since `put` only looks at the
+object itself, an object whose prototype is frozen still gets its own
+`toString`. The prelude of the generated code freezes the same objects with
+`Object.freeze`; there an inherited read-only property would forbid
+`o.toString = …` (the "override mistake"), so the data properties of
+`Object.prototype`, `Function.prototype` and `Error.prototype` become accessors
+whose setter defines the property on the object, as SES does (no measurable cost
+in node). The validator reports changes where the chain starts at a builtin.
 
 **Why node as the reference, and no Javascript engine in the JVM?** The
 generated Javascript is checked against node in the differential tests; GraalJS

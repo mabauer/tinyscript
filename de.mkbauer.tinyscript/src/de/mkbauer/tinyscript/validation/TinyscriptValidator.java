@@ -84,7 +84,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 	 * method of a literal that does not exist ("abc".lenght()), with a suggestion; and a call of
 	 * a builtin method with too few or too many arguments (Math.sqrt(), JSON.parse(s, f),
 	 * (1).toFixed(1, 2)). Reading an unknown member of a builtin gives undefined at run time, but
-	 * is always a mistake; adding one (Math.TAU = …) is allowed, and then it can be read.
+	 * is always a mistake: builtins cannot be extended (see checkBuiltinsAreNotChanged).
 	 */
 	@Check
 	public void checkBuiltinMembers(CallOrPropertyAccess access) {
@@ -116,8 +116,8 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 		if (members == null)
 			return;
 		if (!members.has(name)) {
-			// typeof Math.TAU asks whether it is there
-			if (builtin != null && !call && (isChanged(access) || isAddedInScript(access, builtin, name)
+			// Changing it is reported by checkBuiltinsAreNotChanged; typeof Math.TAU asks whether it is there
+			if (builtin != null && !call && (isChanged(access)
 					|| access.eContainer() instanceof Unary unary && unary.getOp() == UnaryOperator.TYPEOF))
 				return;
 			String suggestion = TinyscriptLinkingDiagnosticMessageProvider.suggestion(name, members.members().keySet());
@@ -125,8 +125,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 					+ (suggestion != null ? " (did you mean '" + suggestion + "'?)" : ""), null);
 			return;
 		}
-		// A member the script replaces (Math.sqrt = …) may be anything
-		if (!call || (builtin != null && isAddedInScript(access, builtin, name)))
+		if (!call)
 			return;
 		if (members.signature(name) == null)
 			error("'" + name + "' of " + what + " is not a function", null);
@@ -157,20 +156,46 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 				|| (container instanceof Unary unary && unary.getOp() == UnaryOperator.DELETE);
 	}
 
-	// Whether the script assigns builtin.name somewhere (Math.TAU = 2 * Math.PI)
-	private static boolean isAddedInScript(CallOrPropertyAccess access, String builtin, String name) {
-		Resource resource = access.eResource();
-		if (resource == null)
-			return false;
-		for (var iterator = resource.getAllContents(); iterator.hasNext();) {
-			if (iterator.next() instanceof CallOrPropertyAccess other && other != access && isChanged(other)
-					&& other.getExpr() instanceof Reference reference && reference.getId() != null && !reference.getId().eIsProxy()
-					&& builtin.equals(reference.getId().getName()) && isBuiltin(reference.getId())
-					&& other.getSuffix() instanceof CallOrPropertyAccessSuffix suffix && suffix.getProperty() instanceof DotPropertyAccessSuffix dot
-					&& dot.getKey() != null && name.equals(dot.getKey().getName()))
-				return true;
+	/**
+	 * Builtins are read-only (TinyscriptEngine.freezeBuiltins): assigning, ++ / -- or delete of a
+	 * property reached from a builtin is an error (Math.TAU = …, Math.sqrt = …,
+	 * Array.prototype.first = …, delete Math.PI). Where only the run shows the builtin
+	 * (const m = Math; m.TAU = …), it is a TypeError.
+	 */
+	@Check
+	public void checkBuiltinsAreNotChanged(CallOrPropertyAccess access) {
+		if (!isChanged(access))
+			return;
+		String builtin = changedBuiltin(access);
+		if (builtin != null)
+			error("Cannot change " + builtin + ": builtins are read-only (declare a function or a constant of your own instead)", null);
+	}
+
+	// The builtin at the start of a chain of property accesses (Math in Math.sqrt.cache), or null:
+	// also if the chain has a call (its result is not known) or goes through System.args (the
+	// arguments of the script, an array it may change)
+	private static String changedBuiltin(CallOrPropertyAccess access) {
+		for (CallOrPropertyAccess part = access;;) {
+			if (!(part.getSuffix() instanceof CallOrPropertyAccessSuffix suffix) || suffix.getCall() != null)
+				return null;
+			Expression receiver = part.getExpr();
+			while (receiver instanceof GroupingExpression grouping)
+				receiver = grouping.getExpr();
+			if (receiver instanceof Reference reference)
+				return !reference.isThis() && reference.getId() != null && !reference.getId().eIsProxy()
+						&& isBuiltin(reference.getId()) ? reference.getId().getName() : null;
+			if (!(receiver instanceof CallOrPropertyAccess inner) || isSystemArgs(inner))
+				return null;
+			part = inner;
 		}
-		return false;
+	}
+
+	// System.args, the builtin System's property args
+	private static boolean isSystemArgs(CallOrPropertyAccess access) {
+		return access.getExpr() instanceof Reference reference && reference.getId() != null && !reference.getId().eIsProxy()
+				&& "System".equals(reference.getId().getName()) && isBuiltin(reference.getId())
+				&& access.getSuffix() instanceof CallOrPropertyAccessSuffix suffix && suffix.getCall() == null
+				&& suffix.getProperty() instanceof DotPropertyAccessSuffix dot && dot.getKey() != null && "args".equals(dot.getKey().getName());
 	}
 
 	// The number of arguments of a call of a builtin: at least min, at most max (spread: unknown)
@@ -893,7 +918,7 @@ public class TinyscriptValidator extends AbstractTinyscriptValidator {
 				&& !object.getId().eIsProxy() && isBuiltin(object.getId())
 				&& signatures().global(object.getId().getName()) instanceof BuiltinSignatures.Members methods
 				&& methods.signature(method.getKey().getName()) instanceof BuiltinSignatures.Signature methodSignature
-				&& !methodSignature.constructor() && !isAddedInScript(call, object.getId().getName(), method.getKey().getName())) {
+				&& !methodSignature.constructor()) {
 			error("'new' needs a class or a constructor function, not the builtin function " + method.getKey().getName(), null);
 			return;
 		}

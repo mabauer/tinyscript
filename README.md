@@ -201,6 +201,11 @@ of primitive datatypes in Javascript is a mine-field on its own.
   (`std:fs`, `std:io`). Each module runs once; imported names are read-only
   snapshots (simpler than Javascript's live bindings), and files share names
   only via imports.
+- **Builtins are read-only:** a script cannot replace or extend them
+  (`Math.sqrt = …`, `Math.TAU = …`, `Array.prototype.first = …` are errors
+  before the run, or a `TypeError` where only the run shows the builtin), so
+  every module sees the same builtins; helpers are functions of their own.
+  Objects of the script still get their own `toString` or `name`.
 - **File access is a module:** there is no global `fs`; use
   `import * as fs from "std:fs";` (not available in the sandboxed web demo).
 - **Few methods on primitives:** strings have their methods (`length`, `charAt`,

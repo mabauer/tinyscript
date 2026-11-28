@@ -47,15 +47,13 @@ public class BuiltinChecksTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testWhatStaysAllowed() {
-        // Known members, any number of arguments where allowed, spread, members added or
-        // replaced by the script, and names that hide a builtin
+        // Known members, any number of arguments where allowed, spread, and names that hide a
+        // builtin (builtins themselves cannot be changed: FrozenBuiltinsTest)
         String code = "print(Math.max(), Math.max(1, 2, 3), Math.PI > 3, \"abc\".length, [1, 2].length, Number.isInteger(2));\n"
                 + "const xs = [3, 1];\nprint(Math.max(...xs), print == print);\n"
-                + "Math.TAU = 2 * Math.PI;\nprint(Math.TAU > 6);\n"
-                + "Math.sqrt = (x, y) => x + y;\nprint(Math.sqrt(1, 2));\n"
                 + "const JSON = { stringify(x) { return \"s\"; } };\nprint(JSON.stringify(1));\n"
                 + "print(typeof Math.XYZ, Math.__proto__ == Object.prototype);";
         assertEquals(List.of(), reportedErrors(code));
-        assertSameOutput("-Infinity 3 true 3 2 true\n3 true\ntrue\n3\ns\nundefined true\n", code);
+        assertSameOutput("-Infinity 3 true 3 2 true\n3 true\ns\nundefined true\n", code);
     }
 }

@@ -10,7 +10,7 @@ and [`../aoc2024`](../aoc2024).
 
 | Day                              | Puzzle                  | Shows                                                                                               |
 | -------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
-| [1](day01.tys), [1a](day01a.tys) | Sonar Sweep             | comparing neighbors; in 1a a method `reduce_pairs` added to `Array.prototype`                       |
+| [1](day01.tys), [1a](day01a.tys) | Sonar Sweep             | comparing neighbors; in 1a a recursive `reducePairs` instead of a method added to `Array.prototype` |
 | [2](day02.tys)                   | Dive!                   | two classes with the same methods (TypeScript: `extends`), default parameters                       |
 | [3](day03.tys)                   | Binary Diagnostic       | columns of bits, `parseInt(s, 2)`, an object instead of an `enum`                                   |
 | [4](day04.tys)                   | Giant Squid             | a class for a bingo board, `Set`s of drawn numbers, `words` of `std:string`                         |
