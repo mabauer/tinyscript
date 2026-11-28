@@ -1857,8 +1857,8 @@ Builtins:
 
 ## 14. Modules
 
-A file is a module. Top-level functions and variables marked with `export` can
-be imported by other files:
+A file is a module. Top-level functions, classes and constants marked with
+`export` can be imported by other files:
 
 ```
 // geometry.tys
@@ -1873,7 +1873,11 @@ print(area(2), unit, geo.area(1));
 ```
 
 - Imports come first in a file; `export` is only allowed for top-level
-  functions, variables and classes.
+  functions, classes and constants (`export const`). `export let` is a
+  compile-time error: an importer gets the value once the module has run and
+  would not see later assignments (Javascript's live bindings would). To share a
+  value that changes, export a function that returns it:
+  `let n = 0; export function count() { return n; }`.
 - **Paths:** relative paths (`"./x"`, `"../lib/y"`) resolve against the
   importing file; bare paths (`"x"`, `"math/vector"`) are searched in the module
   path (REPL: `--module-path dir1:dir2` or `TINYSCRIPT_PATH`, by default the
@@ -1884,7 +1888,8 @@ print(area(2), unit, geo.area(1));
   are an error.
 - **Imported names are read-only:** `area = 1;` is a compile-time error, and the
   exports object cannot be changed (`geo.unit = "m";` is a `TypeError`). Objects
-  you import stay mutable, and a module can keep state in closures.
+  you import stay mutable, and a module keeps state that changes in its own
+  variables, reached through the functions it exports.
 - Importing the same name twice, or a name that is also declared in the file, is
   a "Duplicate identifier"; importing a name a module does not export is an
   error (`"geometry.tys" does not export "helper"`).

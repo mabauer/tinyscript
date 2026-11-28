@@ -198,9 +198,10 @@ of primitive datatypes in Javascript is a mine-field on its own.
 - **Globals vs. modules:** what is a standard global in Javascript and needs no
   privileges stays global (`Math`, `Object`, `print`, …); modules are for
   additions Javascript does not have (`std:array`) and for privileged things
-  (`std:fs`, `std:io`). Each module runs once; imported names are read-only
-  snapshots (simpler than Javascript's live bindings), and files share names
-  only via imports.
+  (`std:fs`, `std:io`). Each module runs once; only functions, classes and
+  constants are exported (`export let` is an error, so no importer sees a stale
+  value where Javascript has live bindings), imported names are read-only, and
+  files share names only via imports.
 - **Builtins are read-only:** a script cannot replace or extend them
   (`Math.sqrt = …`, `Math.TAU = …`, `Array.prototype.first = …` are errors
   before the run, or a `TypeError` where only the run shows the builtin), so

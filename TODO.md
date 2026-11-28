@@ -18,7 +18,7 @@ TypeScript (`examples/aoc20xx`).
 1. **Template strings.** `"" + x` occurs 18 times in the examples, e.g.
    `("" + (i + 1)).padStart(4)`; the most everyday addition, and
    Javascript-compatible. The lexer for `${…}` is real work in Xtext. With them,
-   `+` no longer converts (see the language review, item 4).
+   `+` no longer converts (see the language review, item 3).
 2. **Smaller:** assignment with a pattern (`[a, b] = [b, a];`), renaming in
    imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`.
    More of Javascript's builtins: node has methods and constants that tinyscript
@@ -53,20 +53,15 @@ What is too complicated, and where the language does not follow its own line
 the README and the 92 example and `std:` files; the cases below were run in the
 REPL (jar of 2026-11-24).
 
-**Decided, in this order** (item 1, frozen builtins, is done):
+**Decided, in this order** (done: frozen builtins, only constants exported):
 
-1. **Only constants are exported.** `export let n = 0;` gives the importer a
-   snapshot: after `inc()` the importer still sees `0`, the module `1`.
-   `export let` becomes a compile-time error (functions, classes and `const`
-   stay), so nothing differs from Javascript's live bindings. No example uses
-   `export let`.
-2. **`std:` modules report programming errors as such.** `gcd("a", 2)`,
+1. **`std:` modules report programming errors as such.** `gcd("a", 2)`,
    `parse(5, "x")` and a malformed format throw an `Error` that `catch` gets,
    while `Math.max(s)` with a string ends the script: the modules are written in
    tinyscript and can only `throw new Error`. They need a way to raise a
    `TypeError` that is not caught (and reported at the caller, as today). Decide
    per case what a correct script must expect: `max([])` may stay an `Error`.
-3. **Conditions accept only booleans** (reverses the decision of 2026-11-22).
+2. **Conditions accept only booleans** (reverses the decision of 2026-11-22).
    `null` / `undefined` as false lets a forgotten value through:
    `[1, 2, 3].filter(x => { x > 1; })` is `[]` and
    `function isValid(p) { p.x >= 0; }` is never true, both without an error. So
@@ -79,7 +74,7 @@ REPL (jar of 2026-11-24).
    examples have at most 22 conditions of this form (`== null` occurs 47 times);
    README, reference, `Kinds`, the generator's checks and the examples change
    with it.
-4. **`+` does not convert, once there are template strings** (Language, item 1).
+3. **`+` does not convert, once there are template strings** (Language, item 1).
    `"5" + 1` is `"51"` and `"v: " + undefined` is `"v: undefined"`: the one
    silent conversion left, and the case of a line read without `Number`. `+`
    then takes two numbers, two strings or two arrays; the 21 places with
