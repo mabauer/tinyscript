@@ -17,7 +17,8 @@ TypeScript (`examples/aoc20xx`).
 
 1. **Template strings.** `"" + x` occurs 18 times in the examples, e.g.
    `("" + (i + 1)).padStart(4)`; the most everyday addition, and
-   Javascript-compatible. The lexer for `${…}` is real work in Xtext.
+   Javascript-compatible. The lexer for `${…}` is real work in Xtext. With them,
+   `+` no longer converts (see the language review, item 5).
 2. **Smaller:** assignment with a pattern (`[a, b] = [b, a];`), renaming in
    imports (`import a as x from …`), computed keys (`{ [k]: 1 }`), `Array.from`.
    More of Javascript's builtins: node has methods and constants that tinyscript
@@ -44,6 +45,104 @@ TypeScript (`examples/aoc20xx`).
    the `ResourceMonitor`).
 5. **Possibly later:** `finally`; error classes with `instanceof` (`TypeError`,
    `IOError`); patterns in `catch ({ message })`.
+
+## Language review of 2026-11-28
+
+What is too complicated, and where the language does not follow its own line
+(strict, no silent conversions, errors early). Checked against the reference,
+the README and the 92 example and `std:` files; the cases below were run in the
+REPL (jar of 2026-11-24).
+
+**Decided, in this order:**
+
+1. **Builtins cannot be replaced or extended.** Today `Math.sqrt = x => 0;` and
+   `Array.prototype.push = function (x) { return 42; };` run and change the
+   builtin for every module, although the reference says that builtins cannot be
+   replaced. Adding a member is only half there: `Math.TAU = …` is allowed, but
+   `Math.TAU` in another module is a compile-time error, as is `[7].first()`
+   after `Array.prototype.first = …`. Freeze the builtin objects and their
+   prototypes (a `TypeError`, before the run where the builtin is known); the
+   reference no longer allows `Math.TAU = …`.
+2. **Only constants are exported.** `export let n = 0;` gives the importer a
+   snapshot: after `inc()` the importer still sees `0`, the module `1`.
+   `export let` becomes a compile-time error (functions, classes and `const`
+   stay), so nothing differs from Javascript's live bindings. No example uses
+   `export let`.
+3. **`std:` modules report programming errors as such.** `gcd("a", 2)`,
+   `parse(5, "x")` and a malformed format throw an `Error` that `catch` gets,
+   while `Math.max(s)` with a string ends the script: the modules are written in
+   tinyscript and can only `throw new Error`. They need a way to raise a
+   `TypeError` that is not caught (and reported at the caller, as today). Decide
+   per case what a correct script must expect: `max([])` may stay an `Error`.
+4. **Conditions accept only booleans** (reverses the decision of 2026-11-22).
+   `null` / `undefined` as false lets a forgotten value through:
+   `[1, 2, 3].filter(x => { x > 1; })` is `[]` and
+   `function isValid(p) { p.x >= 0; }` is never true, both without an error. So
+   `if`, `while`, `assert`, `!`, `&&`, `||`, `? :` and the callbacks of
+   `filter`, `some`, `every`, `find` … need `true` or `false`; anything else is
+   a `TypeError`, before the run where the kind is known. `while (node)` becomes
+   `while (node != null)`; the message says so. This also ends
+   `const node = left || right;` giving `true` for two objects, and the special
+   case for literals (`options || {}`) becomes part of the general rule. The
+   examples have at most 22 conditions of this form (`== null` occurs 47 times);
+   README, reference, `Kinds`, the generator's checks and the examples change
+   with it.
+5. **`+` does not convert, once there are template strings** (Language, item 1).
+   `"5" + 1` is `"51"` and `"v: " + undefined` is `"v: undefined"`: the one
+   silent conversion left, and the case of a line read without `Number`. `+`
+   then takes two numbers, two strings or two arrays; the 21 places with
+   `"" + x` become `String(x)` or a template string.
+
+**Open, not decided:**
+
+- **Other places where `undefined` hides a mistake:** too few arguments for a
+  function that is known (`area(2)` for `function area(w, h)` fails only in the
+  body; too many are a compile-time error already, and default parameters say
+  which ones may be left out); objects of a class stay open (`p.xx = 5` adds a
+  field, although the constructor is meant to be the one place for fields;
+  sealing them after the constructor works in node too); `a[5] = 2` on an array
+  of length 1 fills the gap with `undefined`.
+- **The same syntax with another meaning than in Javascript:**
+  `import a from "./m"` is Javascript's default import, and `for (const x : xs)`
+  differs in every program without a gain (`of` and `import { a, b }` would
+  follow the rule "Javascript-compatible where it exists there"); the bitwise
+  operators work on 53 bits instead of 32.
+- **`System` is a global that Javascript does not have,** against the rule that
+  additions go into modules: `System.args` and `currentTimeMillis` would fit a
+  `std:` module.
+- **Four rules for the number of arguments:** a compile-time error for known
+  functions, ignored for methods and callbacks, a `TypeError` for builtins
+  unless they are callbacks, and too few are always allowed.
+- **Assignment is an expression, `++` is not.** No example chains assignments or
+  assigns in a condition; as a statement, the rules for `if ((x = …))` and
+  `c ? a : (b = 1)` would go.
+- **Doubles and unused parts:** `charAt` (used once) next to `s[i]` and `at`,
+  `substring` (2) next to `slice` (27); three `reverse` with different meanings
+  (in place, `toReversed`, `std:array`); `contains` / `includes` / `indexOf`,
+  which differ for `NaN`; `Error("x")` without `new`; `new Array(3)` /
+  `new Array("3")` / `new Array(3, 4)`; never used: `for (i : items)` with an
+  existing variable, `delete`, `hasOwnProperty`.
+- **Smaller:** `x == NaN` and `typeof x == "numbr"` are always false but only
+  warnings; a comma after the last element is allowed in literals, not in calls;
+  array patterns are strict, object patterns are not (`const { nope } = "abc";`
+  runs); `isNaN("x")` fails, `Number.isInteger("x")` is `false`; own kinds of
+  errors are told apart by the string in `e.name`, where a typo stays silent.
+- **Bug:** a compile-time error in an imported module shows the place in the
+  module (`m2.tys:1:32`) with the source line of the importing file.
+
+**Kept for now, to be looked at again:**
+
+- **Prototypes in the object model:** constructor functions, `F.prototype`,
+  `Object.create`, `__proto__`, property descriptors, `call` / `apply`, named
+  function expressions. Outside of `examples/oo`, `.prototype` occurs 3 times
+  and function expressions 8 times, and the parts allow the inheritance that was
+  decided against. Whatever the decision, three things fail silently today:
+  `b.__proto__ = a` does nothing, a getter in `Object.defineProperty` is ignored
+  (`o.x` is `undefined`), and `new String("a")` is an object (`typeof` gives
+  `"object"`).
+- **Interfaces:** two declarations in all examples; only names are checked,
+  there is no `instanceof` and no counterpart in Javascript, and the programming
+  guide says to describe the methods in a comment where an interface would fit.
 
 ## Checking scripts, and code generation as a second backend
 
@@ -202,9 +301,6 @@ functions about 0.35 µs.
   what to write instead.
 - **Conversions:** a user-defined `valueOf` (implicit conversion in operators),
   `toLocaleString`, `printf`-like format strings.
-- **Conditions accept only booleans** (2026-11-22): would cost `while (node)`
-  and `if (o.child)`; instead `options || {}` is a compile-time error that
-  points to `??`.
 - **`from` and `as` as names** (2026-11-22): they stay reserved; the message
   says why and suggests other names.
 - **`Date`**: `System.currentTimeMillis()` is enough.
