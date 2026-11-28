@@ -21,7 +21,10 @@ public non-sealed class TSObject implements TSValue {
 	
 	private TSObject proto = null;
 	protected TinyscriptEngine engine;
-	
+
+	// A builtin (Math, Array.prototype, Math.sqrt …): a script cannot change it (see freeze)
+	private boolean frozen = false;
+
 	protected TSObject(TinyscriptEngine engine) {
 		this.engine = engine;
 		properties = new LinkedHashMap<String, TSPropertyDescriptor>();
@@ -127,6 +130,8 @@ public non-sealed class TSObject implements TSValue {
 	 * Arrays, Maps, Sets and strings refuse (see their overrides).
 	 */
 	public void delete(String key) {
+		if (frozen)
+			throw new TinyscriptTypeError("Cannot delete '" + key + "': builtins are read-only");
 		TSPropertyDescriptor desc = properties.get(key);
 		if (desc == null)
 			return;
@@ -172,6 +177,20 @@ public non-sealed class TSObject implements TSValue {
 	}
 	
 	
+	/**
+	 * Makes this object a frozen builtin: put, delete and Object.defineProperty are a TypeError
+	 * ("builtins are read-only"). An object that has it as prototype still gets properties of its
+	 * own (o.toString = …), since put only looks at the object itself. Java code (defineDefaultProperty,
+	 * e.g. System.args of the host) can still define properties.
+	 */
+	public void freeze() {
+		frozen = true;
+	}
+
+	public boolean isFrozen() {
+		return frozen;
+	}
+
 	public void setPrototype(TSObject proto) {
 		this.proto = proto;
 		defineDefaultProperty("__proto__", proto != null ? proto : TSValue.NULL);
@@ -196,6 +215,8 @@ public non-sealed class TSObject implements TSValue {
 	
 	
 	public void put(String key, TSValue value) {
+		if (frozen)
+			throw new TinyscriptTypeError("Cannot set '" + key + "': builtins are read-only");
 		TSPropertyDescriptor desc = properties.get(key);
 		if (desc != null) {
 			// Like Javascript's strict mode: assigning to a read-only property is an error

@@ -125,6 +125,8 @@ public class ObjectConstructor extends BuiltinConstructor {
 		String key = propertyKey(args[1]);
 		if (!(args[2] instanceof TSObject descriptor))
 			throw new TinyscriptTypeError("defineProperty() needs a descriptor object, not " + args[2].typeOf());
+		if (object.isFrozen())
+			throw new TinyscriptTypeError("Cannot define '" + key + "': builtins are read-only");
 		object.setOwnPropertyDescriptor(key, TSPropertyDescriptor.fromObject(descriptor));
 		return object;
 	}

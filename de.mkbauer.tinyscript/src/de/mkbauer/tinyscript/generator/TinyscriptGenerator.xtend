@@ -1175,7 +1175,56 @@ class TinyscriptGenerator   {
 			E.prototype = JsError.prototype;
 			return E;
 		})(globalThis.Error);
-		
+
+		// Like the interpreter: builtins cannot be replaced or extended. Everything the builtins
+		// reach through their properties and prototypes is frozen, except System.args.
+		// Javascript would then refuse o.toString = … for every object: an inherited read-only
+		// property cannot be hidden by an assignment (the "override mistake"). So the properties of
+		// the prototypes that objects of the script inherit from become accessors whose setter
+		// gives the object a property of its own, as in the interpreter (SES does the same).
+		(function () {
+			const readOnly = key => new TypeError("Cannot set '" + __ts_JsString(key) + "': builtins are read-only");
+			for (const prototype of [Object.prototype, Function.prototype, Error.prototype]) {
+				for (const key of Reflect.ownKeys(prototype)) {
+					const descriptor = Reflect.getOwnPropertyDescriptor(prototype, key);
+					if (!("value" in descriptor) || !descriptor.configurable) {
+						continue;
+					}
+					const value = descriptor.value;
+					Reflect.defineProperty(prototype, key, {
+						get() { return value; },
+						set(newValue) {
+							// Not for the prototype itself, other builtins (frozen), Maps and Sets (not
+							// extensible) and numbers or booleans (strict mode: no properties)
+							if (this === prototype || (typeof this !== "object" && typeof this !== "function")
+									|| !Reflect.defineProperty(this, key, { value: newValue, writable: true, enumerable: true, configurable: true })) {
+								throw readOnly(key);
+							}
+						},
+						enumerable: descriptor.enumerable, configurable: true
+					});
+				}
+			}
+			const seen = new globalThis.Set();
+			const pending = [Object, Function, String, Array, Map, Set, Error, Number, parseInt, parseFloat, isNaN, Math, JSON, range,
+				System, print, __ts_Range.prototype];
+			while (pending.length > 0) {
+				const object = pending.pop();
+				// (not Array.isArray: Array.prototype is an array in Javascript)
+				if (object === null || (typeof object !== "object" && typeof object !== "function") || seen.has(object)
+						|| object === System.args || object === globalThis) {
+					continue;
+				}
+				seen.add(object);
+				for (const key of Reflect.ownKeys(object)) {
+					const descriptor = Reflect.getOwnPropertyDescriptor(object, key);
+					pending.push(descriptor.value, descriptor.get, descriptor.set);
+				}
+				pending.push(Object.getPrototypeOf(object));
+				Object.freeze(object);
+			}
+		})();
+
 	'''
 	
 	def generate(Tinyscript script, boolean includeBuiltins) {

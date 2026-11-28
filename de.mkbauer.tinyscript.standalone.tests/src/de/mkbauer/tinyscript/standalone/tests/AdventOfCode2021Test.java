@@ -19,7 +19,7 @@ public class AdventOfCode2021Test extends TinyscriptTranspilerTestBase {
     @Test
     public void testDay01() {
         assertDay("day01", "day01.example.txt", "Part 1: 7\nPart 2: 5\n");
-        // Part 1 once more, with a method added to Array.prototype
+        // Part 1 once more, with a recursive function over neighbors
         assertDay("day01a", "day01.example.txt", "Part 1: 7\n");
     }
 

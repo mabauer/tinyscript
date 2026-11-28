@@ -1,4 +1,4 @@
-// Advent of Code 2021, day 1, part 1 once more: with a method reduce_pairs for all arrays
+// Advent of Code 2021, day 1, part 1 once more: with a recursive function over neighbors
 // https://adventofcode.com/2021/day/1
 //
 // Usage: tinyscript day01a.tys -- input.txt
@@ -6,25 +6,24 @@
 import inputLines from "./aoc";
 import integers, stripEmptyLines from "./utils";
 
-// reduce_pairs(initialValue, reducerFunction) calls reducerFunction(result, fst, snd) for
-// each two neighbors, like reduce for single elements
-if (Array.prototype.reduce_pairs == undefined) {
-    Array.prototype.reduce_pairs = function(initialValue, reducerFunction) {
-        if (this.length < 2) {
-            return initialValue;
-        } else {
-            const [fst, ...rest] = this;
-            const snd = rest[0];
-            const result = reducerFunction(initialValue, fst, snd);
-            return rest.reduce_pairs(result, reducerFunction);
-        }
-    };
+// reducePairs(items, initialValue, reducerFunction) calls reducerFunction(result, fst, snd) for
+// each two neighbors, like reduce for single elements. (The TypeScript original adds a method
+// reduce_pairs to Array.prototype; in tinyscript, builtins cannot be extended.)
+function reducePairs(items, initialValue, reducerFunction) {
+    if (items.length < 2) {
+        return initialValue;
+    } else {
+        const [fst, ...rest] = items;
+        const snd = rest[0];
+        const result = reducerFunction(initialValue, fst, snd);
+        return reducePairs(rest, result, reducerFunction);
+    }
 }
 
 // Without the empty last line: NaN < number is a TypeError in tinyscript (see day01.tys)
 function part1(lines) {
     const ints = integers(stripEmptyLines(lines));
-    return ints.reduce_pairs(0, (result, fst, snd) => {
+    return reducePairs(ints, 0, (result, fst, snd) => {
         if (fst < snd) {
             result += 1;
         }

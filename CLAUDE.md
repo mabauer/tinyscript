@@ -283,11 +283,15 @@ syntax. After editing, regenerate with `GenerateTinyscript.mwe2`.
   resource limits are not caught
 - `this` as in Javascript's strict mode: set by a method call, `undefined` in a
   plain call and outside functions (`this` there is a compile-time error)
-- Builtins (`Math`, `print`, `Infinity`) cannot be assigned (compile-time
-  error); read-only properties (`Math.PI`, `f.length`) are a `TypeError` when
-  assigned, as in strict mode; `new` only for classes, functions written with
-  `function` and builtin constructors, not for arrow functions, methods or other
-  builtins
+- Builtins (`Math`, `print`, `Infinity`) cannot be assigned, and they are
+  frozen: changing or extending one (`Math.TAU = …`, `Array.prototype.x = …`) is
+  a compile-time error where the source shows the builtin, otherwise a
+  `TypeError` (`TinyscriptEngine.freezeBuiltins`; in the generated code the end
+  of the prelude, where `Object` / `Function` / `Error.prototype` get accessors
+  so that `o.toString = …` and `e.name = …` still work); read-only properties
+  (`f.length`) are a `TypeError` when assigned, as in strict mode; `new` only
+  for classes, functions written with `function` and builtin constructors, not
+  for arrow functions, methods or other builtins
 - The generated Javascript runs in strict mode, the script in a block of its own
   (its declarations hide the prelude's `Map`, `String` …); names that only
   Javascript reserves (`default`, `enum`, `yield` …) get the prefix `__ts_`; its

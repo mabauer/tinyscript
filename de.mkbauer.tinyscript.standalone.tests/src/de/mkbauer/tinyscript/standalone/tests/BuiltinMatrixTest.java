@@ -268,18 +268,24 @@ public class BuiltinMatrixTest extends TinyscriptTranspilerTestBase {
 
     // The outcomes of all cases in node: one program, each case a function called in a try / catch
     private Map<Case, Outcome> runNode(List<Case> cases) {
-        StringBuilder program = new StringBuilder(IDENTITY + "System.matrix = [\n");
+        StringBuilder program = new StringBuilder(IDENTITY + "const builtinMatrix = [\n");
         for (Case c : cases)
             program.append("() => {\n").append(c.declarations()).append("return ").append(c.call()).append(";\n},\n");
         program.append("];\n");
+        // The script runs in a block of its own; the driver after it reads the cases from the
+        // global object (builtins such as System cannot hold them: they are frozen)
         String js = transpile(parse(program.toString()));
+        int declaration = js.indexOf("const builtinMatrix = ");
+        if (declaration < 0)
+            fail("the generated code has no declaration of builtinMatrix");
+        js = js.substring(0, declaration) + "globalThis.builtinMatrix = " + js.substring(declaration + "const builtinMatrix = ".length());
         String driver = """
                 {
                     const text = x => ("" + x).split("\\\\").join("\\\\\\\\").split("\\n").join("\\\\n");
                     const lines = [];
-                    for (let i = 0; i < System.matrix.length; i++) {
+                    for (let i = 0; i < globalThis.builtinMatrix.length; i++) {
                         try {
-                            lines.push("ok\\t" + text(__ts_str(System.matrix[i]())));
+                            lines.push("ok\\t" + text(__ts_str(globalThis.builtinMatrix[i]())));
                         }
                         catch (e) {
                             let caught = true;

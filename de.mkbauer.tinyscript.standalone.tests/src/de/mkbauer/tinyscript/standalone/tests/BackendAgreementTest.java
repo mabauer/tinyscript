@@ -32,13 +32,12 @@ public class BackendAgreementTest extends TinyscriptTranspilerTestBase {
 
     @Test
     public void testReadOnlyBuiltins() {
-        assertBothFail("Cannot assign to the read-only property 'PI'", "Math.PI = 3;");
-        assertBothFail("Cannot assign to the read-only property 'E'", "Math.E += 1;");
+        // Builtins are frozen (see FrozenBuiltinsTest): constants and methods alike
+        assertBothFail("Cannot set 'PI': builtins are read-only", "const m = Math;\nm.PI = 3;");
+        assertBothFail("Cannot set 'E': builtins are read-only", "const m = Math;\nm.E += 1;");
+        assertBothFail("Cannot set 'sqrt': builtins are read-only", "const m = Math;\nm.sqrt = x => x;");
         assertBothFail("Cannot assign to the read-only property 'length' of a function", "function f(a) { }\nf.length = 2;");
         assertBothFail("Cannot assign to the read-only property 'name' of a function", "const f = x => x;\nf.name = \"g\";");
-        // Methods can be replaced, in both
-        String code = "Math.sqrt = x => x;\nprint(Math.sqrt(4));";
-        assertSameOutput("4\n", code);
     }
 
     @Test
