@@ -79,6 +79,43 @@ REPL (jar of 2026-11-24).
    silent conversion left, and the case of a line read without `Number`. `+`
    then takes two numbers, two strings or two arrays; the 21 places with
    `"" + x` become `String(x)` or a template string.
+4. **Assignment is a statement, as `++` is** (decided 2026-11-28). `x = …;`,
+   `o.p += …;`, `a[i] = …;` only as statements: changing is always a statement,
+   an expression only gives a value. None of the 92 example and `std:` files
+   uses an assignment as a value (no chains, none in a condition, no
+   `return x = …`, no arrow body), and `for (const line : lines())` replaces
+   `while ((line = readLine()) != null)`. The special rules go: `if (x = 2)`
+   becomes a syntax error with a hint to `==` (no escape with parentheses), and
+   `c ? a : b` no longer needs `(b = 1)`. An arrow function whose body is an
+   assignment (`xs.forEach(x => sum += x)`) is an error too; the message
+   suggests `x => { sum += x; }`. In the grammar, the assignment moves from
+   `AssignmentExpression` to `ExpressionStatement`; the AST node stays, so the
+   interpreter and the generator hardly change, and tinyscript stays a subset of
+   Javascript. Check that the REPL still prints the value of `x = 5`. The two
+   tests in `LiteralChecksTest` change.
+5. **No silent failures in the prototype layer** (decided 2026-11-28,
+   independent of whether the layer stays). Today the backends differ, and no
+   differential test covers it:
+
+   | Case                                          | Interpreter                                 | node                              |
+   | --------------------------------------------- | ------------------------------------------- | --------------------------------- |
+   | `b.__proto__ = a`                             | does nothing                                | sets the prototype                |
+   | `{ __proto__: a }`                            | ignored                                     | sets the prototype                |
+   | `o.hasOwnProperty("__proto__")`               | `true`                                      | `false`                           |
+   | `Object.defineProperty(o, "x", { value: 1 })` | `x` enumerable and writable                 | `{}`, and `o.x = 2` a `TypeError` |
+   | `defineProperty` with `get: …`                | the getter is ignored, `o.x` is `undefined` | `42`                              |
+   | `o.__x = 1; Object.getOwnPropertyNames(o)`    | `[]`                                        | `["__x"]`                         |
+
+   1. Writing `__proto__` (an assignment, or in an object literal) is an error
+      that points to `Object.create`; reading stays. In the interpreter,
+      `__proto__` is no longer an own property that `setPrototype` defines, so
+      the filter of keys starting with `__` in `getOwnPropertyNames` goes too.
+   2. `get` / `set` in a descriptor is a `TypeError` (no getters or setters, as
+      in classes and literals).
+   3. `defineProperty` takes missing attributes as `false`, as Javascript does
+      (or requires all of them).
+   4. Differential tests for these cases, so that the backends do not drift
+      apart again.
 
 **Open, not decided:**
 
@@ -100,9 +137,6 @@ REPL (jar of 2026-11-24).
 - **Four rules for the number of arguments:** a compile-time error for known
   functions, ignored for methods and callbacks, a `TypeError` for builtins
   unless they are callbacks, and too few are always allowed.
-- **Assignment is an expression, `++` is not.** No example chains assignments or
-  assigns in a condition; as a statement, the rules for `if ((x = …))` and
-  `c ? a : (b = 1)` would go.
 - **Doubles and unused parts:** `charAt` (used once) next to `s[i]` and `at`,
   `substring` (2) next to `slice` (27); three `reverse` with different meanings
   (in place, `toReversed`, `std:array`); `contains` / `includes` / `indexOf`,
@@ -123,10 +157,15 @@ REPL (jar of 2026-11-24).
   `Object.create`, `__proto__`, property descriptors, `call` / `apply`, named
   function expressions. Outside of `examples/oo`, `.prototype` occurs 3 times
   and function expressions 8 times, and the parts allow the inheritance that was
-  decided against. Whatever the decision, three things fail silently today:
-  `b.__proto__ = a` does nothing, a getter in `Object.defineProperty` is ignored
-  (`o.x` is `undefined`), and `new String("a")` is an object (`typeof` gives
-  `"object"`).
+  decided against: `B.prototype = Object.create(A.prototype)` with
+  `A.call(this)` works in both backends. Two ways to the same thing (a class and
+  a constructor function) bring rules of their own (which functions have a
+  `prototype` and take `new`; a constructor function called without `new` fails
+  only at the first `this.x = …`), and property descriptors without accessors
+  are half of Javascript's meta-object protocol, while getters are left out of
+  classes and literals. `new String("a")` gives a wrapper object as in
+  Javascript, which `==` has to treat specially. What fails silently today is
+  item 5 above, independent of this decision.
 - **Interfaces:** two declarations in all examples; only names are checked,
   there is no `instanceof` and no counterpart in Javascript, and the programming
   guide says to describe the methods in a comment where an interface would fit.
